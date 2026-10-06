@@ -1,0 +1,6 @@
+# Les sujets : une phrase de langage naturel chacun. Rien d'autre à fournir (ni sites, ni mots-clés).
+# Chaque sujet devient une grappe ; son lexique est amorcé automatiquement puis affiné par la boucle.
+# Exemple (à décommenter) :
+#   sujets:
+#     - "jardins partagés et potagers collectifs en milieu urbain"
+sujets: []

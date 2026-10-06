@@ -1,0 +1,51 @@
+# Ce que Sednal fournit (FINAL.md § 2) : limites générales, interdits, interrupteur.
+# Les sujets sont dans config/sujets.yaml ; les clés des fournisseurs, en variables d'environnement.
+#
+# Règles générales appliquées dans tous les cas (non désactivables) : sources publiques seulement,
+# robots.txt respecté, ni connexion ni compte, ni contournement de limite ou de captcha, délai d'au
+# moins 1 s par domaine, arrêt sur 403/429, User-Agent identifiable, réseaux sociaux jamais lus
+# (leurs liens deviennent des citations).
+
+autonome: false              # INTERRUPTEUR. false = dry-run : aucun appel, rien d'écrit. Sednal l'active.
+stop_file: donnees/STOP      # si ce fichier existe, tout s'arrête immédiatement
+
+# --- limites générales -------------------------------------------------------------------
+requetes_par_cycle: 50       # requêtes de recherche au plus
+pages_par_cycle: 100         # pages récupérées au plus
+nouvelles_sources_par_cycle: 20
+elements_par_cycle: 200      # observations ingérées au plus
+profondeur: 1                # 0 = résultats de recherche ; 1 = + liens sortants des pages
+seuil_ingestion: 20.0        # proximité minimale (0 à 100) avec un sujet pour ingérer
+
+# --- INTERDITS (éditables) : jamais visités ni ingérés -------------------------------------
+interdits:
+  domaines: []               # suffixes de domaine, ex. [exemple-interdit.test]
+  motifs: []                 # mots présents dans l'URL, le titre ou la description
+
+delai_domaine_s: 1.0         # >= 1 s imposé
+# user_agent: "..."          # identifiable ; défaut : grappes-collecte/1
+
+# --- amorçage depuis la phrase du sujet ----------------------------------------------------
+amorcage: {max_termes: 20, poids: 0.4}
+
+# --- boucle automatique (grappes cycle) ----------------------------------------------------
+apprentissage:               # uniquement à partir des entités confirmées (>= 2 écosystèmes)
+  actif: true
+  min_confirmees: 3
+  min_ecosystemes: 2
+  max_termes_par_cycle: 5
+  max_termes_total: 30
+  poids: 0.3
+  expiration_cycles: 4
+recalibrage:                 # seuils bornés, sur les confirmées uniquement
+  actif: true
+  variation_max: 5.0
+  bornes_seuil_min: [30, 60]
+  bornes_marge: [5, 20]
+stabilite:                   # au-delà d'un seuil : retour en arrière automatique
+  max_changement_grappe: 0.25
+  max_taux_ambiguite: 0.5
+  chute_max_confirmes: 0.3
+  max_derive_lexique: 1.0
+instantanes_conserves: 10
+rapports_dir: rapports

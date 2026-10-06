@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from conftest import CONFIG_CLAIR
 from grappes.cli import main
 from grappes.config import ConfigError, load_config
 from grappes.pipeline import export, ingest, run
@@ -11,7 +12,7 @@ from grappes.storage.db import Database
 
 FIX = Path(__file__).parent / "fixtures"
 ROOT = Path(__file__).resolve().parents[1]
-CONFIG = ROOT / "config"
+CONFIG = CONFIG_CLAIR
 
 
 def _folder(tmp_path: Path, name: str, fixture: str) -> Path:

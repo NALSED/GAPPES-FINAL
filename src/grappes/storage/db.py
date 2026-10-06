@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS observations (
     obs_id TEXT PRIMARY KEY, source_key TEXT NOT NULL, ts TEXT, text TEXT NOT NULL,
     mentions TEXT NOT NULL DEFAULT '[]', links TEXT NOT NULL DEFAULT '[]',
     hashtags TEXT NOT NULL DEFAULT '[]', engagement INTEGER NOT NULL DEFAULT 0,
-    raw_ref TEXT, run_id TEXT
+    raw_ref TEXT, run_id TEXT, ingested_at TEXT
 );
 CREATE TABLE IF NOT EXISTS citations (
     citer TEXT NOT NULL, cited TEXT NOT NULL, ecosystem TEXT NOT NULL,
@@ -67,6 +67,10 @@ class Database:
         self.conn = sqlite3.connect(self.path)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(_SCHEMA_SQL)
+        cols = {r["name"] for r in self.conn.execute("PRAGMA table_info(observations)")}
+        if "ingested_at" not in cols:  # bases antérieures à D30
+            self.conn.execute("ALTER TABLE observations ADD COLUMN ingested_at TEXT")
+            self.conn.commit()
 
     def close(self) -> None:
         self.conn.close()
@@ -99,7 +103,8 @@ class Database:
                 )
                 cur = c.execute(
                     "INSERT OR IGNORE INTO observations(obs_id, source_key, ts, text, mentions,"
-                    " links, hashtags, engagement, raw_ref) VALUES (?,?,?,?,?,?,?,?,?)",
+                    " links, hashtags, engagement, raw_ref, ingested_at)"
+                    " VALUES (?,?,?,?,?,?,?,?,?,?)",
                     (
                         o.obs_id,
                         o.source.key,
@@ -110,10 +115,25 @@ class Database:
                         json.dumps(list(o.hashtags)),
                         o.engagement,
                         o.raw_ref,
+                        datetime.now(UTC).isoformat(),
                     ),
                 )
                 new += cur.rowcount
+                name = o.meta.get("nom")
+                if name:  # nom lisible de la source (premier connu conservé)
+                    c.execute(
+                        "UPDATE sources SET display_name=? WHERE ref_key=? AND display_name IS NULL",
+                        (name, o.source.key),
+                    )
         return new
+
+    def load_display_names(self) -> dict[str, str]:
+        """Noms lisibles connus des sources : `ref_key` -> nom."""
+        return {
+            r["ref_key"]: r["display_name"]
+            for r in self.conn.execute("SELECT ref_key, display_name FROM sources")
+            if r["display_name"]
+        }
 
     def load_observations(self) -> list[Observation]:
         rows = self.conn.execute("SELECT * FROM observations ORDER BY obs_id").fetchall()
@@ -140,10 +160,12 @@ class Database:
             raise ValueError("la durée de purge doit être positive ou nulle")
         cutoff = ((now or datetime.now(UTC)).timestamp()) - days * 86400
         with self.transaction() as c:
-            rows = c.execute("SELECT obs_id, ts FROM observations WHERE ts IS NOT NULL").fetchall()
-            old = [
-                r["obs_id"] for r in rows if datetime.fromisoformat(r["ts"]).timestamp() < cutoff
-            ]
+            # date de l'observation, à défaut date d'ingestion : rien n'échappe à la rétention
+            rows = c.execute(
+                "SELECT obs_id, COALESCE(ts, ingested_at) AS d FROM observations"
+                " WHERE COALESCE(ts, ingested_at) IS NOT NULL"
+            ).fetchall()
+            old = [r["obs_id"] for r in rows if datetime.fromisoformat(r["d"]).timestamp() < cutoff]
             c.executemany("DELETE FROM observations WHERE obs_id=?", [(i,) for i in old])
         return len(old)
 

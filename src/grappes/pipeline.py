@@ -9,6 +9,7 @@ from pathlib import Path
 
 from grappes.clustering.assign import AssignResult, assign
 from grappes.clustering.export import export_csv
+from grappes.clustering.resultat import write_resultat
 from grappes.config import Config
 from grappes.ingestion import RejectReport, get_fetcher
 from grappes.storage.db import Database
@@ -73,7 +74,7 @@ def make_run_id(obs_ids: list[str], config_hash: str) -> str:
 def run(db: Database, cfg: Config) -> tuple[str, AssignResult]:
     """Rejouable : même entrée + même configuration = même run_id, mêmes résultats."""
     observations = db.load_observations()
-    result = assign(observations, cfg)
+    result = assign(observations, cfg, names=db.load_display_names())
     run_id = make_run_id([o.obs_id for o in observations], cfg.config_hash)
     db.save_run(
         run_id,
@@ -88,4 +89,4 @@ def run(db: Database, cfg: Config) -> tuple[str, AssignResult]:
 
 def export(db: Database, cfg: Config, out_dir: str | Path) -> list[Path]:
     run_id, result = run(db, cfg)
-    return export_csv(result, cfg, run_id, out_dir)
+    return [*export_csv(result, cfg, run_id, out_dir), *write_resultat(result, cfg, out_dir)]

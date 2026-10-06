@@ -1,3 +1,5 @@
+> **OBSOLÈTE** : remplacé par `FINAL.md` (référence unique, 2026-10-06). Conservé pour l'historique uniquement ; ne pas s'y référer.
+
 # Réponses de Sednal — 06/10/2026
 
 Appliquer dans l'ordre. Tout reste « proposée » dans DECISIONS.md tant que Sednal ne l'a pas passé à « actée ».

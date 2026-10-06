@@ -45,17 +45,17 @@ Thèmes neutres inventés, graine fixe : mêmes fichiers à chaque génération.
 ````bash
 grappes search --keywords "soupe,potager"          # dry-run : journal seulement, aucun appel
 grappes search --grappe G-DEMO-A                   # les termes de la grappe servent de mots-clés
-grappes search --keywords "soupe" --provider mon_api --execute   # appels réels (si autorisés)
+grappes search --sujet "jardins partagés en ville"   # {sujet} dans les gabarits ; appels réels seulement si `autonome`
 ````
 
-Résultat : `sorties/candidats.csv` (`ecosysteme`, `identifiant`, `url`, `mot_cle`, `fournisseur`, `raison`, `date`, `extra`). Les liens déjà cités dans vos données sont ajoutés sans appel externe (fournisseur `liens_internes`). Les candidats ne sont jamais ingérés sans règle d'autonomie explicite.
+Résultat : `sorties/candidats.csv` (`ecosysteme`, `identifiant`, `url`, `mot_cle`, `fournisseur`, `raison`, `date`, `extra`). Les liens déjà cités dans vos données sont ajoutés sans appel externe (fournisseur `liens_internes`). Les candidats sont ingérés automatiquement par `grappes cycle` selon les règles générales (publics, hors interdits, assez proches d'un sujet), sans validation humaine.
 
-Tout est **désactivé par défaut**. Un appel réel demande trois choses : le fournisseur dans `actifs` (`config/recherche.yaml`), `execution_autorisee: true` dans ce même fichier, et l'option `--execute`. Les clés passent par des variables d'environnement, jamais par un fichier du dépôt.
+Tout est **désactivé par défaut**. Un appel réel demande deux choses : le fournisseur dans `actifs` (`config/recherche.yaml`) et `autonome: true` (`config/autonomie.yaml`, false par défaut = dry-run) ; le fichier `donnees/STOP` arrête tout. Les clés passent par des variables d'environnement, jamais par un fichier du dépôt.
 
 ### Brancher une nouvelle API en 10 minutes
 
 1. **Copiez un exemple** de `config/recherche/exemples/` (API JSON à clé, flux RSS, serveur MCP) dans `config/recherche/`, sous le nom de votre choix, et changez `id`.
-2. **Adaptez l'URL et les paramètres** : `{mots_cles}` (le mot-clé), `{limite}`, `{page}`, `{decalage}`, `{curseur}` sont remplacés ; les autres valeurs restent telles quelles.
+2. **Adaptez l'URL et les paramètres** : `{sujet}` (la phrase du sujet), `{mots_cles}` (le mot-clé), `{limite}`, `{page}`, `{decalage}`, `{curseur}` sont remplacés ; les autres valeurs restent telles quelles.
 3. **Authentification** (`auth`) : `header` (`name`, `env`, `prefix`), `query` (`name`, `env`), `bearer`, `basic` (`user_env`, `password_env`), `oauth_env` (jeton obtenu ailleurs, fourni par la variable `env`), ou rien. Exportez la clé : `export MA_CLE_API=...`. Sans clé, le fournisseur reste inactif.
 4. **Méthode et corps** : `method: POST` avec `body: {type: json|form, content: {...}}`.
 5. **Pagination** (`pagination`) : `page` (`param`, `start`), `offset` (`param`, `size`), `cursor` (`param`, `cursor_path`), `next_link` (`next_path`) ; `max_pages` (3 par défaut, 20 au plus).
@@ -81,3 +81,24 @@ class MonFournisseur(SearchProvider):
 ````
 
 Les champs spécifiques d'un fournisseur sont conservés tels quels dans la colonne `extra`. Interdits : scraping de réseaux sociaux, comptes de connexion, contournement de limites, contenu privé.
+
+## Sortie finale : `sorties/resultat.csv`
+
+`grappes export` écrit, en plus de `entites.csv` et `appartenances.csv`, le fichier `sorties/resultat.csv` : **une seule colonne** `NOM`, une ligne par entité retenue (assignée à une grappe, confirmée ou probable), triée par ordre alphabétique, en UTF-8 sans BOM. Avec plusieurs grappes, un fichier `resultat_<grappe>.csv` par grappe s'ajoute.
+
+* Le nom est lisible (organisation, média, site, canal, compte institutionnel), jamais un identifiant ni une URL. Une entité sans nom connu n'est pas exportée.
+* Les variantes d'écriture (casse, accents, espaces, suffixes comme « officiel ») sont fusionnées.
+* Seuil : `resultat.confiance_min` dans `config/scoring.yaml` (défaut : niveau « probable »).
+* **Personnes physiques exclues par défaut.** Un compte est une personne, sauf indice explicite dans son nom (association, journal, radio, mairie...). En cas de doute : une personne.
+
+````yaml
+resultat:
+  inclure_personnes: false   # NE PASSEZ À true QU'EN CONNAISSANCE DE CAUSE
+````
+
+**Avertissement.** Avec `inclure_personnes: true`, les noms de personnes physiques figurent **en clair** dans `resultat.csv` : le masquage (`redact_persons`) ne s'applique plus à ce fichier. `entites.csv`, le serveur MCP et le rapport continuent de masquer les personnes. Le fichier est alors un traitement de données personnelles : à votre charge.
+
+## Cadre de données
+
+Valeurs proposées, réversibles dans `config/scoring.yaml` : sources publiques uniquement ; `retention_days: 90` (observations plus anciennes supprimées par `grappes purge` et par chaque cycle ; `null` = illimité) ; `redact_persons: true` (personnes masquées par un pseudonyme dans `entites.csv` et le serveur MCP). La base SQLite garde les identifiants nécessaires au calcul : protégez l'accès au fichier.
+

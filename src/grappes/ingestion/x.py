@@ -39,11 +39,13 @@ class XFetcher(BaseFetcher):
         data = doc["data"]
         tweets = data if isinstance(data, list) else [data]
         inc = doc.get("includes") if isinstance(doc.get("includes"), Mapping) else {}
-        users = {
-            str(u["id"]): u["username"]
+        user_rows = [
+            u
             for u in inc.get("users") or []
             if isinstance(u, Mapping) and u.get("id") and isinstance(u.get("username"), str)
-        }
+        ]
+        users = {str(u["id"]): u["username"] for u in user_rows}
+        full_names = {str(u["id"]): u["name"] for u in user_rows if isinstance(u.get("name"), str)}
         out: list[Any] = []
         for t in tweets:
             if not isinstance(t, Mapping):
@@ -52,7 +54,10 @@ class XFetcher(BaseFetcher):
             t = dict(t)
             username = users.get(str(t.get("author_id", "")))
             if "author" not in t and username:
-                t["author"] = {"handle": username}
+                author = {"handle": username}
+                if str(t.get("author_id", "")) in full_names:
+                    author["name"] = full_names[str(t["author_id"])]
+                t["author"] = author
             ent = t.get("entities")
             if isinstance(ent, Mapping) and isinstance(ent.get("mentions"), list):
                 mentions = []
@@ -110,6 +115,12 @@ class XFetcher(BaseFetcher):
         )
         source = SourceRef("x", canonical_handle(handle))
         meta = {"lang": str(raw["lang"])} if raw.get("lang") else {}
+        if (
+            isinstance(author, Mapping)
+            and isinstance(author.get("name"), str)
+            and author["name"].strip()
+        ):
+            meta["nom"] = author["name"].strip()
         yield Observation(
             obs_id=make_obs_id("x", native_id, text),
             source=source,

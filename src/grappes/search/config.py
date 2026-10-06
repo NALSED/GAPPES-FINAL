@@ -1,7 +1,8 @@
-"""Configuration de la recherche : liste blanche, verrous, un fichier YAML par fournisseur.
+"""Configuration de la recherche : liste blanche des fournisseurs, un fichier YAML par fournisseur.
 
 `config/recherche.yaml` : réglages globaux. `config/recherche/*.yaml` : un fournisseur par fichier
-(les sous-dossiers, dont `exemples/`, ne sont pas chargés). Tout est désactivé par défaut.
+(les sous-dossiers, dont `exemples/`, ne sont pas chargés). Les appels réels dépendent du seul
+interrupteur `autonome` (`config/autonomie.yaml`) ; sans lui, tout est dry-run.
 Cette configuration est indépendante de `config_hash` : elle ne change aucun score.
 """
 
@@ -29,7 +30,6 @@ class ProviderSpec:
 @dataclass(frozen=True, slots=True)
 class SearchConfig:
     actifs: tuple[str, ...] = ()  # liste blanche : vide = tout désactivé
-    execution_autorisee: bool = False  # verrou 1 ; verrou 2 : option `--execute`
     quota_total: int = 100
     delai_s: float = 1.0
     limite_par_mot_cle: int = 20
@@ -86,7 +86,6 @@ def load_search_config(config_dir: str | Path = "config") -> SearchConfig:
         raise ConfigError(f"{gpath}: fournisseurs actifs sans fichier de configuration : {unknown}")
     return SearchConfig(
         actifs=tuple(dict.fromkeys(actifs)),
-        execution_autorisee=bool(d.get("execution_autorisee", False)),
         quota_total=int(_num(d, "quota_total", 100, gpath, minimum=0)),
         delai_s=_num(d, "delai_s", 1.0, gpath),
         limite_par_mot_cle=int(_num(d, "limite_par_mot_cle", 20, gpath, minimum=1)),

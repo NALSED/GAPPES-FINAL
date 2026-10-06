@@ -2,7 +2,7 @@
 
 Distinct du serveur MCP en lecture seule de grappes (`grappes.mcp`, qui sert vers l'extérieur).
 La configuration donne le transport, l'outil à appeler, la correspondance des arguments
-(gabarits `{mots_cles}`, `{limite}`) et celle du résultat vers le format commun (mêmes `response`
+(gabarits `{sujet}`, `{mots_cles}`, `{limite}`) et celle du résultat vers le format commun (mêmes `response`
 et `fields` que pour `type: http`).
 
 Sécurité : le résultat d'un outil est une donnée non fiable. Seul un JSON est lu (contenu
@@ -77,6 +77,7 @@ class McpProvider(SearchProvider):
         }
         env = {str(n): self.ctx.env_secret(n) for n in transport.get("env") or []}
         values = {
+            "sujet": self.ctx.sujet or keyword,
             "mots_cles": keyword,
             "limite": str(limit),
             "page": "1",

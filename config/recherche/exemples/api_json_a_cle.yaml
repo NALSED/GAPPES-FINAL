@@ -1,6 +1,6 @@
 # Exemple 1 : API JSON à clé. Copiez ce fichier dans config/recherche/, adaptez l'URL et les chemins,
 # ajoutez son id à `actifs` dans config/recherche.yaml et exportez la clé : export MA_CLE_API=...
-# Domaine fictif : aucun appel réel n'est fait tant que `execution_autorisee` reste faux.
+# Domaine fictif : aucun appel réel n'est fait tant que `autonome` reste faux (config/autonomie.yaml).
 id: api_json_exemple
 type: http
 public: true                      # source publique, sans identifiant de connexion

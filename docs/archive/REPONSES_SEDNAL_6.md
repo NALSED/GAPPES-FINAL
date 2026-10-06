@@ -1,3 +1,5 @@
+> **OBSOLÈTE** : remplacé par `FINAL.md` (référence unique, 2026-10-06). Conservé pour l'historique uniquement ; ne pas s'y référer.
+
 # Réponses de Sednal n°6 : phase 8 recentrée sur la recherche (proposition, à confirmer par Sednal)
 
 ## Changement de périmètre

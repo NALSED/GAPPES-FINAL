@@ -45,7 +45,7 @@ def test_x_entites_metriques_et_date():
     assert a.hashtags == ("jardinage",)  # `{"tag": ...}`
     assert a.engagement == 12 + 3 + 1  # like + retweet + reply (quote, bookmark, impression exclus)
     assert a.ts == datetime(2026, 9, 2, 10, 0, tzinfo=UTC)
-    assert a.meta == {"lang": "fr"}
+    assert a.meta == {"lang": "fr", "nom": "Compte Demo A"}
     assert [m.key for m in b.mentions] == ["x:compte_demo_a"]  # « RT @... »
     assert c.mentions == () and c.links == () and c.engagement == 0
 

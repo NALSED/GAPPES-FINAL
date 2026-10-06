@@ -28,7 +28,7 @@ def srv():
         yield s
 
 
-def make_search(tmp_path, providers, actifs=None, autorise=True, base="", **glob):
+def make_search(tmp_path, providers, actifs=None, base="", **glob):
     cfg = tmp_path / "config"
     (cfg / "recherche").mkdir(parents=True, exist_ok=True)
     for pid, body in providers.items():
@@ -36,7 +36,6 @@ def make_search(tmp_path, providers, actifs=None, autorise=True, base="", **glob
         (cfg / "recherche" / f"{pid}.yaml").write_text(text, encoding="utf-8")
     settings = {
         "actifs": list(providers) if actifs is None else actifs,
-        "execution_autorisee": autorise,
         "delai_s": 0,
         "quota_total": 100,
         **glob,
@@ -71,11 +70,12 @@ def test_dry_run_par_defaut_aucun_appel(tmp_path, srv, monkeypatch):
     assert "dry-run" in journal(tmp_path) and "/json" in journal(tmp_path)
 
 
-def test_execute_sans_autorisation_de_configuration_reste_dry_run(tmp_path, srv, monkeypatch):
+def test_sujet_dans_les_gabarits(tmp_path, srv, monkeypatch):
     monkeypatch.setenv("CLE_TEST", KEY)
-    cfg = make_search(tmp_path, {"api": API_JSON}, autorise=False, base=srv.base)
-    rep = run_search(cfg, ["jardin"], execute=True)
-    assert srv.log == [] and not rep.executed and "execution_autorisee" in rep.status["*"]
+    body = API_JSON.replace('q: "{mots_cles}"', 'q: "{sujet} / {mots_cles}"')
+    cfg = make_search(tmp_path, {"api": body}, base=srv.base)
+    run_search(cfg, ["potager"], execute=True, sujet="jardins partagés en ville")
+    assert srv.log[0]["query"]["q"] == "jardins partagés en ville / potager"
 
 
 def test_liste_blanche_obligatoire(tmp_path, srv, monkeypatch):
@@ -604,7 +604,7 @@ def test_cli_search_dry_run_et_liens_internes(tmp_path, base_liens, capsys, monk
     (cfg / "recherche" / "api.yaml").write_text(
         "id: api\ntype: http\nurl: http://127.0.0.1:9/x\nresponse: {items: r}\nfields: {url: u}\n"
     )
-    (cfg / "recherche.yaml").write_text("actifs: [api]\nexecution_autorisee: true\ndelai_s: 0\n")
+    (cfg / "recherche.yaml").write_text("actifs: [api]\ndelai_s: 0\n")
     out = tmp_path / "sorties"
     code = main(
         [
@@ -620,7 +620,12 @@ def test_cli_search_dry_run_et_liens_internes(tmp_path, base_liens, capsys, monk
         ]
     )
     text = capsys.readouterr().out
-    assert code == 0 and "dry-run" in text and "api : dry-run" in text and "jamais ingérés" in text
+    assert (
+        code == 0
+        and "dry-run" in text
+        and "api : dry-run" in text
+        and "`autonome` est faux" in text
+    )
     rows = list(csv.DictReader((out / "candidats.csv").open(encoding="utf-8"), delimiter=";"))
     assert {"telegram"} <= {r["ecosysteme"] for r in rows}
     assert all(r["fournisseur"] == "liens_internes" for r in rows)  # aucun appel externe
@@ -669,3 +674,71 @@ def test_cli_search_grappe_utilise_son_lexique(tmp_path, capsys):
     assert (
         code == 0 and "0 candidats" in capsys.readouterr().out
     )  # aucun fournisseur actif par défaut
+
+
+# --- interrupteur unique `autonome` et fichier STOP (FINAL.md § 3, § 8) -----------------------
+
+
+def _cfg_cli(tmp_path, srv, autonomie: str | None):
+    import shutil
+
+    cfg = tmp_path / "cfg"
+    shutil.copytree(ROOT / "config", cfg)
+    (cfg / "recherche").mkdir(exist_ok=True)
+    (cfg / "recherche" / "api.yaml").write_text(
+        f"id: api\ntype: http\nurl: {srv.base}/pages\nresponse: {{items: results}}\nfields: {{id: id, title: title}}\n"
+    )
+    (cfg / "recherche.yaml").write_text("actifs: [api]\ndelai_s: 0\n")
+    if autonomie is not None:
+        (cfg / "autonomie.yaml").write_text(autonomie)
+    return cfg
+
+
+def test_cli_search_dry_run_tant_que_autonome_est_faux(tmp_path, srv, capsys):
+    from grappes.cli import main
+
+    cfg = _cfg_cli(tmp_path, srv, "autonome: false\n")
+    code = main(
+        [
+            "--db",
+            str(tmp_path / "x.db"),
+            "--config",
+            str(cfg),
+            "search",
+            "--keywords",
+            "a",
+            "--out",
+            str(tmp_path / "o"),
+        ]
+    )
+    assert code == 0 and srv.log == [] and "`autonome` est faux" in capsys.readouterr().out
+
+
+def test_cli_search_appels_reels_seulement_si_autonome(tmp_path, srv, capsys):
+    from grappes.cli import main
+
+    cfg = _cfg_cli(tmp_path, srv, "autonome: true\n")
+    code = main(
+        [
+            "--db",
+            str(tmp_path / "x.db"),
+            "--config",
+            str(cfg),
+            "search",
+            "--keywords",
+            "a",
+            "--out",
+            str(tmp_path / "o"),
+        ]
+    )
+    assert code == 0 and len(srv.log) == 1 and "appels réels" in capsys.readouterr().out
+
+
+def test_cli_search_fichier_stop_arrete_tout(tmp_path, srv, capsys):
+    from grappes.cli import main
+
+    stop = tmp_path / "STOP"
+    stop.write_text("")
+    cfg = _cfg_cli(tmp_path, srv, f"autonome: true\nstop_file: {stop}\n")
+    code = main(["--db", str(tmp_path / "x.db"), "--config", str(cfg), "search", "--keywords", "a"])
+    assert code == 4 and srv.log == [] and "arrêt demandé" in capsys.readouterr().err

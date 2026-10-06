@@ -3,17 +3,17 @@
 import csv
 import json
 import time
-from pathlib import Path
 
 import pytest
 
+from conftest import CONFIG_CLAIR
 from grappes.config import load_config
 from grappes.ingestion import get_fetcher
 from grappes.pipeline import export, ingest, run
 from grappes.semantic.scoring import score_proximity
 from grappes.storage.db import Database
 
-CONFIG = Path(__file__).resolve().parents[1] / "config"
+CONFIG = CONFIG_CLAIR
 
 
 def rec(i, author, text, **extra):

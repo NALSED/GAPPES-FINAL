@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +13,14 @@ import yaml
 
 from grappes.canon import canonical_domain, canonical_handle
 from grappes.ecosystem.crossref import CrossRefRule
+from grappes.learned import (
+    LearnedError,
+    learned_dir,
+    load_learned_lexicon,
+    load_learned_thresholds,
+)
 from grappes.models import Grappe, Lexicon
+from grappes.personnes import DEFAULT_INSTITUTION_HINTS
 
 
 class ConfigError(ValueError):
@@ -45,6 +52,13 @@ class ScoringConfig:
     c_anchor: float = 0.4
     crossref_floor: float = 60.0
     max_iter: int = 3
+    retention_days: int | None = 90  # données brutes ; None = conservation illimitée (D30)
+    redact_persons: bool = True  # entités de type `person` masquées dans les sorties (D30)
+    resultat_confiance_min: float | None = None  # seuil de resultat.csv ; None = niveau_probable
+    resultat_inclure_ambigus: bool = False
+    resultat_inclure_personnes: bool = False  # si vrai : personnes en clair dans resultat.csv (D32)
+    resultat_indices_institution: tuple[str, ...] = DEFAULT_INSTITUTION_HINTS
+    resultat_suffixes: tuple[str, ...] = ("officiel", "official", "channel", "chaîne", "chaine")
     crossref: CrossRefRule = field(default_factory=CrossRefRule)
 
 
@@ -145,6 +159,7 @@ def load_scoring(path: Path) -> ScoringConfig:
     w = _mapping(d.get("poids_confiance"), f"{path}:poids_confiance")
     cc = _mapping(d.get("poids_complementaire"), f"{path}:poids_complementaire")
     cr = _mapping(d.get("crossref"), f"{path}:crossref")
+    res = _mapping(d.get("resultat"), f"{path}:resultat")
     dr = default.crossref
     try:
         window = cr.get("window_days", dr.window_days)
@@ -179,6 +194,23 @@ def load_scoring(path: Path) -> ScoringConfig:
             w_anchor=float(w.get("ancrage", default.w_anchor)),
             crossref_floor=float(d.get("crossref_floor", default.crossref_floor)),
             max_iter=int(d.get("max_iter", default.max_iter)),
+            retention_days=(
+                None
+                if d.get("retention_days", 90) in (None, 0)
+                else int(d.get("retention_days", 90))
+            ),
+            redact_persons=bool(d.get("redact_persons", default.redact_persons)),
+            resultat_confiance_min=(
+                None if res.get("confiance_min") is None else float(res["confiance_min"])
+            ),
+            resultat_inclure_ambigus=bool(res.get("inclure_ambigus", False)),
+            resultat_inclure_personnes=bool(res.get("inclure_personnes", False)),
+            resultat_indices_institution=tuple(
+                str(x) for x in res.get("indices_institution", DEFAULT_INSTITUTION_HINTS)
+            ),
+            resultat_suffixes=tuple(
+                str(x).casefold() for x in res.get("suffixes", default.resultat_suffixes)
+            ),
             crossref=rule,
         )
     except (TypeError, ValueError) as exc:
@@ -218,6 +250,10 @@ def load_scoring(path: Path) -> ScoringConfig:
         raise ConfigError(f"{path}: crossref.min_weight_sum doit être > 0")
     if cfg.crossref.window_days is not None and cfg.crossref.window_days < 1:
         raise ConfigError(f"{path}: crossref.window_days doit être >= 1 (ou null)")
+    if cfg.retention_days is not None and cfg.retention_days < 1:
+        raise ConfigError(f"{path}: retention_days doit être >= 1 (ou null)")
+    if cfg.resultat_confiance_min is not None:
+        _finite(cfg.resultat_confiance_min, f"{path}: resultat.confiance_min")
     if cfg.max_iter < 1:
         raise ConfigError(f"{path}: max_iter doit être >= 1")
     if cfg.crossref.min_citers < 1 or cfg.crossref.min_ecosystems < 1:
@@ -271,6 +307,19 @@ def load_grappe(path: Path) -> Grappe:
     )
 
 
+def _with_learned(g: Grappe, learned: dict) -> Grappe:
+    """Ajoute les termes appris au lexique, sans jamais remplacer ni retirer un terme de Sednal."""
+    extra = {
+        t: lt.weight
+        for t, lt in learned.items()
+        if t not in g.lexicon.terms and t not in g.lexicon.negative
+    }
+    if not extra:
+        return g
+    lex = Lexicon(terms={**g.lexicon.terms, **extra}, negative=g.lexicon.negative)
+    return replace(g, lexicon=lex, learned_terms=tuple(sorted(extra)))
+
+
 def load_config(config_dir: str | Path = "config") -> Config:
     root = Path(config_dir)
     if not root.is_dir():
@@ -289,9 +338,19 @@ def load_config(config_dir: str | Path = "config") -> Config:
         for o in g.oppositions:
             if ":" not in o and o not in ids:
                 raise ConfigError(f"{g.grappe_id}: opposition vers une grappe inconnue {o!r}")
+    # fichiers « appris » (phase 9) : séparés, jamais prioritaires sur les termes de Sednal
+    adir = learned_dir(root)
+    learned_files = sorted(adir.glob("*.yaml")) if adir.is_dir() else []
+    try:
+        thresholds = load_learned_thresholds(root)
+        grappes = tuple(_with_learned(g, load_learned_lexicon(root, g.grappe_id)) for g in grappes)
+    except LearnedError as exc:
+        raise ConfigError(str(exc)) from exc
+    if thresholds:
+        scoring = replace(scoring, **thresholds)
     # empreinte : contenu brut de tous les fichiers pris en compte, dans l'ordre
     h = hashlib.sha256()
-    for p in [p for p in (scoring_path, sources_path) if p.exists()] + files:
+    for p in [p for p in (scoring_path, sources_path) if p.exists()] + files + learned_files:
         h.update(p.name.encode())
         h.update(p.read_bytes())
     return Config(scoring, sources, grappes, h.hexdigest()[:16])

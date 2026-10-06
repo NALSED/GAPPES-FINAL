@@ -24,6 +24,7 @@ from grappes.ecosystem.crossref import (
     validate_crossref,
 )
 from grappes.models import Entity, EntityType, Observation
+from grappes.personnes import is_institution
 from grappes.semantic.relations import anchor_scores, is_ambiguous
 from grappes.semantic.scoring import score_proximity
 
@@ -58,6 +59,7 @@ class AssignResult:
     citations: list[Citation]
     validations: list[ValidationRecord] = field(default_factory=list)
     iterations: int = 0
+    names: dict[str, str] = field(default_factory=dict)  # clé de source -> nom lisible connu
 
 
 def entity_id_for(primary_ref: str) -> str:
@@ -84,7 +86,9 @@ def _top_mean(scores: list[float], n: int) -> float:
     return round(sum(best) / len(best), 2) if best else 0.0
 
 
-def assign(observations: list[Observation], cfg: Config) -> AssignResult:
+def assign(
+    observations: list[Observation], cfg: Config, names: dict[str, str] | None = None
+) -> AssignResult:
     citations = build_citations(observations)
     texts_own: dict[str, list[Observation]] = defaultdict(list)
     for o in observations:
@@ -191,8 +195,12 @@ def assign(observations: list[Observation], cfg: Config) -> AssignResult:
     stats: dict[str, EntityStats] = {}
     for ref in refs:
         etype = EntityType(sc.entity_types.get(ref.split(":", 1)[0], "person"))
+        if etype is EntityType.PERSON and is_institution(
+            (names or {}).get(ref), sc.resultat_indices_institution
+        ):
+            etype = EntityType.GROUP  # compte institutionnel : indice explicite dans le nom
         eid = entity_id_for(ref)
-        entities.append(Entity(eid, etype, ref, ref.split(":", 1)[1]))
+        entities.append(Entity(eid, etype, ref, (names or {}).get(ref) or ref.split(":", 1)[1]))
         stats[eid] = stats_by_ref[ref]
         scored = sorted(((gid, conf[ref, gid]) for gid in grappes), key=lambda t: (-t[1], t[0]))
         best_id, best = scored[0]
@@ -220,4 +228,5 @@ def assign(observations: list[Observation], cfg: Config) -> AssignResult:
                 }
             )
     ordered = [validations[k] for k in sorted(validations)]
-    return AssignResult(entities, memberships, stats, citations, ordered, iterations)
+    known = {r: n for r, n in (names or {}).items() if r in stats_by_ref and n}
+    return AssignResult(entities, memberships, stats, citations, ordered, iterations, known)

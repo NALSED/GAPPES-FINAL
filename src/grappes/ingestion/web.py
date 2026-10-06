@@ -59,5 +59,13 @@ class WebFetcher(BaseFetcher):
             text=text,
             links=dedup(u for u in links if u and canonical_domain(u) != domain),
             raw_ref=page_url,
-            meta={"page_url": page_url, **({"lang": str(raw["lang"])} if raw.get("lang") else {})},
+            meta={
+                "page_url": page_url,
+                **({"lang": str(raw["lang"])} if raw.get("lang") else {}),
+                **(
+                    {"nom": raw["site_name"].strip()}
+                    if isinstance(raw.get("site_name"), str) and raw["site_name"].strip()
+                    else {}
+                ),
+            },
         )

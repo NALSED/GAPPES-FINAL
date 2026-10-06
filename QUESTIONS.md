@@ -1,22 +1,21 @@
 # QUESTIONS — grappes
 
-Statut au 2026-10-06, après `REPONSES_SEDNAL.md`. Aucune réponse inventée.
+Statut au 2026-10-06. Référence unique : `FINAL.md`. Aucune réponse inventée. Rien ci-dessous n'est une condition d'avancement : chaque point a une valeur par défaut documentée.
 
-## Ouvertes
+## Ouvertes (valeur par défaut en attendant)
 
-* **Q2** Échantillons de formats reçus (`REPONSES_SEDNAL_3.md`) : synthétiques, pas de vrais exports. Fetchers adaptés (D24 à D26) ; vrais exports toujours attendus pour la phase 7 (voir Q16 à Q19).
-* **Q3** Langues des corpus ?
-* **Q10** Clients MCP visés et lieu d'exécution ?
-* **Q11** Scoring par embeddings plus tard, oui ou non ?
+* **Q3** Langues des corpus ? Défaut : normalisation multilingue (accents latins retirés, autres écritures intactes).
+* **Q10** Clients MCP visés et lieu d'exécution ? Défaut : serveur MCP stdio en lecture seule.
+* **Q11** Scoring par embeddings plus tard, oui ou non ? Défaut : non (lexique et recoupement).
 
-## À confirmer sur de vrais exports (REPONSES_SEDNAL_3, Q2)
+## À trancher sur les premières vraies données collectées (Q16 à Q19)
 
-Les échantillons de Sednal sont construits d'après les documentations officielles, avec des valeurs inventées. Aucun champ n'a été supposé au-delà de ces échantillons ; les points ci-dessous restent à vérifier (détail dans `docs/conception/formats_json.md`).
+Aucun export n'est attendu de Sednal (`FINAL.md` § 3) : ces points se tranchent sur les premières données réellement ramenées par la collecte, quelle qu'en soit l'origine. Les formats actuels viennent d'échantillons construits d'après les documentations officielles ; aucun champ n'a été supposé au-delà (détail dans `docs/conception/formats_json.md`).
 
 * **Q16** Telegram (export Desktop) :
   * l'URL d'un `text_link` est-elle bien dans `href` ? L'échantillon n'en contient pas ; le fetcher lit `href`, à défaut `url` ;
   * champs des messages de service (`action`, `actor`...) : ils sont seulement ignorés ; certains portent-ils une information utile (ajout de membres, épinglage) ?
-  * l'export ne donne que le nom affiché du canal (`name`), pas son nom public : l'identifiant est le nom mis en forme (D25), ce qui fait correspondre `Canal Demo A` à `t.me/canal_demo_a` par hypothèse. Existe-t-il un champ de nom public, ou une table d'équivalence à fournir ?
+  * l'export ne donne que le nom affiché du canal (`name`), pas son nom public : l'identifiant vient de la table d'équivalence de configuration (D25, référence), à défaut du nom mis en forme, marqué « hypothèse ». Existe-t-il un champ de nom public dans les vrais exports ?
   * `forwarded_from` est un nom affiché (pas d'identifiant) : même heuristique ;
   * `date` sans fuseau : `date_unixtime` (UTC) est préféré, est-ce toujours cohérent ?
   * export d'un groupe ou d'un compte complet (`chats.list`) : la structure diffère-t-elle ? Aujourd'hui seul `{name, messages}` est géré, et la source reste le chat, jamais l'auteur du message.
@@ -35,16 +34,15 @@ Les échantillons de Sednal sont construits d'après les documentations officiel
 
 ## Réglées ou provisoires
 
-* **Q7, Q7b** Levées par Sednal (D21) : pas de `retention_days`, pas de `redact_persons`, base légale non requise.
+* **Q7** Cadre de données : valeurs proposées par Claude (D30) — sources publiques seulement, `retention_days` 90, `redact_persons` actif, personnes physiques exclues de `resultat.csv` — réversibles par Sednal ; elles remplacent D20 et D21.
 * **Q15** Réglée (D19) : E vaut 0 tant que le recoupement n'est pas validé ; `explain` indique `recoupement_partiel`.
 * **Q1** Réglée : « grappes » reste le nom de travail.
 * **Q4, Q5, Q9** Valeurs actuelles gardées (seuils par défaut ; CSV `;`, UTF-8 sans BOM ; règle d'opposition par marge). Provisoire, à recalibrer avec des données réelles.
-* **Q6** Thèmes neutres de démonstration conservés (cuisine, jardinage).
+* **Q6** Thèmes neutres de démonstration conservés (jeux d'essai ; les vraies grappes viennent des sujets).
 * **Q8** Sans objet (plage horaire supprimée).
 * **Q12** Réglée : hook `Stop` migré et vérifié.
 * **Q13** Pas de watchdog pour l'instant (D4 reste « proposée »). Chaque interruption « session limit » est notée dans `ETAT.md`.
 * **Q14** Classification mécanique / jugement validée ; N = 5, atteint (8 lignes dans le journal).
 * **QA** Confirmé : on suit `MISSION.md` (`grappes`).
 * **QB** Réglée : hook `Stop` vers `/opt/grappes/outils/continuer.sh`.
-* **QC** Réglée : phase 7 « données réelles » dès que Q2 est livrée (Q7 levée, D21).
-* Q12 à Q14 manquent dans le §17 de `MISSION.md` : Sednal les ajoute (je ne touche pas à `MISSION.md`).
+* Corrections de `MISSION.md` (dont les Q12 à Q19 manquantes du §17) : proposées dans `docs/conception/corrections_mission.md` ; `MISSION.md` n'est pas modifié.

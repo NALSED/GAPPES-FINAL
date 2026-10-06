@@ -12,6 +12,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "outils"))
 import corpus_synthetique
 
+from conftest import CONFIG_CLAIR
 from grappes.config import load_config
 from grappes.mcp.queries import Queries, open_readonly
 from grappes.pipeline import export, ingest, run
@@ -25,7 +26,7 @@ GA, GB = "G-DEMO-A", "G-DEMO-B"
 def monde(tmp_path_factory):
     out = tmp_path_factory.mktemp("corpus")
     attendu = corpus_synthetique.write(out)
-    cfg = load_config(ROOT / "config")
+    cfg = load_config(CONFIG_CLAIR)
     db = Database(out / "c.db")
     reports = {eco: ingest(db, out / eco, eco, cfg) for eco in ("x", "telegram", "web")}
     run_id, res = run(db, cfg)
@@ -125,7 +126,7 @@ def test_top_10_via_client_mcp_stdio(monde):
         env={
             **os.environ,
             "GRAPPES_DB": str(monde["out"] / "c.db"),
-            "GRAPPES_CONFIG": str(ROOT / "config"),
+            "GRAPPES_CONFIG": str(CONFIG_CLAIR),
             "PYTHONPATH": str(ROOT / "src"),
         },
     )
@@ -149,12 +150,12 @@ def test_cli_ingest_mauvais_ecosysteme_echoue_clairement(monde, tmp_path, capsys
 
     db = str(tmp_path / "c.db")
     code = main(
-        ["--db", db, "--config", str(ROOT / "config"), "ingest", str(monde["out"] / "x")]
+        ["--db", db, "--config", str(CONFIG_CLAIR), "ingest", str(monde["out"] / "x")]
         + ["--ecosystem", "telegram"]
     )
     assert code == 1 and "mauvais --ecosystem" in capsys.readouterr().err
     ok = main(
-        ["--db", db, "--config", str(ROOT / "config"), "ingest", str(monde["out"] / "x")]
+        ["--db", db, "--config", str(CONFIG_CLAIR), "ingest", str(monde["out"] / "x")]
         + ["--ecosystem", "x"]
     )
     assert ok == 0

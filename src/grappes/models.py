@@ -59,3 +59,4 @@ class Grappe:
     anchors: tuple[str, ...] = ()  # clés canoniques
     oppositions: tuple[str, ...] = ()  # grappe_id ou clés canoniques
     scale: float = 3.0  # paramètre de saturation du scoring
+    learned_terms: tuple[str, ...] = ()  # termes du « lexique_appris » fusionnés dans le lexique

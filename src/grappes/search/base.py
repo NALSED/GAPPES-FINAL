@@ -68,7 +68,8 @@ class Journal:
 class SearchContext:
     """Ce que le moteur donne à un fournisseur : exécution réelle ou non, quotas, délai, journal."""
 
-    execute: bool = False  # faux = dry-run : aucun appel externe
+    execute: bool = False  # faux = dry-run : aucun appel externe (vrai seulement si `autonome`)
+    sujet: str = ""  # phrase du sujet en cours, pour le gabarit {sujet}
     journal: Journal = field(default_factory=lambda: Journal(None))
     delay_s: float = 1.0
     quota_total: int = 100

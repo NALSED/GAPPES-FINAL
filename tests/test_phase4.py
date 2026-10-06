@@ -17,7 +17,7 @@ NEUTRAL = "rien de particulier"
 
 def make_cfg(tmp_path: Path, **scoring):
     (tmp_path / "grappes").mkdir()
-    base = {"top_n_observations": 1, "max_iter": 3, "seuil_min": 30}
+    base = {"top_n_observations": 1, "max_iter": 3, "seuil_min": 30, "redact_persons": "false"}
     base.update(scoring)
     lines = [f"{k}: {v}" for k, v in base.items()]
     (tmp_path / "scoring.yaml").write_text("\n".join(lines) + "\n", encoding="utf-8")

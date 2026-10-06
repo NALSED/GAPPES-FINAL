@@ -8,6 +8,7 @@ import sqlite3
 from pathlib import Path
 
 from grappes.config import Config
+from grappes.redact import pseudonym
 from grappes.semantic.scoring import score_detail
 
 MAX_LIMIT = 100
@@ -41,6 +42,21 @@ class Queries:
         self.conn = conn
         self.cfg = cfg
         self.grappes = {g.grappe_id: g for g in cfg.grappes}
+
+    # --- masquage des personnes (redact_persons, D30) --------------------------------------
+
+    def _is_hidden(self, ref: str) -> bool:
+        """Vrai si `ref` désigne une entité de type `person` et que le masquage est actif."""
+        if not self.cfg.scoring.redact_persons:
+            return False
+        r = self.conn.execute("SELECT type FROM entities WHERE primary_ref=?", (ref,)).fetchone()
+        return bool(r and r["type"] == "person")
+
+    def _ref(self, ref: str) -> str:
+        return pseudonym(ref) if self._is_hidden(ref) else ref
+
+    def _name(self, ref: str, name: str | None) -> str | None:
+        return "" if self._is_hidden(ref) else name
 
     # --- utilitaires ----------------------------------------------------------------------
 
@@ -140,8 +156,8 @@ class Queries:
             rows.append(
                 {
                     "entity_id": m["entity_id"],
-                    "ref": ref,
-                    "display_name": m["display_name"],
+                    "ref": self._ref(ref),
+                    "display_name": self._name(ref, m["display_name"]),
                     "ecosystem": eco,
                     "confidence": m["confidence"],
                     "n_member_citers": n,
@@ -175,7 +191,13 @@ class Queries:
             args.append(grappe_id)
         sql += " ORDER BY m.confidence DESC, e.entity_id, m.grappe_id LIMIT ?"
         args.append(clamp(limit, 20))
-        return [dict(r) for r in self.conn.execute(sql, args)]
+        rows = []
+        for r in self.conn.execute(sql, args):
+            d = dict(r)
+            d["display_name"] = self._name(d["primary_ref"], d["display_name"])
+            d["primary_ref"] = self._ref(d["primary_ref"])
+            rows.append(d)
+        return rows
 
     def _entity(self, entity_id: str) -> sqlite3.Row:
         r = self.conn.execute("SELECT * FROM entities WHERE entity_id=?", (entity_id,)).fetchone()
@@ -201,8 +223,8 @@ class Queries:
         return {
             "entity_id": e["entity_id"],
             "type": e["type"],
-            "primary_ref": e["primary_ref"],
-            "display_name": e["display_name"],
+            "primary_ref": self._ref(e["primary_ref"]),
+            "display_name": self._name(e["primary_ref"], e["display_name"]),
             "n_observations": n_obs,
             "n_citing_sources": n_cit,
             "memberships": [dict(m) for m in ms],
@@ -229,6 +251,7 @@ class Queries:
                 " WHERE c.cited=? AND c.run_id=? ORDER BY o.obs_id",
                 (ref, run),
             ).fetchall()
+        hidden = self._is_hidden(ref)
         kw = {**g.lexicon.terms, **{k: -v for k, v in g.lexicon.negative.items()}}
         scored = sorted(
             ((score_detail(r["text"], kw, scale=g.scale), r) for r in own),
@@ -239,7 +262,7 @@ class Queries:
                 "obs_id": r["obs_id"],
                 "score": d.score,
                 "matched": d.matched,
-                "excerpt": excerpt(r["text"]),
+                "excerpt": "[masqué]" if hidden else excerpt(r["text"]),
             }
             for d, r in scored
         ]
@@ -256,12 +279,12 @@ class Queries:
         ).fetchone()
         return {
             "entity_id": entity_id,
-            "ref": ref,
+            "ref": self._ref(ref),
             "grappe_id": grappe_id,
             "membership": dict(m) if m else None,
             "semantic_context": context,
             "terms": terms,
-            "citers": citers,
+            "citers": [self._ref(c) for c in citers],
             "validation": None
             if not v
             else {
@@ -292,7 +315,7 @@ class Queries:
         ).fetchall()
         return [
             {
-                "cited": r["cited"],
+                "cited": self._ref(r["cited"]),
                 "n_citers": r["n_citers"],
                 "n_ecosystems": r["n_ecosystems"],
                 "weight_sum": r["weight_sum"],
@@ -314,7 +337,7 @@ class Queries:
             "n_b": len(mb),
             "overlap": len(both),
             "jaccard": round(len(both) / len(union), 3) if union else 0.0,
-            "shared_entities": sorted(both)[:MAX_LIMIT],
+            "shared_entities": [self._ref(r) for r in sorted(both)[:MAX_LIMIT]],
             "opposed": b in ga.oppositions or a in gb.oppositions,
             "oppositions_a": list(ga.oppositions),
             "oppositions_b": list(gb.oppositions),

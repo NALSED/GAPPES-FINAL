@@ -1,3 +1,5 @@
+> **OBSOLÈTE** : remplacé par `FINAL.md` (référence unique, 2026-10-06). Conservé pour l'historique uniquement ; ne pas s'y référer.
+
 # Phase 7 — données réelles (plan, non exécuté)
 
 Statut : **proposée** (D17). Ne dépend plus que de vrais exports (Q2 : des échantillons synthétiques ont été livrés et les fetchers adaptés, D24 à D26 ; reste Q16 à Q19) ; Q7 et Q7b sont levées (D20, D21). Aucune donnée réelle n'est ingérée avant la livraison de vrais exports, et aucune donnée réelle ne passe par le compte gratuit.

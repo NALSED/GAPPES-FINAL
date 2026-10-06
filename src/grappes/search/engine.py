@@ -49,6 +49,7 @@ def run_search(
     providers: Iterable[str] | None = None,
     execute: bool = False,
     extra: Iterable[Candidate] = (),
+    sujet: str = "",
     sleep: Callable[[float], None] | None = None,
     transport=None,
 ) -> SearchReport:
@@ -56,24 +57,23 @@ def run_search(
 
     `extra` : candidats déjà connus (liens cités), fusionnés avec les résultats.
 
-    Appels réels seulement si `execute` ET `cfg.execution_autorisee` ET fournisseur dans la liste
+    Appels réels seulement si `execute` (c'est-à-dire `autonome`) ET fournisseur dans la liste
     blanche `cfg.actifs`. Sinon : dry-run (journal, aucun appel). Toute erreur d'un fournisseur
     est contenue : elle n'arrête ni les autres fournisseurs ni le cycle.
     """
     discover_plugins(cfg.plugins_dir)
     keywords = list(dict.fromkeys(k for k in keywords if k.strip()))
     wanted = list(providers) if providers is not None else list(cfg.actifs)
-    real = bool(execute and cfg.execution_autorisee)
+    real = bool(execute)
     ctx = SearchContext(
         execute=real,
         journal=Journal(cfg.journal),
         delay_s=cfg.delai_s,
         quota_total=cfg.quota_total,
+        sujet=sujet,
         **({"sleep": sleep} if sleep else {}),
     )
     report = SearchReport(executed=real)
-    if execute and not cfg.execution_autorisee:
-        report.status["*"] = "dry-run : `execution_autorisee` est faux dans config/recherche.yaml"
     found: list[Candidate] = []
     for pid in wanted:
         if pid not in cfg.actifs or pid not in cfg.providers:

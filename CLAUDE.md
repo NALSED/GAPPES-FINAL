@@ -1,6 +1,6 @@
 # CLAUDE.md — grappes
 
-* Document de référence : `MISSION.md` (lecture seule pour l'agent, prime sur tout). Le relire en début de session.
+* Documents de référence : `FINAL.md` (référence unique, prioritaire) puis `MISSION.md` (lecture seule pour l'agent) pour tout ce que `FINAL.md` ne traite pas. Les fichiers de `docs/archive/` sont obsolètes. Les relire en début de session.
 * Mode continu : pas de plage horaire, pas de plafond ; l'agent tranche seul et trace chaque décision dans `DECISIONS.md`. Notification à Sednal uniquement en cas de bug bloquant.
 * §2 : suivi dans `ETAT.md`, `DECISIONS.md`, `QUESTIONS.md`. Ambiguïté : l'écrire dans `QUESTIONS.md`, ne rien inventer. Fin de phase : tests verts, suivi à jour, puis phase suivante sans validation. Ne solliciter Sednal que pour un choix crucial ou un bug critique.
 * Docs, commentaires et commits en français ; identifiants de code en anglais. Blocs de code des `.md` en quatre backticks. Petits commits, tests verts avant chaque commit.

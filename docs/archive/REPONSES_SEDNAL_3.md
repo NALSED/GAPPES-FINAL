@@ -1,3 +1,5 @@
+> **OBSOLÈTE** : remplacé par `FINAL.md` (référence unique, 2026-10-06). Conservé pour l'historique uniquement ; ne pas s'y référer.
+
 # Réponses de Sednal n°3 — Q2 : échantillons de formats
 
 * Dans /opt/grappes/donnees/echantillons/ : x_1.json, telegram_1.json, instagram_1.json, web_1.json.

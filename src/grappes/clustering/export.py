@@ -7,6 +7,8 @@ from pathlib import Path
 
 from grappes.clustering.assign import NON_CLASSE, SECONDAIRE, AssignResult, level
 from grappes.config import Config
+from grappes.models import EntityType
+from grappes.redact import pseudonym
 
 ENTITY_COLUMNS = [
     "entity_id",
@@ -62,13 +64,14 @@ def export_csv(result: AssignResult, cfg: Config, run_id: str, out_dir: str | Pa
                 by_entity.get(e.entity_id, []), key=lambda m: (-m["confidence"], m["grappe_id"])
             )
             main = ms[0] if ms else None
+            hidden = cfg.scoring.redact_persons and e.type is EntityType.PERSON
             classed = main is not None and main["status"] != NON_CLASSE
             w.writerow(
                 [
                     e.entity_id,
                     e.type.value,
-                    safe_cell(e.display_name or ""),
-                    safe_cell(e.primary_ref),
+                    "" if hidden else safe_cell(e.display_name or ""),
+                    pseudonym(e.primary_ref) if hidden else safe_cell(e.primary_ref),
                     ",".join(sorted(st.ecosystems)),
                     main["grappe_id"] if classed else "",
                     f"{main['confidence']:.2f}" if main else "0.00",

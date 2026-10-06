@@ -33,6 +33,7 @@ def _explain(db: Database, cfg, entity_id: str, grappe_id: str | None) -> int:
 
 
 def _search(args, cfg) -> int:
+    from grappes.autonomy import load_autonomy
     from grappes.search.config import load_search_config
     from grappes.search.engine import run_search, split_keywords, write_candidates_csv
     from grappes.search.internal import internal_candidates
@@ -43,6 +44,8 @@ def _search(args, cfg) -> int:
         print(f"configuration de recherche invalide : {exc}", file=sys.stderr)
         return 2
     keywords = split_keywords(args.keywords or "")
+    if args.sujet:
+        keywords = [args.sujet.strip(), *[k for k in keywords if k != args.sujet.strip()]]
     if args.grappe:
         grappe = next((g for g in cfg.grappes if g.grappe_id == args.grappe), None)
         if grappe is None:
@@ -59,14 +62,30 @@ def _search(args, cfg) -> int:
     if not keywords and not internal:
         print("aucun mot-clé (--keywords ou --grappe) et aucun lien déjà cité", file=sys.stderr)
         return 2
-    rep = run_search(scfg, keywords, providers=args.provider, execute=args.execute, extra=internal)
+    try:
+        autonomy = load_autonomy(args.config)
+    except ConfigError as exc:
+        print(f"configuration d'autonomie invalide : {exc}", file=sys.stderr)
+        return 2
+    if autonomy.stop_file.exists():
+        print(f"arrêt demandé : {autonomy.stop_file} existe, aucune recherche", file=sys.stderr)
+        return 4
+    rep = run_search(
+        scfg,
+        keywords,
+        providers=args.provider,
+        execute=autonomy.autonome,
+        extra=internal,
+        sujet=(args.sujet or "").strip(),
+    )
     for pid, status in rep.status.items():
         print(f"{pid} : {status}")
     merged = rep.candidates
     path = write_candidates_csv(Path(args.out) / "candidats.csv", merged, cfg.scoring.csv_separator)
     mode = "appels réels" if rep.executed else "dry-run : aucun appel externe"
     print(f"{len(merged)} candidats ({mode}, {rep.requests} requêtes) -> {path}")
-    print("Les candidats ne sont jamais ingérés sans validation de Sednal.")
+    if not rep.executed:
+        print("`autonome` est faux (config/autonomie.yaml) : dry-run, aucun appel réel.")
     return 0
 
 
@@ -85,15 +104,20 @@ def main(argv: list[str] | None = None) -> int:
     x.add_argument("entity_id")
     x.add_argument("--grappe", help="grappe à expliquer (défaut : grappe principale)")
     pg = sub.add_parser("purge")
-    pg.add_argument("--older-than", type=int, required=True, metavar="JOURS")
+    pg.add_argument(
+        "--older-than",
+        type=int,
+        metavar="JOURS",
+        help="défaut : retention_days de scoring.yaml (90)",
+    )
     sub.add_parser("mcp")
-    se = sub.add_parser("search", help="recherche de candidats (dry-run par défaut)")
+    se = sub.add_parser(
+        "search", help="recherche de candidats (dry-run tant que `autonome` est faux)"
+    )
     se.add_argument("--keywords", help="mots-clés séparés par des virgules")
     se.add_argument("--grappe", help="identifiant d'une grappe : ses termes servent de mots-clés")
     se.add_argument("--provider", action="append", help="fournisseur (répétable ; défaut : actifs)")
-    se.add_argument(
-        "--execute", action="store_true", help="appels réels (si autorisés en configuration)"
-    )
+    se.add_argument("--sujet", help="phrase du sujet : gabarit {sujet} et mot-clé de départ")
     se.add_argument("--no-internal", action="store_true", help="sans les liens déjà cités")
     se.add_argument("--out", default="sorties")
     args = p.parse_args(argv)
@@ -138,10 +162,14 @@ def main(argv: list[str] | None = None) -> int:
             for path in export(db, cfg, args.out):
                 print(path)
         elif args.cmd == "purge":
-            if args.older_than < 0:
+            days = cfg.scoring.retention_days if args.older_than is None else args.older_than
+            if days is None:
+                print("--older-than est requis : retention_days est illimité", file=sys.stderr)
+                return 2
+            if days < 0:
                 print("--older-than doit être positif ou nul", file=sys.stderr)
                 return 2
-            print(f"{db.purge_older_than(args.older_than)} observations supprimées")
+            print(f"{db.purge_older_than(days)} observations supprimées")
         elif args.cmd == "explain":
             return _explain(db, cfg, args.entity_id, args.grappe)
     finally:

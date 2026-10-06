@@ -65,7 +65,9 @@ class TelegramFetcher(BaseFetcher):
         raw_name = doc.get("username") or doc.get("name")
         channel = channel_ident(raw_name) if isinstance(raw_name, str) else ""
         return [
-            {**m, "channel": channel} if isinstance(m, Mapping) and channel else m
+            {**m, "channel": channel, "_chat_name": doc.get("name")}
+            if isinstance(m, Mapping) and channel
+            else m
             for m in doc["messages"]
         ]
 
@@ -120,4 +122,9 @@ class TelegramFetcher(BaseFetcher):
             hashtags=dedup(extract_hashtags(text)),
             engagement=to_int(raw.get("views")) + to_int(raw.get("reactions")),
             raw_ref=f"{source.ident}/{native_id}" if native_id else None,
+            meta=(
+                {"nom": raw["_chat_name"].strip()}
+                if isinstance(raw.get("_chat_name"), str) and raw["_chat_name"].strip()
+                else {}
+            ),
         )

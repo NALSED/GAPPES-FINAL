@@ -1,7 +1,7 @@
 """Fournisseur générique `type: http` : toute API HTTP décrite par un fichier YAML.
 
 Couvre : authentification (en-tête, paramètre d'URL, Bearer, Basic, jeton OAuth fourni en variable
-d'environnement), GET/POST, corps JSON ou formulaire, gabarits (`{mots_cles}`, `{limite}`,
+d'environnement), GET/POST, corps JSON ou formulaire, gabarits (`{sujet}`, `{mots_cles}`, `{limite}`,
 `{page}`, `{decalage}`, `{curseur}`), pagination (page, décalage, curseur, lien « suivant »),
 réponses JSON/XML/CSV, chemins vers les champs et transformations simples. Voir
 `config/recherche/exemples/` et `docs/utilisateur.md`.
@@ -37,7 +37,7 @@ from grappes.search.paths import first, select
 
 MAX_BYTES = 2_000_000
 MAX_PAGES = 20
-_PLACEHOLDER = re.compile(r"\{(mots_cles|limite|page|decalage|curseur)\}")
+_PLACEHOLDER = re.compile(r"\{(sujet|mots_cles|limite|page|decalage|curseur)\}")
 _NUMERIC = {"limite", "page", "decalage"}
 
 
@@ -172,7 +172,8 @@ class HttpProvider(SearchProvider):
         cursor, next_url = "", None
         produced = 0
         for _ in range(max_pages):
-            values = {"mots_cles": keyword, "limite": str(min(limit, step) if kind != "none" else limit),
+            values = {"sujet": self.ctx.sujet or keyword, "mots_cles": keyword,
+                      "limite": str(min(limit, step) if kind != "none" else limit),
                       "page": str(page), "decalage": str(offset), "curseur": cursor}  # fmt: skip
             params = {
                 k: v for k, v in ((k, render(t, values)) for k, t in (o.get("params") or {}).items())
