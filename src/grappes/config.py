@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
 
+from grappes.canon import canonical_domain, canonical_handle
 from grappes.ecosystem.crossref import CrossRefRule
 from grappes.models import Grappe, Lexicon
 
@@ -72,6 +74,49 @@ def _load_yaml(path: Path) -> dict[str, Any]:
     return data
 
 
+def _mapping(d: Any, where: str) -> dict[str, Any]:
+    """`None` -> {} ; autre chose qu'un mapping -> ConfigError (jamais d'AttributeError)."""
+    if d is None:
+        return {}
+    if not isinstance(d, dict):
+        raise ConfigError(f"{where}: un mapping est attendu")
+    return d
+
+
+def _finite(value: Any, where: str) -> float:
+    try:
+        x = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ConfigError(f"{where}: nombre attendu ({value!r})") from exc
+    if not math.isfinite(x):
+        raise ConfigError(f"{where}: nombre fini attendu ({value!r})")
+    return x
+
+
+def _ref(value: Any, where: str) -> str:
+    """Référence de source `ecosysteme:ident` canonicalisée (casse, `@`, `www.`)."""
+    from grappes.ingestion import registered_ecosystems
+
+    if not isinstance(value, str) or ":" not in value:
+        raise ConfigError(f"{where}: référence `ecosysteme:ident` attendue ({value!r})")
+    eco, ident = (part.strip() for part in value.split(":", 1))
+    eco = eco.casefold()
+    if eco not in registered_ecosystems():
+        raise ConfigError(f"{where}: écosystème inconnu {eco!r} dans {value!r}")
+    ident = canonical_domain(ident) if eco == "web" else canonical_handle(ident)
+    if not ident:
+        raise ConfigError(f"{where}: identifiant vide dans {value!r}")
+    return f"{eco}:{ident}"
+
+
+def _ref_list(value: Any, where: str) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if not isinstance(value, list):
+        raise ConfigError(f"{where}: une liste est attendue")
+    return tuple(dict.fromkeys(_ref(v, where) for v in value))
+
+
 def _weights(d: Any, where: str, *, allow_negative: bool = False) -> dict[str, float]:
     if d is None:
         return {}
@@ -81,6 +126,7 @@ def _weights(d: Any, where: str, *, allow_negative: bool = False) -> dict[str, f
     for k, v in d.items():
         if isinstance(v, bool) or not isinstance(v, (int, float)):
             raise ConfigError(f"{where}: poids non numérique pour {k!r}")
+        _finite(v, f"{where}: poids {k!r}")
         if v <= 0 and not allow_negative:
             raise ConfigError(f"{where}: poids {k!r} doit être > 0")
         out[str(k)] = float(v)
@@ -89,11 +135,11 @@ def _weights(d: Any, where: str, *, allow_negative: bool = False) -> dict[str, f
 
 def load_scoring(path: Path) -> ScoringConfig:
     d = _load_yaml(path)
-    csv = d.get("csv") or {}
+    csv = _mapping(d.get("csv"), f"{path}:csv")
     default = ScoringConfig()
-    w = d.get("poids_confiance") or {}
-    cc = d.get("poids_complementaire") or {}
-    cr = d.get("crossref") or {}
+    w = _mapping(d.get("poids_confiance"), f"{path}:poids_confiance")
+    cc = _mapping(d.get("poids_complementaire"), f"{path}:poids_complementaire")
+    cr = _mapping(d.get("crossref"), f"{path}:crossref")
     dr = default.crossref
     try:
         window = cr.get("window_days", dr.window_days)
@@ -113,7 +159,10 @@ def load_scoring(path: Path) -> ScoringConfig:
             marge_ambiguite=float(d.get("marge_ambiguite", default.marge_ambiguite)),
             niveau_confirme=float(d.get("niveau_confirme", default.niveau_confirme)),
             niveau_probable=float(d.get("niveau_probable", default.niveau_probable)),
-            entity_types={str(k): str(v) for k, v in (d.get("entity_types") or {}).items()}
+            entity_types={
+                str(k): str(v)
+                for k, v in _mapping(d.get("entity_types"), f"{path}:entity_types").items()
+            }
             or default.entity_types,
             csv_separator=str(csv.get("separator", default.csv_separator)),
             csv_bom=bool(csv.get("bom", default.csv_bom)),
@@ -144,6 +193,26 @@ def load_scoring(path: Path) -> ScoringConfig:
         or cfg.c_ecosystem + cfg.c_anchor <= 0
     ):
         raise ConfigError(f"{path}: poids_complementaire invalides (somme dans ]0 ; 1])")
+    floats = {
+        "seuil_min": cfg.seuil_min,
+        "marge_ambiguite": cfg.marge_ambiguite,
+        "niveau_confirme": cfg.niveau_confirme,
+        "niveau_probable": cfg.niveau_probable,
+        "crossref_floor": cfg.crossref_floor,
+        "poids_confiance.semantique": cfg.w_semantic,
+        "poids_confiance.ecosysteme": cfg.w_ecosystem,
+        "poids_confiance.ancrage": cfg.w_anchor,
+        "poids_complementaire.ecosysteme": cfg.c_ecosystem,
+        "poids_complementaire.ancrage": cfg.c_anchor,
+        "crossref.min_weight_sum": cfg.crossref.min_weight_sum,
+        "crossref.min_citer_confidence": cfg.crossref.min_citer_confidence,
+    }
+    for name, value in floats.items():
+        _finite(value, f"{path}: {name}")
+    if cfg.crossref.min_weight_sum <= 0:
+        raise ConfigError(f"{path}: crossref.min_weight_sum doit être > 0")
+    if cfg.crossref.window_days is not None and cfg.crossref.window_days < 1:
+        raise ConfigError(f"{path}: crossref.window_days doit être >= 1 (ou null)")
     if cfg.max_iter < 1:
         raise ConfigError(f"{path}: max_iter doit être >= 1")
     if cfg.crossref.min_citers < 1 or cfg.crossref.min_ecosystems < 1:
@@ -164,25 +233,35 @@ def load_sources(path: Path) -> SourcesConfig:
     )
 
 
+def _opposition_list(value: Any, where: str) -> tuple[str, ...]:
+    """Identifiants de grappe (sans `:`) ou références de sources (`ecosysteme:ident`)."""
+    if value is None:
+        return ()
+    if not isinstance(value, list):
+        raise ConfigError(f"{where}: une liste est attendue")
+    out = [_ref(v, where) if isinstance(v, str) and ":" in v else str(v) for v in value]
+    return tuple(dict.fromkeys(out))
+
+
 def load_grappe(path: Path) -> Grappe:
     d = _load_yaml(path)
     gid = d.get("id")
     if not isinstance(gid, str) or not gid.strip():
         raise ConfigError(f"{path}: `id` manquant")
-    lex = d.get("lexicon") or {}
+    lex = _mapping(d.get("lexicon"), f"{path}:lexicon")
     terms = _weights(lex.get("terms"), f"{path}:lexicon.terms")
     if not terms:
         raise ConfigError(f"{path}: lexique vide")
     negative = _weights(lex.get("negative"), f"{path}:lexicon.negative")
-    scale = float(d.get("scale", 3.0))
+    scale = _finite(d.get("scale", 3.0), f"{path}: scale")
     if scale <= 0:
         raise ConfigError(f"{path}: scale doit être > 0")
     return Grappe(
         grappe_id=gid.strip(),
         label=str(d.get("label", gid)),
         lexicon=Lexicon(terms=terms, negative=negative),
-        anchors=tuple(str(a) for a in d.get("anchors") or ()),
-        oppositions=tuple(str(o) for o in d.get("oppositions") or ()),
+        anchors=_ref_list(d.get("anchors"), f"{path}:anchors"),
+        oppositions=_opposition_list(d.get("oppositions"), f"{path}:oppositions"),
         scale=scale,
     )
 

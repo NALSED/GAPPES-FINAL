@@ -21,7 +21,8 @@ Dernière mise à jour : 2026-10-06 — v1 terminée (phases 0 à 6) ; réponses
 * **Corpus synthétique** (D18) : `outils/corpus_synthetique.py` (~2 300 enregistrements), `tests/test_corpus.py` ; requête MCP « 10 sources les plus influentes de la Grappe A » vérifiée (API et client stdio).
 * **Phase 7** : plan écrit (`docs/conception/phase7.md`, D17, proposée), non exécuté ; bloquée par Q2 et Q7. Aucune donnée réelle ingérée.
 * **Réponses n°2 appliquées** : D19 (Q15 : E = 0 tant que le recoupement n'est pas validé, `recoupement_partiel` et `e_potentiel` dans `explain`), D20 (Q7 : pas de `retention_days`, pas de `redact_persons`). Q7 et Q7b levées ensuite (D21).
-* Tests : 137 verts, `ruff` propre.
+* **Revue de configuration** (D22) : `ConfigError` lisibles partout, NaN/infini refusés, ancres canonicalisées et validées, `purge` négatif refusé ; `tests/test_config_robustesse.py`.
+* Tests : 163 verts, `ruff` propre.
 * Interruptions « session limit » : aucune constatée depuis les réponses de Sednal (à noter ici à chaque occurrence, Q13).
 
 ## Ce qui marche

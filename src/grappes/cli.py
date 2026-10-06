@@ -80,6 +80,9 @@ def main(argv: list[str] | None = None) -> int:
             for path in export(db, cfg, args.out):
                 print(path)
         elif args.cmd == "purge":
+            if args.older_than < 0:
+                print("--older-than doit être positif ou nul", file=sys.stderr)
+                return 2
             print(f"{db.purge_older_than(args.older_than)} observations supprimées")
         elif args.cmd == "explain":
             return _explain(db, cfg, args.entity_id, args.grappe)

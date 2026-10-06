@@ -136,6 +136,8 @@ class Database:
         return out
 
     def purge_older_than(self, days: int, now: datetime | None = None) -> int:
+        if days < 0:
+            raise ValueError("la durée de purge doit être positive ou nulle")
         cutoff = ((now or datetime.now(UTC)).timestamp()) - days * 86400
         with self.transaction() as c:
             rows = c.execute("SELECT obs_id, ts FROM observations WHERE ts IS NOT NULL").fetchall()
