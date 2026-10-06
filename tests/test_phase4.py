@@ -246,3 +246,55 @@ def test_lien_tme_cite_le_canal_telegram():
 
     o = obs("x:a", "voir", links=["https://t.me/Canal_B/7", "https://exemple.org/p"])
     assert {c.cited for c in build_citations([o])} == {"telegram:canal_b", "web:exemple.org"}
+
+
+# --- D15 : conf = S + (100 − S)·(0,6·E + 0,4·A) / 100 -------------------------------------
+
+
+def _sc(tmp_path, **scoring):
+    return make_cfg(tmp_path, **scoring).scoring
+
+
+@pytest.mark.parametrize(
+    ("s", "e", "a", "attendu"),
+    [
+        (50, 0, 0, 50),  # S seul : conf = S
+        (0, 100, 0, 60),  # E seul
+        (0, 0, 100, 40),  # A seul
+        (50, 100, 100, 100),  # tous
+        (50, 50, 50, 75),  # S + 50·(0,6·50 + 0,4·50)/100
+        (100, 0, 0, 100),
+    ],
+)
+def test_confiance_complementaire(tmp_path, s, e, a, attendu):
+    from grappes.clustering.assign import combine
+
+    assert combine(s, e, a, _sc(tmp_path)) == pytest.approx(attendu)
+
+
+def test_confiance_sans_citations_vaut_s(tmp_path):
+    cfg = make_cfg(tmp_path)
+    res = assign([obs("x:solo", STRONG)], cfg)
+    m = next(m for m in res.memberships if m["grappe_id"] == "G-A")
+    assert m["ecosystem"] == 0 and m["anchor"] == 0
+    assert m["confidence"] == m["semantic"] > 50  # plus de plafond à 50
+
+
+def test_confiance_option_ponderee(tmp_path):
+    from grappes.clustering.assign import combine
+
+    sc = _sc(tmp_path, formule_confiance="ponderee")
+    assert combine(100, 0, 0, sc) == pytest.approx(50)  # ancienne formule, plafond à 50
+    assert combine(100, 100, 100, sc) == pytest.approx(100)
+    (tmp_path / "p").mkdir()
+    res = assign([obs("x:solo", STRONG)], make_cfg(tmp_path / "p", formule_confiance="ponderee"))
+    m = next(m for m in res.memberships if m["grappe_id"] == "G-A")
+    assert m["confidence"] == pytest.approx(0.5 * m["semantic"])
+
+
+@pytest.mark.parametrize(
+    "bad", ["formule_confiance: autre", "poids_complementaire: {ecosysteme: 0.8, ancrage: 0.5}"]
+)
+def test_formule_invalide(tmp_path, bad):
+    with pytest.raises(Exception, match="formule_confiance|poids_complementaire"):
+        make_cfg(tmp_path, **{bad.split(":", 1)[0]: bad.split(":", 1)[1]})

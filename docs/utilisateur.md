@@ -22,7 +22,8 @@
 * `confidence_level` : `confirmé` ≥ 70, `probable` ≥ 40, `faible` sinon.
 * `status` : `classé`, `ambigu` (grappe proche ou opposée), `non_classé`.
 * `validated_via_crossref` : `oui` si l appartenance principale vient du recoupement.
-* Confiance = 0,5·S + 0,3·E + 0,2·A (S sémantique, E recoupement, A ancrage). Valeurs initiales, configurables (voir `DECISIONS.md` D12).
+* Confiance = S + (100 − S)·(0,6·E + 0,4·A) / 100 (S sémantique, E recoupement, A ancrage, tous sur 0 à 100). Sans citations, confiance = S. Valeurs initiales, configurables (`poids_complementaire`, voir `DECISIONS.md` D15). L'ancienne formule 0,5·S + 0,3·E + 0,2·A reste disponible avec `formule_confiance: ponderee` (poids dans `poids_confiance`).
+* Proximité sémantique : 100 × (1 − exp(−brut / scale)), `scale = 3` par défaut (par grappe). Un terme de poids 1 donne ≈ 28, trois termes ≈ 63 (D7).
 
 ## Limites connues
 

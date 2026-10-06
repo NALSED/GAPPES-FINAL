@@ -30,9 +30,12 @@ class ScoringConfig:
     )
     csv_separator: str = ";"
     csv_bom: bool = False
-    w_semantic: float = 0.50
+    formule_confiance: str = "complementaire"  # ou "ponderee" (ancienne formule, D12)
+    w_semantic: float = 0.50  # formule « ponderee » : w_s·S + w_e·E + w_a·A
     w_ecosystem: float = 0.30
     w_anchor: float = 0.20
+    c_ecosystem: float = 0.6  # formule « complementaire » : S + (100 − S)·(c_e·E + c_a·A)/100
+    c_anchor: float = 0.4
     crossref_floor: float = 60.0
     max_iter: int = 3
     crossref: CrossRefRule = field(default_factory=CrossRefRule)
@@ -89,6 +92,7 @@ def load_scoring(path: Path) -> ScoringConfig:
     csv = d.get("csv") or {}
     default = ScoringConfig()
     w = d.get("poids_confiance") or {}
+    cc = d.get("poids_complementaire") or {}
     cr = d.get("crossref") or {}
     dr = default.crossref
     try:
@@ -113,6 +117,9 @@ def load_scoring(path: Path) -> ScoringConfig:
             or default.entity_types,
             csv_separator=str(csv.get("separator", default.csv_separator)),
             csv_bom=bool(csv.get("bom", default.csv_bom)),
+            formule_confiance=str(d.get("formule_confiance", default.formule_confiance)),
+            c_ecosystem=float(cc.get("ecosysteme", default.c_ecosystem)),
+            c_anchor=float(cc.get("ancrage", default.c_anchor)),
             w_semantic=float(w.get("semantique", default.w_semantic)),
             w_ecosystem=float(w.get("ecosysteme", default.w_ecosystem)),
             w_anchor=float(w.get("ancrage", default.w_anchor)),
@@ -129,6 +136,14 @@ def load_scoring(path: Path) -> ScoringConfig:
         or (cfg.w_semantic + cfg.w_ecosystem + cfg.w_anchor) <= 0
     ):
         raise ConfigError(f"{path}: poids_confiance invalides")
+    if cfg.formule_confiance not in ("complementaire", "ponderee"):
+        raise ConfigError(f"{path}: formule_confiance doit être complementaire ou ponderee")
+    if (
+        min(cfg.c_ecosystem, cfg.c_anchor) < 0
+        or cfg.c_ecosystem + cfg.c_anchor > 1
+        or cfg.c_ecosystem + cfg.c_anchor <= 0
+    ):
+        raise ConfigError(f"{path}: poids_complementaire invalides (somme dans ]0 ; 1])")
     if cfg.max_iter < 1:
         raise ConfigError(f"{path}: max_iter doit être >= 1")
     if cfg.crossref.min_citers < 1 or cfg.crossref.min_ecosystems < 1:

@@ -11,7 +11,11 @@ entity_types:              # type d'entité par écosystème
 csv:
   separator: ";"
   bom: false
-poids_confiance:           # confiance = w_s·S + w_e·E + w_a·A
+formule_confiance: complementaire   # complementaire (D15) | ponderee (ancienne formule, D12)
+poids_complementaire:      # conf = S + (100 − S)·(c_e·E + c_a·A)/100 ; sans citations, conf = S
+  ecosysteme: 0.6
+  ancrage: 0.4
+poids_confiance:           # formule « ponderee » : conf = w_s·S + w_e·E + w_a·A
   semantique: 0.50
   ecosysteme: 0.30
   ancrage: 0.20

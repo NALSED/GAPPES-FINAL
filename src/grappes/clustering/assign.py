@@ -1,8 +1,10 @@
 """Score de confiance et affectation aux grappes (MISSION §10.2, §11).
 
-confiance = w_s·S + w_e·E + w_a·A. Amorçage (itération 0) : (w_s·S + w_a·A) / (w_s + w_a),
-sans E, pour désigner les membres initiaux (ancres comprises). Ensuite jusqu'à `max_iter`
-itérations : les citants de l'itération n sont les membres de n−1.
+Formule par défaut (D15) : confiance = S + (100 − S)·(0,6·E + 0,4·A) / 100 ; sans citations,
+confiance = S. Option `formule_confiance: ponderee` : w_s·S + w_e·E + w_a·A (D12).
+Amorçage (itération 0) : même formule avec E = 0, pour désigner les membres initiaux
+(ancres comprises). Ensuite jusqu'à `max_iter` itérations : les citants de l'itération n
+sont les membres de n−1.
 """
 
 from __future__ import annotations
@@ -12,7 +14,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from grappes.config import Config
+from grappes.config import Config, ScoringConfig
 from grappes.ecosystem.crossref import (
     Citation,
     ValidationRecord,
@@ -69,6 +71,13 @@ def level(confidence: float, cfg: Config) -> str:
     return "faible"
 
 
+def combine(s: float, e: float, a: float, sc: ScoringConfig) -> float:
+    """Confiance à partir de S (sémantique), E (recoupement) et A (ancrage), tous sur 0 à 100."""
+    if sc.formule_confiance == "ponderee":
+        return sc.w_semantic * s + sc.w_ecosystem * e + sc.w_anchor * a
+    return s + (100.0 - s) * (sc.c_ecosystem * e + sc.c_anchor * a) / 100.0
+
+
 def _top_mean(scores: list[float], n: int) -> float:
     best = sorted(scores, reverse=True)[:n]
     return round(sum(best) / len(best), 2) if best else 0.0
@@ -115,11 +124,15 @@ def assign(observations: list[Observation], cfg: Config) -> AssignResult:
     windowed = filter_window(citations, sc.crossref.window_days)
 
     # itération 0 : amorçage sans E
-    ws, we, wa = sc.w_semantic, sc.w_ecosystem, sc.w_anchor
+    ws, wa = sc.w_semantic, sc.w_anchor
+
+    def bootstrap(s: float, a: float) -> float:
+        if sc.formule_confiance == "ponderee":  # renormalisée sans E
+            return (ws * s + wa * a) / (ws + wa) if ws + wa else 0.0
+        return combine(s, 0.0, a, sc)
+
     conf: dict[tuple[str, str], float] = {
-        (r, gid): (ws * sem[r, gid] + wa * anc[gid][r]) / (ws + wa) if ws + wa else 0.0
-        for r in refs
-        for gid in grappes
+        (r, gid): bootstrap(sem[r, gid], anc[gid][r]) for r in refs for gid in grappes
     }
     eco: dict[tuple[str, str], float] = dict.fromkeys(conf, 0.0)
     via: dict[tuple[str, str], str] = {
@@ -156,7 +169,7 @@ def assign(observations: list[Observation], cfg: Config) -> AssignResult:
                     if rec
                     else 0.0
                 )
-                c = ws * sem[r, gid] + we * e + wa * anc[gid][r]
+                c = combine(sem[r, gid], e, anc[gid][r], sc)
                 v = "ancre" if r in anchors else "semantique"
                 if rec is not None:
                     validations[r, gid] = rec

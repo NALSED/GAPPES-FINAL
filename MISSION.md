@@ -263,8 +263,8 @@ class EntityType(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class SourceRef:
-    ecosystem: str      # "x" | "telegram" | "web" | ...
-    ident: str          # handle / canal / domaine, canonicalisé
+    ecosystem: str  # "x" | "telegram" | "web" | ...
+    ident: str  # handle / canal / domaine, canonicalisé
 
     @property
     def key(self) -> str:
@@ -273,15 +273,15 @@ class SourceRef:
 
 @dataclass(frozen=True, slots=True)
 class Observation:
-    obs_id: str                         # hash stable (écosystème + id natif + texte)
+    obs_id: str  # hash stable (écosystème + id natif + texte)
     source: SourceRef
     ts: datetime | None
     text: str
     mentions: tuple[SourceRef, ...] = ()
-    links: tuple[str, ...] = ()         # URLs canonicalisées
+    links: tuple[str, ...] = ()  # URLs canonicalisées
     hashtags: tuple[str, ...] = ()
     engagement: int = 0
-    raw_ref: str | None = None          # pointeur vers le JSON d'origine
+    raw_ref: str | None = None  # pointeur vers le JSON d'origine
     meta: dict[str, str] = field(default_factory=dict, compare=False)
 
 
@@ -289,13 +289,13 @@ class Observation:
 class Entity:
     entity_id: str
     type: EntityType
-    primary_ref: str                    # SourceRef.key ou url:domaine
+    primary_ref: str  # SourceRef.key ou url:domaine
     display_name: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class Lexicon:
-    terms: dict[str, float]             # terme -> poids (> 0)
+    terms: dict[str, float]  # terme -> poids (> 0)
     negative: dict[str, float] = field(default_factory=dict)  # terme -> pénalité (> 0)
 
 
@@ -304,10 +304,9 @@ class Grappe:
     grappe_id: str
     label: str
     lexicon: Lexicon
-    anchors: tuple[str, ...] = ()       # clés canoniques
-    oppositions: tuple[str, ...] = ()   # grappe_id ou clés canoniques
-    scale: float = 3.0                  # paramètre de saturation du scoring
-
+    anchors: tuple[str, ...] = ()  # clés canoniques
+    oppositions: tuple[str, ...] = ()  # grappe_id ou clés canoniques
+    scale: float = 3.0  # paramètre de saturation du scoring
 ```
 
 **Canonicalisation à implémenter et tester :**
@@ -348,7 +347,6 @@ class BaseFetcher(ABC):
 
     def fetch_raw(self, **params) -> Iterable[Mapping[str, Any]]:
         raise NotImplementedError("Hors périmètre v1 : le JSON est fourni de l'extérieur.")
-
 ```
 
 * `ingestion/base.py` contient aussi un **registre** (décorateur `@register`) pour retrouver un fetcher par `ecosystem`.
@@ -406,8 +404,9 @@ class ScoreDetail:
     matched: dict[str, int]
 
 
-def score_detail(text: str, keywords: Sequence[str] | Mapping[str, float],
-                 *, scale: float = 3.0) -> ScoreDetail:
+def score_detail(
+    text: str, keywords: Sequence[str] | Mapping[str, float], *, scale: float = 3.0
+) -> ScoreDetail:
     items = keywords.items() if isinstance(keywords, Mapping) else ((k, 1.0) for k in keywords)
     haystack = normalize(text)
     raw = 0.0
@@ -424,10 +423,10 @@ def score_detail(text: str, keywords: Sequence[str] | Mapping[str, float],
     return ScoreDetail(round(100.0 * (1.0 - math.exp(-raw / scale)), 2), matched)
 
 
-def score_proximity(text: str, keywords: Sequence[str] | Mapping[str, float],
-                    *, scale: float = 3.0) -> float:
+def score_proximity(
+    text: str, keywords: Sequence[str] | Mapping[str, float], *, scale: float = 3.0
+) -> float:
     return score_detail(text, keywords, scale=scale).score
-
 ```
 
 **Tests obligatoires :** texte vide → 0 ; aucun terme → 0 ; monotonie (plus de termes distincts → score plus élevé) ; saturation (jamais > 100) ; insensibilité à la casse et aux accents latins ; cyrillique et arménien non altérés ; limites de mots ; terme répété sous-linéaire ; pénalité ; déterminisme.
@@ -499,20 +498,20 @@ Un facteur dynamique éventuel (ancienneté, volume) est hors v1 : à proposer e
 ```python
 @dataclass(frozen=True, slots=True)
 class Citation:
-    citer: str          # clé canonique de la source citante
-    cited: str          # clé canonique de l'élément cité (url:..., x:..., kw:...)
-    ecosystem: str      # écosystème de la source citante
+    citer: str  # clé canonique de la source citante
+    cited: str  # clé canonique de l'élément cité (url:..., x:..., kw:...)
+    ecosystem: str  # écosystème de la source citante
     obs_id: str
     ts: datetime | None
 
 
 @dataclass(frozen=True, slots=True)
 class CrossRefRule:
-    min_citers: int = 3                  # X : nombre minimal de sources citantes distinctes
-    min_ecosystems: int = 2              # croisement d'écosystèmes
-    min_weight_sum: float = 3.0          # somme minimale des poids des citants
-    min_citer_confidence: float = 50.0   # un citant ne compte que s'il est déjà membre de la grappe
-    window_days: int | None = 180        # fenêtre temporelle (filtre appliqué en amont)
+    min_citers: int = 3  # X : nombre minimal de sources citantes distinctes
+    min_ecosystems: int = 2  # croisement d'écosystèmes
+    min_weight_sum: float = 3.0  # somme minimale des poids des citants
+    min_citer_confidence: float = 50.0  # un citant ne compte que s'il est déjà membre de la grappe
+    window_days: int | None = 180  # fenêtre temporelle (filtre appliqué en amont)
 
 
 @dataclass(frozen=True, slots=True)
@@ -523,8 +522,7 @@ class ValidationRecord:
     ecosystems: tuple[str, ...]
     weight_sum: float
     validated: bool
-    reasons: tuple[str, ...]             # explicabilité : pourquoi validé / pourquoi refusé
-
+    reasons: tuple[str, ...]  # explicabilité : pourquoi validé / pourquoi refusé
 ```
 
 **Algorithme (`validate_crossref`) :**
@@ -624,7 +622,6 @@ def top_sources(grappe_id: str, limit: int = 10, ecosystem: str | None = None) -
 
 if __name__ == "__main__":
     mcp.run()
-
 ```
 
 ### 13.2 Outils exposés
