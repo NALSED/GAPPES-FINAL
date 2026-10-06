@@ -73,6 +73,13 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 f"{new} nouvelles observations, {rep.duplicates} doublons, {rep.n_rejected} rejets"
             )
+            if rep.n_rejected and not (new or rep.duplicates):
+                print(
+                    f"tous les enregistrements ont été rejetés : mauvais --ecosystem "
+                    f"({args.ecosystem}) ou format inattendu ?",
+                    file=sys.stderr,
+                )
+                return 1
         elif args.cmd == "run":
             run_id, res = run(db, cfg)
             print(f"{run_id} : {len(res.entities)} entités, {len(res.memberships)} appartenances")

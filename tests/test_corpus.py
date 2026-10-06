@@ -142,3 +142,39 @@ def test_top_10_via_client_mcp_stdio(monde):
             assert not valides.is_error and "cible" in valides.content[0].text
 
     asyncio.run(asyncio.wait_for(scenario(), 60))
+
+
+def test_cli_ingest_mauvais_ecosysteme_echoue_clairement(monde, tmp_path, capsys):
+    from grappes.cli import main
+
+    db = str(tmp_path / "c.db")
+    code = main(
+        ["--db", db, "--config", str(ROOT / "config"), "ingest", str(monde["out"] / "x")]
+        + ["--ecosystem", "telegram"]
+    )
+    assert code == 1 and "mauvais --ecosystem" in capsys.readouterr().err
+    ok = main(
+        ["--db", db, "--config", str(ROOT / "config"), "ingest", str(monde["out"] / "x")]
+        + ["--ecosystem", "x"]
+    )
+    assert ok == 0
+
+
+def test_ingestion_incrementale_change_le_run_id_et_garde_les_anciens(monde, tmp_path):
+    cfg = monde["cfg"]
+    db = Database(tmp_path / "inc.db")
+    for eco in ("x", "telegram", "web"):
+        ingest(db, monde["out"] / eco, eco, cfg)
+    r1, _ = run(db, cfg)
+    extra = tmp_path / "extra"
+    extra.mkdir()
+    (extra / "n.jsonl").write_text(
+        json.dumps({"id": "nouveau", "author": "nouvelle_source", "text": "soupe recette"}) + "\n",
+        encoding="utf-8",
+    )
+    assert ingest(db, extra, "x", cfg)[0] == 1
+    r2, res2 = run(db, cfg)
+    assert r1 != r2 and db.latest_run_id() == r2
+    assert any(e.primary_ref == "x:nouvelle_source" for e in res2.entities)
+    assert db.conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0] == 2
+    assert run(db, cfg)[0] == r2  # rejouer sans nouvelle donnée : même run_id

@@ -22,7 +22,8 @@ Dernière mise à jour : 2026-10-06 — v1 terminée (phases 0 à 6) ; réponses
 * **Phase 7** : plan écrit (`docs/conception/phase7.md`, D17, proposée), non exécuté ; bloquée par Q2 et Q7. Aucune donnée réelle ingérée.
 * **Réponses n°2 appliquées** : D19 (Q15 : E = 0 tant que le recoupement n'est pas validé, `recoupement_partiel` et `e_potentiel` dans `explain`), D20 (Q7 : pas de `retention_days`, pas de `redact_persons`). Q7 et Q7b levées ensuite (D21).
 * **Revue de configuration** (D22) : `ConfigError` lisibles partout, NaN/infini refusés, ancres canonicalisées et validées, `purge` négatif refusé ; `tests/test_config_robustesse.py`.
-* Tests : 163 verts, `ruff` propre.
+* **CLI** (D23) : `ingest` échoue explicitement si tout est rejeté ; paquet installé dans `.venv` (commande `grappes` disponible) ; ingestion incrémentale testée sur le corpus.
+* Tests : 165 verts, `ruff` propre.
 * Interruptions « session limit » : aucune constatée depuis les réponses de Sednal (à noter ici à chaque occurrence, Q13).
 
 ## Ce qui marche
