@@ -20,7 +20,7 @@ Dernière mise à jour : 2026-10-06 — v1 terminée (phases 0 à 6) ; réponses
 * **Revue de robustesse** (D16) : BOM UTF-8 accepté, fichier JSON illisible compté comme rejet, injection de formule CSV neutralisée ; 31 tests (`tests/test_robustesse.py`).
 * **Corpus synthétique** (D18) : `outils/corpus_synthetique.py` (~2 300 enregistrements), `tests/test_corpus.py` ; requête MCP « 10 sources les plus influentes de la Grappe A » vérifiée (API et client stdio).
 * **Phase 7** : plan écrit (`docs/conception/phase7.md`, D17, proposée), non exécuté ; bloquée par Q2 et Q7. Aucune donnée réelle ingérée.
-* **Réponses n°2 appliquées** : D19 (Q15 : E = 0 tant que le recoupement n'est pas validé, `recoupement_partiel` et `e_potentiel` dans `explain`), D20 (Q7 : pas de `retention_days`, pas de `redact_persons`). Base légale non précisée (Q7b).
+* **Réponses n°2 appliquées** : D19 (Q15 : E = 0 tant que le recoupement n'est pas validé, `recoupement_partiel` et `e_potentiel` dans `explain`), D20 (Q7 : pas de `retention_days`, pas de `redact_persons`). Q7 et Q7b levées ensuite (D21).
 * Tests : 137 verts, `ruff` propre.
 * Interruptions « session limit » : aucune constatée depuis les réponses de Sednal (à noter ici à chaque occurrence, Q13).
 
@@ -40,6 +40,6 @@ Dernière mise à jour : 2026-10-06 — v1 terminée (phases 0 à 6) ; réponses
 
 ## Reste à faire
 
-* Réponses de Sednal : Q2 (JSON anonymisés), Q7b (base légale), Q3, Q10, Q11.
-* Phase 7 (données réelles) : dès que Q2 et Q7b sont répondues, suivre `docs/conception/phase7.md`.
+* Q2 : Sednal prépare les JSON anonymisés (seul blocage de la phase 7, qui suivra `docs/conception/phase7.md`).
+* Réponses de Sednal encore ouvertes : Q3 (langues), Q10 (clients MCP), Q11 (embeddings).
 * Pas de watchdog « session limit » (Q13) ; noter chaque interruption ici.
