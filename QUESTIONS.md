@@ -15,4 +15,5 @@ Statut : ouvertes sauf mention. Aucune réponse inventée.
 * **Q11** Scoring par embeddings plus tard, oui ou non ?
 * **Q12 à Q14** : citées dans `MISSION.md` (Q12 qui exécute les étapes 5 et 6, Q13 watchdog, Q14 classification mécanique/jugement et N lignes de journal) mais absentes du §17. À fournir.
 * **QA** Le premier message parlait de « mapping / sites abandonnés » ; je suis `MISSION.md` (`grappes`). Confirmé implicitement par la mise à jour de `MISSION.md` ; à infirmer si faux.
-* **QB** Édition de `~/.claude/settings.json` (hook `Stop` → `/opt/grappes/outils/continuer.sh`) refusée par le classifieur : à faire par Sednal (`sed -i` après sauvegarde), ou autorisation explicite via une règle de permission.
+* **QB** Réglée : hook `Stop` pointe vers `/opt/grappes/outils/continuer.sh`.
+* **QC** `MISSION.md` ne définit pas de phase après la 6 : quelle suite (v2, données réelles) ? En attendant, consolidation.

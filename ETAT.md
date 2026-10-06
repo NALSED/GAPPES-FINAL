@@ -1,6 +1,6 @@
 # ETAT — grappes
 
-Dernière mise à jour : 2026-10-06 — Phase 0 (préparation, aucun code applicatif).
+Dernière mise à jour : 2026-10-06 — v1 terminée (phases 0 à 6), consolidation.
 
 ## Où on en est
 
@@ -11,20 +11,19 @@ Dernière mise à jour : 2026-10-06 — Phase 0 (préparation, aucun code applic
 * Phase 4 terminée : poids des sources, citations, recoupement itératif borné (`ecosystem/crossref.py`), ancres et oppositions (`semantic/relations.py`), confiance complète (`clustering/assign.py`), table `validations`. Cas testés : validé, refusé (écosystèmes, citants, poids, non-membres), ambigu, circularité bornée.
 * Phase 5 terminée : serveur MCP (`mcp/queries.py`, `mcp/server.py`), 8 outils, SDK `mcp` 2.3.0 épinglé (D13), README de connexion ; test de bout en bout via un client MCP stdio.
 * Phase 6 terminée : CLI complète (`ingest`, `run`, `export`, `explain`, `purge`, `mcp`), erreurs d'entrée lisibles, `docs/utilisateur.md`, test de charge 100 000 observations : 5,0 s, ~200 Mo (`docs/conception/charge.md`).
-* **v1 fonctionnelle** : `ingest → run → export` sur fixtures, `explain`, MCP. Reste hors code : étape 5 du §4.2 (hook `Stop`) et les réponses de Sednal à Q1–Q7, Q9–Q14.
+* **v1 fonctionnelle** : `ingest → run → export` sur fixtures, `explain`, MCP. Reste hors code : les réponses de Sednal à Q1–Q7, Q9–Q14.
 * Tests : 83 verts (`.venv/bin/pytest`), `ruff` propre.
-* Journal gratuit : lignes dans `donnees/.journal_ccr.log` (N à fixer, Q14).
-* Étape 5 de §4.2 (hook `Stop` dans `~/.claude/settings.json`) toujours à faire par Sednal (QB).
+* Journal gratuit : 8 lignes dans `donnees/.journal_ccr.log` (N à fixer, Q14).
+* Étape 5 de §4.2 faite : le hook `Stop` de `~/.claude/settings.json` pointe vers `/opt/grappes/outils/continuer.sh`, plus aucune référence à `/opt/mapping`, sauvegarde `settings.json.bak` (QB réglée).
 
 ## Ce qui marche
 
-* Ingestion JSON brut -> Observations (3 écosystèmes), rapport de rejets, doublons.
-* Scoring de proximité 0 à 100.
+* Pipeline complet `ingest → run → export`, `explain`, `purge`, serveur MCP (voir phases 1 à 6).
 
 ## Constats d'environnement
 
 * `gh` n'est pas installé : impossible de commenter l'issue `NALSED/agent-momo`. Les questions sont dans `QUESTIONS.md` et le pilotage se fait par tmux (§0).
-* `~/.claude/settings.json` référence toujours `/opt/mapping/outils/continuer.sh` (hook `Stop`). Non modifié (interdit avant accord de Sednal).
+* Hook `Stop` et hook rtk (`PreToolUse`) actifs. `python` et `ruff` ne sont pas dans le PATH : utiliser `.venv/bin/`.
 * Interruption : `/opt/grappes` était en `root:root` 755 au début de la session ; corrigé par Sednal.
 
 ## Limites connues
@@ -33,6 +32,6 @@ Dernière mise à jour : 2026-10-06 — Phase 0 (préparation, aucun code applic
 
 ## Reste à faire
 
-* Réponses de Sednal aux questions de `QUESTIONS.md`.
-* Validation puis exécution des étapes 1 à 7 du §4.2.
-* Phase 1 après validation de la phase 0.
+* Réponses de Sednal aux questions de `QUESTIONS.md` (Q1–Q7, Q9–Q14).
+* `MISSION.md` ne définit pas de phase 7 : consolidation en attendant (revue de code, cas limites, lien `t.me`).
+* Watchdog « session limit » : proposé (D4), non implémenté avant accord (Q13).
