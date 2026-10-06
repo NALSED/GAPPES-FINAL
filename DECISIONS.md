@@ -7,3 +7,4 @@
 | D3 | 2026-10-06 | Brouillons de migration (CLAUDE.md, continuer.sh, appeler_gratuit.sh) placés dans `docs/conception/migration_env.md`, pas dans `outils/`, pour ne rien activer avant accord. | prise |
 | D4 | 2026-10-06 | Watchdog « session limit » (§4.4) : timer systemd qui détecte le message dans le pane tmux et envoie la reprise. Non implémenté avant le « go » (Q13). | proposée |
 | D5 | 2026-10-06 | Dépôt git dédié initialisé dans `/opt/grappes` (nom de travail `grappes`, Q1 toujours ouverte). | prise |
+| D6 | 2026-10-06 | Pleine autonomie : `ATTENTE_VALIDATION` et STOP de fin de phase supprimés (MISSION §0/§2.2 modifiés par Sednal). Sollicitation uniquement pour choix crucial ou bug critique. | prise |

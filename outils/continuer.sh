@@ -2,8 +2,6 @@
 # Hook Stop : force la continuation (exit 2) avec anti-boucle ; chemins relatifs au projet.
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT" || exit 0
-# STOP de fin de phase : validation de Sednal requise
-[ -f "$ROOT/ATTENTE_VALIDATION" ] && exit 0
 mkdir -p "$ROOT/donnees"
 ETAT_FILE="$ROOT/donnees/.stop_hook_state"
 HEAD=$(git rev-parse HEAD 2>/dev/null || echo "none")
