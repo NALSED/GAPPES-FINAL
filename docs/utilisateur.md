@@ -102,3 +102,7 @@ resultat:
 
 Valeurs proposées, réversibles dans `config/scoring.yaml` : sources publiques uniquement ; `retention_days: 90` (observations plus anciennes supprimées par `grappes purge` et par chaque cycle ; `null` = illimité) ; `redact_persons: true` (personnes masquées par un pseudonyme dans `entites.csv` et le serveur MCP). La base SQLite garde les identifiants nécessaires au calcul : protégez l'accès au fichier.
 
+## Canaux Telegram : table d'équivalence
+
+L'export Telegram Desktop ne donne que le nom affiché d'un canal. `config/telegram.yaml` associe un nom affiché à l'identifiant public (celui de `t.me/<identifiant>`). Sans entrée, l'identifiant est déduit du nom et marqué « hypothèse » : `grappes explain` liste ces citations (`citations_hypothetiques`) et elles ne valident jamais un recoupement. Deux canaux de même nom ne sont jamais fusionnés.
+

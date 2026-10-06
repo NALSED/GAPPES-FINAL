@@ -18,17 +18,17 @@ CREATE TABLE IF NOT EXISTS runs (
 );
 CREATE TABLE IF NOT EXISTS sources (
     ref_key TEXT PRIMARY KEY, ecosystem TEXT NOT NULL, ident TEXT NOT NULL,
-    weight REAL NOT NULL, display_name TEXT
+    weight REAL NOT NULL, display_name TEXT, native_id TEXT
 );
 CREATE TABLE IF NOT EXISTS observations (
     obs_id TEXT PRIMARY KEY, source_key TEXT NOT NULL, ts TEXT, text TEXT NOT NULL,
     mentions TEXT NOT NULL DEFAULT '[]', links TEXT NOT NULL DEFAULT '[]',
     hashtags TEXT NOT NULL DEFAULT '[]', engagement INTEGER NOT NULL DEFAULT 0,
-    raw_ref TEXT, run_id TEXT, ingested_at TEXT
+    raw_ref TEXT, run_id TEXT, ingested_at TEXT, hypo TEXT NOT NULL DEFAULT '[]'
 );
 CREATE TABLE IF NOT EXISTS citations (
     citer TEXT NOT NULL, cited TEXT NOT NULL, ecosystem TEXT NOT NULL,
-    obs_id TEXT NOT NULL, ts TEXT, run_id TEXT NOT NULL
+    obs_id TEXT NOT NULL, ts TEXT, run_id TEXT NOT NULL, hypothesis INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS entities (
     entity_id TEXT PRIMARY KEY, type TEXT NOT NULL, primary_ref TEXT NOT NULL UNIQUE,
@@ -67,10 +67,21 @@ class Database:
         self.conn = sqlite3.connect(self.path)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(_SCHEMA_SQL)
-        cols = {r["name"] for r in self.conn.execute("PRAGMA table_info(observations)")}
-        if "ingested_at" not in cols:  # bases antérieures à D30
-            self.conn.execute("ALTER TABLE observations ADD COLUMN ingested_at TEXT")
-            self.conn.commit()
+        self._migrate()
+
+    def _migrate(self) -> None:
+        """Ajoute les colonnes apparues après la première version (bases existantes)."""
+        wanted = {
+            "observations": [("ingested_at", "TEXT"), ("hypo", "TEXT NOT NULL DEFAULT '[]'")],
+            "sources": [("native_id", "TEXT")],
+            "citations": [("hypothesis", "INTEGER NOT NULL DEFAULT 0")],
+        }
+        for table, columns in wanted.items():
+            have = {r["name"] for r in self.conn.execute(f"PRAGMA table_info({table})")}
+            for name, decl in columns:
+                if name not in have:
+                    self.conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {decl}")
+        self.conn.commit()
 
     def close(self) -> None:
         self.conn.close()
@@ -103,8 +114,8 @@ class Database:
                 )
                 cur = c.execute(
                     "INSERT OR IGNORE INTO observations(obs_id, source_key, ts, text, mentions,"
-                    " links, hashtags, engagement, raw_ref, ingested_at)"
-                    " VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    " links, hashtags, engagement, raw_ref, ingested_at, hypo)"
+                    " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                     (
                         o.obs_id,
                         o.source.key,
@@ -116,9 +127,16 @@ class Database:
                         o.engagement,
                         o.raw_ref,
                         datetime.now(UTC).isoformat(),
+                        json.dumps(list(o.hypothetical)),
                     ),
                 )
                 new += cur.rowcount
+                native = o.meta.get("chat_id")
+                if native:  # identifiant natif du canal (détection des homonymes, D25)
+                    c.execute(
+                        "UPDATE sources SET native_id=? WHERE ref_key=? AND native_id IS NULL",
+                        (native, o.source.key),
+                    )
                 name = o.meta.get("nom")
                 if name:  # nom lisible de la source (premier connu conservé)
                     c.execute(
@@ -126,6 +144,14 @@ class Database:
                         (name, o.source.key),
                     )
         return new
+
+    def native_ids(self) -> dict[str, str]:
+        """Identifiants natifs connus des sources : `ref_key` -> identifiant (canaux Telegram)."""
+        return {
+            r["ref_key"]: r["native_id"]
+            for r in self.conn.execute("SELECT ref_key, native_id FROM sources")
+            if r["native_id"]
+        }
 
     def load_display_names(self) -> dict[str, str]:
         """Noms lisibles connus des sources : `ref_key` -> nom."""
@@ -151,6 +177,7 @@ class Database:
                     hashtags=tuple(json.loads(r["hashtags"])),
                     engagement=r["engagement"],
                     raw_ref=r["raw_ref"],
+                    hypothetical=tuple(json.loads(r["hypo"])),
                 )
             )
         return out
@@ -221,9 +248,18 @@ class Database:
                 ],
             )
             c.executemany(
-                "INSERT INTO citations VALUES (?,?,?,?,?,?)",
+                "INSERT INTO citations(citer, cited, ecosystem, obs_id, ts, run_id, hypothesis)"
+                " VALUES (?,?,?,?,?,?,?)",
                 [
-                    (ci.citer, ci.cited, ci.ecosystem, ci.obs_id, _iso(ci.ts), run_id)
+                    (
+                        ci.citer,
+                        ci.cited,
+                        ci.ecosystem,
+                        ci.obs_id,
+                        _iso(ci.ts),
+                        run_id,
+                        int(ci.hypothesis),
+                    )
                     for ci in citations
                 ],
             )

@@ -14,7 +14,7 @@ Entrée : fichiers `.json` (objet ou liste) et `.jsonl` (un objet par ligne), UT
 | Telegram | `type: "service"` (ex. `create_channel`) | Ignoré, compté à part |
 | Telegram | `text` : chaîne **ou liste** de chaînes et d'objets `{type, text}` ; `text_entities` typées (`plain`, `link`, `mention`, `hashtag`, `text_link`...) | Texte aplati ; entités lues dans `text_entities` (à défaut `entities`, ou les objets de la liste `text`) |
 | Telegram | `date` sans fuseau, `date_unixtime` en **chaîne** | `date_unixtime` préféré (UTC) ; sinon `date` lue en UTC |
-| Telegram | Aucun nom public de canal dans l'export, seulement `name` ; `forwarded_from` est un nom affiché | Identifiant du canal = nom affiché mis en forme (minuscules, espaces → `_`) (D25) |
+| Telegram | Aucun nom public de canal dans l'export, seulement `name` ; `forwarded_from` est un nom affiché | Table d'équivalence `config/telegram.yaml` (référence) ; à défaut dérivation du nom, marquée « hypothèse » : citations conservées mais jamais validantes ; homonymes jamais fusionnés (D25, D33) |
 | Instagram | Écosystème absent | `InstagramFetcher` (D26) |
 | Web | `links: [{href, anchor}]` au lieu de `outlinks: [url]` ; `canonical_url`, `published_at`, `lang` en plus | `links` et `outlinks` acceptés ; `canonical_url` préférée à `url` ; `published_at` préférée à `fetched_at` |
 
@@ -53,7 +53,7 @@ Obligatoire : un canal (celui de l'export, ou `channel` sur un enregistrement pl
 
 * Mentions = `@` du texte + entités `mention` + `forwarded_from`.
 * Liens = entités `link` (URL dans `text`), `text_link` (URL dans `href`, à confirmer) et `url`.
-* Canal : `username` s'il existe, sinon `name` mis en forme (D25).
+* Canal : `username` s'il existe ; sinon la table d'équivalence ; sinon `name` dérivé (hypothèse). Voir D33.
 
 ## Instagram (`instagram`)
 

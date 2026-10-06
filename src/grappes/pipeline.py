@@ -56,9 +56,10 @@ def read_json_records(folder: str | Path) -> list[dict]:
 def ingest(
     db: Database, folder: str | Path, ecosystem: str, cfg: Config
 ) -> tuple[int, RejectReport]:
-    fetcher = get_fetcher(ecosystem)
+    fetcher = get_fetcher(ecosystem).configure(cfg)
     records = [r for doc in read_json_records(folder) for r in fetcher.unwrap(doc)]
     obs, report = fetcher.parse_many(records)
+    obs = fetcher.finalize(obs, db)
     weights = {o.source.key: cfg.sources.weight(o.source.key) for o in obs}
     new = db.add_observations(obs, weights)
     return new, report

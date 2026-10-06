@@ -34,6 +34,9 @@ class Observation:
     hashtags: tuple[str, ...] = ()
     engagement: int = 0
     raw_ref: str | None = None  # pointeur vers le JSON d'origine
+    # clés (source ou éléments cités) dont l'identité n'est qu'une hypothèse (D25) : une citation
+    # qui les implique est conservée et signalée, mais ne valide jamais un recoupement
+    hypothetical: tuple[str, ...] = ()
     meta: dict[str, str] = field(default_factory=dict, compare=False)
 
 

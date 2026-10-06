@@ -41,6 +41,14 @@ class RejectReport:
 class BaseFetcher(ABC):
     ecosystem: ClassVar[str]
 
+    def configure(self, cfg: Any) -> BaseFetcher:
+        """Reçoit la configuration (ex. table d'équivalence Telegram). Par défaut : rien à faire."""
+        return self
+
+    def finalize(self, observations: list[Observation], db: Any) -> list[Observation]:
+        """Dernier traitement d'un lot avant stockage, avec accès à la base (homonymes...)."""
+        return observations
+
     def unwrap(self, doc: Any) -> list[Any]:
         """Document JSON (liste, enveloppe d'export ou API) -> enregistrements à parser.
 

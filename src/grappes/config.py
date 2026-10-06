@@ -79,6 +79,9 @@ class Config:
     sources: SourcesConfig
     grappes: tuple[Grappe, ...]
     config_hash: str
+    telegram_names: dict[str, str] = field(
+        default_factory=dict
+    )  # nom affiché normalisé -> id public
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -320,6 +323,32 @@ def _with_learned(g: Grappe, learned: dict) -> Grappe:
     return replace(g, lexicon=lex, learned_terms=tuple(sorted(extra)))
 
 
+def load_telegram_names(path: Path) -> dict[str, str]:
+    """`config/telegram.yaml` : `equivalences: {"Nom affiché": identifiant_public}` (D25).
+
+    La clé est normalisée (casse, accents, ponctuation) ; deux noms qui se normalisent pareil
+    vers des identifiants différents sont refusés : rien ne doit être fusionné par erreur.
+    """
+    import re
+
+    from grappes.canon import canonical_handle
+    from grappes.semantic.scoring import normalize
+
+    raw = _mapping(_load_yaml(path).get("equivalences"), f"{path}:equivalences")
+    table: dict[str, str] = {}
+    for name, ident in raw.items():
+        if not isinstance(ident, str) or not canonical_handle(ident):
+            raise ConfigError(f"{path}: identifiant public attendu pour {name!r}")
+        key = re.sub(r"[^\w]+", " ", normalize(str(name))).strip()
+        handle = canonical_handle(ident)
+        if not key:
+            raise ConfigError(f"{path}: nom affiché vide")
+        if table.get(key, handle) != handle:
+            raise ConfigError(f"{path}: le nom {name!r} désigne deux identifiants différents")
+        table[key] = handle
+    return table
+
+
 def load_config(config_dir: str | Path = "config") -> Config:
     root = Path(config_dir)
     if not root.is_dir():
@@ -338,6 +367,8 @@ def load_config(config_dir: str | Path = "config") -> Config:
         for o in g.oppositions:
             if ":" not in o and o not in ids:
                 raise ConfigError(f"{g.grappe_id}: opposition vers une grappe inconnue {o!r}")
+    tg_path = root / "telegram.yaml"
+    telegram_names = load_telegram_names(tg_path) if tg_path.exists() else {}
     # fichiers « appris » (phase 9) : séparés, jamais prioritaires sur les termes de Sednal
     adir = learned_dir(root)
     learned_files = sorted(adir.glob("*.yaml")) if adir.is_dir() else []
@@ -350,10 +381,15 @@ def load_config(config_dir: str | Path = "config") -> Config:
         scoring = replace(scoring, **thresholds)
     # empreinte : contenu brut de tous les fichiers pris en compte, dans l'ordre
     h = hashlib.sha256()
-    for p in [p for p in (scoring_path, sources_path) if p.exists()] + files + learned_files:
+    for p in (
+        [p for p in (scoring_path, sources_path) if p.exists()]
+        + files
+        + learned_files
+        + ([tg_path] if tg_path.exists() else [])
+    ):
         h.update(p.name.encode())
         h.update(p.read_bytes())
-    return Config(scoring, sources, grappes, h.hexdigest()[:16])
+    return Config(scoring, sources, grappes, h.hexdigest()[:16], telegram_names)
 
 
 def config_summary(cfg: Config) -> str:

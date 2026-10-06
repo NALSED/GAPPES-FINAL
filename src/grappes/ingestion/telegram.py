@@ -1,10 +1,17 @@
 """Fetcher Telegram : export Telegram Desktop (`messages`) et enregistrement plat historique.
 
+Identité d'un canal (D25, `FINAL.md` § 11). L'export ne donne que le nom affiché. Référence : la
+table d'équivalence de configuration (`config/telegram.yaml`, nom affiché -> identifiant public).
+Repli si le nom n'y est pas : dérivation du nom (minuscules, accents ôtés, espaces -> `_`),
+marquée « hypothèse » : les citations qui l'impliquent sont conservées et signalées mais ne
+valident jamais un recoupement. Deux canaux de même nom affiché ne sont jamais fusionnés.
+
 Formats : voir docs/conception/formats_json.md.
 """
 
 from __future__ import annotations
 
+import dataclasses
 import re
 from collections.abc import Iterable, Mapping
 from typing import Any
@@ -23,21 +30,34 @@ from grappes.ingestion.base import (
     to_int,
 )
 from grappes.models import Observation, SourceRef
+from grappes.semantic.scoring import normalize
 
 _NON_WORD = re.compile(r"[^\w]+", re.UNICODE)
+_BARE_ID = re.compile(r"^[A-Za-z0-9_]{3,}$")
 
 
-def channel_ident(name: str) -> str:
-    """Identifiant canonique d'un canal : `@nom_public` tel quel, sinon le nom affiché mis en
-    forme (minuscules, espaces et ponctuation -> `_`).
+def name_key(name: str) -> str:
+    """Clé de recherche d'un nom affiché : casse, accents latins, ponctuation et espaces ôtés."""
+    return _NON_WORD.sub(" ", normalize(name)).strip()
 
-    L'export Telegram Desktop ne donne que le nom affiché (D25) : la mise en forme du nom est
-    une heuristique documentée, à confirmer sur de vrais exports (Q16).
+
+def derive_ident(name: str) -> str:
+    """Identifiant déduit d'un nom affiché : `Café Crème Info` -> `cafe_creme_info` (hypothèse)."""
+    return _NON_WORD.sub("_", normalize(name)).strip("_")
+
+
+def resolve_name(name: str, table: Mapping[str, str]) -> tuple[str, bool]:
+    """(identifiant, exact) d'un canal désigné par son nom affiché.
+
+    Exact : `@nom_public` ou nom présent dans la table. Sinon : dérivation, `exact = False`.
     """
     name = name.strip()
     if name.startswith("@"):
-        return canonical_handle(name)
-    return _NON_WORD.sub("_", name.casefold()).strip("_")
+        return canonical_handle(name), True
+    found = table.get(name_key(name))
+    if found:
+        return found, True
+    return derive_ident(name), False
 
 
 def _flatten(text: Any) -> str:
@@ -57,19 +77,60 @@ def _flatten(text: Any) -> str:
 class TelegramFetcher(BaseFetcher):
     ecosystem = "telegram"
 
+    def __init__(self) -> None:
+        self.names: dict[str, str] = {}
+
+    def configure(self, cfg: Any) -> TelegramFetcher:
+        self.names = dict(getattr(cfg, "telegram_names", {}) or {})
+        return self
+
     def unwrap(self, doc: Any) -> list[Any]:
         """Export d'un canal : `{name, type, id, messages: [...]}` -> un enregistrement par
-        message, le canal étant celui de l'export."""
+        message, le canal étant celui de l'export (résolu par la table, sinon dérivé)."""
         if not (isinstance(doc, Mapping) and isinstance(doc.get("messages"), list)):
             return [doc]
-        raw_name = doc.get("username") or doc.get("name")
-        channel = channel_ident(raw_name) if isinstance(raw_name, str) else ""
+        username = doc.get("username")
+        name = doc.get("name")
+        if isinstance(username, str) and canonical_handle(username):
+            channel, exact = canonical_handle(username), True
+        elif isinstance(name, str) and derive_ident(name):
+            channel, exact = resolve_name(name, self.names)
+        else:
+            channel, exact = "", False
+        extra = {
+            "channel": channel,
+            "_ident_exact": exact,
+            "_chat_name": name,
+            "_chat_id": doc.get("id"),
+        }
         return [
-            {**m, "channel": channel, "_chat_name": doc.get("name")}
-            if isinstance(m, Mapping) and channel
-            else m
-            for m in doc["messages"]
+            {**m, **extra} if isinstance(m, Mapping) and channel else m for m in doc["messages"]
         ]
+
+    def finalize(self, observations: list[Observation], db: Any) -> list[Observation]:
+        """Deux canaux de même nom affiché (identifiants natifs différents) ne sont pas fusionnés :
+        le second reçoit l'identifiant `<déduit>~<id natif>`."""
+        known = db.native_ids() if hasattr(db, "native_ids") else {}
+        seen: dict[str, str] = {}
+        out: list[Observation] = []
+        for o in observations:
+            native = o.meta.get("chat_id")
+            key = o.source.key
+            if native and key in o.hypothetical:
+                owner = known.get(key) or seen.setdefault(key, native)
+                if owner != native:
+                    ident = f"{o.source.ident}~{native}"
+                    source = SourceRef("telegram", ident)
+                    mid = (o.raw_ref or "").split("/")[-1]
+                    o = dataclasses.replace(
+                        o,
+                        source=source,
+                        obs_id=make_obs_id("telegram", f"{ident}/{mid}", o.text),
+                        raw_ref=f"{ident}/{mid}",
+                        hypothetical=tuple(source.key if h == key else h for h in o.hypothetical),
+                    )
+            out.append(o)
+        return out
 
     def parse(self, raw: Mapping[str, Any]) -> Iterable[Observation]:
         if not isinstance(raw, Mapping):
@@ -77,7 +138,18 @@ class TelegramFetcher(BaseFetcher):
         if raw.get("type") == "service":
             raise Skip  # création du canal, épinglage... : aucun texte à analyser
         channel = raw.get("channel")
-        if not isinstance(channel, str) or not channel_ident(channel):
+        if not isinstance(channel, str) or not channel.strip():
+            raise FetcherError("canal manquant")
+        if raw.get("_ident_exact") is not None:  # issu d'un export : déjà résolu par `unwrap`
+            ident, src_exact = channel, bool(raw["_ident_exact"])
+        elif channel.strip().startswith("@") or _BARE_ID.match(channel.strip()):
+            ident, src_exact = (
+                canonical_handle(channel),
+                True,
+            )  # enregistrement plat : un identifiant
+        else:
+            ident, src_exact = resolve_name(channel, self.names)
+        if not ident:
             raise FetcherError("canal manquant")
         native_id = str(raw.get("message_id", raw.get("id", "")))
         text = _flatten(raw.get("text"))
@@ -89,14 +161,14 @@ class TelegramFetcher(BaseFetcher):
         entities = raw.get("text_entities") or raw.get("entities")
         if not isinstance(entities, list):
             entities = raw["text"] if isinstance(raw.get("text"), list) else []
-        mention_handles = list(extract_mentions(text))
+        exact_handles = list(extract_mentions(text))
         urls: list[str] = []
         for e in entities:
             if not isinstance(e, Mapping):
                 continue
             kind = e.get("type")
             if kind == "mention" and isinstance(e.get("text"), str):
-                mention_handles.append(e["text"])
+                exact_handles.append(e["text"])
             elif kind in ("link", "url"):
                 url = e.get("url") or e.get("text")
                 if isinstance(url, str) and url.strip():
@@ -105,26 +177,34 @@ class TelegramFetcher(BaseFetcher):
                 url = e.get("href") or e.get("url")
                 if isinstance(url, str) and url.strip():
                     urls.append(canonical_url(url))
+        mentions: dict[str, bool] = {}  # identifiant -> exact ?
+        for h in exact_handles:
+            if canonical_handle(h):
+                mentions[canonical_handle(h)] = True
         fwd = raw.get("forwarded_from")
-        if isinstance(fwd, str) and channel_ident(fwd):
-            mention_handles.append(fwd if fwd.startswith("@") else channel_ident(fwd))
+        if isinstance(fwd, str) and fwd.strip():
+            fid, fexact = resolve_name(fwd, self.names)
+            if fid:
+                mentions[fid] = mentions.get(fid, False) or fexact
 
-        source = SourceRef("telegram", channel_ident(channel))
+        source = SourceRef("telegram", ident)
+        hypo = [source.key] if not src_exact else []
+        hypo += [f"telegram:{i}" for i, exact in mentions.items() if not exact]
+        meta: dict[str, str] = {}
+        if isinstance(raw.get("_chat_name"), str) and raw["_chat_name"].strip():
+            meta["nom"] = raw["_chat_name"].strip()
+        if raw.get("_chat_id") is not None:
+            meta["chat_id"] = str(raw["_chat_id"])
         yield Observation(
             obs_id=make_obs_id("telegram", f"{source.ident}/{native_id}", text),
             source=source,
             ts=parse_ts(raw.get("date_unixtime")) or parse_ts(raw.get("date")),
             text=text,
-            mentions=dedup(
-                SourceRef("telegram", h) for h in (channel_ident(m) for m in mention_handles) if h
-            ),
+            mentions=dedup(SourceRef("telegram", i) for i in mentions),
             links=dedup(u for u in urls if u),
             hashtags=dedup(extract_hashtags(text)),
             engagement=to_int(raw.get("views")) + to_int(raw.get("reactions")),
             raw_ref=f"{source.ident}/{native_id}" if native_id else None,
-            meta=(
-                {"nom": raw["_chat_name"].strip()}
-                if isinstance(raw.get("_chat_name"), str) and raw["_chat_name"].strip()
-                else {}
-            ),
+            hypothetical=tuple(dict.fromkeys(hypo)),
+            meta=meta,
         )

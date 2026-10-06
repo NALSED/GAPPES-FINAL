@@ -17,6 +17,7 @@ class Citation:
     ecosystem: str  # écosystème de la source citante
     obs_id: str
     ts: datetime | None
+    hypothesis: bool = False  # identité du citant ou du cité déduite d'un nom affiché (D25)
 
 
 def build_citations(observations: list[Observation]) -> list[Citation]:
@@ -33,9 +34,10 @@ def build_citations(observations: list[Observation]) -> list[Citation]:
         for cited in cited_keys:
             if cited == o.source.key:
                 continue
+            hypo = o.source.key in o.hypothetical or cited in o.hypothetical
             out.setdefault(
                 (o.source.key, cited, o.obs_id),
-                Citation(o.source.key, cited, o.source.ecosystem, o.obs_id, o.ts),
+                Citation(o.source.key, cited, o.source.ecosystem, o.obs_id, o.ts, hypo),
             )
     return [out[k] for k in sorted(out)]
 

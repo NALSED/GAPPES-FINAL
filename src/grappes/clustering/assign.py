@@ -125,8 +125,9 @@ def assign(
             sem[ref, g.grappe_id] = _top_mean(
                 [score_proximity(o.text, kw, scale=g.scale) for o in context], sc.top_n_observations
             )
-    anc = {g.grappe_id: anchor_scores(g, refs, citations) for g in cfg.grappes}
-    windowed = filter_window(citations, sc.crossref.window_days)
+    firm = [c for c in citations if not c.hypothesis]  # D25 : une hypothèse ne valide rien
+    anc = {g.grappe_id: anchor_scores(g, refs, firm) for g in cfg.grappes}
+    windowed = filter_window(firm, sc.crossref.window_days)
 
     # itération 0 : amorçage sans E
     ws, wa = sc.w_semantic, sc.w_anchor

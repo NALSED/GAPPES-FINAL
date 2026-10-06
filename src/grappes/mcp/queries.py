@@ -273,6 +273,14 @@ class Queries:
                 (ref, run),
             )
         ]
+        hypo = [
+            self._ref(r["citer"])
+            for r in self.conn.execute(
+                "SELECT DISTINCT citer FROM citations WHERE cited=? AND run_id=? AND hypothesis=1"
+                " ORDER BY citer",
+                (ref, run),
+            )
+        ]
         v = self.conn.execute(
             "SELECT * FROM validations WHERE cited=? AND grappe_id=? AND run_id=?",
             (ref, grappe_id, run),
@@ -285,6 +293,8 @@ class Queries:
             "semantic_context": context,
             "terms": terms,
             "citers": [self._ref(c) for c in citers],
+            # citations dont l'identité est une hypothèse (D25) : signalées, jamais validantes
+            "citations_hypothetiques": hypo,
             "validation": None
             if not v
             else {
