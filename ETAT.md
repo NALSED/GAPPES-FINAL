@@ -8,8 +8,9 @@ Dernière mise à jour : 2026-10-06 — Phase 0 (préparation, aucun code applic
 * Phase 1 terminée : squelette, `models.py`, `canon.py`, `BaseFetcher` + registre, fetchers X/Telegram/web, fixtures synthétiques, `docs/conception/formats_json.md`.
 * Phase 2 terminée : `semantic/scoring.py` + tests §9.1 (voir D7 sur l'écart de la valeur « ≈ 86 »).
 * Phase 3 terminée : SQLite (`storage/db.py`), config YAML + `config_hash`, affectation sémantique seule (confiance = S), `entites.csv` / `appartenances.csv` rejouables à l'identique, CLI `ingest`/`run`/`export`.
-* Phase 4 en cours : pondération, recoupement, ancres, oppositions, confiance complète.
-* Tests : 52 verts (`.venv/bin/pytest`), `ruff` propre.
+* Phase 4 terminée : poids des sources, citations, recoupement itératif borné (`ecosystem/crossref.py`), ancres et oppositions (`semantic/relations.py`), confiance complète (`clustering/assign.py`), table `validations`. Cas testés : validé, refusé (écosystèmes, citants, poids, non-membres), ambigu, circularité bornée.
+* Phase 5 en cours : serveur MCP.
+* Tests : 70 verts (`.venv/bin/pytest`), `ruff` propre.
 * Journal gratuit : lignes dans `donnees/.journal_ccr.log` (N à fixer, Q14).
 * Étape 5 de §4.2 (hook `Stop` dans `~/.claude/settings.json`) toujours à faire par Sednal (QB).
 

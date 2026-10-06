@@ -147,7 +147,9 @@ class Database:
 
     # --- runs -----------------------------------------------------------------------------
 
-    def save_run(self, run_id: str, config_hash: str, entities, memberships, citations) -> None:
+    def save_run(
+        self, run_id: str, config_hash: str, entities, memberships, citations, validations=()
+    ) -> None:
         """Remplace le contenu d'un run (rejouable)."""
         with self.transaction() as c:
             c.execute(
@@ -156,6 +158,7 @@ class Database:
             )
             c.execute("DELETE FROM memberships WHERE run_id=?", (run_id,))
             c.execute("DELETE FROM citations WHERE run_id=?", (run_id,))
+            c.execute("DELETE FROM validations WHERE run_id=?", (run_id,))
             c.executemany(
                 "INSERT OR REPLACE INTO entities VALUES (?,?,?,?)",
                 [(e.entity_id, e.type.value, e.primary_ref, e.display_name) for e in entities],
@@ -175,6 +178,22 @@ class Database:
                         run_id,
                     )
                     for m in memberships
+                ],
+            )
+            c.executemany(
+                "INSERT INTO validations VALUES (?,?,?,?,?,?,?,?)",
+                [
+                    (
+                        v.cited,
+                        v.grappe_id,
+                        len(v.citers),
+                        len(v.ecosystems),
+                        v.weight_sum,
+                        int(v.validated),
+                        json.dumps(list(v.reasons), ensure_ascii=False),
+                        run_id,
+                    )
+                    for v in validations
                 ],
             )
             c.executemany(

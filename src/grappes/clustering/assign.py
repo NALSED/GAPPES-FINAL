@@ -1,7 +1,8 @@
-"""Score de confiance et affectation aux grappes.
+"""Score de confiance et affectation aux grappes (MISSION §10.2, §11).
 
-Phase 3 (sémantique seule) : confiance = S. Les composantes E (recoupement) et A (ancrage)
-sont à 0 et seront branchées en phase 4 avec la formule complète de MISSION §11.
+confiance = w_s·S + w_e·E + w_a·A. Amorçage (itération 0) : (w_s·S + w_a·A) / (w_s + w_a),
+sans E, pour désigner les membres initiaux (ancres comprises). Ensuite jusqu'à `max_iter`
+itérations : les citants de l'itération n sont les membres de n−1.
 """
 
 from __future__ import annotations
@@ -12,8 +13,15 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from grappes.config import Config
-from grappes.ecosystem.crossref import Citation, build_citations
+from grappes.ecosystem.crossref import (
+    Citation,
+    ValidationRecord,
+    build_citations,
+    filter_window,
+    validate_crossref,
+)
 from grappes.models import Entity, EntityType, Observation
+from grappes.semantic.relations import anchor_scores, is_ambiguous
 from grappes.semantic.scoring import score_proximity
 
 NON_CLASSE = "non_classé"
@@ -45,6 +53,8 @@ class AssignResult:
     memberships: list[dict]
     stats: dict[str, EntityStats]  # clé = entity_id
     citations: list[Citation]
+    validations: list[ValidationRecord] = field(default_factory=list)
+    iterations: int = 0
 
 
 def entity_id_for(primary_ref: str) -> str:
@@ -87,33 +97,95 @@ def assign(observations: list[Observation], cfg: Config) -> AssignResult:
         if c.cited not in texts_own:
             st.see(c.ts)
 
+    refs = sorted(stats_by_ref)
+    grappes = {g.grappe_id: g for g in cfg.grappes}
+    sc = cfg.scoring
+    weight = cfg.sources.weight
+
+    # S(e, g) : calculé une fois ; texte propre, à défaut contexte des citations (§9.2)
+    sem: dict[tuple[str, str], float] = {}
+    for ref in refs:
+        context = texts_own.get(ref) or texts_cited.get(ref, [])
+        for g in cfg.grappes:
+            kw = {**g.lexicon.terms, **{k: -v for k, v in g.lexicon.negative.items()}}
+            sem[ref, g.grappe_id] = _top_mean(
+                [score_proximity(o.text, kw, scale=g.scale) for o in context], sc.top_n_observations
+            )
+    anc = {g.grappe_id: anchor_scores(g, refs, citations) for g in cfg.grappes}
+    windowed = filter_window(citations, sc.crossref.window_days)
+
+    # itération 0 : amorçage sans E
+    ws, we, wa = sc.w_semantic, sc.w_ecosystem, sc.w_anchor
+    conf: dict[tuple[str, str], float] = {
+        (r, gid): (ws * sem[r, gid] + wa * anc[gid][r]) / (ws + wa) if ws + wa else 0.0
+        for r in refs
+        for gid in grappes
+    }
+    eco: dict[tuple[str, str], float] = dict.fromkeys(conf, 0.0)
+    via: dict[tuple[str, str], str] = {
+        (r, gid): ("ancre" if r in grappes[gid].anchors else "semantique") for r, gid in conf
+    }
+    # membres connus (citants admissibles) : amorcés par l'itération 0, puis cumulatifs, pour
+    # que la formule complète (E, A absents) ne fasse pas sortir un citant déjà reconnu.
+    minc = sc.crossref.min_citer_confidence
+    members: dict[str, set[str]] = {
+        gid: {r for r in refs if r in g.anchors or conf[r, gid] >= minc}
+        for gid, g in grappes.items()
+    }
+    validations: dict[tuple[str, str], ValidationRecord] = {}
+    iterations = 0
+    for _ in range(sc.max_iter):
+        iterations += 1
+        prev_members = {gid: set(m) for gid, m in members.items()}
+        prev = conf
+        validations = {}
+        new_conf: dict[tuple[str, str], float] = {}
+        new_eco: dict[tuple[str, str], float] = {}
+        new_via: dict[tuple[str, str], str] = {}
+        for gid, g in grappes.items():
+            anchors = set(g.anchors)
+
+            known = prev_members[gid]
+            records = validate_crossref(
+                windowed, gid, lambda ref, known=known: ref in known, weight, sc.crossref
+            )
+            for r in refs:
+                rec = records.get(r)
+                e = (
+                    100.0 * min(1.0, rec.weight_sum / (2 * sc.crossref.min_weight_sum))
+                    if rec
+                    else 0.0
+                )
+                c = ws * sem[r, gid] + we * e + wa * anc[gid][r]
+                v = "ancre" if r in anchors else "semantique"
+                if rec is not None:
+                    validations[r, gid] = rec
+                    if rec.validated:
+                        c, v = max(c, sc.crossref_floor), "recoupement"
+                new_conf[r, gid], new_eco[r, gid], new_via[r, gid] = round(c, 2), round(e, 2), v
+        for gid in grappes:
+            members[gid] |= {r for r in refs if new_conf[r, gid] >= minc}
+        converged = new_conf == prev and members == prev_members
+        conf, eco, via = new_conf, new_eco, new_via
+        if converged:
+            break
+
     entities: list[Entity] = []
     memberships: list[dict] = []
     stats: dict[str, EntityStats] = {}
-    for ref in sorted(stats_by_ref):
-        eco = ref.split(":", 1)[0]
-        etype = EntityType(cfg.scoring.entity_types.get(eco, "person"))
+    for ref in refs:
+        etype = EntityType(sc.entity_types.get(ref.split(":", 1)[0], "person"))
         eid = entity_id_for(ref)
         entities.append(Entity(eid, etype, ref, ref.split(":", 1)[1]))
         stats[eid] = stats_by_ref[ref]
-        # texte propre ; à défaut, contexte des citations (jamais de texte inventé, §9.2)
-        context = texts_own.get(ref) or texts_cited.get(ref, [])
-        scored: list[tuple[str, float]] = []
-        for g in cfg.grappes:
-            kw = {**g.lexicon.terms, **{k: -v for k, v in g.lexicon.negative.items()}}
-            s = _top_mean(
-                [score_proximity(o.text, kw, scale=g.scale) for o in context],
-                cfg.scoring.top_n_observations,
-            )
-            scored.append((g.grappe_id, s))
-        # meilleure grappe d'abord ; égalité départagée par l'id (déterminisme)
-        scored.sort(key=lambda t: (-t[1], t[0]))
+        scored = sorted(((gid, conf[ref, gid]) for gid in grappes), key=lambda t: (-t[1], t[0]))
         best_id, best = scored[0]
-        second = scored[1][1] if len(scored) > 1 else 0.0
-        classed = best >= cfg.scoring.seuil_min
-        ambiguous = classed and (best - second) < cfg.scoring.marge_ambiguite and second > 0
-        for gid, s in scored:
-            if s <= 0:
+        classed = best >= sc.seuil_min
+        ambiguous = classed and is_ambiguous(
+            grappes[best_id], dict(scored), grappes, sc.marge_ambiguite
+        )
+        for gid, c in scored:
+            if c <= 0:
                 continue
             if gid == best_id:
                 status = (AMBIGU if ambiguous else CLASSE) if classed else NON_CLASSE
@@ -123,12 +195,13 @@ def assign(observations: list[Observation], cfg: Config) -> AssignResult:
                 {
                     "entity_id": eid,
                     "grappe_id": gid,
-                    "semantic": s,
-                    "ecosystem": 0.0,
-                    "anchor": 0.0,
-                    "confidence": s,
-                    "via": "semantique",
+                    "semantic": sem[ref, gid],
+                    "ecosystem": eco[ref, gid],
+                    "anchor": round(anc[gid][ref], 2),
+                    "confidence": c,
+                    "via": via[ref, gid],
                     "status": status,
                 }
             )
-    return AssignResult(entities, memberships, stats, citations)
+    ordered = [validations[k] for k in sorted(validations)]
+    return AssignResult(entities, memberships, stats, citations, ordered, iterations)

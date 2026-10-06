@@ -52,7 +52,14 @@ def run(db: Database, cfg: Config) -> tuple[str, AssignResult]:
     observations = db.load_observations()
     result = assign(observations, cfg)
     run_id = make_run_id([o.obs_id for o in observations], cfg.config_hash)
-    db.save_run(run_id, cfg.config_hash, result.entities, result.memberships, result.citations)
+    db.save_run(
+        run_id,
+        cfg.config_hash,
+        result.entities,
+        result.memberships,
+        result.citations,
+        result.validations,
+    )
     return run_id, result
 
 

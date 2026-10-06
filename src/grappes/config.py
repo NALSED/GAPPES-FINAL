@@ -10,6 +10,7 @@ from typing import Any
 
 import yaml
 
+from grappes.ecosystem.crossref import CrossRefRule
 from grappes.models import Grappe, Lexicon
 
 
@@ -29,6 +30,12 @@ class ScoringConfig:
     )
     csv_separator: str = ";"
     csv_bom: bool = False
+    w_semantic: float = 0.50
+    w_ecosystem: float = 0.30
+    w_anchor: float = 0.20
+    crossref_floor: float = 60.0
+    max_iter: int = 3
+    crossref: CrossRefRule = field(default_factory=CrossRefRule)
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,6 +88,20 @@ def load_scoring(path: Path) -> ScoringConfig:
     d = _load_yaml(path)
     csv = d.get("csv") or {}
     default = ScoringConfig()
+    w = d.get("poids_confiance") or {}
+    cr = d.get("crossref") or {}
+    dr = default.crossref
+    try:
+        window = cr.get("window_days", dr.window_days)
+        rule = CrossRefRule(
+            min_citers=int(cr.get("min_citers", dr.min_citers)),
+            min_ecosystems=int(cr.get("min_ecosystems", dr.min_ecosystems)),
+            min_weight_sum=float(cr.get("min_weight_sum", dr.min_weight_sum)),
+            min_citer_confidence=float(cr.get("min_citer_confidence", dr.min_citer_confidence)),
+            window_days=None if window is None else int(window),
+        )
+    except (TypeError, ValueError) as exc:
+        raise ConfigError(f"{path}: crossref : {exc}") from exc
     try:
         cfg = ScoringConfig(
             top_n_observations=int(d.get("top_n_observations", default.top_n_observations)),
@@ -92,11 +113,26 @@ def load_scoring(path: Path) -> ScoringConfig:
             or default.entity_types,
             csv_separator=str(csv.get("separator", default.csv_separator)),
             csv_bom=bool(csv.get("bom", default.csv_bom)),
+            w_semantic=float(w.get("semantique", default.w_semantic)),
+            w_ecosystem=float(w.get("ecosysteme", default.w_ecosystem)),
+            w_anchor=float(w.get("ancrage", default.w_anchor)),
+            crossref_floor=float(d.get("crossref_floor", default.crossref_floor)),
+            max_iter=int(d.get("max_iter", default.max_iter)),
+            crossref=rule,
         )
     except (TypeError, ValueError) as exc:
         raise ConfigError(f"{path}: {exc}") from exc
     if cfg.top_n_observations < 1:
         raise ConfigError(f"{path}: top_n_observations doit être >= 1")
+    if (
+        min(cfg.w_semantic, cfg.w_ecosystem, cfg.w_anchor) < 0
+        or (cfg.w_semantic + cfg.w_ecosystem + cfg.w_anchor) <= 0
+    ):
+        raise ConfigError(f"{path}: poids_confiance invalides")
+    if cfg.max_iter < 1:
+        raise ConfigError(f"{path}: max_iter doit être >= 1")
+    if cfg.crossref.min_citers < 1 or cfg.crossref.min_ecosystems < 1:
+        raise ConfigError(f"{path}: crossref.min_citers et min_ecosystems doivent être >= 1")
     if len(cfg.csv_separator) != 1:
         raise ConfigError(f"{path}: csv.separator doit être un caractère")
     bad = set(cfg.entity_types.values()) - {"person", "group", "site"}

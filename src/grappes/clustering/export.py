@@ -72,7 +72,7 @@ def export_csv(result: AssignResult, cfg: Config, run_id: str, out_dir: str | Pa
                     f"{main['semantic']:.2f}" if main else "0.00",
                     f"{main['ecosystem']:.2f}" if main else "0.00",
                     f"{main['anchor']:.2f}" if main else "0.00",
-                    "non",
+                    "oui" if main and classed and main["via"] == "recoupement" else "non",
                     st.n_observations,
                     len(st.citing),
                     _fmt(st.first_seen),
