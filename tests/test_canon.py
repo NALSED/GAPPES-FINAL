@@ -30,3 +30,13 @@ def test_url_vide_et_idempotence():
     assert canonical_url("  ") == ""
     u = canonical_url("https://www.exemple.test/a/?utm_x=1&b=2")
     assert canonical_url(u) == u
+
+
+def test_telegram_channel():
+    from grappes.canon import telegram_channel
+
+    assert telegram_channel("https://t.me/Canal_A/123") == "canal_a"
+    assert telegram_channel("t.me/canal_a") == "canal_a"
+    assert telegram_channel("https://t.me/+AbCdEf") == ""
+    assert telegram_channel("https://t.me/joinchat/xyz") == ""
+    assert telegram_channel("https://exemple.org/t.me/x") == ""

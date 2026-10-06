@@ -239,3 +239,10 @@ def test_config_scoring_invalide(tmp_path, bad):
     )
     with pytest.raises(ConfigError):
         load_config(tmp_path)
+
+
+def test_lien_tme_cite_le_canal_telegram():
+    from grappes.ecosystem.crossref import build_citations
+
+    o = obs("x:a", "voir", links=["https://t.me/Canal_B/7", "https://exemple.org/p"])
+    assert {c.cited for c in build_citations([o])} == {"telegram:canal_b", "web:exemple.org"}

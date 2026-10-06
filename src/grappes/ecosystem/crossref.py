@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
-from grappes.canon import canonical_domain
+from grappes.canon import canonical_domain, telegram_channel
 from grappes.models import Observation
 
 
@@ -22,12 +22,18 @@ class Citation:
 def build_citations(observations: list[Observation]) -> list[Citation]:
     """Une citation par (observation, élément cité) ; auto-citations ignorées.
 
-    Les liens sont rattachés au domaine (`web:domaine`). Tri stable pour la reproductibilité.
+    Les liens sont rattachés au domaine (`web:domaine`), sauf les liens `t.me/<canal>` qui
+    citent le canal Telegram (`telegram:canal`). Tri stable pour la reproductibilité.
     """
     out: dict[tuple[str, str, str], Citation] = {}
     for o in observations:
         cited_keys = [m.key for m in o.mentions]
-        cited_keys += [f"web:{d}" for d in (canonical_domain(u) for u in o.links) if d]
+        for u in o.links:
+            channel = telegram_channel(u)
+            if channel:
+                cited_keys.append(f"telegram:{channel}")
+            elif d := canonical_domain(u):
+                cited_keys.append(f"web:{d}")
         for cited in cited_keys:
             if cited == o.source.key:
                 continue

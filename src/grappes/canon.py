@@ -21,6 +21,28 @@ def canonical_domain(host: str) -> str:
     return h.removeprefix("www.")
 
 
+_TME_HOSTS = {"t.me", "telegram.me"}
+_TME_RESERVED = {"joinchat", "c", "s", "addstickers", "share", "iv", "proxy", "socks"}
+
+
+def telegram_channel(url: str) -> str:
+    """Handle du canal pointé par un lien `t.me/<canal>[/<id>]`, sinon chaîne vide.
+
+    Les liens d'invitation (`+...`, `joinchat`) et les chemins réservés ne désignent pas
+    un canal public identifiable : ils donnent une chaîne vide.
+    """
+    url = url.strip()
+    if "://" not in url:
+        url = "https://" + url
+    parts = urlsplit(url)
+    if (parts.hostname or "").casefold().removeprefix("www.") not in _TME_HOSTS:
+        return ""
+    first = parts.path.strip("/").split("/", 1)[0]
+    if not first or first.startswith("+") or first.casefold() in _TME_RESERVED:
+        return ""
+    return canonical_handle(first)
+
+
 def canonical_url(url: str) -> str:
     """Schéma + hôte en minuscules, sans `www.`, `utm_*`, `fbclid`, fragment ni `/` final."""
     url = url.strip()

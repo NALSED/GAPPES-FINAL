@@ -28,10 +28,10 @@ Dernière mise à jour : 2026-10-06 — v1 terminée (phases 0 à 6), consolidat
 
 ## Limites connues
 
-* Les liens vers `t.me` créent une entité `web:t.me` (site) au lieu d'une citation du canal Telegram : à traiter avec les vrais formats (Q2).
+* Les liens d'invitation Telegram (`t.me/+...`, `joinchat`) restent des entités `web:t.me` : pas de canal public identifiable (D14, Q2).
 
 ## Reste à faire
 
 * Réponses de Sednal aux questions de `QUESTIONS.md` (Q1–Q7, Q9–Q14).
-* `MISSION.md` ne définit pas de phase 7 : consolidation en attendant (revue de code, cas limites, lien `t.me`).
+* `MISSION.md` ne définit pas de phase 7 : consolidation en attendant (revue de code, cas limites).
 * Watchdog « session limit » : proposé (D4), non implémenté avant accord (Q13).
