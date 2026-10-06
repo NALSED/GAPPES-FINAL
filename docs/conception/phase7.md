@@ -1,6 +1,6 @@
 # Phase 7 — données réelles (plan, non exécuté)
 
-Statut : **proposée** (D17). Ne dépend plus que de Q2 (JSON anonymisés, en préparation par Sednal) ; Q7 et Q7b sont levées (D20, D21). Aucune donnée réelle n'est ingérée avant la livraison de Q2, et aucune donnée réelle ne passe par le compte gratuit.
+Statut : **proposée** (D17). Ne dépend plus que de vrais exports (Q2 : des échantillons synthétiques ont été livrés et les fetchers adaptés, D24 à D26 ; reste Q16 à Q19) ; Q7 et Q7b sont levées (D20, D21). Aucune donnée réelle n'est ingérée avant la livraison de vrais exports, et aucune donnée réelle ne passe par le compte gratuit.
 
 ## 1. Prérequis
 
@@ -12,7 +12,7 @@ Q3  langues des corpus                           -> normalisation et lexiques
 
 ## 2. Étapes
 
-1. **Formats réels** : comparer les JSON fournis à `docs/conception/formats_json.md` ; adapter les fetchers (champs, imbrications, identifiants, dates) ; ajouter des fixtures anonymisées minimales et leurs tests ; consigner chaque écart en `DECISIONS.md`. Reprendre le cas `t.me` (D14) sur les vrais liens.
+1. **Formats réels** : (comparaison faite sur les échantillons synthétiques, `formats_json.md`) comparer les JSON fournis à `docs/conception/formats_json.md` ; adapter les fetchers (champs, imbrications, identifiants, dates) ; ajouter des fixtures anonymisées minimales et leurs tests ; consigner chaque écart en `DECISIONS.md`. Reprendre le cas `t.me` (D14) sur les vrais liens.
 2. **Conservation** : pas de `retention_days` ni de `redact_persons` (D20, D21) ; `purge` reste manuelle.
 3. **Lexiques réels** : fournis par Sednal (jamais écrits par l'agent) ; `scale` et poids par grappe ; versionnés hors dépôt public si Sednal le demande.
 4. **Calibrage des seuils** : `seuil_min`, `marge_ambiguite`, `crossref.*`, `crossref_floor`, `poids_complementaire` ; sur un échantillon annoté par Sednal, mesurer précision et rappel par grappe, choisir les valeurs, les tracer en `DECISIONS.md` (passage de « proposée » à « actée » par Sednal). (Q15 tranchée par D19.)

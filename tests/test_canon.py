@@ -32,11 +32,19 @@ def test_url_vide_et_idempotence():
     assert canonical_url(u) == u
 
 
-def test_telegram_channel():
-    from grappes.canon import telegram_channel
+def test_link_target():
+    from grappes.canon import link_target
 
-    assert telegram_channel("https://t.me/Canal_A/123") == "canal_a"
-    assert telegram_channel("t.me/canal_a") == "canal_a"
-    assert telegram_channel("https://t.me/+AbCdEf") == ""
-    assert telegram_channel("https://t.me/joinchat/xyz") == ""
-    assert telegram_channel("https://exemple.org/t.me/x") == ""
+    assert link_target("https://t.me/Canal_A/123") == "telegram:canal_a"
+    assert link_target("t.me/s/canal_a") == "telegram:canal_a"
+    assert link_target("https://www.x.com/Compte_A/status/1") == "x:compte_a"
+    assert link_target("https://twitter.com/compte_a") == "x:compte_a"
+    assert link_target("https://www.instagram.com/compte_c/") == "instagram:compte_c"
+    assert link_target("https://www.Exemple.org/p?utm=1") == "web:exemple.org"
+    # cibles non identifiables : rien n'est cité, jamais web:t.me / web:x.com / ...
+    for ignore in (
+        "https://t.me/+AbCdEf", "https://t.me/joinchat/xyz", "https://t.me/c/123/4", "https://t.me/",
+        "https://t.co/AbC123", "https://x.com/i/web/status/1", "https://x.com/search?q=a",
+        "https://www.instagram.com/p/DEMO0001/", "https://www.instagram.com/reel/DEMO/", "",
+    ):  # fmt: skip
+        assert link_target(ignore) == "", ignore

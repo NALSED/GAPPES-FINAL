@@ -20,12 +20,17 @@ class FetcherError(Exception):
     """JSON brut inexploitable."""
 
 
+class Skip(Exception):
+    """Enregistrement valide mais sans observation (ex. message de service) : compté, pas rejeté."""
+
+
 @dataclass(slots=True)
 class RejectReport:
     """Rapport de rejets d'un lot : comptes et motifs, sans interrompre le lot."""
 
     accepted: int = 0
     duplicates: int = 0
+    ignored: int = 0
     rejected: list[tuple[int, str]] = field(default_factory=list)  # (index, motif)
 
     @property
@@ -35,6 +40,15 @@ class RejectReport:
 
 class BaseFetcher(ABC):
     ecosystem: ClassVar[str]
+
+    def unwrap(self, doc: Any) -> list[Any]:
+        """Document JSON (liste, enveloppe d'export ou API) -> enregistrements à parser.
+
+        Par défaut : un objet = un enregistrement. Les fetchers dont l'export a une enveloppe
+        (`data`, `messages`...) la défont ici ; les enregistrements illisibles restent tels
+        quels pour être comptés comme rejets.
+        """
+        return [doc]
 
     @abstractmethod
     def parse(self, raw: Mapping[str, Any]) -> Iterable[Observation]:
@@ -50,6 +64,9 @@ class BaseFetcher(ABC):
         for i, raw in enumerate(raws):
             try:
                 obs_list = list(self.parse(raw))
+            except Skip:
+                report.ignored += 1
+                continue
             except FetcherError as exc:
                 report.rejected.append((i, str(exc)))
                 log.warning("%s: enregistrement %d rejeté : %s", self.ecosystem, i, exc)
@@ -112,6 +129,8 @@ def parse_ts(value: Any) -> datetime | None:
     if value is None or value == "":
         return None
     try:
+        if isinstance(value, str) and value.strip().isdigit():  # epoch en chaîne
+            value = int(value.strip())
         if isinstance(value, (int, float)) and not isinstance(value, bool):
             return datetime.fromtimestamp(value, tz=UTC)
         dt = datetime.fromisoformat(str(value).strip())

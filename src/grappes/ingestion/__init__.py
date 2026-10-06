@@ -1,6 +1,6 @@
 """Ingestion : importer les modules déclenche l'enregistrement des fetchers."""
 
-from grappes.ingestion import telegram, web, x  # noqa: F401
+from grappes.ingestion import instagram, telegram, web, x  # noqa: F401
 from grappes.ingestion.base import (
     BaseFetcher,
     FetcherError,

@@ -18,6 +18,7 @@ log = logging.getLogger(__name__)
 
 def read_json_records(folder: str | Path) -> list[dict]:
     """Lit tous les `.json` (liste ou objet) et `.jsonl` d'un dossier, dans l'ordre des noms.
+    Les objets sont rendus tels quels : `Fetcher.unwrap` défait les enveloppes d'export.
 
     UTF-8 avec ou sans BOM. Un fichier illisible (encodage, JSON invalide) ou une ligne
     invalide devient un enregistrement `None`, compté comme rejet par le fetcher : le lot
@@ -55,7 +56,8 @@ def ingest(
     db: Database, folder: str | Path, ecosystem: str, cfg: Config
 ) -> tuple[int, RejectReport]:
     fetcher = get_fetcher(ecosystem)
-    obs, report = fetcher.parse_many(read_json_records(folder))
+    records = [r for doc in read_json_records(folder) for r in fetcher.unwrap(doc)]
+    obs, report = fetcher.parse_many(records)
     weights = {o.source.key: cfg.sources.weight(o.source.key) for o in obs}
     new = db.add_observations(obs, weights)
     return new, report

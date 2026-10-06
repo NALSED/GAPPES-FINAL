@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 _TRACKING_PARAMS = {"fbclid"}
@@ -22,25 +23,71 @@ def canonical_domain(host: str) -> str:
 
 
 _TME_HOSTS = {"t.me", "telegram.me"}
-_TME_RESERVED = {"joinchat", "c", "s", "addstickers", "share", "iv", "proxy", "socks"}
+_X_HOSTS = {"x.com", "twitter.com", "mobile.twitter.com"}
+_IG_HOSTS = {"instagram.com"}
+_SHORTENERS = {"t.co"}  # cible inconnaissable sans résolution réseau : jamais citée
+_TME_RESERVED = {"joinchat", "c", "addstickers", "share", "iv", "proxy", "socks", "login"}
+_X_RESERVED = {
+    "i", "home", "hashtag", "search", "intent", "share", "explore", "settings", "messages",
+    "notifications", "compose", "login", "signup", "tos", "privacy", "about", "account",
+}  # fmt: skip
+_IG_RESERVED = {
+    "p", "reel", "reels", "tv", "explore", "stories", "accounts", "direct", "about",
+    "developer", "legal", "web",
+}  # fmt: skip
 
 
-def telegram_channel(url: str) -> str:
-    """Handle du canal pointé par un lien `t.me/<canal>[/<id>]`, sinon chaîne vide.
+def link_target(url: str) -> str:
+    """Clé canonique (`ecosysteme:ident`) de l'élément cité par un lien ; `""` si aucun.
 
-    Les liens d'invitation (`+...`, `joinchat`) et les chemins réservés ne désignent pas
-    un canal public identifiable : ils donnent une chaîne vide.
+    * `t.me/<canal>[/<id>]`, `t.me/s/<canal>` -> `telegram:canal` ;
+    * `x.com|twitter.com/<compte>[/...]` -> `x:compte` ;
+    * `instagram.com/<compte>` -> `instagram:compte` ;
+    * autre site -> `web:domaine`.
+
+    Rien n'est cité (`""`) quand la cible ne peut pas être identifiée sans résolution réseau ni
+    ré-identification : invitations Telegram (`t.me/+...`, `joinchat`), messages de groupes
+    privés (`t.me/c/...`), publications Instagram (`/p/...`, `/reel/...`), raccourcisseur `t.co`,
+    pages d'outils de plateforme (`x.com/i/...`, `x.com/search`...). Aucun lien ne devient donc
+    une entité `web:t.me`, `web:x.com` ou `web:instagram.com`.
     """
     url = url.strip()
+    if not url:
+        return ""
     if "://" not in url:
         url = "https://" + url
     parts = urlsplit(url)
-    if (parts.hostname or "").casefold().removeprefix("www.") not in _TME_HOSTS:
+    host = (parts.hostname or "").casefold().removeprefix("www.")
+    if not host:
         return ""
-    first = parts.path.strip("/").split("/", 1)[0]
-    if not first or first.startswith("+") or first.casefold() in _TME_RESERVED:
+    segments = [seg for seg in parts.path.split("/") if seg]
+    first = segments[0] if segments else ""
+    if host in _SHORTENERS:
         return ""
-    return canonical_handle(first)
+    if host in _TME_HOSTS:
+        if first.casefold() == "s" and len(segments) > 1:  # aperçu web d'un canal public
+            first = segments[1]
+        if not first or first.startswith("+") or first.casefold() in _TME_RESERVED | {"s"}:
+            return ""
+        handle = canonical_handle(first)
+        return f"telegram:{handle}" if handle else ""
+    if host in _X_HOSTS:
+        if not first or first.casefold() in _X_RESERVED:
+            return ""
+        return f"x:{canonical_handle(first)}"
+    if host in _IG_HOSTS:
+        if not first or first.casefold() in _IG_RESERVED:
+            return ""
+        return f"instagram:{canonical_handle(first)}"
+    return f"web:{host}"
+
+
+_URL_RE = re.compile(r"https?://[^\s<>\"')\]]+", re.IGNORECASE)
+
+
+def extract_urls(text: str) -> list[str]:
+    """URLs `http(s)://` d'un texte libre (légende, message), sans ponctuation finale."""
+    return [u.rstrip(".,;:!?") for u in _URL_RE.findall(text)]
 
 
 def canonical_url(url: str) -> str:

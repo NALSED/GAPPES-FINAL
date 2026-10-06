@@ -15,7 +15,7 @@ def load(name):
 
 
 def test_registre():
-    assert registered_ecosystems() == ["telegram", "web", "x"]
+    assert registered_ecosystems() == ["instagram", "telegram", "web", "x"]
     with pytest.raises(FetcherError):
         get_fetcher("inconnu")
 

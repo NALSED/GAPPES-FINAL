@@ -28,7 +28,12 @@ class ScoringConfig:
     niveau_confirme: float = 70.0
     niveau_probable: float = 40.0
     entity_types: dict[str, str] = field(
-        default_factory=lambda: {"x": "person", "telegram": "group", "web": "site"}
+        default_factory=lambda: {
+            "x": "person",
+            "telegram": "group",
+            "web": "site",
+            "instagram": "person",
+        }
     )
     csv_separator: str = ";"
     csv_bom: bool = False

@@ -13,7 +13,7 @@ python3 -m venv .venv
 ## Utilisation
 
 ````bash
-grappes ingest <dossier_json> --ecosystem x|telegram|web
+grappes ingest <dossier_json> --ecosystem x|telegram|instagram|web
 grappes run
 grappes export --out ./sorties
 ````

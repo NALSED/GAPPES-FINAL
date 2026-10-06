@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from grappes.config import ConfigError, load_config
+from grappes.ingestion import registered_ecosystems
 from grappes.pipeline import export, ingest, run
 from grappes.storage.db import Database
 
@@ -38,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("ingest")
     s.add_argument("folder")
-    s.add_argument("--ecosystem", required=True, choices=["x", "telegram", "web"])
+    s.add_argument("--ecosystem", required=True, choices=registered_ecosystems())
     sub.add_parser("run")
     e = sub.add_parser("export")
     e.add_argument("--out", default="sorties")
@@ -72,6 +73,7 @@ def main(argv: list[str] | None = None) -> int:
             new, rep = ingest(db, args.folder, args.ecosystem, cfg)
             print(
                 f"{new} nouvelles observations, {rep.duplicates} doublons, {rep.n_rejected} rejets"
+                + (f", {rep.ignored} ignorés" if rep.ignored else "")
             )
             if rep.n_rejected and not (new or rep.duplicates):
                 print(

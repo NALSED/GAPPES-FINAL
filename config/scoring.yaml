@@ -8,6 +8,7 @@ entity_types:              # type d'entité par écosystème
   x: person
   telegram: group
   web: site
+  instagram: person
 csv:
   separator: ";"
   bom: false
