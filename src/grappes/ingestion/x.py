@@ -60,9 +60,7 @@ class XFetcher(BaseFetcher):
             source=source,
             ts=parse_ts(raw.get("created_at")),
             text=text,
-            mentions=dedup(
-                SourceRef("x", h) for h in map(canonical_handle, mention_handles) if h
-            ),
+            mentions=dedup(SourceRef("x", h) for h in map(canonical_handle, mention_handles) if h),
             links=dedup(u for u in urls if u),
             hashtags=dedup(t for t in tags if t),
             engagement=engagement,

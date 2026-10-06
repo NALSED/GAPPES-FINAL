@@ -7,8 +7,9 @@ Dernière mise à jour : 2026-10-06 — Phase 0 (préparation, aucun code applic
 * Phase 0 terminée (suivi, `CLAUDE.md`, outils, dépôt git dédié). Pleine autonomie : plus de STOP de fin de phase (D6).
 * Phase 1 terminée : squelette, `models.py`, `canon.py`, `BaseFetcher` + registre, fetchers X/Telegram/web, fixtures synthétiques, `docs/conception/formats_json.md`.
 * Phase 2 terminée : `semantic/scoring.py` + tests §9.1 (voir D7 sur l'écart de la valeur « ≈ 86 »).
-* Phase 3 en cours : SQLite, config YAML, affectation sémantique seule, `entites.csv` v0.
-* Tests : 34 verts (`.venv/bin/pytest`), `ruff` propre.
+* Phase 3 terminée : SQLite (`storage/db.py`), config YAML + `config_hash`, affectation sémantique seule (confiance = S), `entites.csv` / `appartenances.csv` rejouables à l'identique, CLI `ingest`/`run`/`export`.
+* Phase 4 en cours : pondération, recoupement, ancres, oppositions, confiance complète.
+* Tests : 52 verts (`.venv/bin/pytest`), `ruff` propre.
 * Journal gratuit : lignes dans `donnees/.journal_ccr.log` (N à fixer, Q14).
 * Étape 5 de §4.2 (hook `Stop` dans `~/.claude/settings.json`) toujours à faire par Sednal (QB).
 
@@ -22,6 +23,10 @@ Dernière mise à jour : 2026-10-06 — Phase 0 (préparation, aucun code applic
 * `gh` n'est pas installé : impossible de commenter l'issue `NALSED/agent-momo`. Les questions sont dans `QUESTIONS.md` et le pilotage se fait par tmux (§0).
 * `~/.claude/settings.json` référence toujours `/opt/mapping/outils/continuer.sh` (hook `Stop`). Non modifié (interdit avant accord de Sednal).
 * Interruption : `/opt/grappes` était en `root:root` 755 au début de la session ; corrigé par Sednal.
+
+## Limites connues
+
+* Les liens vers `t.me` créent une entité `web:t.me` (site) au lieu d'une citation du canal Telegram : à traiter avec les vrais formats (Q2).
 
 ## Reste à faire
 

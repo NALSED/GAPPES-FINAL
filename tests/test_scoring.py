@@ -65,7 +65,9 @@ def test_multi_mots_hashtag_handle():
     assert score_proximity("ma grande soupe", ["grande soupe"]) > 0
     assert score_proximity("voir #cuisine", ["#cuisine"]) > 0
     assert score_proximity("merci @chef_demo", ["@chef_demo"]) > 0
-    assert score_proximity("grande  soupe", ["grande soupe"]) == 0  # espaces multiples : pas de magie
+    assert (
+        score_proximity("grande  soupe", ["grande soupe"]) == 0
+    )  # espaces multiples : pas de magie
 
 
 def test_scale():

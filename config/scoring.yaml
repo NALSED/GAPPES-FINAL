@@ -1,0 +1,13 @@
+# Paramètres globaux. Toutes les valeurs sont initiales, non actées (MISSION §11, Q4).
+top_n_observations: 5      # S(e, g) = moyenne des N meilleurs scores d'observations
+seuil_min: 40.0            # confiance minimale pour porter un cluster_id
+marge_ambiguite: 10.0      # écart minimal avec la 2e grappe
+niveau_confirme: 70.0
+niveau_probable: 40.0
+entity_types:              # type d'entité par écosystème
+  x: person
+  telegram: group
+  web: site
+csv:
+  separator: ";"
+  bom: false
