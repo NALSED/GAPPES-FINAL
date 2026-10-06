@@ -10,8 +10,9 @@ Dernière mise à jour : 2026-10-06 — Phase 0 (préparation, aucun code applic
 * Phase 3 terminée : SQLite (`storage/db.py`), config YAML + `config_hash`, affectation sémantique seule (confiance = S), `entites.csv` / `appartenances.csv` rejouables à l'identique, CLI `ingest`/`run`/`export`.
 * Phase 4 terminée : poids des sources, citations, recoupement itératif borné (`ecosystem/crossref.py`), ancres et oppositions (`semantic/relations.py`), confiance complète (`clustering/assign.py`), table `validations`. Cas testés : validé, refusé (écosystèmes, citants, poids, non-membres), ambigu, circularité bornée.
 * Phase 5 terminée : serveur MCP (`mcp/queries.py`, `mcp/server.py`), 8 outils, SDK `mcp` 2.3.0 épinglé (D13), README de connexion ; test de bout en bout via un client MCP stdio.
-* Phase 6 en cours : CLI complète (`explain`, `purge`, `mcp`), durcissement, doc utilisateur, test de charge 100 000 observations.
-* Tests : 81 verts (`.venv/bin/pytest`), `ruff` propre.
+* Phase 6 terminée : CLI complète (`ingest`, `run`, `export`, `explain`, `purge`, `mcp`), erreurs d'entrée lisibles, `docs/utilisateur.md`, test de charge 100 000 observations : 5,0 s, ~200 Mo (`docs/conception/charge.md`).
+* **v1 fonctionnelle** : `ingest → run → export` sur fixtures, `explain`, MCP. Reste hors code : étape 5 du §4.2 (hook `Stop`) et les réponses de Sednal à Q1–Q7, Q9–Q14.
+* Tests : 83 verts (`.venv/bin/pytest`), `ruff` propre.
 * Journal gratuit : lignes dans `donnees/.journal_ccr.log` (N à fixer, Q14).
 * Étape 5 de §4.2 (hook `Stop` dans `~/.claude/settings.json`) toujours à faire par Sednal (QB).
 

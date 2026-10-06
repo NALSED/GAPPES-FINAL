@@ -159,3 +159,40 @@ def test_jsonl_ligne_cassee_comptee_en_rejet(tmp_path):
     new, rep = ingest(db, d, "x", cfg)
     assert new == 1 and rep.n_rejected == 1
     json.dumps(rep.rejected)  # sérialisable
+
+
+def test_cli_explain_purge_et_erreurs(tmp_path, capsys):
+    d = _folder(tmp_path, "in", "x.jsonl")
+    db = str(tmp_path / "c.db")
+    base = ["--db", db, "--config", str(CONFIG)]
+    assert main([*base, "ingest", str(tmp_path / "absent"), "--ecosystem", "x"]) == 2
+    assert main([*base, "ingest", str(d), "--ecosystem", "x"]) == 0
+    assert main([*base, "run"]) == 0
+    capsys.readouterr()
+    assert main([*base, "explain", "E-inconnu"]) == 1
+    d2 = Database(db)
+    eid = d2.conn.execute(
+        "SELECT entity_id FROM entities WHERE primary_ref='x:chef_demo'"
+    ).fetchone()[0]
+    d2.close()
+    capsys.readouterr()
+    assert main([*base, "explain", eid]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["entite"]["primary_ref"] == "x:chef_demo" and "explication" in out
+    assert main([*base, "purge", "--older-than", "1"]) == 0
+    assert main(["--db", str(tmp_path / "absente.db"), "--config", str(CONFIG), "mcp"]) == 2
+
+
+def test_charge_synthetique_petit(tmp_path):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("charge", ROOT / "outils" / "charge.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    cfg = load_config(CONFIG)
+    obs = list(mod.synth(500, 25))
+    assert len(obs) == 500 and len({o.obs_id for o in obs}) == 500
+    from grappes.clustering.assign import assign
+
+    res = assign(obs, cfg)
+    assert res.entities and res.iterations <= cfg.scoring.max_iter
