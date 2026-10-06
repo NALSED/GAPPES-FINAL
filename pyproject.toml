@@ -7,7 +7,7 @@ name = "grappes"
 version = "0.1.0"
 description = "Intelligence de terrain : entités rangées en grappes"
 requires-python = ">=3.11"
-dependencies = ["pyyaml>=6"]
+dependencies = ["pyyaml>=6", "mcp==2.3.0"]
 
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
