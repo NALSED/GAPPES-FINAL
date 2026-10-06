@@ -4,16 +4,18 @@ Dernière mise à jour : 2026-10-06 — Phase 0 (préparation, aucun code applic
 
 ## Où on en est
 
-* `MISSION.md` lu en entier (fichier tronqué à la Q5 du §17, voir `QUESTIONS.md`).
-* Fichiers de suivi créés : `ETAT.md`, `DECISIONS.md`, `QUESTIONS.md`, `docs/conception/`.
-* `MISSION.md` mis à jour par Sednal : plage 9 h à 17 h supprimée (développement continu).
-* Migration §4.2 : étapes 1 à 4 faites (dépôt git dédié `/opt/grappes`, `CLAUDE.md`, `outils/continuer.sh`, `outils/appeler_gratuit.sh` testé : 1 ligne dans `donnees/.journal_ccr.log`).
-* Étape 5 (`~/.claude/settings.json`, hook `Stop`) : **bloquée**, l'édition a été refusée par le classifieur de permissions. À faire par Sednal ou à autoriser explicitement. Sauvegarde non faite.
-* Étapes 6 (nouvelle session tmux) et 7 (checklist §4.7) en attente.
+* Phase 0 terminée (suivi, `CLAUDE.md`, outils, dépôt git dédié). Pleine autonomie : plus de STOP de fin de phase (D6).
+* Phase 1 terminée : squelette, `models.py`, `canon.py`, `BaseFetcher` + registre, fetchers X/Telegram/web, fixtures synthétiques, `docs/conception/formats_json.md`.
+* Phase 2 terminée : `semantic/scoring.py` + tests §9.1 (voir D7 sur l'écart de la valeur « ≈ 86 »).
+* Phase 3 en cours : SQLite, config YAML, affectation sémantique seule, `entites.csv` v0.
+* Tests : 34 verts (`.venv/bin/pytest`), `ruff` propre.
+* Journal gratuit : lignes dans `donnees/.journal_ccr.log` (N à fixer, Q14).
+* Étape 5 de §4.2 (hook `Stop` dans `~/.claude/settings.json`) toujours à faire par Sednal (QB).
 
 ## Ce qui marche
 
-* Rien d'applicatif (phase 0).
+* Ingestion JSON brut -> Observations (3 écosystèmes), rapport de rejets, doublons.
+* Scoring de proximité 0 à 100.
 
 ## Constats d'environnement
 

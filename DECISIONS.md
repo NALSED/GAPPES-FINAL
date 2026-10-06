@@ -8,3 +8,5 @@
 | D4 | 2026-10-06 | Watchdog « session limit » (§4.4) : timer systemd qui détecte le message dans le pane tmux et envoie la reprise. Non implémenté avant le « go » (Q13). | proposée |
 | D5 | 2026-10-06 | Dépôt git dédié initialisé dans `/opt/grappes` (nom de travail `grappes`, Q1 toujours ouverte). | prise |
 | D6 | 2026-10-06 | Pleine autonomie : `ATTENTE_VALIDATION` et STOP de fin de phase supprimés (MISSION §0/§2.2 modifiés par Sednal). Sollicitation uniquement pour choix crucial ou bug critique. | prise |
+| D7 | 2026-10-06 | §9.1 : la formule `100 × (1 − exp(−raw/scale))` avec `scale = 3` donne 63,2 pour trois termes de poids 1, pas ≈ 86 comme annoncé (86,5 correspond à `scale = 1,5`). On garde la formule et `scale = 3.0` (valeur initiale configurable par grappe) ; test écrit sur la formule. À réviser si Sednal préfère `scale = 1,5`. | prise |
+| D8 | 2026-10-06 | `normalize` recompose en NFC après retrait des accents latins, pour que « й » ne reste pas décomposé. | prise |
