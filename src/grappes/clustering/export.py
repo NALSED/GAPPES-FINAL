@@ -35,6 +35,11 @@ def _fmt(ts) -> str:
     return ts.isoformat() if ts else ""
 
 
+def _safe(value: str) -> str:
+    """Neutralise l'injection de formule tableur : une cellule texte ne commence pas par = + - @."""
+    return "'" + value if value[:1] in ("=", "+", "-", "@", "\t", "\r") else value
+
+
 def _open(path: Path, cfg: Config):
     return path.open("w", encoding="utf-8-sig" if cfg.scoring.csv_bom else "utf-8", newline="")
 
@@ -62,8 +67,8 @@ def export_csv(result: AssignResult, cfg: Config, run_id: str, out_dir: str | Pa
                 [
                     e.entity_id,
                     e.type.value,
-                    e.display_name or "",
-                    e.primary_ref,
+                    _safe(e.display_name or ""),
+                    _safe(e.primary_ref),
                     ",".join(sorted(st.ecosystems)),
                     main["grappe_id"] if classed else "",
                     f"{main['confidence']:.2f}" if main else "0.00",

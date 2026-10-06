@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from pathlib import Path
 
 from grappes.clustering.assign import AssignResult, assign
@@ -12,20 +13,40 @@ from grappes.config import Config
 from grappes.ingestion import RejectReport, get_fetcher
 from grappes.storage.db import Database
 
+log = logging.getLogger(__name__)
+
 
 def read_json_records(folder: str | Path) -> list[dict]:
-    """Lit tous les `.json` (liste ou objet) et `.jsonl` d'un dossier, dans l'ordre des noms."""
+    """Lit tous les `.json` (liste ou objet) et `.jsonl` d'un dossier, dans l'ordre des noms.
+
+    UTF-8 avec ou sans BOM. Un fichier illisible (encodage, JSON invalide) ou une ligne
+    invalide devient un enregistrement `None`, compté comme rejet par le fetcher : le lot
+    n'est jamais interrompu.
+    """
     records: list[dict] = []
     for p in sorted(Path(folder).iterdir()):
+        if p.suffix not in (".json", ".jsonl") or not p.is_file():
+            continue
+        try:
+            text = p.read_text(encoding="utf-8-sig")
+        except UnicodeDecodeError as exc:
+            log.warning("%s: encodage UTF-8 invalide (%s), fichier rejeté", p.name, exc)
+            records.append(None)
+            continue
         if p.suffix == ".jsonl":
-            for line in p.read_text(encoding="utf-8").splitlines():
+            for line in text.splitlines():
                 if line.strip():
                     try:
                         records.append(json.loads(line))
                     except json.JSONDecodeError:
-                        records.append(None)  # compté comme rejet par le fetcher
-        elif p.suffix == ".json":
-            data = json.loads(p.read_text(encoding="utf-8"))
+                        records.append(None)
+        else:
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError as exc:
+                log.warning("%s: JSON invalide (%s), fichier rejeté", p.name, exc)
+                records.append(None)
+                continue
             records.extend(data if isinstance(data, list) else [data])
     return records
 
