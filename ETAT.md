@@ -24,7 +24,8 @@ Dernière mise à jour : 2026-10-06 — v1 terminée (phases 0 à 6) ; réponses
 * **Revue de configuration** (D22) : `ConfigError` lisibles partout, NaN/infini refusés, ancres canonicalisées et validées, `purge` négatif refusé ; `tests/test_config_robustesse.py`.
 * **CLI** (D23) : `ingest` échoue explicitement si tout est rejeté ; paquet installé dans `.venv` (commande `grappes` disponible) ; ingestion incrémentale testée sur le corpus.
 * **Échantillons de formats** (`REPONSES_SEDNAL_3.md`, D24 à D26) : comparaison documentée dans `docs/conception/formats_json.md` ; fetchers X, Telegram, web adaptés, `InstagramFetcher` créé, liens révisés (D14 -> D24) ; `tests/test_echantillons.py` (échantillons dans `tests/fixtures/echantillons/`). Points à confirmer sur de vrais exports : Q16 à Q19. Aucune donnée réelle ingérée, aucune ré-identification.
-* Tests : 177 verts, `ruff` propre.
+* **Phase 8** (REPONSES_SEDNAL_6, D27 à D29, proposées) : multiprise de recherche enfichable `grappes search` (`src/grappes/search/`, `docs/conception/phase8.md`, guide dans `docs/utilisateur.md`). Fournisseurs par YAML (`http`, `mcp`) ou plugin Python ; dry-run par défaut ; aucun appel réel lancé. REPONSES_SEDNAL_4.md et _5.md n'existent pas sur la machine (D29).
+* Tests : 229 verts, `ruff` propre.
 * Interruptions « session limit » : aucune constatée depuis les réponses de Sednal (à noter ici à chaque occurrence, Q13).
 
 ## Ce qui marche

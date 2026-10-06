@@ -1,0 +1,10 @@
+# Recherche de candidats (phase 8). Tout est désactivé par défaut ; rien n'est ingéré automatiquement.
+# Un fournisseur = un fichier YAML dans config/recherche/ (voir config/recherche/exemples/)
+# ou un plugin Python dans plugins/. Aucun fournisseur n'est codé en dur dans le cœur.
+actifs: []                   # liste blanche des fournisseurs (ids) ; vide = rien d'actif
+execution_autorisee: false   # verrou 1 : sans lui, `--execute` reste un dry-run
+quota_total: 100             # requêtes maximum par exécution, tous fournisseurs confondus
+delai_s: 1.0                 # délai minimal entre deux requêtes
+limite_par_mot_cle: 20       # candidats maximum par mot-clé et par fournisseur
+plugins_dir: plugins
+journal: donnees/journal_recherche.log

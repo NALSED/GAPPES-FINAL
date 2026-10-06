@@ -6,3 +6,6 @@ sorties/
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+donnees/journal_recherche.log
+plugins/*.py
+!plugins/__init__.py
