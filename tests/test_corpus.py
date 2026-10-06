@@ -79,6 +79,13 @@ def test_refuses_jamais_valides(monde):
     assert "web:cible-bruit.test" not in records or "non membres" in bruit
 
 
+def test_mono_ecosysteme_refuse_e_nul_non_classe(monde):
+    """D19 : 5 membres de A, un seul écosystème -> refusé, E = 0, conf = S, non classé."""
+    for m in membres(monde, "x:cible_mono_eco"):
+        assert m["ecosystem"] == 0 and m["confidence"] == m["semantic"]
+        assert m["status"] != "classé"
+
+
 def test_ambigu_et_circulaire(monde):
     assert membres(monde, "x:mixte")[0]["status"] == "ambigu"
     for i in range(3):

@@ -270,6 +270,13 @@ class Queries:
                 "n_ecosystems": v["n_ecosystems"],
                 "weight_sum": v["weight_sum"],
                 "reasons": json.loads(v["reasons"]),
+                # E potentiel non retenu : recoupement refusé mais citants membres présents
+                "recoupement_partiel": not v["validated"] and v["weight_sum"] > 0,
+                "e_potentiel": round(
+                    100.0
+                    * min(1.0, v["weight_sum"] / (2 * self.cfg.scoring.crossref.min_weight_sum)),
+                    2,
+                ),
             },
             "is_anchor": ref in g.anchors,
             "run_id": run,

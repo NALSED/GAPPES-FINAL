@@ -6,13 +6,14 @@ Statut au 2026-10-06, après `REPONSES_SEDNAL.md`. Aucune réponse inventée.
 
 * **Q2** 2-3 exemples de JSON bruts anonymisés par écosystème (X, Telegram, web) ? Bloque la phase 7.
 * **Q3** Langues des corpus ?
-* **Q7** Base légale, `retention_days`, `redact_persons` par défaut ? Bloque la phase 7 : aucune donnée réelle n'est ingérée avant la réponse.
+* **Q7b** Base légale du traitement : non précisée (la réponse de Sednal ne porte que sur `retention_days` et `redact_persons`, voir D20). À fournir avant toute donnée réelle.
 * **Q10** Clients MCP visés et lieu d'exécution ?
 * **Q11** Scoring par embeddings plus tard, oui ou non ?
-* **Q15** (nouvelle) Avec la formule D15, E compte même quand le recoupement est **refusé** (E se calcule sur les citants membres, pas sur `validated`). Exemple du corpus synthétique : `x:cible_mono_eco`, citée par 5 membres de la grappe A d'un seul écosystème, est refusée (`écosystèmes 1 < 2`) mais obtient E = 83, donc confiance 50 ≥ `seuil_min` : classée « probable », `via = semantique`. Avec l'ancienne formule (0,3·E), elle restait à 25, non classée. Faut-il (a) garder ce comportement, (b) ne compter E que si le recoupement est validé, ou (c) afficher `via = recoupement_partiel` pour ne pas l'attribuer à la sémantique ? Comportement actuel conservé (conforme à la formule fournie).
 
 ## Réglées ou provisoires
 
+* **Q7** Partiellement réglée (D20) : pas de `retention_days`, pas de `redact_persons`. Reste la base légale (Q7b).
+* **Q15** Réglée (D19) : E vaut 0 tant que le recoupement n'est pas validé ; `explain` indique `recoupement_partiel`.
 * **Q1** Réglée : « grappes » reste le nom de travail.
 * **Q4, Q5, Q9** Valeurs actuelles gardées (seuils par défaut ; CSV `;`, UTF-8 sans BOM ; règle d'opposition par marge). Provisoire, à recalibrer avec des données réelles.
 * **Q6** Thèmes neutres de démonstration conservés (cuisine, jardinage).

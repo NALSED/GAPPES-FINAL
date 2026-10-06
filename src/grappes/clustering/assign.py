@@ -1,5 +1,6 @@
 """Score de confiance et affectation aux grappes (MISSION §10.2, §11).
 
+E vaut 0 tant que le recoupement n'est pas validé (D19).
 Formule par défaut (D15) : confiance = S + (100 − S)·(0,6·E + 0,4·A) / 100 ; sans citations,
 confiance = S. Option `formule_confiance: ponderee` : w_s·S + w_e·E + w_a·A (D12).
 Amorçage (itération 0) : même formule avec E = 0, pour désigner les membres initiaux
@@ -164,9 +165,11 @@ def assign(observations: list[Observation], cfg: Config) -> AssignResult:
             )
             for r in refs:
                 rec = records.get(r)
+                # E potentiel (citants membres) ; retenu seulement si le recoupement est validé
+                # (D19) : un refus ne doit pas suffire à classer l'entité.
                 e = (
                     100.0 * min(1.0, rec.weight_sum / (2 * sc.crossref.min_weight_sum))
-                    if rec
+                    if rec and rec.validated
                     else 0.0
                 )
                 c = combine(sem[r, gid], e, anc[gid][r], sc)

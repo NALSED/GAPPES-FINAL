@@ -298,3 +298,53 @@ def test_confiance_option_ponderee(tmp_path):
 def test_formule_invalide(tmp_path, bad):
     with pytest.raises(Exception, match="formule_confiance|poids_complementaire"):
         make_cfg(tmp_path, **{bad.split(":", 1)[0]: bad.split(":", 1)[1]})
+
+
+# --- D19 : E vaut 0 tant que le recoupement n'est pas validé ---------------------------------
+
+
+def _citants(eco_par_citant):
+    obs_list = [obs("web:cible.test", "soupe")]  # S ≈ 28 < seuil_min
+    for i, eco in enumerate(eco_par_citant):
+        src = f"{eco}:membre{i}"
+        link = "https://cible.test/p" if eco != "web" else "https://cible.test/q"
+        obs_list.append(obs(src, STRONG))
+        obs_list.append(obs(src, NEUTRAL, links=[link]))
+    return obs_list
+
+
+def _membre_a(res, ref):
+    eid = next(e.entity_id for e in res.entities if e.primary_ref == ref)
+    return next(m for m in res.memberships if m["entity_id"] == eid and m["grappe_id"] == "G-A")
+
+
+def test_recoupement_refuse_donne_e_nul_et_pas_de_classement(tmp_path):
+    res = assign(_citants(["x"] * 5), make_cfg(tmp_path, seuil_min=40))
+    m = _membre_a(res, "web:cible.test")
+    rec = next(r for r in res.validations if r.cited == "web:cible.test" and r.grappe_id == "G-A")
+    assert not rec.validated and "écosystèmes 1 < 2" in " ".join(rec.reasons)
+    assert m["ecosystem"] == 0 and m["confidence"] == m["semantic"] > 0
+    assert m["status"] == "non_classé" and m["via"] != "recoupement"
+
+
+def test_second_ecosysteme_valide_e_positif_et_classe(tmp_path):
+    res = assign(_citants(["x"] * 3 + ["telegram"] * 2), make_cfg(tmp_path, seuil_min=40))
+    m = _membre_a(res, "web:cible.test")
+    assert m["ecosystem"] > 0 and m["status"] == "classé" and m["via"] == "recoupement"
+    assert m["confidence"] >= 60
+
+
+def test_explain_signale_le_recoupement_partiel(tmp_path):
+    from grappes.mcp.queries import Queries, open_readonly
+    from grappes.pipeline import run
+    from grappes.storage.db import Database
+
+    cfg = make_cfg(tmp_path)
+    db = Database(tmp_path / "d.db")
+    db.add_observations(_citants(["x"] * 5), {})
+    run(db, cfg)
+    q = Queries(open_readonly(tmp_path / "d.db"), cfg)
+    eid = next(r["entity_id"] for r in q.search_entities("cible"))
+    v = q.explain_assignment(eid, "G-A")["validation"]
+    assert v["recoupement_partiel"] and v["e_potentiel"] > 0 and not v["validated"]
+    assert any("écosystèmes" in r for r in v["reasons"])
