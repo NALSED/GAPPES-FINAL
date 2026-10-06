@@ -29,3 +29,13 @@
 
 * Formats JSON d entrée proposés, non réels (Q2) : `docs/conception/formats_json.md`.
 * Les liens `t.me` créent une entité `web:t.me`.
+
+## Corpus synthétique
+
+````bash
+.venv/bin/python outils/corpus_synthetique.py /tmp/corpus   # x/, telegram/, web/, attendu.json
+.venv/bin/grappes --db /tmp/corpus/c.db ingest /tmp/corpus/x --ecosystem x
+````
+
+Thèmes neutres inventés, graine fixe : mêmes fichiers à chaque génération. `attendu.json` donne le statut attendu des cibles de recoupement (validé, refusé, ambigu).
+

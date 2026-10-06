@@ -1,6 +1,6 @@
 # ETAT — grappes
 
-Dernière mise à jour : 2026-10-06 — v1 terminée (phases 0 à 6), consolidation.
+Dernière mise à jour : 2026-10-06 — v1 terminée (phases 0 à 6) ; réponses de Sednal appliquées (`REPONSES_SEDNAL.md`).
 
 ## Où on en est
 
@@ -15,6 +15,13 @@ Dernière mise à jour : 2026-10-06 — v1 terminée (phases 0 à 6), consolidat
 * Tests : 83 verts (`.venv/bin/pytest`), `ruff` propre.
 * Journal gratuit : 8 lignes dans `donnees/.journal_ccr.log` (N à fixer, Q14).
 * Étape 5 de §4.2 faite : le hook `Stop` de `~/.claude/settings.json` pointe vers `/opt/grappes/outils/continuer.sh`, plus aucune référence à `/opt/mapping`, sauvegarde `settings.json.bak` (QB réglée).
+
+* **Réponses de Sednal appliquées** : D7 confirmé (`scale = 3`, un terme ≈ 28, trois ≈ 63) ; D15 formule de confiance `S + (100 − S)·(0,6·E + 0,4·A)/100` (ancienne formule en option `formule_confiance: ponderee`) ; D13 import `mcp.server.mcpserver.MCPServer` confirmé ; Q1, Q4, Q5, Q9, Q12, Q13, Q14, QA, QC réglées ou provisoires.
+* **Revue de robustesse** (D16) : BOM UTF-8 accepté, fichier JSON illisible compté comme rejet, injection de formule CSV neutralisée ; 31 tests (`tests/test_robustesse.py`).
+* **Corpus synthétique** (D18) : `outils/corpus_synthetique.py` (~2 300 enregistrements), `tests/test_corpus.py` ; requête MCP « 10 sources les plus influentes de la Grappe A » vérifiée (API et client stdio).
+* **Phase 7** : plan écrit (`docs/conception/phase7.md`, D17, proposée), non exécuté ; bloquée par Q2 et Q7. Aucune donnée réelle ingérée.
+* Tests : 133 verts, `ruff` propre.
+* Interruptions « session limit » : aucune constatée depuis les réponses de Sednal (à noter ici à chaque occurrence, Q13).
 
 ## Ce qui marche
 
@@ -32,6 +39,6 @@ Dernière mise à jour : 2026-10-06 — v1 terminée (phases 0 à 6), consolidat
 
 ## Reste à faire
 
-* Réponses de Sednal aux questions de `QUESTIONS.md` (Q1–Q7, Q9–Q14).
-* `MISSION.md` ne définit pas de phase 7 : consolidation en attendant (revue de code, cas limites).
-* Watchdog « session limit » : proposé (D4), non implémenté avant accord (Q13).
+* Réponses de Sednal : Q2, Q3, Q7, Q10, Q11, et arbitrage de Q15 (E compté même si le recoupement est refusé).
+* Phase 7 (données réelles) : dès que Q2 et Q7 sont répondues, suivre `docs/conception/phase7.md`.
+* Pas de watchdog « session limit » (Q13) ; noter chaque interruption ici.
