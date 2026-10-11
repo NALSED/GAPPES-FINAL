@@ -1,6 +1,6 @@
 # ETAT — grappes
 
-Dernière mise à jour : 2026-10-11 (cycle réel après Q24 : Admiralty, registres, Tranco). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
+Dernière mise à jour : 2026-10-11 (Q24 close ; cycles normaux). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
 
 ## En attente de Sednal
 
@@ -27,20 +27,9 @@ Sujet : « Les acteurs des blocages et mobilisations étudiantes en France en ce
 * **Règles tenues** : `robots.txt` respecté (flux et pages), 1 s entre deux requêtes d'un domaine, arrêt sur 403, aucun réseau social visité, journal complet (`donnees/journal_recherche.log` : 25 requêtes Tavily, 36 Wikipédia/RSS, 195 pages sur l'ensemble des cycles de la journée, annulés compris).
 * **Défauts de mon code corrigés en route** : D48 (les 8 premiers articles Wikipédia prenaient tous les emplacements de « nouvelles sources » : plafond désormais partagé entre écosystèmes) et D49 (requêtes avec des variantes du même mot ; un mot répété suffisait à faire ingérer un article : deux radicaux distincts exigés).
 
-## Q24 : pondération Admiralty, registres, Tranco appliqués (D50 à D53)
+## Q24 : close (acceptée, D56)
 
-* **Fait** : fiabilité A à F par type de fournisseur (poids par centroïde de rang, aucun barème inventé), crédibilité 1 à 6, colonne `admiralty` dans `entites.csv` ; registres officiels (ESR par domaine : 241 domaines en cache ; SIRENE/RNA par nom exact, actif, unique) ; Tranco (liste 8PXYV du 2026-10-10, téléchargée une fois, cache 30 jours). 515 tests verts.
-* **Cycle réel après les trois points** (`rapports/cycle_2026-10-11_7.md`) : 4 nouvelles sources, sources par lettre B : 2, C : 11, D : 1, **aucune en A** (le seul nom web interrogé, « Le Bonbon », n'a pas de correspondance exacte), **0 entité confirmée**, 7 rangées « probable ». Rien n'a changé de grappe ; l'ajustement automatique du seuil d'ingestion (20 → 25) a été proposé par le cycle.
-* **Lecture honnête** : la pondération rend la confirmation *plus rapide* quand deux écosystèmes citent la même cible (tests), mais elle ne crée pas de recoupement : tant que les citants d'une cible sont tous de l'écosystème `wikipedia`, la règle des deux écosystèmes bloque, comme voulu (D50, D51). Ce n'est pas un bug ; le résultat reste « probable » pour ce sujet. Les voies restantes de Q24 (extraction d'entités dans le texte RSS, plus de pages web) changent la règle ou le volume : non traitées sans décision de Sednal.
-
-## Q24 suite : citations par mention textuelle (D54)
-
-* **Fait** : le texte libre des éléments RSS et des pages web peut citer une entité déjà connue (nom exact ou domaine, jamais de création d'entité, jamais d'approximation, jamais le propre site de l'éditeur). Marquage `via="texte"`, fiabilité Admiralty une lettre en dessous de celle du citant. 522 tests verts.
-* **Cycle réel** (`rapports/cycle_2026-10-11_8.md`) : 345 citations dont **7 par texte** (pages `lebonbon.fr` et `valeursactuelles.com` mentionnant « Union étudiante », « Cocarde étudiante », « Mouvement des gilets jaunes »), **toutes vers des articles Wikipédia** (donc cibles d'écosystème `wikipedia`, citantes `web`). Résultat : toujours **0 confirmée**, 8 probables. Aucun flux RSS ne mentionne par son nom une entité connue ce cycle.
-* **Lecture honnête** : la mention textuelle apporte bien une seconde voix d'un autre écosystème, mais il faut encore trois citants membres et une somme de poids ≥ 3. Avec des sources D (mention = E, poids 0,59), il en faudrait beaucoup ; seules des mentions par des médias établis (B → C) y arrivent vite. Le plafond n'est donc plus la règle des deux écosystèmes mais le volume de sources citant les mêmes cibles. Je n'ai rien relâché (non négociable) et n'ai pas augmenté les pages lues (écarté).
-
-* **Flux franceinfo ajouté (D55)** puis cycle réel (`rapports/cycle_2026-10-11_9.md`) : 1 seule observation du flux assez proche du sujet (95 résultats refusés pour proximité), 347 citations dont 9 par texte, toujours **0 confirmée**, 8 probables. Le Monde écarté (flux « usage strictement personnel », robots.txt restrictif).
-* **Constat** : le sujet du jour ne produit presque aucun élément de flux proche ; ajouter des flux ne suffit pas. Je m'arrête là sur Q24 : la suite (autres médias, sujets plus couverts par la presse) demande un choix de Sednal. Rien n'est relâché.
+Décision de Sednal : « probable » est le niveau maximal accepté pour le sujet actuel (trop pointu pour se recouper naturellement). D50 à D55 (Admiralty, registres, Tranco, mentions textuelles, flux franceinfo) restent en place pour d'autres sujets ; pas de nouveau flux, pas de changement de sujet, règle des deux écosystèmes inchangée. Dernier état : 8 probables, 0 confirmée (`rapports/cycle_2026-10-11_9.md`). Plus aucun point bloquant ouvert : les cycles reprennent selon le planning normal (`outils/cycle.sh`, timer systemd).
 
 ## Limites connues
 
