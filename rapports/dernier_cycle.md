@@ -1,37 +1,38 @@
-# Rapport du cycle 3 — 11/10/2026 07:45
+# Rapport du cycle 4 — 11/10/2026 07:47
 
 **Mode : réel.** Cycle terminé normalement.
 
 ## Alertes
 
-* Sites qui ont refusé les visites (403/429 ou contrôle anti-robot), arrêt sur ces sites : openai.com
+Aucune alerte.
 
 ## Sujets suivis
 
-* « Les acteurs de l'actualité française en ce moment » — 12 mot(s) de départ (amorcé pendant ce cycle)
+* « Les acteurs de l'actualité française en ce moment » — 12 mot(s) de départ
 
 ## Ce qui est entré
 
-* Requêtes de recherche : 4
-* Résultats examinés : 29
-* Pages visitées : 32
-* Nouvelles sources : **3**
-  * parlons-politique.fr
-  * serieously.ouest-france.fr
-  * azertag.az
-* Observations ajoutées : **15**
+* Requêtes de recherche : 3
+* Résultats examinés : 30
+* Pages visitées : 22
+* Nouvelles sources : **2**
+  * openai.com
+  * madeinmarseille.net
+* Observations ajoutées : **4**
 * Refusé, et pourquoi :
-  * 44 × plafond de pages par domaine atteint
-  * 16 × robots.txt : visite interdite ou illisible
-  * 8 × proximité insuffisante avec les sujets
+  * 33 × plafond de pages par domaine atteint
+  * 13 × robots.txt : visite interdite ou illisible
+  * 6 × proximité insuffisante avec les sujets
   * 5 × réseau social ou identité sans page : citation seulement, jamais lu
-  * 1 × refus du serveur (403/429) : arrêt sur ce domaine
+  * 5 × page trop éloignée des sujets
+  * 4 × page déjà ingérée
 
 ## Où en sont les entités
 
-* Entités connues : 4
-* Rangées dans une grappe : 4 (dont 0 ambiguës)
+* Entités connues : 5
+* Rangées dans une grappe : 5 (dont 0 ambiguës)
 * Confirmées (recoupées sur au moins deux écosystèmes) : 0
+* Avant ce cycle : 4 rangées, 0 confirmées
 * Une source qui n'est pas recoupée reste « probable » au mieux.
 
 ## Ce qui a changé de grappe

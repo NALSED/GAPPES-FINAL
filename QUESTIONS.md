@@ -11,6 +11,9 @@ Statut au 2026-10-06. Référence unique : `FINAL.md`. Aucune réponse inventée
 * **Q20** Garde-fou de la boucle d'apprentissage (D41) : une entité confirmée n'enseigne des mots que si elle descend d'une ancre ou d'une source trouvée par la recherche. Sans ancre et avant la première recherche réelle, rien n'est appris. Faut-il relâcher cette exigence (`apprentissage.exiger_racine_de_confiance: false`) ? Défaut : non, par prudence.
 * **Q21** Personnes physiques (D32) : exclues de `resultat.csv` par défaut ; un compte X ou Instagram sans indice institutionnel explicite dans son nom est traité comme une personne (« en cas de doute, une personne »). La liste d'indices est intégrée (`resultat.indices_institution` pour la remplacer). Défaut : à garder.
 
+* **Q22** (constat du premier cycle réel) Avec le seul fournisseur Tavily, tout est du web : un seul écosystème. Aucune entité ne peut donc être « confirmée » (recoupée sur au moins 2 écosystèmes), et la boucle n'apprend ni mots ni seuils. Trois voies, à toi de choisir : (a) brancher un adaptateur officiel d'un autre écosystème comme fournisseur (un fichier YAML ou un plugin) ; (b) accepter que tout reste « probable » ; (c) redéfinir « écosystème » pour distinguer des familles de sites (presse, institutions...), ce qui change la règle de `FINAL.md`. Défaut : (b), rien n'est modifié.
+* **Q23** Sujet très large : « Les acteurs de l'actualité française » amorce un lexique générique (acteur, actualité, France, crise...) qui laisse passer des sites sans rapport (cinéma, informatique). Un sujet plus précis, ou un `seuil_ingestion` plus haut dans `config/autonomie.yaml` (défaut 20), améliorerait la pertinence. Défaut : inchangé.
+
 ## À trancher sur les premières vraies données collectées (Q16 à Q19)
 
 Aucun export n'est attendu de Sednal (`FINAL.md` § 3) : ces points se tranchent sur les premières données réellement ramenées par la collecte, quelle qu'en soit l'origine. Les formats actuels viennent d'échantillons construits d'après les documentations officielles ; aucun champ n'a été supposé au-delà (détail dans `docs/conception/formats_json.md`).
@@ -33,7 +36,7 @@ Aucun export n'est attendu de Sednal (`FINAL.md` § 3) : ces points se tranchent
   * les noms d'utilisateur peuvent contenir un point : le motif de mention actuel (`@\w+`) s'arrêterait au point ;
   * légende, mentions et hashtags n'ont pas d'entités structurées : extraction par expression régulière ;
   * les commentaires et `children` (carrousels) sont ignorés.
-* **Q19** Web : le format d'entrée est une proposition de Sednal (aucun standard). `published_at` préféré à `fetched_at`, `canonical_url` préférée à `url`, `links[].anchor` ignoré. Format réel du collecteur à fournir.
+* **Q19** Web (partiellement confirmée le 2026-10-11, voir `ETAT.md`) : le format d'entrée est une proposition de Sednal (aucun standard). `published_at` préféré à `fetched_at`, `canonical_url` préférée à `url`, `links[].anchor` ignoré. Format réel du collecteur à fournir.
 
 ## Réglées ou provisoires
 
