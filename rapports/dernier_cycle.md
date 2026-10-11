@@ -1,4 +1,4 @@
-# Rapport du cycle 12 — 11/10/2026 12:00
+# Rapport du cycle 13 — 11/10/2026 12:10
 
 **Mode : réel.** Cycle terminé normalement.
 
@@ -13,16 +13,15 @@ Aucune alerte.
 ## Ce qui est entré
 
 * Requêtes de recherche : 9
-* Résultats examinés : 139
+* Résultats examinés : 149
 * Pages visitées : 7
-* Nouvelles sources : **1**
-  * franceinfo.fr
-* Observations ajoutées : **1**
+* Nouvelles sources : **0**
+* Observations ajoutées : **0**
 * Refusé, et pourquoi :
-  * 95 × proximité insuffisante avec les sujets
-  * 15 × document déjà ingéré
+  * 96 × proximité insuffisante avec les sujets
+  * 21 × document déjà ingéré
   * 11 × réseau social ou identité sans page : citation seulement, jamais lu
-  * 7 × personne physique (catégorie biographique)
+  * 8 × personne physique (catégorie biographique)
   * 7 × robots.txt : visite interdite ou illisible
   * 2 × page déjà ingérée
   * 1 × aucune catégorie lisible : en cas de doute, une personne
@@ -47,7 +46,7 @@ Aucune entité n'a changé de grappe.
 **Les acteurs des blocages et mobilisations étudiantes en France en ce moment** : 0 entité(s) confirmée(s) fiable(s) sur 0
 * 0 entité(s) confirmée(s) fiable(s) < 3 : rien appris
 * Seuils inchangés (0 entité(s) confirmée(s) < 3 : seuils inchangés).
-* Seuil d'ingestion inchangé (25) : 1 source(s) ingérée(s) < 3 : trop peu pour juger de la pertinence.
+* Seuil d'ingestion inchangé (25) : 0 source(s) ingérée(s) < 3 : trop peu pour juger de la pertinence.
 
 ## Stabilité
 
