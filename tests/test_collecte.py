@@ -309,3 +309,71 @@ def test_places_inutilisees_redistribuees_aux_documents(tmp_path, srv):
     assert len(rep.new_sources) == 4 and {i.ref.split(":")[0] for i in rep.ingested} == {
         "wikipedia"
     }  # pas de page : tout aux documents
+
+
+# --- un mot répété ne fait pas un sujet (constat du cycle 6) ----------------------------------------------------
+
+
+def test_radicaux_pluriel_singulier_confondus():
+    from grappes.cycle.collect import stem
+
+    assert stem("blocages") == stem("blocage") == "blocage" and stem("étudiants") == stem(
+        "etudiant"
+    )
+    assert stem("france") == "france" and stem("bus") == "bus" and stem("#cuisine") == "cuisine"
+
+
+def test_ingestion_exige_deux_radicaux_distincts(tmp_path, srv):
+    from grappes.cycle.collect import best_subject, distinct_terms
+
+    cfg, *_ = monde(tmp_path, srv)
+    g = cfg.grappes[0]
+    seul = (
+        "compost compost compost compost compost compost"  # un seul mot, répété : jamais un sujet
+    )
+    assert proximity(seul, g) > 20 and distinct_terms(seul, g) == 1
+    assert (
+        best_subject(seul, [g], min_terms=2)[0] is None
+        and best_subject(seul, [g], min_terms=1)[0] is g
+    )
+    deux = "le compost du potager"
+    assert distinct_terms(deux, g) == 2 and best_subject(deux, [g], min_terms=2)[0] is g
+    assert distinct_terms("potager potagers", g) == 1  # singulier et pluriel : le même radical
+
+
+def test_requetes_sans_variantes_du_meme_mot(tmp_path, srv):
+    from grappes.cycle.collect import search_queries, stem
+    from grappes.models import Grappe, Lexicon
+
+    g = Grappe(
+        "g",
+        "g",
+        Lexicon(
+            terms={
+                "acteur": 0.5,
+                "acteurs": 0.5,
+                "blocage": 0.5,
+                "blocages": 0.5,
+                "etudiant": 0.4,
+                "etudiants": 0.4,
+            }
+        ),
+        subject="la phrase du sujet",
+    )
+    q = search_queries(g)
+    assert q[0] == "la phrase du sujet"
+    for requete in q[1:]:
+        stems = [stem(w) for w in requete.split()]
+        assert len(stems) == len(set(stems)) == 2  # jamais « acteur acteurs »
+    assert len(q) == 3 and "acteur" in q[1] and "etudiant" in q[2]
+
+
+def test_deux_radicaux_dans_l_ingestion_reelle(tmp_path, srv):
+    """Sur le faux serveur, toute page ingérée contient au moins deux radicaux du lexique."""
+    cfg, db, _rep, _ = lancer(tmp_path, srv)
+    from grappes.cycle.collect import distinct_terms
+
+    g = cfg.grappes[0]
+    assert db.load_observations() and all(
+        distinct_terms(o.text, g) >= 2 for o in db.load_observations()
+    )

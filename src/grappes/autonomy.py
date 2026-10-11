@@ -44,6 +44,9 @@ class Autonomy:
     seuil_ingestion_min: float = 5.0  # bornes de l'ajustement automatique
     seuil_ingestion_max: float = 40.0
     seuil_ingestion_auto: bool = False  # vrai : la boucle l'ajuste elle-même dans les bornes
+    ingestion_termes_min: int = (
+        2  # radicaux DIFFÉRENTS du lexique exigés (un mot répété ne fait pas un sujet)
+    )
     # interdits (éditables)
     interdits_domaines: tuple[str, ...] = ()
     interdits_motifs: tuple[str, ...] = ()
@@ -236,6 +239,9 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
         seuil_ingestion_min=ingestion[1],
         seuil_ingestion_max=ingestion[2],
         seuil_ingestion_auto=ingestion[3],
+        ingestion_termes_min=int(
+            _num(d, "ingestion_termes_min", base.ingestion_termes_min, path, 1)
+        ),
         interdits_domaines=_strs(interdits, "domaines", (), path),
         interdits_motifs=_strs(interdits, "motifs", (), path),
         delai_domaine_s=max(

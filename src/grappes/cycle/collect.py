@@ -25,7 +25,7 @@ from grappes.ingestion.base import make_obs_id, parse_ts
 from grappes.models import Grappe, Observation, SourceRef
 from grappes.search.config import SearchConfig
 from grappes.search.engine import run_search
-from grappes.semantic.scoring import score_proximity
+from grappes.semantic.scoring import normalize, score_detail, score_proximity
 from grappes.storage.db import Database
 
 MAX_PAGES_PER_DOMAIN = 5  # par cycle : explorer un site, pas l'aspirer
@@ -71,12 +71,32 @@ def proximity(text: str, grappe: Grappe) -> float:
     return score_proximity(text, lexicon_terms(grappe), scale=grappe.scale) if text.strip() else 0.0
 
 
+def stem(term: str) -> str:
+    """Radical grossier : un pluriel en -s ou -x se ramène au singulier (« blocages » -> « blocage »)."""
+    t = normalize(term).lstrip("#")
+    return t[:-1] if len(t) >= 5 and t.endswith(("s", "x")) and not t.endswith(("ss", "us")) else t
+
+
 def search_queries(g: Grappe) -> list[str]:
-    """Requêtes d'un sujet : sa phrase, puis ses meilleurs termes combinés par deux (un mot seul
-    ramène du bruit : constaté sur les premières données réelles)."""
-    top = sorted(g.lexicon.terms, key=lambda t: (-g.lexicon.terms[t], t))[:TOP_TERMS]
+    """Requêtes d'un sujet : sa phrase, puis ses meilleurs termes combinés par deux. Un mot seul ramène du
+    bruit, et deux formes du même mot (« acteur acteurs ») ne diversifient rien : un seul terme par radical
+    (constaté sur les premières données réelles)."""
+    by_stem: dict[str, str] = {}
+    for t in sorted(g.lexicon.terms, key=lambda t: (-g.lexicon.terms[t], len(t), t)):
+        by_stem.setdefault(stem(t), t)
+    top = list(by_stem.values())[:TOP_TERMS]
     pairs = [" ".join(top[i : i + 2]) for i in range(0, len(top) - 1, 2)]
+    if len(top) >= 2 and len(top) % 2:  # un terme resté seul se joint au premier
+        pairs.append(f"{top[-1]} {top[0]}")
     return list(dict.fromkeys([g.subject, *pairs]))
+
+
+def distinct_terms(text: str, grappe: Grappe) -> int:
+    """Nombre de radicaux DIFFÉRENTS du lexique présents dans le texte : un mot répété ne fait pas un sujet."""
+    if not text.strip():
+        return 0
+    kw = {k: v for k, v in lexicon_terms(grappe).items() if v > 0}
+    return len({stem(k) for k in score_detail(text, kw, scale=grappe.scale).matched})
 
 
 def link_relevant(anchor: str, url: str, subjects: list[Grappe]) -> bool:
@@ -86,11 +106,14 @@ def link_relevant(anchor: str, url: str, subjects: list[Grappe]) -> bool:
     return any(proximity(f"{anchor} {words}", g) > 0 for g in subjects)
 
 
-def best_subject(text: str, subjects: list[Grappe]) -> tuple[Grappe | None, float]:
+def best_subject(
+    text: str, subjects: list[Grappe], min_terms: int = 1
+) -> tuple[Grappe | None, float]:
+    """Sujet le plus proche du texte et sa proximité ; 0 si moins de `min_terms` radicaux distincts."""
     best: tuple[Grappe | None, float] = (None, 0.0)
     for g in subjects:
         s = proximity(text, g)
-        if s > best[1]:
+        if s > best[1] and distinct_terms(text, g) >= min_terms:
             best = (g, s)
     return best
 
@@ -144,7 +167,7 @@ def collect(
             if reason:
                 rep.refused[reason] += 1
                 continue
-            owner, score = best_subject(m.text, ready)
+            owner, score = best_subject(m.text, ready, auto.ingestion_termes_min)
             if owner is None or score < auto.seuil_ingestion:
                 rep.refused["proximité insuffisante avec les sujets"] += 1
                 continue
@@ -275,7 +298,7 @@ def collect(
         if not obs:
             rep.refused["page illisible"] += 1
             continue
-        owner, score = best_subject(obs[0].text, ready)
+        owner, score = best_subject(obs[0].text, ready, auto.ingestion_termes_min)
         if owner is None or score < auto.seuil_ingestion:
             rep.refused["page trop éloignée des sujets"] += 1
             continue
