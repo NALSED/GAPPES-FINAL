@@ -92,6 +92,7 @@ class Config:
     fiabilite: Fiabilite = field(
         default_factory=Fiabilite
     )  # code Admiralty (neutre si le fichier est absent)
+    racine: Path | None = None  # dossier de configuration (registres, caches) ; hors empreinte
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -444,7 +445,7 @@ def load_config(config_dir: str | Path = "config") -> Config:
                 h.update(digest)
     except LearnedError as exc:
         raise ConfigError(str(exc)) from exc
-    return Config(scoring, sources, grappes, h.hexdigest()[:16], telegram_names, fiabilite)
+    return Config(scoring, sources, grappes, h.hexdigest()[:16], telegram_names, fiabilite, root)
 
 
 def config_summary(cfg: Config) -> str:

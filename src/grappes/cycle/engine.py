@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import sqlite3
 import time
+from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
@@ -53,11 +54,15 @@ from grappes.learned import (
     save_learned_thresholds,
 )
 from grappes.models import EntityType
-from grappes.pipeline import run
+from grappes.pipeline import reliability_for, run
+from grappes.registres import load_registres
+from grappes.registres import update as registres_update
 from grappes.search.base import Journal
 from grappes.search.config import SearchConfig, load_search_config
 from grappes.search.engine import run_search
+from grappes.search.http import urllib_transport
 from grappes.storage.db import Database
+from grappes.tranco import ensure as ensure_tranco
 
 OK, CANCELLED, STOPPED, FAILED, DRY, BUSY = "ok", "annule", "arret", "erreur", "dry-run", "occupe"
 EXIT = {OK: 0, DRY: 0, FAILED: 1, BUSY: 3, STOPPED: 4, CANCELLED: 5}
@@ -179,6 +184,40 @@ def _seed_subjects(
 # --- cycle réel ------------------------------------------------------------------------------------
 
 
+def _update_fiabilite(db, cfg, scfg, transport, now) -> dict[str, object]:
+    """Registres officiels et classement Tranco : mises à jour réseau bornées (caches), puis résumé pour le rapport.
+    Une panne n'arrête jamais le cycle : sans cache, les sources restent à leur lettre statique."""
+    out: dict[str, object] = {}
+    if cfg.racine is None or not cfg.fiabilite.enabled:
+        return out
+    transport = transport or urllib_transport
+    journal = Journal(scfg.journal)
+    reg_path = cfg.racine / "registres.yaml"
+    stats = {"requetes": 0}
+    if reg_path.exists():
+        try:
+            rcfg = load_registres(reg_path)
+            stats = registres_update(db, rcfg, now, transport, journal)
+        except Exception as exc:  # noqa: BLE001
+            journal.log("registres", "-", "-", f"erreur {type(exc).__name__}")
+    tr = cfg.fiabilite.tranco
+    if tr.get("actif"):
+        meta = ensure_tranco(tr["dossier"], now, transport, journal, tr["cache_jours"], tr["api"])
+        out["tranco"] = (
+            f"liste {meta.get('liste_id', '?')} du {meta.get('cree_le', '?')} (tranco-list.eu)"
+            if meta
+            else "indisponible (sources web restent en D)"
+        )
+    rel = reliability_for(db, cfg)
+    letters = Counter(
+        rel.letter(r["ref_key"]) for r in db.conn.execute("SELECT ref_key FROM sources")
+    )
+    out["lettres"] = ", ".join(f"{k} : {v}" for k, v in sorted(letters.items())) or "aucune source"
+    out["requetes_registres"] = stats.get("requetes", 0)
+    out["en_a"] = len(rel.registre)
+    return out
+
+
 def run_cycle(
     config_dir: str | Path = "config",
     db_path: str | Path = "donnees/grappes.db",
@@ -261,6 +300,7 @@ def _execute(
         data.collect.providers.update(seed_status)
         if data.collect.stopped:
             raise StopRequested
+        data.fiabilite = _update_fiabilite(db, cfg, scfg, search_transport, now)
         run_id, res = run(db, cfg)
         # apprentissage (confirmées uniquement) et recalibrage (bornés)
         observations = db.load_observations()

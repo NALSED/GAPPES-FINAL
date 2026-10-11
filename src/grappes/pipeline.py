@@ -6,17 +6,21 @@ import hashlib
 import json
 import logging
 from collections.abc import Iterator
+from functools import lru_cache
 from itertools import islice
 from pathlib import Path
 from typing import Any
 
+from grappes.canon import canonical_domain
 from grappes.clustering.assign import AssignResult, assign
 from grappes.clustering.export import export_csv
 from grappes.clustering.resultat import write_resultat
 from grappes.config import Config
 from grappes.fiabilite import Reliability
 from grappes.ingestion import RejectReport, get_fetcher
+from grappes.registres import load_registres, matched_refs
 from grappes.storage.db import Database
+from grappes.tranco import ranks_for, read_meta
 
 log = logging.getLogger(__name__)
 
@@ -121,7 +125,33 @@ def make_run_id(obs_ids: list[str], config_hash: str) -> str:
 
 def reliability_for(db: Database, cfg: Config) -> Reliability:
     """Fiabilité à l'exécution : table Admiralty (+ registres officiels et Tranco quand ils sont en cache)."""
-    return Reliability(cfg.fiabilite)
+    registre: frozenset[str] = frozenset()
+    ranks: dict[str, int] = {}
+    tranco_id = ""
+    if cfg.racine is not None and cfg.fiabilite.enabled:
+        reg_path = cfg.racine / "registres.yaml"
+        if reg_path.exists():
+            registre = matched_refs(db, load_registres(reg_path))
+        tr = cfg.fiabilite.tranco
+        if tr.get("actif"):
+            meta = read_meta(tr["dossier"])
+            if meta:
+                tranco_id = f"{meta.get('liste_id', '')}@{meta.get('cree_le', '')}"
+                ranks = _tranco_ranks(tr["dossier"], tranco_id, _web_hosts(db))
+    return Reliability(cfg.fiabilite, registre, ranks, tranco_id)
+
+
+def _web_hosts(db: Database) -> frozenset[str]:
+    return frozenset(
+        canonical_domain(r["ident"])
+        for r in db.conn.execute("SELECT ident FROM sources WHERE ecosystem IN ('web','rss')")
+    )
+
+
+@lru_cache(maxsize=4)
+def _tranco_ranks(directory: str, list_id: str, hosts: frozenset[str]) -> dict[str, int]:
+    """Rangs lus dans le cache (une seule lecture de la liste par jeu de domaines et par liste)."""
+    return ranks_for(directory, set(hosts))
 
 
 def run(db: Database, cfg: Config) -> tuple[str, AssignResult]:

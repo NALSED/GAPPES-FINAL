@@ -74,3 +74,15 @@ credibilite:
   4: Douteuse                           # un peu de signal, sous le seuil de classement (ou ambiguïté par la marge)
   5: Improbable                         # contredite : ambiguïté avec une grappe OPPOSÉE
   6: Ne peut pas être jugée             # aucun signal
+
+# Affinage à l'intérieur de D par le classement Tranco (https://tranco-list.eu, liste académique ouverte et gratuite,
+# conçue pour la recherche, résistante à la manipulation). Un domaine web générique bien classé pèse un peu plus
+# qu'un domaine absent du classement : le facteur est interpolé entre D (absent) et C (rang 1), selon le log du rang
+# (log10(rang) / log10(1 000 000)), et ne dépasse JAMAIS le facteur de C, donc jamais celui de B ou de A.
+# La liste est téléchargée UNE fois et mise en cache (renouvelée après `cache_jours`) ; son identifiant et sa date
+# sont conservés dans `<dossier>/meta.json` et repris dans le run_id. Jamais interrogée en boucle.
+tranco:
+  actif: true
+  dossier: donnees/tranco
+  cache_jours: 30
+  api: "https://tranco-list.eu/api/lists/date/{date}"

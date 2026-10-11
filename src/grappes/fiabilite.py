@@ -58,6 +58,9 @@ class Fiabilite:
     default: str = "F"
     media: tuple[str, ...] = ()
     digest: str = ""  # empreinte du fichier (entre dans `config_hash`)
+    tranco: dict[str, Any] = field(
+        default_factory=dict
+    )  # {dossier, cache_jours, api} : affinage des sources D
 
     def letter_static(self, ref: str) -> str:
         """Lettre d'après l'écosystème et la liste de médias établis (ni registre, ni Tranco)."""
@@ -97,8 +100,17 @@ def load_fiabilite(path: Path) -> Fiabilite:
     media = d.get("medias_etablis") or []
     if not isinstance(media, list) or not all(isinstance(m, str) and m.strip() for m in media):
         raise FiabiliteError(f"{path}: `medias_etablis` doit être une liste de domaines")
+    tranco = d.get("tranco") or {}
+    if not isinstance(tranco, dict):
+        raise FiabiliteError(f"{path}: `tranco` doit être un mapping")
     return Fiabilite(
         enabled=True,
+        tranco={
+            "dossier": str(tranco.get("dossier", "donnees/tranco")),
+            "cache_jours": int(tranco.get("cache_jours", 30)),
+            "api": str(tranco.get("api", "https://tranco-list.eu/api/lists/date/{date}")),
+            "actif": bool(tranco.get("actif", False)),
+        },
         factors=letter_factors(ref),
         ecosystems={str(k): str(v) for k, v in eco.items()},
         default=default,

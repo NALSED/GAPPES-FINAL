@@ -29,6 +29,7 @@ class CycleData:
     seeded: list[str] = field(default_factory=list)  # sujets amorcés pendant ce cycle
     collect: CollectReport | None = None
     purged: int = 0
+    fiabilite: dict[str, object] = field(default_factory=dict)  # registres, Tranco, lettres
     before: Metrics | None = None
     after: Metrics | None = None
     indicators: Indicators | None = None
@@ -124,6 +125,14 @@ def render(d: CycleData) -> str:
             w("* Refusé, et pourquoi :")
             for reason, n in Counter(c.refused).most_common(MAX_LIST):
                 w(f"  * {n} × {reason}")
+    if d.fiabilite:
+        f = d.fiabilite
+        w(f"* Fiabilité des sources (code Admiralty) : {f.get('lettres', '-')}")
+        w(
+            f"* Registres officiels : {f.get('requetes_registres', 0)} requête(s) ce cycle, "
+            f"{f.get('en_a', 0)} source(s) placée(s) en A"
+        )
+        w(f"* Classement Tranco : {f.get('tranco', 'non utilisé')}")
     if d.purged:
         w(f"* Observations supprimées par la durée de conservation : {d.purged}")
     w("")

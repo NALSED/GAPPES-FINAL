@@ -49,6 +49,13 @@ CREATE TABLE IF NOT EXISTS validations (
     n_ecosystems INTEGER NOT NULL, weight_sum REAL NOT NULL, validated INTEGER NOT NULL,
     reasons TEXT NOT NULL, run_id TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS registre_domaines (
+    registre TEXT NOT NULL, domaine TEXT NOT NULL, maj TEXT NOT NULL, PRIMARY KEY (registre, domaine)
+);
+CREATE TABLE IF NOT EXISTS registre_noms (
+    registre TEXT NOT NULL, nom TEXT NOT NULL, trouve INTEGER NOT NULL, identifiant TEXT NOT NULL DEFAULT '',
+    maj TEXT NOT NULL, PRIMARY KEY (registre, nom)
+);
 CREATE INDEX IF NOT EXISTS idx_obs_source ON observations(source_key);
 CREATE INDEX IF NOT EXISTS idx_cit_cited ON citations(cited);
 CREATE INDEX IF NOT EXISTS idx_mem_grappe ON memberships(grappe_id, run_id);
