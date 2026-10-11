@@ -251,7 +251,7 @@ def test_lien_isole_ne_classe_pas_une_entite_jamais_lue():
     from grappes.clustering.assign import assign
     from test_phase4 import STRONG, make_cfg, obs
 
-    cfg = make_cfg(Path(tempfile.mkdtemp()), seuil_min=30)
+    cfg = make_cfg(Path(tempfile.mkdtemp()), seuil_min=30, contexte_min_citants=2)
     seul = [obs("web:page1.test", STRONG, links=["https://pied-de-page.test/"])]
     res = assign(seul, cfg)
     ref = {e.primary_ref: e.entity_id for e in res.entities}["web:pied-de-page.test"]
@@ -268,3 +268,19 @@ def test_la_configuration_reelle_ne_contient_aucun_jeu_d_essai():
         if (ROOT / "config" / "grappes").exists()
         else True
     )
+
+
+def test_par_defaut_un_site_jamais_lu_n_est_jamais_classe_d_apres_ses_citants():
+    """Réglage de base (D45) : sans texte propre, seul le recoupement classe une entité (google.com cité
+    par deux pages d'actualité ne devient pas « probable »)."""
+    import tempfile
+
+    from grappes.clustering.assign import assign
+    from test_phase4 import STRONG, make_cfg, obs
+
+    cfg = make_cfg(Path(tempfile.mkdtemp()), seuil_min=30)
+    assert cfg.scoring.contexte_min_citants is None
+    o = [obs(f"web:page{i}.test", STRONG, links=["https://google.com/"]) for i in range(3)]
+    res = assign(o, cfg)
+    ref = {e.primary_ref: e.entity_id for e in res.entities}["web:google.com"]
+    assert not [m for m in res.memberships if m["entity_id"] == ref and m["confidence"] > 0]

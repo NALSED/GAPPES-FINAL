@@ -1,44 +1,36 @@
-# Rapport du cycle 1 — 11/10/2026 07:39
+# Rapport du cycle 3 — 11/10/2026 07:45
 
 **Mode : réel.** Cycle terminé normalement.
 
 ## Alertes
 
-* Sites qui ont refusé les visites (403/429 ou contrôle anti-robot), arrêt sur ces sites : themeforest.net
+* Sites qui ont refusé les visites (403/429 ou contrôle anti-robot), arrêt sur ces sites : openai.com
 
 ## Sujets suivis
 
-* « Les acteurs de l'actualité française en ce moment » — 11 mot(s) de départ (amorcé pendant ce cycle)
+* « Les acteurs de l'actualité française en ce moment » — 12 mot(s) de départ (amorcé pendant ce cycle)
 
 ## Ce qui est entré
 
-* Requêtes de recherche : 6
-* Résultats examinés : 49
-* Pages visitées : 55
-* Nouvelles sources : **6**
-  * bourgognefranchecomte.fr
-  * en.overclocking.com
-  * filmreviewdaily.com
-  * thetradenews.com
-  * overclocking.com
-  * store.thetradenews.com
-* Observations ajoutées : **11**
+* Requêtes de recherche : 4
+* Résultats examinés : 29
+* Pages visitées : 32
+* Nouvelles sources : **3**
+  * parlons-politique.fr
+  * serieously.ouest-france.fr
+  * azertag.az
+* Observations ajoutées : **15**
 * Refusé, et pourquoi :
-  * 485 × plafond de pages par domaine atteint
-  * 30 × proximité insuffisante avec les sujets
-  * 22 × page trop éloignée des sujets
-  * 12 × robots.txt : visite interdite ou illisible
-  * 8 × réseau social : lu seulement par un adaptateur officiel (ses liens sont des citations)
-  * 2 × réseau social ou identité sans page : citation seulement, jamais lu
-  * 1 × la page demande à ne pas être indexée : ignorée
+  * 44 × plafond de pages par domaine atteint
+  * 16 × robots.txt : visite interdite ou illisible
+  * 8 × proximité insuffisante avec les sujets
+  * 5 × réseau social ou identité sans page : citation seulement, jamais lu
   * 1 × refus du serveur (403/429) : arrêt sur ce domaine
-  * 1 × échec de la requête (SearchError)
-  * 1 × page introuvable ou en erreur
 
 ## Où en sont les entités
 
-* Entités connues : 23
-* Rangées dans une grappe : 7 (dont 0 ambiguës)
+* Entités connues : 4
+* Rangées dans une grappe : 4 (dont 0 ambiguës)
 * Confirmées (recoupées sur au moins deux écosystèmes) : 0
 * Une source qui n'est pas recoupée reste « probable » au mieux.
 
@@ -48,10 +40,6 @@ Aucune entité n'a changé de grappe.
 
 ## Mots appris, seuils
 
-**Grappe de démonstration A (cuisine)** : 0 entité(s) confirmée(s) fiable(s) sur 0
-* 0 entité(s) confirmée(s) fiable(s) < 3 : rien appris
-**Grappe de démonstration B (jardinage)** : 0 entité(s) confirmée(s) fiable(s) sur 0
-* 0 entité(s) confirmée(s) fiable(s) < 3 : rien appris
 **Les acteurs de l'actualité française en ce moment** : 0 entité(s) confirmée(s) fiable(s) sur 0
 * 0 entité(s) confirmée(s) fiable(s) < 3 : rien appris
 * Seuils inchangés (0 entité(s) confirmée(s) < 3 : seuils inchangés).
