@@ -54,7 +54,6 @@ def test_config_hash_change_si_fichier_change(tmp_path):
     "contenu",
     [
         "id: ''\nlexicon: {terms: {a: 1}}",
-        "id: G\nlexicon: {terms: {}}",
         "id: G\nlexicon: {terms: {a: -1}}",
         "id: G\nlexicon: {terms: {a: 1}}\nscale: 0",
         "id: G\nlexicon: {terms: {a: 1}}\noppositions: [G-NOPE]",

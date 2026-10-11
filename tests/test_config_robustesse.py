@@ -101,3 +101,25 @@ def test_purge_negative_refusee(tmp_path, capsys):
     )
     assert code == 2 and "positif" in capsys.readouterr().err
     assert len(Database(tmp_path / "x.db").load_observations()) == 1
+
+
+def test_lexique_facultatif_et_sujets_deviennent_des_grappes(tmp_path):
+    """FINAL.md § 3 : aucune exigence de lexique saisi par Sednal ; un sujet suffit."""
+    (tmp_path / "sujets.yaml").write_text(
+        'sujets: ["Jardins partagés et potagers collectifs en ville"]\n', "utf-8"
+    )
+    cfg = load_config(tmp_path)
+    (g,) = cfg.grappes
+    assert g.grappe_id == "sujet-jardins-partages-et-potagers-collectifs-en" and g.subject
+    assert g.lexicon.terms == {}  # pas encore amorcé
+    (tmp_path / "grappes").mkdir()
+    (tmp_path / "grappes" / "x.yaml").write_text("id: G\nanchors: ['web:exemple.test']\n", "utf-8")
+    assert {g.grappe_id for g in load_config(tmp_path).grappes} == {
+        "G",
+        "sujet-jardins-partages-et-potagers-collectifs-en",
+    }
+
+
+def test_ni_grappe_ni_sujet_refuse_avec_message_clair(tmp_path):
+    with pytest.raises(ConfigError, match="au moins un sujet"):
+        load_config(tmp_path)

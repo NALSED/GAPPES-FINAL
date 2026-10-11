@@ -63,3 +63,4 @@ class Grappe:
     oppositions: tuple[str, ...] = ()  # grappe_id ou clés canoniques
     scale: float = 3.0  # paramètre de saturation du scoring
     learned_terms: tuple[str, ...] = ()  # termes du « lexique_appris » fusionnés dans le lexique
+    subject: str = ""  # phrase du sujet quand la grappe en vient (lexique amorcé automatiquement)

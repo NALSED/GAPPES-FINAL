@@ -18,6 +18,7 @@ from grappes.learned import (
     learned_dir,
     load_learned_lexicon,
     load_learned_thresholds,
+    load_seed,
 )
 from grappes.models import Grappe, Lexicon
 from grappes.personnes import DEFAULT_INSTITUTION_HINTS
@@ -299,9 +300,7 @@ def load_grappe(path: Path) -> Grappe:
     if not isinstance(gid, str) or not gid.strip():
         raise ConfigError(f"{path}: `id` manquant")
     lex = _mapping(d.get("lexicon"), f"{path}:lexicon")
-    terms = _weights(lex.get("terms"), f"{path}:lexicon.terms")
-    if not terms:
-        raise ConfigError(f"{path}: lexique vide")
+    terms = _weights(lex.get("terms"), f"{path}:lexicon.terms")  # facultatif (FINAL.md § 3)
     negative = _weights(lex.get("negative"), f"{path}:lexicon.negative")
     scale = _finite(d.get("scale", 3.0), f"{path}: scale")
     if scale <= 0:
@@ -362,13 +361,25 @@ def load_config(config_dir: str | Path = "config") -> Config:
     scoring_path, sources_path = root / "scoring.yaml", root / "sources.yaml"
     scoring = load_scoring(scoring_path) if scoring_path.exists() else ScoringConfig()
     sources = load_sources(sources_path) if sources_path.exists() else SourcesConfig()
-    files = sorted((root / "grappes").glob("*.yaml"))
+    files = sorted((root / "grappes").glob("*.yaml")) if (root / "grappes").is_dir() else []
     grappes = tuple(load_grappe(p) for p in files)
     ids = [g.grappe_id for g in grappes]
     if len(set(ids)) != len(ids):
         raise ConfigError("identifiants de grappe dupliqués")
-    if not grappes:
-        raise ConfigError(f"aucune grappe dans {root / 'grappes'}")
+    # sujets (une phrase chacun) : chacun devient une grappe, lexique amorcé automatiquement
+    from grappes.autonomy import load_subjects
+
+    subjects = load_subjects(root)
+    subject_files = [root / "sujets.yaml"] if (root / "sujets.yaml").exists() else []
+    for s in subjects.subjects:
+        if s.id in ids:
+            raise ConfigError(f"sujet {s.phrase!r}: identifiant de grappe déjà pris ({s.id})")
+        ids.append(s.id)
+    if not grappes and not subjects.subjects:
+        raise ConfigError(
+            f"aucune grappe ({root / 'grappes'}) ni sujet ({root / 'sujets.yaml'}) : "
+            "fournir au moins un sujet en une phrase"
+        )
     for g in grappes:
         for o in g.oppositions:
             if ":" not in o and o not in ids:
@@ -379,6 +390,15 @@ def load_config(config_dir: str | Path = "config") -> Config:
     adir = learned_dir(root)
     learned_files = sorted(adir.glob("*.yaml")) if adir.is_dir() else []
     try:
+        grappes += tuple(
+            Grappe(
+                grappe_id=s.id,
+                label=s.phrase,
+                lexicon=Lexicon(terms={t: lt.weight for t, lt in load_seed(root, s.id).items()}),
+                subject=s.phrase,
+            )
+            for s in subjects.subjects
+        )
         thresholds = load_learned_thresholds(root)
         grappes = tuple(_with_learned(g, load_learned_lexicon(root, g.grappe_id)) for g in grappes)
     except LearnedError as exc:
@@ -390,6 +410,7 @@ def load_config(config_dir: str | Path = "config") -> Config:
     for p in (
         [p for p in (scoring_path, sources_path) if p.exists()]
         + files
+        + subject_files
         + learned_files
         + ([tg_path] if tg_path.exists() else [])
     ):

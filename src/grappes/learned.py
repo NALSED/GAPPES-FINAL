@@ -41,6 +41,11 @@ def lexicon_path(config_dir: str | Path, grappe_id: str) -> Path:
     return learned_dir(config_dir) / f"lexique_appris_{_SAFE.sub('_', grappe_id)}.yaml"
 
 
+def seed_path(config_dir: str | Path, grappe_id: str) -> Path:
+    """Lexique d'amorçage d'un sujet : `config/apprentissage/amorcage_<grappe>.yaml`."""
+    return learned_dir(config_dir) / f"amorcage_{_SAFE.sub('_', grappe_id)}.yaml"
+
+
 def thresholds_path(config_dir: str | Path) -> Path:
     return learned_dir(config_dir) / "seuils_appris.yaml"
 
@@ -63,8 +68,20 @@ def _num(value: Any, where: str) -> float:
     return float(value)
 
 
+def load_seed(config_dir: str | Path, grappe_id: str) -> dict[str, LearnedTerm]:
+    """Termes d'amorçage d'un sujet (extraits des premiers résultats de recherche)."""
+    return _load_terms(seed_path(config_dir, grappe_id))
+
+
+def save_seed(config_dir: str | Path, grappe_id: str, terms: dict[str, LearnedTerm]) -> Path | None:
+    return _save_terms(seed_path(config_dir, grappe_id), grappe_id, terms)
+
+
 def load_learned_lexicon(config_dir: str | Path, grappe_id: str) -> dict[str, LearnedTerm]:
-    path = lexicon_path(config_dir, grappe_id)
+    return _load_terms(lexicon_path(config_dir, grappe_id))
+
+
+def _load_terms(path: Path) -> dict[str, LearnedTerm]:
     if not path.exists():
         return {}
     raw = _read(path).get("termes") or {}
@@ -88,7 +105,10 @@ def save_learned_lexicon(
     config_dir: str | Path, grappe_id: str, terms: dict[str, LearnedTerm]
 ) -> Path | None:
     """Écrit le lexique appris (ou supprime le fichier s'il est vide). Tri stable."""
-    path = lexicon_path(config_dir, grappe_id)
+    return _save_terms(lexicon_path(config_dir, grappe_id), grappe_id, terms)
+
+
+def _save_terms(path: Path, grappe_id: str, terms: dict[str, LearnedTerm]) -> Path | None:
     if not terms:
         path.unlink(missing_ok=True)
         return None
