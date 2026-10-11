@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -18,6 +19,8 @@ class Citation:
     obs_id: str
     ts: datetime | None
     hypothesis: bool = False  # identité du citant ou du cité déduite d'un nom affiché (D25)
+    reliability: str = ""  # fiabilité Admiralty du citant (A à F), fixée par `assign`
+    credibility: int = 6  # crédibilité Admiralty (1 à 6) de l'élément cité, fixée par `assign`
 
 
 def build_citations(observations: list[Observation]) -> list[Citation]:
@@ -90,10 +93,19 @@ def validate_crossref(
         raw = by_cited[cited]
         citers = tuple(sorted(x for x in raw if is_member(x)))
         ecos = tuple(sorted({x.split(":", 1)[0] for x in citers}))
-        wsum = round(sum(weight(x) for x in citers), 6)
+        weights = [weight(x) for x in citers]
+        wsum = round(sum(weights), 6)
+        # Effectif minimal de citants DÉDUIT des poids, pas inventé : le poids total à atteindre ne peut venir de
+        # moins de citants que min_weight_sum / (meilleur poids présent), jamais moins que le nombre d'écosystèmes
+        # exigés (donc au moins 2 citants), jamais plus que min_citers. Poids uniformes = comportement historique.
+        best = max(weights, default=1.0)
+        need = min(
+            rule.min_citers,
+            max(rule.min_ecosystems, 2, math.ceil(rule.min_weight_sum / best - 1e-9)),
+        )
         reasons: list[str] = []
-        if len(citers) < rule.min_citers:
-            reasons.append(f"citants membres {len(citers)} < {rule.min_citers}")
+        if len(citers) < need:
+            reasons.append(f"citants membres {len(citers)} < {need}")
         if len(ecos) < rule.min_ecosystems:
             reasons.append(f"écosystèmes {len(ecos)} < {rule.min_ecosystems}")
         if wsum < rule.min_weight_sum:

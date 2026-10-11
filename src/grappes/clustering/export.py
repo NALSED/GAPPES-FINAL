@@ -29,6 +29,7 @@ ENTITY_COLUMNS = [
     "first_seen",
     "last_seen",
     "run_id",
+    "admiralty",
 ]
 MEMBERSHIP_COLUMNS = ["entity_id", "cluster_id", "confidence_score", "via", "status"]
 
@@ -88,6 +89,9 @@ def export_csv(result: AssignResult, cfg: Config, run_id: str, out_dir: str | Pa
                     _fmt(st.first_seen),
                     _fmt(st.last_seen),
                     run_id,
+                    result.admiralty.get(
+                        e.primary_ref, ""
+                    ),  # fiabilité de la source + crédibilité (ex. B2)
                 ]
             )
     with _open(appart, cfg) as f:

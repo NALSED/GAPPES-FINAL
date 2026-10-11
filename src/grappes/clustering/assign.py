@@ -10,6 +10,7 @@ sont les membres de n−1.
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -23,9 +24,10 @@ from grappes.ecosystem.crossref import (
     filter_window,
     validate_crossref,
 )
+from grappes.fiabilite import Reliability
 from grappes.models import Entity, EntityType, Observation
 from grappes.personnes import is_institution
-from grappes.semantic.relations import anchor_scores, is_ambiguous
+from grappes.semantic.relations import anchor_scores, are_opposed, is_ambiguous
 from grappes.semantic.scoring import score_proximity
 
 NON_CLASSE = "non_classé"
@@ -60,6 +62,9 @@ class AssignResult:
     validations: list[ValidationRecord] = field(default_factory=list)
     iterations: int = 0
     names: dict[str, str] = field(default_factory=dict)  # clé de source -> nom lisible connu
+    admiralty: dict[str, str] = field(
+        default_factory=dict
+    )  # clé de source -> « B2 » (fiabilité, crédibilité)
 
 
 def entity_id_for(primary_ref: str) -> str:
@@ -90,9 +95,29 @@ def _top_mean(scores: list[float], n: int) -> float:
     return round(sum(best) / len(best), 2) if best else 0.0
 
 
+def credibility(
+    status: str, validated: bool, n_member_citers: int, opposed_conflict: bool, confidence: float
+) -> int:
+    """Crédibilité Admiralty (1 à 6) d'une appartenance, déduite des signaux du recoupement — aucun barème :
+    1 confirmée (recoupement validé) ; 2 probable : rangée ET citée par un membre ; 3 possible : rangée d'après son
+    seul texte ; 4 douteuse : signal sous le seuil, ou ambiguïté par la marge ; 5 improbable : ambiguïté avec une
+    grappe OPPOSÉE (contredite) ; 6 non jugeable : aucun signal."""
+    if validated:
+        return 1
+    if status == CLASSE:
+        return 2 if n_member_citers >= 1 else 3
+    if status == AMBIGU:
+        return 5 if opposed_conflict else 4
+    return 4 if confidence > 0 else 6
+
+
 def assign(
-    observations: list[Observation], cfg: Config, names: dict[str, str] | None = None
+    observations: list[Observation],
+    cfg: Config,
+    names: dict[str, str] | None = None,
+    reliability: Reliability | None = None,
 ) -> AssignResult:
+    rel = reliability or Reliability(cfg.fiabilite)
     citations = build_citations(observations)
     texts_own: dict[str, list[Observation]] = defaultdict(list)
     for o in observations:
@@ -118,7 +143,10 @@ def assign(
     refs = sorted(stats_by_ref)
     grappes = {g.grappe_id: g for g in cfg.grappes}
     sc = cfg.scoring
-    weight = cfg.sources.weight
+
+    # poids d'une voix = poids de la source (sources.yaml) × facteur de fiabilité Admiralty (D50)
+    def weight(ref: str) -> float:
+        return cfg.sources.weight(ref) * rel.factor(ref)
 
     # S(e, g) : calculé une fois ; texte propre, à défaut contexte des citations (§9.2)
     sem: dict[tuple[str, str], float] = {}
@@ -204,6 +232,9 @@ def assign(
             break
 
     entities: list[Entity] = []
+    admiralty: dict[
+        str, str
+    ] = {}  # clé de source -> « B2 » : fiabilité de la source, crédibilité de l'information
     memberships: list[dict] = []
     stats: dict[str, EntityStats] = {}
     for ref in refs:
@@ -221,6 +252,15 @@ def assign(
         ambiguous = classed and is_ambiguous(
             grappes[best_id], dict(scored), grappes, sc.marge_ambiguite
         )
+        opposed = ambiguous and any(
+            gid != best_id
+            and c > 0
+            and are_opposed(grappes[best_id], grappes[gid])
+            and c >= best - sc.marge_ambiguite
+            for gid, c in scored
+        )
+        letter = rel.letter(ref)
+        best_cred = 6
         for gid, c in scored:
             if c <= 0:
                 continue
@@ -228,8 +268,20 @@ def assign(
                 status = (AMBIGU if ambiguous else CLASSE) if classed else NON_CLASSE
             else:
                 status = SECONDAIRE
+            rec = validations.get((ref, gid))
+            cred = credibility(
+                status,
+                bool(rec and rec.validated),
+                len(rec.citers) if rec else 0,
+                opposed and gid == best_id,
+                c,
+            )
+            if gid == best_id:
+                best_cred = cred
             memberships.append(
                 {
+                    "fiabilite": letter,
+                    "credibilite": cred,
                     "entity_id": eid,
                     "grappe_id": gid,
                     "semantic": sem[ref, gid],
@@ -240,6 +292,14 @@ def assign(
                     "status": status,
                 }
             )
+        admiralty[ref] = f"{letter}{best_cred}"
+    cred_of = {ref: int(code[1]) for ref, code in admiralty.items()}
+    citations = [
+        dataclasses.replace(c, reliability=rel.letter(c.citer), credibility=cred_of.get(c.cited, 6))
+        for c in citations
+    ]
     ordered = [validations[k] for k in sorted(validations)]
     known = {r: n for r, n in (names or {}).items() if r in stats_by_ref and n}
-    return AssignResult(entities, memberships, stats, citations, ordered, iterations, known)
+    return AssignResult(
+        entities, memberships, stats, citations, ordered, iterations, known, admiralty
+    )

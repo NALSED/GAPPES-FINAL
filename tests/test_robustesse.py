@@ -108,7 +108,7 @@ def test_dates_absentes(tmp_path, cfg):
     rows = list(
         csv.reader((tmp_path / "out" / "entites.csv").open(encoding="utf-8"), delimiter=";")
     )
-    assert all(r[-3] == "" and r[-2] == "" for r in rows[1:])
+    assert all(r[-4] == "" and r[-3] == "" for r in rows[1:])
 
 
 def test_citations_circulaires_bornees(tmp_path, cfg):

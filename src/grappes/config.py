@@ -13,6 +13,7 @@ import yaml
 
 from grappes.canon import canonical_domain, canonical_handle
 from grappes.ecosystem.crossref import CrossRefRule
+from grappes.fiabilite import Fiabilite, FiabiliteError, load_fiabilite
 from grappes.learned import (
     LearnedError,
     canonical_digest,
@@ -88,6 +89,9 @@ class Config:
     telegram_names: dict[str, str] = field(
         default_factory=dict
     )  # nom affiché normalisé -> id public
+    fiabilite: Fiabilite = field(
+        default_factory=Fiabilite
+    )  # code Admiralty (neutre si le fichier est absent)
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -393,6 +397,11 @@ def load_config(config_dir: str | Path = "config") -> Config:
         for o in g.oppositions:
             if ":" not in o and o not in ids:
                 raise ConfigError(f"{g.grappe_id}: opposition vers une grappe inconnue {o!r}")
+    fiab_path = root / "fiabilite_sources.yaml"
+    try:
+        fiabilite = load_fiabilite(fiab_path)
+    except FiabiliteError as exc:
+        raise ConfigError(str(exc)) from exc
     tg_path = root / "telegram.yaml"
     telegram_names = load_telegram_names(tg_path) if tg_path.exists() else {}
     # fichiers « appris » (phase 9) : séparés, jamais prioritaires sur les termes de Sednal
@@ -421,6 +430,7 @@ def load_config(config_dir: str | Path = "config") -> Config:
         + files
         + subject_files
         + ([tg_path] if tg_path.exists() else [])
+        + ([fiab_path] if fiab_path.exists() else [])
     ):
         h.update(p.name.encode())
         h.update(p.read_bytes())
@@ -434,7 +444,7 @@ def load_config(config_dir: str | Path = "config") -> Config:
                 h.update(digest)
     except LearnedError as exc:
         raise ConfigError(str(exc)) from exc
-    return Config(scoring, sources, grappes, h.hexdigest()[:16], telegram_names)
+    return Config(scoring, sources, grappes, h.hexdigest()[:16], telegram_names, fiabilite)
 
 
 def config_summary(cfg: Config) -> str:

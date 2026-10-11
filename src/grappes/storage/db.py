@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -25,11 +25,13 @@ CREATE TABLE IF NOT EXISTS observations (
     obs_id TEXT PRIMARY KEY, source_key TEXT NOT NULL, ts TEXT, text TEXT NOT NULL,
     mentions TEXT NOT NULL DEFAULT '[]', links TEXT NOT NULL DEFAULT '[]',
     hashtags TEXT NOT NULL DEFAULT '[]', engagement INTEGER NOT NULL DEFAULT 0,
-    raw_ref TEXT, run_id TEXT, ingested_at TEXT, hypo TEXT NOT NULL DEFAULT '[]'
+    raw_ref TEXT, run_id TEXT, ingested_at TEXT, hypo TEXT NOT NULL DEFAULT '[]',
+    fiabilite_admiralty TEXT
 );
 CREATE TABLE IF NOT EXISTS citations (
     citer TEXT NOT NULL, cited TEXT NOT NULL, ecosystem TEXT NOT NULL,
-    obs_id TEXT NOT NULL, ts TEXT, run_id TEXT NOT NULL, hypothesis INTEGER NOT NULL DEFAULT 0
+    obs_id TEXT NOT NULL, ts TEXT, run_id TEXT NOT NULL, hypothesis INTEGER NOT NULL DEFAULT 0,
+    fiabilite_admiralty TEXT, credibilite_admiralty INTEGER
 );
 CREATE TABLE IF NOT EXISTS entities (
     entity_id TEXT PRIMARY KEY, type TEXT NOT NULL, primary_ref TEXT NOT NULL UNIQUE,
@@ -39,6 +41,7 @@ CREATE TABLE IF NOT EXISTS memberships (
     entity_id TEXT NOT NULL, grappe_id TEXT NOT NULL, semantic REAL NOT NULL,
     ecosystem REAL NOT NULL, anchor REAL NOT NULL, confidence REAL NOT NULL,
     via TEXT NOT NULL, status TEXT NOT NULL, run_id TEXT NOT NULL,
+    fiabilite_admiralty TEXT, credibilite_admiralty INTEGER,
     PRIMARY KEY (entity_id, grappe_id, run_id)
 );
 CREATE TABLE IF NOT EXISTS validations (
@@ -73,9 +76,18 @@ class Database:
     def _migrate(self) -> None:
         """Ajoute les colonnes apparues après la première version (bases existantes)."""
         wanted = {
-            "observations": [("ingested_at", "TEXT"), ("hypo", "TEXT NOT NULL DEFAULT '[]'")],
+            "observations": [
+                ("ingested_at", "TEXT"),
+                ("hypo", "TEXT NOT NULL DEFAULT '[]'"),
+                ("fiabilite_admiralty", "TEXT"),
+            ],
+            "memberships": [("fiabilite_admiralty", "TEXT"), ("credibilite_admiralty", "INTEGER")],
             "sources": [("native_id", "TEXT"), ("origin", "TEXT")],
-            "citations": [("hypothesis", "INTEGER NOT NULL DEFAULT 0")],
+            "citations": [
+                ("hypothesis", "INTEGER NOT NULL DEFAULT 0"),
+                ("fiabilite_admiralty", "TEXT"),
+                ("credibilite_admiralty", "INTEGER"),
+            ],
         }
         for table, columns in wanted.items():
             have = {r["name"] for r in self.conn.execute(f"PRAGMA table_info({table})")}
@@ -98,8 +110,14 @@ class Database:
 
     # --- observations ---------------------------------------------------------------------
 
-    def add_observations(self, observations: Iterable[Observation], weights: dict[str, float]):
-        """Insère (idempotent sur obs_id). Retourne le nombre de nouvelles observations."""
+    def add_observations(
+        self,
+        observations: Iterable[Observation],
+        weights: dict[str, float],
+        letter: Callable[[str], str] | None = None,
+    ):
+        """Insère (idempotent sur obs_id). Retourne le nombre de nouvelles observations.
+        `letter` : fiabilité Admiralty (A à F) d'une source, inscrite dans l'observation à l'ingestion."""
         new = 0
         with self.transaction() as c:
             for o in observations:
@@ -115,8 +133,8 @@ class Database:
                 )
                 cur = c.execute(
                     "INSERT OR IGNORE INTO observations(obs_id, source_key, ts, text, mentions,"
-                    " links, hashtags, engagement, raw_ref, ingested_at, hypo)"
-                    " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                    " links, hashtags, engagement, raw_ref, ingested_at, hypo, fiabilite_admiralty)"
+                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                     (
                         o.obs_id,
                         o.source.key,
@@ -129,6 +147,7 @@ class Database:
                         o.raw_ref,
                         datetime.now(UTC).isoformat(),
                         json.dumps(list(o.hypothetical)),
+                        letter(o.source.key) if letter else None,
                     ),
                 )
                 new += cur.rowcount
@@ -235,7 +254,9 @@ class Database:
                 [(e.entity_id, e.type.value, e.primary_ref, e.display_name) for e in entities],
             )
             c.executemany(
-                "INSERT INTO memberships VALUES (?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO memberships(entity_id, grappe_id, semantic, ecosystem, anchor, confidence,"
+                " via, status, run_id, fiabilite_admiralty, credibilite_admiralty)"
+                " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                 [
                     (
                         m["entity_id"],
@@ -247,6 +268,8 @@ class Database:
                         m["via"],
                         m["status"],
                         run_id,
+                        m.get("fiabilite"),
+                        m.get("credibilite"),
                     )
                     for m in memberships
                 ],
@@ -268,8 +291,8 @@ class Database:
                 ],
             )
             c.executemany(
-                "INSERT INTO citations(citer, cited, ecosystem, obs_id, ts, run_id, hypothesis)"
-                " VALUES (?,?,?,?,?,?,?)",
+                "INSERT INTO citations(citer, cited, ecosystem, obs_id, ts, run_id, hypothesis,"
+                " fiabilite_admiralty, credibilite_admiralty) VALUES (?,?,?,?,?,?,?,?,?)",
                 [
                     (
                         ci.citer,
@@ -279,6 +302,8 @@ class Database:
                         _iso(ci.ts),
                         run_id,
                         int(ci.hypothesis),
+                        ci.reliability or None,
+                        ci.credibility,
                     )
                     for ci in citations
                 ],

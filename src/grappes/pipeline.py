@@ -14,6 +14,7 @@ from grappes.clustering.assign import AssignResult, assign
 from grappes.clustering.export import export_csv
 from grappes.clustering.resultat import write_resultat
 from grappes.config import Config
+from grappes.fiabilite import Reliability
 from grappes.ingestion import RejectReport, get_fetcher
 from grappes.storage.db import Database
 
@@ -105,7 +106,7 @@ def ingest(
         obs, rep = fetcher.parse_many(raws, seen=seen, offset=offset)
         obs = fetcher.finalize(obs, db)
         weights = {o.source.key: cfg.sources.weight(o.source.key) for o in obs}
-        new += db.add_observations(obs, weights)
+        new += db.add_observations(obs, weights, letter=reliability_for(db, cfg).letter)
         report.absorb(rep)
         offset += len(raws)
     return new, report
@@ -118,11 +119,17 @@ def make_run_id(obs_ids: list[str], config_hash: str) -> str:
     return "R-" + h.hexdigest()[:12]
 
 
+def reliability_for(db: Database, cfg: Config) -> Reliability:
+    """Fiabilité à l'exécution : table Admiralty (+ registres officiels et Tranco quand ils sont en cache)."""
+    return Reliability(cfg.fiabilite)
+
+
 def run(db: Database, cfg: Config) -> tuple[str, AssignResult]:
-    """Rejouable : même entrée + même configuration = même run_id, mêmes résultats."""
+    """Rejouable : même entrée + même configuration (+ mêmes registres et classement) = même run_id."""
     observations = db.load_observations()
-    result = assign(observations, cfg, names=db.load_display_names())
-    run_id = make_run_id([o.obs_id for o in observations], cfg.config_hash)
+    rel = reliability_for(db, cfg)
+    result = assign(observations, cfg, names=db.load_display_names(), reliability=rel)
+    run_id = make_run_id([o.obs_id for o in observations], cfg.config_hash + rel.fingerprint)
     db.save_run(
         run_id,
         cfg.config_hash,

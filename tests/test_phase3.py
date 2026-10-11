@@ -116,8 +116,8 @@ def test_csv_format(loaded, tmp_path):
     export(db, cfg, tmp_path / "o")
     lines = (tmp_path / "o" / "entites.csv").read_text("utf-8").splitlines()
     header = lines[0].split(";")
-    assert header[0] == "entity_id" and header[-1] == "run_id" and len(header) == 18
-    assert all(len(line.split(";")) == 18 for line in lines)
+    assert header[0] == "entity_id" and header[-2:] == ["run_id", "admiralty"] and len(header) == 19
+    assert all(len(line.split(";")) == 19 for line in lines)
     assert len(lines) == 1 + 8  # web:t.me remplacé par la citation du canal (D14)
     assert not (tmp_path / "o" / "entites.csv").read_bytes().startswith(b"\xef\xbb\xbf")
 

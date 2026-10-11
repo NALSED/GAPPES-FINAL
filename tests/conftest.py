@@ -15,7 +15,16 @@ from urllib.parse import urlsplit
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-ACTIVATION = ("secrets.env", "autonomie.yaml", "sujets.yaml", "recherche.yaml", "tavily.yaml")
+# fichiers d'activation, et pondération Admiralty (les tests historiques supposent des poids uniformes ; les
+# tests de l'Admiralty fournissent leur propre table)
+ACTIVATION = (
+    "secrets.env",
+    "autonomie.yaml",
+    "sujets.yaml",
+    "recherche.yaml",
+    "tavily.yaml",
+    "fiabilite_sources.yaml",
+)
 
 
 def _copie_claire() -> Path:
