@@ -40,7 +40,10 @@ class Autonomy:
     nouvelles_sources_par_cycle: int = 20
     elements_par_cycle: int = 200  # observations ingérées au plus par cycle
     profondeur: int = 1  # 0 = résultats de recherche seulement ; 1 = + liens sortants des pages
-    seuil_ingestion: float = 20.0  # proximité minimale (0 à 100) avec un sujet
+    seuil_ingestion: float = 20.0  # proximité minimale (0 à 100) avec un sujet (valeur de départ)
+    seuil_ingestion_min: float = 5.0  # bornes de l'ajustement automatique
+    seuil_ingestion_max: float = 40.0
+    seuil_ingestion_auto: bool = False  # vrai : la boucle l'ajuste elle-même dans les bornes
     # interdits (éditables)
     interdits_domaines: tuple[str, ...] = ()
     interdits_motifs: tuple[str, ...] = ()
@@ -167,12 +170,44 @@ def _normalize_autonomy(d: dict[str, Any], path: Path) -> dict[str, Any]:
     return d
 
 
+def _ingestion_settings(
+    d: dict[str, Any], path: Path, config_dir
+) -> tuple[float, float, float, bool]:
+    """`seuil_ingestion` : un nombre, ou `{valeur, min, max, auto_ajustable}`. Si l'ajustement automatique est
+    permis, la dernière valeur ajustée par la boucle (fichier appris) remplace la valeur de départ, toujours
+    ramenée dans les bornes."""
+    from grappes.learned import LearnedError, load_ingestion_threshold
+
+    base = Autonomy()  # (attributs de classe d'un dataclass à slots : il faut une instance)
+    raw = d.get("seuil_ingestion", base.seuil_ingestion)
+    if isinstance(raw, dict):
+        start = _num(raw, "valeur", base.seuil_ingestion, path)
+        lo = _num(raw, "min", base.seuil_ingestion_min, path)
+        hi = _num(raw, "max", base.seuil_ingestion_max, path)
+        auto = bool(raw.get("auto_ajustable", False))
+    else:
+        start = _num(d, "seuil_ingestion", base.seuil_ingestion, path)
+        lo, hi, auto = base.seuil_ingestion_min, base.seuil_ingestion_max, False
+    if not 0 <= lo <= hi <= 100:
+        raise ConfigError(f"{path}: seuil_ingestion : 0 <= min <= max <= 100 attendu")
+    value = min(max(start, lo), hi)
+    if auto:
+        try:
+            learned = load_ingestion_threshold(config_dir)
+        except LearnedError as exc:
+            raise ConfigError(str(exc)) from exc
+        if learned is not None:
+            value = min(max(learned, lo), hi)
+    return value, lo, hi, auto
+
+
 def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
     """`config/autonomie.yaml` ; absent = tout par défaut, donc `autonome: false`."""
     path = Path(config_dir) / "autonomie.yaml"
     if not path.exists():
         return Autonomy()
     d = _normalize_autonomy(_yaml(path), path)
+    ingestion = _ingestion_settings(d, path, config_dir)
     base = Autonomy()
     ap, rc, st = (d.get(k) or {} for k in ("apprentissage", "recalibrage", "stabilite"))
     for name, section in (("apprentissage", ap), ("recalibrage", rc), ("stabilite", st)):
@@ -197,7 +232,10 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
         ),
         elements_par_cycle=int(_num(d, "elements_par_cycle", base.elements_par_cycle, path)),
         profondeur=int(_num(d, "profondeur", base.profondeur, path)),
-        seuil_ingestion=_num(d, "seuil_ingestion", base.seuil_ingestion, path),
+        seuil_ingestion=ingestion[0],
+        seuil_ingestion_min=ingestion[1],
+        seuil_ingestion_max=ingestion[2],
+        seuil_ingestion_auto=ingestion[3],
         interdits_domaines=_strs(interdits, "domaines", (), path),
         interdits_motifs=_strs(interdits, "motifs", (), path),
         delai_domaine_s=max(

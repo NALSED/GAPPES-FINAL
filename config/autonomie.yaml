@@ -6,3 +6,9 @@ interdits:
   - reddit.com
   - facebook.com
 autonome: true
+
+seuil_ingestion:
+  valeur: 20
+  min: 5
+  max: 40
+  auto_ajustable: true

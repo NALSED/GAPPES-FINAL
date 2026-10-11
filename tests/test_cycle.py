@@ -612,3 +612,37 @@ def test_cli_cycle_stop_et_occupe(tmp_path, capsys):
 def test_cli_cycle_annule_code_5(tmp_path, capsys):
     m = Monde(tmp_path, stabilite={"max_taux_ambiguite": 0.0, "min_entites": 5})
     assert _cli(m, "cycle") == 5 and "CYCLE ANNULÉ" in capsys.readouterr().out
+
+
+# --- seuil d'ingestion auto-ajustable : tracé dans le rapport, restauré par le retour en arrière -------------
+
+
+def test_seuil_d_ingestion_trace_dans_le_rapport_et_restaure_au_retour(tmp_path, monkeypatch):
+    from grappes.autonomy import load_autonomy
+    from grappes.cycle.learn import IngestionAdjust
+
+    m = Monde(tmp_path, seuil_ingestion={"valeur": 20, "min": 5, "max": 40, "auto_ajustable": True})
+    out = m.cycle()
+    assert (
+        out.status == OK
+        and "Seuil d'ingestion inchangé (20)" in out.report
+        and "trop peu" in out.report
+    )
+
+    monkeypatch.setattr(
+        engine,
+        "adjust_ingestion",
+        lambda *a, **k: IngestionAdjust(
+            20.0, 25.0, "seulement 1 source sur 6 rangée : trop de bruit"
+        ),
+    )
+    out2 = m.cycle()
+    assert out2.status == OK
+    assert "Seuil d'ingestion modifié** : 20 → 25. Raison : seulement 1 source sur 6" in out2.report
+    assert load_autonomy(m.config).seuil_ingestion == 25  # utilisé au cycle suivant
+    rec = read_log(m.data / "cycles.jsonl")[-1]
+    assert rec["seuil_ingestion"] == 25.0
+    assert rollback_last(m.config, m.db, m.out, m.data).status == OK
+    assert (
+        load_autonomy(m.config).seuil_ingestion == 20
+    )  # le retour en arrière restaure aussi le seuil

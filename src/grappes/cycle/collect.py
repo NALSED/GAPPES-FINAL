@@ -39,6 +39,7 @@ class Ingested:
     score: float
     depth: int
     new_source: bool
+    ref: str = ""  # clé de la source ingérée (ex. web:lemonde.fr, wikipedia:fr/udf)
 
 
 @dataclass(slots=True)
@@ -208,7 +209,9 @@ def collect(
         rep.observations_new += added
         if is_new:
             new_domains.add(domain)
-        rep.ingested.append(Ingested(key, domain, owner.grappe_id, round(score, 2), depth, is_new))
+        rep.ingested.append(
+            Ingested(key, domain, owner.grappe_id, round(score, 2), depth, is_new, f"web:{domain}")
+        )
         if depth < auto.profondeur:  # exploration : liens web sortants qui touchent au sujet
             for item in res.record.get("links", []):
                 link = item["href"]

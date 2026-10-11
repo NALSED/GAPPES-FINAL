@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 from grappes.cycle.collect import CollectReport
-from grappes.cycle.learn import GrappeLearning, Recalibration
+from grappes.cycle.learn import GrappeLearning, IngestionAdjust, Recalibration
 from grappes.cycle.metrics import LABELS, Indicators, Metrics
 
 MAX_LIST = 15
@@ -35,6 +35,7 @@ class CycleData:
     changed: list[tuple[str, str, str]] = field(default_factory=list)  # (nom, grappe avant, après)
     learning: list[GrappeLearning] = field(default_factory=list)
     recalibration: Recalibration | None = None
+    ingestion: IngestionAdjust | None = None
     hypothetical_citations: int = 0
     hypothetical_sources: int = 0
     include_persons: bool = False
@@ -175,6 +176,14 @@ def render(d: CycleData) -> str:
                 w(f"* Seuil modifié — {label} : {rc.before[k]:g} → {rc.after[k]:g}")
     elif rc:
         w(f"* Seuils inchangés{(' (' + rc.note + ')') if rc.note else ''}.")
+    ig = d.ingestion
+    if ig is not None:
+        if ig.changed:
+            w(
+                f"* **Seuil d'ingestion modifié** : {ig.before:g} → {ig.after:g}. Raison : {ig.reason}."
+            )
+        else:
+            w(f"* Seuil d'ingestion inchangé ({ig.before:g}) : {ig.reason}.")
     w("")
 
     # --- Telegram

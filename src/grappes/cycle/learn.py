@@ -157,6 +157,72 @@ def learn_grappe(
     return res
 
 
+# --- seuil d'ingestion auto-ajustable ----------------------------------------------------------------------
+
+MIN_INGESTED = 3  # en dessous, trop peu de sources pour juger de la pertinence
+PRECISION_LOW = 1 / 3  # part de sources ingérées qui sont rangées : en dessous, on durcit
+PRECISION_HIGH = 0.8  # au-dessus, et si beaucoup de candidats sont refusés, on assouplit
+REFUSED_SHARE_HIGH = 0.2
+
+
+@dataclass(slots=True)
+class IngestionAdjust:
+    before: float
+    after: float
+    reason: str
+
+    @property
+    def changed(self) -> bool:
+        return abs(self.after - self.before) > 1e-9
+
+
+def adjust_ingestion(
+    auto: Autonomy,
+    ingested_refs: list[str],
+    classed_refs: set[str],
+    n_examined: int,
+    n_refused_proximity: int,
+) -> IngestionAdjust:
+    """Ajuste `seuil_ingestion` dans ses bornes, d'au plus `variation_max` par cycle, d'après la
+    pertinence observée : parmi les sources ingérées ce cycle, quelle part est ensuite rangée dans un sujet ?
+
+    * moins d'un tiers : trop de bruit entre -> seuil relevé ;
+    * plus de 80 % ET au moins 20 % des résultats examinés refusés pour proximité insuffisante : on rate
+      sans doute de bonnes sources -> seuil abaissé ;
+    * sinon, ou si moins de 3 sources ingérées : inchangé.
+    Retourne la décision et sa raison (reprises dans le rapport de cycle).
+    """
+    lo, hi, now = auto.seuil_ingestion_min, auto.seuil_ingestion_max, auto.seuil_ingestion
+    keep = IngestionAdjust(now, now, "")
+    if not auto.seuil_ingestion_auto:
+        keep.reason = "ajustement automatique non autorisé (`auto_ajustable` faux)"
+        return keep
+    refs = list(dict.fromkeys(ingested_refs))
+    if len(refs) < MIN_INGESTED:
+        keep.reason = f"{len(refs)} source(s) ingérée(s) < {MIN_INGESTED} : trop peu pour juger de la pertinence"
+        return keep
+    kept = sum(1 for r in refs if r in classed_refs)
+    precision = kept / len(refs)
+    refused = n_refused_proximity / n_examined if n_examined else 0.0
+    step = auto.variation_max
+    if precision < PRECISION_LOW:
+        new = min(now + step, hi)
+        why = f"seulement {kept} source(s) sur {len(refs)} ingérée(s) rangée(s) dans un sujet ({precision:.0%}) : trop de bruit"
+    elif precision > PRECISION_HIGH and refused >= REFUSED_SHARE_HIGH:
+        new = max(now - step, lo)
+        why = (
+            f"{kept} source(s) sur {len(refs)} rangée(s) ({precision:.0%}) et {refused:.0%} des résultats refusés "
+            "pour proximité insuffisante : des sources pertinentes sont probablement écartées"
+        )
+    else:
+        keep.reason = f"pertinence satisfaisante ({kept} sur {len(refs)} rangée(s), {refused:.0%} refusés pour proximité)"
+        return keep
+    if abs(new - now) < 1e-9:
+        keep.reason = f"{why} ; mais le seuil est déjà à sa borne ({now:g})"
+        return keep
+    return IngestionAdjust(now, round(new, 2), why)
+
+
 # --- recalibrage borné -----------------------------------------------------------------------------
 
 

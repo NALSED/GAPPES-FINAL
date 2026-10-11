@@ -25,6 +25,7 @@ from grappes.clustering.resultat import write_resultat
 from grappes.config import Config, load_config
 from grappes.cycle.collect import collect
 from grappes.cycle.learn import (
+    adjust_ingestion,
     confirmed_by_grappe,
     learn_grappe,
     recalibrate,
@@ -47,6 +48,7 @@ from grappes.cycle.state import (
 from grappes.fetch import PageFetcher
 from grappes.learned import (
     load_learned_lexicon,
+    save_ingestion_threshold,
     save_learned_lexicon,
     save_learned_thresholds,
 )
@@ -301,6 +303,15 @@ def _execute(
             n_learned = sum(len(g.learned_terms) for g in cfg.grappes)
         after = run_metrics(db, run_id, cfg)
         data.after = after
+        if auto.seuil_ingestion_auto and data.collect and not data.collect.dry_run:
+            # pertinence observée : part des sources ingérées ce cycle qui sont ensuite rangées dans un sujet
+            c = data.collect
+            n_prox = sum(n for k, n in c.refused.items() if k.startswith("proximité insuffisante"))
+            data.ingestion = adjust_ingestion(
+                auto, [i.ref for i in c.ingested], set(after.main), c.candidates, n_prox
+            )
+            if data.ingestion.changed:
+                save_ingestion_threshold(paths.config, data.ingestion.after, n)
         n_base = sum(len(g.lexicon.terms) - len(g.learned_terms) for g in cfg.grappes)
         data.indicators = compare(before, after, auto, n_learned, n_base)
         data.hypothetical_citations, data.hypothetical_sources = _hypothetical(db, res)
@@ -340,6 +351,7 @@ def _finish(
     ind = data.indicators
     append_log(paths.log, {
         "n": data.n, "cycle_id": data.cycle_id, "date": data.date.isoformat(), "status": OK, "run_id": run_id,
+        "seuil_ingestion": data.ingestion.after if data.ingestion else None,
         "indicateurs": _ind_dict(ind), "rapport": str(report), "nouvelles_sources": len(data.collect.new_sources) if data.collect else 0,
         "mots_appris": sum(len(g.added) for g in data.learning),
     })  # fmt: skip

@@ -426,8 +426,12 @@ def load_config(config_dir: str | Path = "config") -> Config:
         h.update(p.read_bytes())
     try:
         for p in learned_files:  # fichiers appris : termes et poids seulement (voir learned.py)
-            h.update(p.name.encode())
-            h.update(canonical_digest(p))
+            digest = canonical_digest(p)
+            if (
+                digest != b"[]"
+            ):  # un fichier sans effet sur le scoring (ex. seul seuil d'ingestion) : ignoré
+                h.update(p.name.encode())
+                h.update(digest)
     except LearnedError as exc:
         raise ConfigError(str(exc)) from exc
     return Config(scoring, sources, grappes, h.hexdigest()[:16], telegram_names)

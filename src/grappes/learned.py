@@ -154,10 +154,38 @@ def load_learned_thresholds(config_dir: str | Path) -> dict[str, float]:
     return out
 
 
+INGESTION_KEY = "seuil_ingestion"  # seuil d'ingestion auto-ajusté (n'entre pas dans `config_hash`)
+
+
+def load_ingestion_threshold(config_dir: str | Path) -> float | None:
+    """Dernier seuil d'ingestion ajusté par la boucle, ou `None`."""
+    path = thresholds_path(config_dir)
+    if not path.exists():
+        return None
+    data = _read(path)
+    if INGESTION_KEY not in data:
+        return None
+    return _num(data[INGESTION_KEY], f"{path}:{INGESTION_KEY}")
+
+
+def save_ingestion_threshold(config_dir: str | Path, value: float, cycle: int) -> Path:
+    """Écrit le seuil d'ingestion sans toucher aux autres seuils appris du fichier."""
+    path = thresholds_path(config_dir)
+    data = _read(path) if path.exists() else {}
+    data[INGESTION_KEY] = round(float(value), 4)
+    data["cycle"] = cycle
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    return path
+
+
 def save_learned_thresholds(config_dir: str | Path, values: dict[str, float], cycle: int) -> Path:
     path = thresholds_path(config_dir)
     path.parent.mkdir(parents=True, exist_ok=True)
-    data: dict[str, Any] = {k: round(float(v), 4) for k, v in values.items() if k in THRESHOLD_KEYS}
+    data: dict[str, Any] = {}
+    if path.exists() and INGESTION_KEY in _read(path):  # conserve le seuil d'ingestion déjà ajusté
+        data[INGESTION_KEY] = _read(path)[INGESTION_KEY]
+    data.update({k: round(float(v), 4) for k, v in values.items() if k in THRESHOLD_KEYS})
     data["cycle"] = cycle
     path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
     return path
