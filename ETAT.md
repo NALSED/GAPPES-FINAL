@@ -33,6 +33,12 @@ Sujet : « Les acteurs des blocages et mobilisations étudiantes en France en ce
 * **Cycle réel après les trois points** (`rapports/cycle_2026-10-11_7.md`) : 4 nouvelles sources, sources par lettre B : 2, C : 11, D : 1, **aucune en A** (le seul nom web interrogé, « Le Bonbon », n'a pas de correspondance exacte), **0 entité confirmée**, 7 rangées « probable ». Rien n'a changé de grappe ; l'ajustement automatique du seuil d'ingestion (20 → 25) a été proposé par le cycle.
 * **Lecture honnête** : la pondération rend la confirmation *plus rapide* quand deux écosystèmes citent la même cible (tests), mais elle ne crée pas de recoupement : tant que les citants d'une cible sont tous de l'écosystème `wikipedia`, la règle des deux écosystèmes bloque, comme voulu (D50, D51). Ce n'est pas un bug ; le résultat reste « probable » pour ce sujet. Les voies restantes de Q24 (extraction d'entités dans le texte RSS, plus de pages web) changent la règle ou le volume : non traitées sans décision de Sednal.
 
+## Q24 suite : citations par mention textuelle (D54)
+
+* **Fait** : le texte libre des éléments RSS et des pages web peut citer une entité déjà connue (nom exact ou domaine, jamais de création d'entité, jamais d'approximation, jamais le propre site de l'éditeur). Marquage `via="texte"`, fiabilité Admiralty une lettre en dessous de celle du citant. 522 tests verts.
+* **Cycle réel** (`rapports/cycle_2026-10-11_8.md`) : 345 citations dont **7 par texte** (pages `lebonbon.fr` et `valeursactuelles.com` mentionnant « Union étudiante », « Cocarde étudiante », « Mouvement des gilets jaunes »), **toutes vers des articles Wikipédia** (donc cibles d'écosystème `wikipedia`, citantes `web`). Résultat : toujours **0 confirmée**, 8 probables. Aucun flux RSS ne mentionne par son nom une entité connue ce cycle.
+* **Lecture honnête** : la mention textuelle apporte bien une seconde voix d'un autre écosystème, mais il faut encore trois citants membres et une somme de poids ≥ 3. Avec des sources D (mention = E, poids 0,59), il en faudrait beaucoup ; seules des mentions par des médias établis (B → C) y arrivent vite. Le plafond n'est donc plus la règle des deux écosystèmes mais le volume de sources citant les mêmes cibles. Je n'ai rien relâché (non négociable) et n'ai pas augmenté les pages lues (écarté).
+
 ## Limites connues
 
 * Q16 à Q19 (formats Telegram, X, Instagram, web) restent ouvertes : elles se trancheront sur les premières vraies données collectées.
