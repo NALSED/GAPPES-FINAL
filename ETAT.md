@@ -39,6 +39,9 @@ Sujet : « Les acteurs des blocages et mobilisations étudiantes en France en ce
 * **Cycle réel** (`rapports/cycle_2026-10-11_8.md`) : 345 citations dont **7 par texte** (pages `lebonbon.fr` et `valeursactuelles.com` mentionnant « Union étudiante », « Cocarde étudiante », « Mouvement des gilets jaunes »), **toutes vers des articles Wikipédia** (donc cibles d'écosystème `wikipedia`, citantes `web`). Résultat : toujours **0 confirmée**, 8 probables. Aucun flux RSS ne mentionne par son nom une entité connue ce cycle.
 * **Lecture honnête** : la mention textuelle apporte bien une seconde voix d'un autre écosystème, mais il faut encore trois citants membres et une somme de poids ≥ 3. Avec des sources D (mention = E, poids 0,59), il en faudrait beaucoup ; seules des mentions par des médias établis (B → C) y arrivent vite. Le plafond n'est donc plus la règle des deux écosystèmes mais le volume de sources citant les mêmes cibles. Je n'ai rien relâché (non négociable) et n'ai pas augmenté les pages lues (écarté).
 
+* **Flux franceinfo ajouté (D55)** puis cycle réel (`rapports/cycle_2026-10-11_9.md`) : 1 seule observation du flux assez proche du sujet (95 résultats refusés pour proximité), 347 citations dont 9 par texte, toujours **0 confirmée**, 8 probables. Le Monde écarté (flux « usage strictement personnel », robots.txt restrictif).
+* **Constat** : le sujet du jour ne produit presque aucun élément de flux proche ; ajouter des flux ne suffit pas. Je m'arrête là sur Q24 : la suite (autres médias, sujets plus couverts par la presse) demande un choix de Sednal. Rien n'est relâché.
+
 ## Limites connues
 
 * Q16 à Q19 (formats Telegram, X, Instagram, web) restent ouvertes : elles se trancheront sur les premières vraies données collectées.
