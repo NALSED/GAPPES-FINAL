@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
-from grappes.canon import canonical_domain, link_target
+from grappes.canon import canonical_domain, link_target, site_key
 from grappes.models import Observation
 from grappes.semantic.scoring import normalize
 
@@ -27,7 +27,11 @@ class Citation:
 
 
 TEXT_ECOSYSTEMS = ("rss", "web")  # écosystèmes dont le texte libre est lu pour des mentions (D54)
-TEXT_CITABLE = ("web", "wikipedia", "rss")  # comptes et personnes : jamais reconnus par leur nom (D25)
+TEXT_CITABLE = (
+    "web",
+    "wikipedia",
+    "rss",
+)  # comptes et personnes : jamais reconnus par leur nom (D25)
 MIN_NAME_LEN = 5  # un nom plus court (« Le », « ENS ») n'est jamais cherché dans un texte
 
 
@@ -159,10 +163,25 @@ def validate_crossref(
     out: dict[str, ValidationRecord] = {}
     for cited in sorted(by_cited):
         raw = by_cited[cited]
-        citers = tuple(sorted(x for x in raw if is_member(x)))
-        ecos = tuple(sorted({x.split(":", 1)[0] for x in citers}))
         tw = text_weight or weight
-        weights = [tw(x) if x in text_only.get(cited, ()) else weight(x) for x in citers]
+
+        def w_of(x: str, cited=cited, tw=tw) -> float:
+            return tw(x) if x in text_only.get(cited, ()) else weight(x)
+
+        members = sorted(x for x in raw if is_member(x))
+        # une voix par ÉDITEUR (D58) : `agency.x.fr`, `x.fr` et le flux `rss:x.fr` ne sont pas des voix indépendantes ;
+        # on garde le citant de plus fort poids, et les écosystèmes ne se lisent que sur ces représentants.
+        by_publisher: dict[str, str] = {}
+        for x in members:
+            eco, _, ident = x.partition(":")
+            key = site_key(ident) if eco in ("web", "rss") else x
+            best_x = by_publisher.get(key)
+            if best_x is None or w_of(x) > w_of(best_x):
+                by_publisher[key] = x
+        citers = tuple(sorted(by_publisher.values()))
+        merged = len(members) - len(citers)
+        ecos = tuple(sorted({x.split(":", 1)[0] for x in citers}))
+        weights = [w_of(x) for x in citers]
         wsum = round(sum(weights), 6)
         # Effectif minimal de citants DÉDUIT des poids, pas inventé : le poids total à atteindre ne peut venir de
         # moins de citants que min_weight_sum / (meilleur poids présent), jamais moins que le nombre d'écosystèmes
@@ -179,8 +198,10 @@ def validate_crossref(
             reasons.append(f"écosystèmes {len(ecos)} < {rule.min_ecosystems}")
         if wsum < rule.min_weight_sum:
             reasons.append(f"poids {wsum:g} < {rule.min_weight_sum:g}")
-        if len(raw) > len(citers):
-            reasons.append(f"{len(raw) - len(citers)} citant(s) non membres ignorés")
+        if len(raw) > len(members):
+            reasons.append(f"{len(raw) - len(members)} citant(s) non membres ignorés")
+        if merged:
+            reasons.append(f"{merged} citant(s) fusionné(s) : même éditeur qu'un autre citant")
         validated = not any("<" in r for r in reasons)
         if validated:
             reasons.insert(0, "validé : seuils atteints")

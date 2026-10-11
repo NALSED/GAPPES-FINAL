@@ -568,6 +568,7 @@ def test_exemples_de_configuration_se_chargent():
         "wikipedia",
         "rss_letudiant",
         "rss_liberation",
+        "rss_franceinfo",
     }
 
 

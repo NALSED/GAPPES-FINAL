@@ -22,6 +22,21 @@ def canonical_domain(host: str) -> str:
     return h.removeprefix("www.")
 
 
+_SECOND_LEVEL = {"co", "com", "org", "net", "gov", "ac", "edu"}  # « co.uk », « com.au »...
+
+
+def site_key(host: str) -> str:
+    """Éditeur d'un site : domaine enregistrable, approché sans liste externe (les deux derniers libellés, trois
+    avec un second niveau « co/com/org/net/gov/ac/edu » sous un code pays). `agency.lebonbon.fr` et `lebonbon.fr`
+    sont le même éditeur ; `bbc.co.uk` reste lui-même. Approximation documentée (D58) : elle ne sert qu'à ne pas
+    compter deux fois la même voix."""
+    labels = canonical_domain(host).split(".")
+    if len(labels) <= 2:
+        return ".".join(labels)
+    keep = 3 if labels[-2] in _SECOND_LEVEL and len(labels[-1]) == 2 else 2
+    return ".".join(labels[-keep:])
+
+
 _TME_HOSTS = {"t.me", "telegram.me"}
 _X_HOSTS = {"x.com", "twitter.com", "mobile.twitter.com"}
 _IG_HOSTS = {"instagram.com"}
