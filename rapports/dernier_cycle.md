@@ -1,4 +1,4 @@
-# Rapport du cycle 13 — 11/10/2026 12:10
+# Rapport du cycle 14 — 11/10/2026 12:24
 
 **Mode : réel.** Cycle terminé normalement.
 
@@ -18,12 +18,13 @@ Aucune alerte.
 * Nouvelles sources : **0**
 * Observations ajoutées : **0**
 * Refusé, et pourquoi :
-  * 96 × proximité insuffisante avec les sujets
+  * 97 × proximité insuffisante avec les sujets
   * 21 × document déjà ingéré
   * 11 × réseau social ou identité sans page : citation seulement, jamais lu
-  * 8 × personne physique (catégorie biographique)
   * 7 × robots.txt : visite interdite ou illisible
+  * 6 × personne physique (catégorie biographique)
   * 2 × page déjà ingérée
+  * 1 × personne physique (texte biographique)
   * 1 × aucune catégorie lisible : en cas de doute, une personne
 * Fiabilité des sources (code Admiralty) : B : 3, C : 12, D : 2
 * Registres officiels : 0 requête(s) ce cycle, 0 source(s) placée(s) en A
