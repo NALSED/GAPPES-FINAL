@@ -21,7 +21,8 @@ from grappes.canon import canonical_domain, canonical_url, link_target
 from grappes.config import Config
 from grappes.fetch import PageFetcher
 from grappes.ingestion import get_fetcher
-from grappes.models import Grappe
+from grappes.ingestion.base import make_obs_id, parse_ts
+from grappes.models import Grappe, Observation, SourceRef
 from grappes.search.config import SearchConfig
 from grappes.search.engine import run_search
 from grappes.semantic.scoring import score_proximity
@@ -116,6 +117,9 @@ def collect(
 
     # 1. recherche : phrase + meilleurs termes de chaque sujet, quota de requêtes partagé
     found: dict[str, tuple[float, str, object]] = {}  # url -> (score, id de grappe, candidat)
+    docs: list[
+        tuple[float, str, object]
+    ] = []  # résultats qui SONT le document (flux RSS, Wikipédia)
     used = 0
     for g in ready:
         remaining = max(auto.requetes_par_cycle - used, 0)
@@ -133,7 +137,11 @@ def collect(
         rep.providers.update(res.status)
         for m in res.raw:  # un candidat par résultat (URL), pas par entité fusionnée
             rep.candidates += 1
-            reason = _screen_candidate(m, scfg, fetcher)
+            reason = (
+                _screen_doc(m, scfg, fetcher)
+                if m.doc is not None
+                else _screen_candidate(m, scfg, fetcher)
+            )
             if reason:
                 rep.refused[reason] += 1
                 continue
@@ -141,11 +149,56 @@ def collect(
             if owner is None or score < auto.seuil_ingestion:
                 rep.refused["proximité insuffisante avec les sujets"] += 1
                 continue
+            if m.doc is not None:
+                docs.append((score, owner.grappe_id, m))
+                continue
             if m.url not in found or score > found[m.url][0]:
                 found[m.url] = (score, owner.grappe_id, m)
     rep.requests = used
 
-    # 2. récupération et ingestion, du plus proche au moins proche, jusqu'aux plafonds
+    # 2a. documents déjà en main (flux RSS, Wikipédia) : ingérés tels quels sous leur propre écosystème,
+    #     sans récupérer de page (le fournisseur les a déjà livrés, robots.txt respecté s'il s'agit d'un flux)
+    known_refs = {r[0] for r in db.conn.execute("SELECT ref_key FROM sources")}
+    new_refs: set[str] = set()
+    for score, gid, m in sorted(docs, key=lambda t: (-t[0], t[2].url)):
+        if should_stop():
+            rep.stopped = True
+            break
+        if rep.observations_new >= auto.elements_par_cycle:
+            rep.refused["plafond d'observations par cycle atteint"] += 1
+            continue
+        d = m.doc
+        ref = f"{d['ecosysteme']}:{d['source']}"
+        is_new = ref not in known_refs and ref not in new_refs
+        if is_new and len(new_refs) >= auto.nouvelles_sources_par_cycle:
+            rep.refused["plafond de nouvelles sources atteint"] += 1
+            continue
+        if (
+            m.url
+            and db.conn.execute("SELECT 1 FROM observations WHERE raw_ref=?", (m.url,)).fetchone()
+        ):
+            rep.refused["document déjà ingéré"] += 1
+            continue
+        obs = Observation(
+            obs_id=make_obs_id(d["ecosysteme"], f"{d['source']}|{m.url}", m.text),
+            source=SourceRef(d["ecosysteme"], d["source"]),
+            ts=parse_ts(m.date) if m.date else None,
+            text=m.text,
+            links=tuple(d["liens"]),
+            raw_ref=m.url or None,
+            meta={"nom": d["nom"]} if d["nom"] else {},
+        )
+        added = db.add_observations([obs], {ref: cfg.sources.weight(ref)})
+        if not added:
+            rep.refused["observation déjà connue"] += 1
+            continue
+        db.set_origin(ref, "recherche")
+        rep.observations_new += added
+        if is_new:
+            new_refs.add(ref)
+        rep.ingested.append(Ingested(m.url, d["source"], gid, round(score, 2), 0, is_new, ref))
+
+    # 2b. récupération et ingestion des pages, du plus proche au moins proche, jusqu'aux plafonds
     known_sources = {
         r[0] for r in db.conn.execute("SELECT ident FROM sources WHERE ecosystem='web'")
     }
@@ -180,7 +233,7 @@ def collect(
             rep.refused["plafond de pages par domaine atteint"] += 1
             continue
         is_new = domain not in known_sources and domain not in new_domains
-        if is_new and len(new_domains) >= auto.nouvelles_sources_par_cycle:
+        if is_new and len(new_domains) + len(new_refs) >= auto.nouvelles_sources_par_cycle:
             rep.refused["plafond de nouvelles sources atteint"] += 1
             continue
         rep.pages_attempted += 1
@@ -224,6 +277,16 @@ def collect(
                 ):
                     queue.append((0.0, link, depth + 1))
     return rep
+
+
+def _screen_doc(m, scfg: SearchConfig, fetcher: PageFetcher) -> str | None:
+    """Motif de refus d'un résultat-document (exclusion du fournisseur, interdits), ou `None`."""
+    if m.doc["exclu"]:
+        return m.doc["exclu"]
+    spec = scfg.providers.get(m.provider)
+    if spec is not None and not spec.public:
+        return "fournisseur non public"
+    return (fetcher.rules.check_url(m.url) if m.url else None) or fetcher.rules.check_text(m.text)
 
 
 def _screen_candidate(m, scfg: SearchConfig, fetcher: PageFetcher) -> str | None:

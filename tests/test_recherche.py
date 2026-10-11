@@ -554,10 +554,20 @@ def test_exemples_de_configuration_se_chargent():
     for f in sorted((ROOT / "config" / "recherche" / "exemples").glob("*.yaml")):
         d = yaml.safe_load(f.read_text("utf-8"))
         assert d["id"] and d["type"] in registered_types(), f.name
-    assert [f.name for f in (ROOT / "config" / "recherche").glob("*.yaml")] == [
-        "tavily.yaml"
-    ]  # le seul fournisseur branché
-    assert load_search_config(ROOT / "config").actifs == ("tavily",)
+    assert {
+        f.name for f in (ROOT / "config" / "recherche").glob("*.yaml")
+    } == {  # les fournisseurs branchés
+        "tavily.yaml",
+        "wikipedia.yaml",
+        "rss_letudiant.yaml",
+        "rss_liberation.yaml",
+    }
+    assert set(load_search_config(ROOT / "config").actifs) == {
+        "tavily",
+        "wikipedia",
+        "rss_letudiant",
+        "rss_liberation",
+    }
 
 
 # --- liens déjà cités et CLI ------------------------------------------------------------------

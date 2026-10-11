@@ -143,10 +143,37 @@ class HttpProvider(SearchProvider):
             return {"Authorization": f"Basic {token}"}, {}
         raise SearchError(f"type d'authentification inconnu : {kind!r}")
 
+    def _robots(self, base_url: str):
+        """Respect de robots.txt pour les flux publics (RSS) : `respecter_robots: true` dans le YAML."""
+        from grappes.fetch.robots import (
+            RobotsCache,
+        )  # import tardif : `grappes.fetch` importe ce module
+
+        ua = str((self.options.get("headers") or {}).get("User-Agent", "grappes-recherche/1"))
+
+        def fetch(u: str) -> tuple[int, bytes]:
+            try:
+                self.ctx.throttle()
+                r = self.transport("GET", u, {"User-Agent": ua}, None, 15.0, 500_000)
+                self.ctx.journal.log(self.id, "-", f"GET {u}", str(r.status))
+                return r.status, r.body
+            except Exception as exc:  # noqa: BLE001 - robots illisible = prudence
+                self.ctx.journal.log(self.id, "-", f"GET {u}", f"erreur {type(exc).__name__}")
+                return 0, b""
+
+        return RobotsCache(fetch, ua)
+
     # --- recherche -------------------------------------------------------------------------
 
     def search(self, keyword: str, limit: int) -> Iterable[Candidate]:
         o = self.options
+        # Flux sans requête (RSS : toujours les mêmes éléments quel que soit le mot-clé) : lu une seule fois par
+        # exécution, avec son propre plafond de résultats.
+        if o.get("sans_mots_cles"):
+            if getattr(self, "_deja_lu", False):
+                return
+            self._deja_lu = True
+        limit = int(o.get("limite_resultats", limit))
         base_url = o.get("url")
         if not isinstance(base_url, str) or urllib.parse.urlsplit(base_url).scheme not in (
             "http",
@@ -157,6 +184,7 @@ class HttpProvider(SearchProvider):
         if method not in ("GET", "POST"):
             raise ProviderUnavailable(f"méthode non gérée : {method}")
         auth_headers, auth_params = self._auth()
+        robots = self._robots(base_url) if o.get("respecter_robots") and self.ctx.execute else None
         pag = o.get("pagination") or {}
         kind = pag.get("type", "none")
         if kind not in ("none", "page", "offset", "cursor", "next_link"):
@@ -217,6 +245,10 @@ class HttpProvider(SearchProvider):
             if not self.ctx.execute:
                 self.ctx.journal.log(self.id, keyword, f"{method} {log_url}", "dry-run")
                 return
+            if robots is not None and not robots.check(url)[0]:
+                raise ProviderUnavailable(
+                    f"robots.txt interdit {urllib.parse.urlsplit(url).path or '/'} : flux non lu"
+                )
             self.ctx.take(self.id, quota)
             self.ctx.throttle()
             resp = self.transport(

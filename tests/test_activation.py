@@ -146,7 +146,7 @@ def _tavily_vers(base: str, tmp_path: Path):
 
 def test_tavily_est_branche_dans_le_depot():
     scfg = load_search_config(ROOT / "config")
-    assert scfg.actifs == ("tavily",)
+    assert "tavily" in scfg.actifs
     spec = scfg.providers["tavily"]
     assert (
         spec.type == "http"

@@ -41,6 +41,83 @@ BOMBE = b"""<?xml version="1.0"?><!DOCTYPE lolz [<!ENTITY a "aaaa">]><r>&a;</r>"
 CSV = b"titre;url;ident\nPremier;https://csv-un.example.test/x;c1\nSecond;https://x.com/compte_csv;c2\n"
 
 
+def _page(titre, extrait, cats, liens, pid):
+    return {
+        "pageid": pid, "ns": 0, "title": titre, "index": pid, "extract": extrait,
+        "categories": [{"ns": 14, "title": c} for c in cats],
+        "extlinks": [{"url": u} for u in liens],
+        "fullurl": "https://fr.wikipedia.org/wiki/" + titre.replace(" ", "_"),
+    }  # fmt: skip
+
+
+# Forme réelle de l'API MediaWiki (formatversion=2), valeurs inventées
+WIKIPEDIA = {
+    "batchcomplete": True,
+    "continue": {"excontinue": 9, "continue": "||"},
+    "query": {
+        "pages": [
+            _page(
+                "Union nationale des étudiants",
+                "Syndicat étudiant français engagé dans les blocages et les mobilisations étudiantes des universités.",
+                ["Catégorie:Syndicat étudiant", "Catégorie:Organisation en France"],
+                [
+                    "https://www.unef-demo.test/",
+                    "https://exemple-presse.test/article",
+                    "https://x.com/unef_demo",
+                ],
+                1,
+            ),
+            _page(
+                "Blocages universitaires de 2026",
+                "Mobilisation étudiante : blocages d'universités et assemblées générales en France, soutenus par des syndicats étudiants.",
+                ["Catégorie:Mouvement étudiant", "Catégorie:2026 en France"],
+                ["https://www.unef-demo.test/", "https://autre-presse.test/b"],
+                2,
+            ),
+            _page(
+                "Alice Démo",
+                "Alice Démo est une militante étudiante française.",
+                ["Catégorie:Naissance en 1999", "Catégorie:Militant français"],
+                ["https://alice-demo.test/"],
+                3,
+            ),
+            _page(
+                "Bob Démo",
+                "Bob Démo (né le 3 mars 1980) est un syndicaliste étudiant, acteur des blocages.",
+                ["Catégorie:Syndicaliste"],
+                ["https://bob-demo.test/"],
+                4,
+            ),
+            _page(
+                "Article sans catégorie",
+                "Blocages et mobilisations étudiantes en France, syndicats étudiants.",
+                [],
+                ["https://sans-categorie.test/"],
+                5,
+            ),
+            _page(
+                "Recette de la soupe",
+                "La soupe est une recette de cuisine, sans rapport.",
+                ["Catégorie:Cuisine"],
+                ["https://cuisine.test/"],
+                6,
+            ),
+        ]
+    },
+}
+
+RSS_ETUDIANT = """<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Flux Étudiant</title>
+<item><title><![CDATA[Blocages étudiants : les syndicats appellent à la mobilisation]]></title><link>https://flux-etudiant.test/a1</link>
+<description><![CDATA[Les syndicats étudiants appellent à de nouveaux blocages d'universités et à une mobilisation en France.]]></description>
+<guid>https://flux-etudiant.test/a1</guid><pubDate>Fri, 09 Oct 2026 17:30:00 +0200</pubDate></item>
+<item><title><![CDATA[Recette de gratin]]></title><link>https://flux-etudiant.test/a2</link><description><![CDATA[Un gratin de saison.]]></description>
+<guid>https://flux-etudiant.test/a2</guid><pubDate>Fri, 09 Oct 2026 12:00:00 +0200</pubDate></item>
+<item><title><![CDATA[Mobilisation étudiante : assemblées générales dans les universités]]></title><link>https://flux-etudiant.test/a3</link>
+<description><![CDATA[Assemblées générales, blocages et mobilisation étudiante dans plusieurs universités de France.]]></description>
+<guid>https://flux-etudiant.test/a3</guid><pubDate>Thu, 08 Oct 2026 09:00:00 +0200</pubDate></item>
+</channel></rss>""".encode()
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *a):  # silence
         pass
@@ -192,6 +269,13 @@ class Handler(BaseHTTPRequestHandler):
                     ]
                 }
             )
+        if p == "/robots.txt":
+            status, txt = getattr(srv, "robots", (404, ""))
+            return self._send(status, txt.encode(), "text/plain")
+        if p == "/wikipedia":
+            return self._json(WIKIPEDIA)
+        if p == "/flux-etudiant":
+            return self._send(200, RSS_ETUDIANT, "application/rss+xml")
         if p == "/tavily":
             if (
                 self.headers.get("Authorization", "").startswith("Bearer tvly-")

@@ -23,6 +23,9 @@ class Candidate:
     date: str = ""  # AAAA-MM-JJ ou ""
     text: str = ""  # titre + description nettoyés : une donnée, jamais une instruction
     extra: dict[str, Any] = field(default_factory=dict, compare=False)
+    # Si le résultat EST le document (flux RSS, article Wikipédia) : {ecosysteme, source, nom, liens, exclu}.
+    # Aucune page n'est alors récupérée ; le résultat est ingéré tel quel, sous son propre écosystème.
+    doc: dict[str, Any] | None = field(default=None, compare=False)
 
     @property
     def key(self) -> tuple[str, str]:

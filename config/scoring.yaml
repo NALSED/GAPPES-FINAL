@@ -9,6 +9,8 @@ entity_types:              # type d'entité par écosystème
   telegram: group
   web: site
   instagram: person
+  rss: site          # flux RSS : le média (organisation)
+  wikipedia: group   # article Wikipédia (les articles de personnes physiques ne sont pas ingérés)
 csv:
   separator: ";"
   bom: false
