@@ -117,9 +117,8 @@ def collect(
 
     # 1. recherche : phrase + meilleurs termes de chaque sujet, quota de requêtes partagé
     found: dict[str, tuple[float, str, object]] = {}  # url -> (score, id de grappe, candidat)
-    docs: list[
-        tuple[float, str, object]
-    ] = []  # résultats qui SONT le document (flux RSS, Wikipédia)
+    # résultats qui SONT le document (flux RSS, Wikipédia), un seul exemplaire par article
+    docs_by_key: dict[str, tuple[float, str, object]] = {}
     used = 0
     for g in ready:
         remaining = max(auto.requetes_par_cycle - used, 0)
@@ -149,36 +148,58 @@ def collect(
             if owner is None or score < auto.seuil_ingestion:
                 rep.refused["proximité insuffisante avec les sujets"] += 1
                 continue
-            if m.doc is not None:
-                docs.append((score, owner.grappe_id, m))
+            if (
+                m.doc is not None
+            ):  # le même article revient pour plusieurs requêtes : un seul exemplaire
+                key = m.url or f"{m.doc['ecosysteme']}:{m.doc['source']}"
+                if key not in docs_by_key or score > docs_by_key[key][0]:
+                    docs_by_key[key] = (score, owner.grappe_id, m)
                 continue
             if m.url not in found or score > found[m.url][0]:
                 found[m.url] = (score, owner.grappe_id, m)
     rep.requests = used
+    docs = list(docs_by_key.values())
 
     # 2a. documents déjà en main (flux RSS, Wikipédia) : ingérés tels quels sous leur propre écosystème,
-    #     sans récupérer de page (le fournisseur les a déjà livrés, robots.txt respecté s'il s'agit d'un flux)
+    #     sans récupérer de page (le fournisseur les a déjà livrés, robots.txt respecté s'il s'agit d'un flux).
+    #     Le plafond de nouvelles sources est PARTAGÉ ÉQUITABLEMENT entre écosystèmes (sinon les 8 premiers
+    #     articles Wikipédia prennent tout et aucune page web n'entre : plus de recoupement entre écosystèmes).
     known_refs = {r[0] for r in db.conn.execute("SELECT ref_key FROM sources")}
     new_refs: set[str] = set()
-    for score, gid, m in sorted(docs, key=lambda t: (-t[0], t[2].url)):
-        if should_stop():
-            rep.stopped = True
-            break
-        if rep.observations_new >= auto.elements_par_cycle:
-            rep.refused["plafond d'observations par cycle atteint"] += 1
-            continue
+    new_domains: set[str] = set()  # nouvelles sources web (pages), comptées avec les précédentes
+    cap = auto.nouvelles_sources_par_cycle
+    ecosystems = {m.doc["ecosysteme"] for _s, _g, m in docs} | ({"web"} if found else set())
+    share = max(1, cap // len(ecosystems)) if ecosystems else cap
+    web_reserve = share if found else 0  # des places gardées pour les pages web
+    by_eco: Counter = Counter()
+    deferred: list = []
+
+    def add_doc(score: float, gid: str, m, limited: bool) -> None:
         d = m.doc
         ref = f"{d['ecosysteme']}:{d['source']}"
+        if rep.observations_new >= auto.elements_par_cycle:
+            rep.refused["plafond d'observations par cycle atteint"] += 1
+            return
         is_new = ref not in known_refs and ref not in new_refs
-        if is_new and len(new_refs) >= auto.nouvelles_sources_par_cycle:
+        total = len(new_refs) + len(new_domains)
+        if is_new and total >= cap:
             rep.refused["plafond de nouvelles sources atteint"] += 1
-            continue
+            return
+        if (
+            is_new
+            and limited
+            and (by_eco[d["ecosysteme"]] >= share or len(new_refs) >= cap - web_reserve)
+        ):
+            deferred.append(
+                (score, gid, m)
+            )  # sa part est prise : une seconde chance s'il reste des places
+            return
         if (
             m.url
             and db.conn.execute("SELECT 1 FROM observations WHERE raw_ref=?", (m.url,)).fetchone()
         ):
             rep.refused["document déjà ingéré"] += 1
-            continue
+            return
         obs = Observation(
             obs_id=make_obs_id(d["ecosysteme"], f"{d['source']}|{m.url}", m.text),
             source=SourceRef(d["ecosysteme"], d["source"]),
@@ -191,12 +212,19 @@ def collect(
         added = db.add_observations([obs], {ref: cfg.sources.weight(ref)})
         if not added:
             rep.refused["observation déjà connue"] += 1
-            continue
+            return
         db.set_origin(ref, "recherche")
         rep.observations_new += added
         if is_new:
             new_refs.add(ref)
+            by_eco[d["ecosysteme"]] += 1
         rep.ingested.append(Ingested(m.url, d["source"], gid, round(score, 2), 0, is_new, ref))
+
+    for score, gid, m in sorted(docs, key=lambda t: (-t[0], t[2].url)):
+        if should_stop():
+            rep.stopped = True
+            break
+        add_doc(score, gid, m, limited=True)
 
     # 2b. récupération et ingestion des pages, du plus proche au moins proche, jusqu'aux plafonds
     known_sources = {
@@ -209,7 +237,6 @@ def collect(
     web = get_fetcher("web")
     seen_urls: set[str] = set()
     per_domain: Counter = Counter()
-    new_domains: set[str] = set()
     while queue:
         if should_stop():
             rep.stopped = True
@@ -276,6 +303,12 @@ def collect(
                     and link_relevant(item.get("anchor", ""), link, ready)
                 ):
                     queue.append((0.0, link, depth + 1))
+    # 2c. seconde chance des documents dont la part était prise, s'il reste des places dans le plafond total
+    for score, gid, m in deferred:
+        if should_stop():
+            rep.stopped = True
+            break
+        add_doc(score, gid, m, limited=False)
     return rep
 
 

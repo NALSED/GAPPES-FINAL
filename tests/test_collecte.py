@@ -248,3 +248,64 @@ def test_requetes_phrase_puis_termes_combines_par_deux(tmp_path, srv):
     q = search_queries(cfg.grappes[0])
     assert q[0] == cfg.grappes[0].subject  # la phrase d'abord
     assert all(" " in x for x in q[1:]) and len(q) <= 3  # jamais un mot seul : trop de bruit
+
+
+# --- plafond de nouvelles sources partagé entre écosystèmes (constat du cycle 5) ------------------------------
+
+PLUGIN_MIXTE = """
+from grappes.search import Candidate, SearchProvider, register_provider
+
+
+@register_provider
+class Mixte(SearchProvider):
+    type = "mixte_test"
+
+    def search(self, keyword, limit):
+        base = self.options["base"]
+        texte = "Jardins partagés et potager collectif : compost, semis et récolte en ville."
+        for i in range(8):
+            doc = {"ecosysteme": "wikipedia", "source": f"fr/article_{i}", "nom": f"Article {i}", "liens": [], "exclu": ""}
+            yield Candidate("wikipedia", doc["source"], f"https://fr.wikipedia.org/wiki/Article_{i}", keyword, self.id, "doc", text=texte, doc=doc)
+        if self.options.get("avec_pages", True):
+            yield Candidate("web", "127.0.0.1", f"{base}/jardin-a", keyword, self.id, "page", text=texte)
+            yield Candidate("web", "localhost", f"{base.replace('127.0.0.1', 'localhost')}/jardin-b", keyword, self.id, "page", text=texte)
+"""
+
+
+def monde_mixte(tmp_path, srv, avec_pages, **auto):
+    cfg, _scfg, autonomy, fetcher, db = monde(tmp_path, srv, **auto)
+    cfgdir = tmp_path / "config"
+    (cfgdir / "recherche" / "api.yaml").unlink()
+    (cfgdir / "recherche" / "mixte.yaml").write_text(
+        f"id: mixte\ntype: mixte_test\nbase: {srv.base}\navec_pages: {str(avec_pages).lower()}\n"
+    )
+    (cfgdir / "recherche.yaml").write_text("actifs: [mixte]\ndelai_s: 0\n")
+    (tmp_path / "plugins").mkdir()
+    (tmp_path / "plugins" / "mixte.py").write_text(PLUGIN_MIXTE)
+    return cfg, load_search_config(cfgdir), autonomy, fetcher, db
+
+
+def test_les_pages_web_gardent_leur_place_face_aux_documents(tmp_path, srv):
+    cfg, scfg, autonomy, fetcher, db = monde_mixte(
+        tmp_path, srv, True, nouvelles_sources_par_cycle=4
+    )
+    rep = collect(db, cfg, scfg, autonomy, fetcher, execute=True, log=False)
+    par_eco = {}
+    for i in rep.ingested:
+        if i.new_source:
+            par_eco[i.ref.split(":")[0]] = par_eco.get(i.ref.split(":")[0], 0) + 1
+    assert par_eco == {
+        "wikipedia": 2,
+        "web": 2,
+    }  # équitable : sans cela, Wikipédia prenait les 4 places
+    assert rep.refused["plafond de nouvelles sources atteint"] == 6
+
+
+def test_places_inutilisees_redistribuees_aux_documents(tmp_path, srv):
+    cfg, scfg, autonomy, fetcher, db = monde_mixte(
+        tmp_path, srv, False, nouvelles_sources_par_cycle=4
+    )
+    rep = collect(db, cfg, scfg, autonomy, fetcher, execute=True, log=False)
+    assert len(rep.new_sources) == 4 and {i.ref.split(":")[0] for i in rep.ingested} == {
+        "wikipedia"
+    }  # pas de page : tout aux documents
