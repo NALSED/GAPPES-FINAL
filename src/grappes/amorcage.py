@@ -174,6 +174,14 @@ def tokens(text: str) -> list[str]:
     return [w for w in _WORD.findall(normalize(text)) if w not in _NORMALIZED_STOP]
 
 
+def singular(word: str) -> str:
+    """Singulier approximatif (pluriels en -s ou -x d'un mot d'au moins 5 lettres), `""` sinon.
+    Le scoring compare des mots entiers : sans cela « jardin » ne reconnaîtrait pas « jardins »."""
+    if len(word) >= 5 and word.endswith(("s", "x")) and not word.endswith(("ss", "us")):
+        return word[:-1]
+    return ""
+
+
 @dataclass(slots=True)
 class Seed:
     terms: dict[str, float] = field(default_factory=dict)  # terme -> poids
@@ -201,7 +209,11 @@ def extract_terms(
     if n == 0 and not phrase_words:
         seed.reason = "aucun résultat exploitable et phrase sans mot significatif"
         return seed
-    chosen: dict[str, float] = {w: weight for w in phrase_words[:max_terms]}
+    chosen: dict[str, float] = {}
+    for w in phrase_words:  # chaque mot de la phrase, et son singulier (« jardins » -> « jardin »)
+        for form in (w, singular(w)):
+            if form and len(chosen) < max_terms:
+                chosen.setdefault(form, weight)
     common_cut = (
         0.8 * n if n >= 5 else n + 1
     )  # trop répandu = ne discrimine pas (si assez de textes)

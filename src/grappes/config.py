@@ -15,6 +15,7 @@ from grappes.canon import canonical_domain, canonical_handle
 from grappes.ecosystem.crossref import CrossRefRule
 from grappes.learned import (
     LearnedError,
+    canonical_digest,
     learned_dir,
     load_learned_lexicon,
     load_learned_thresholds,
@@ -411,11 +412,16 @@ def load_config(config_dir: str | Path = "config") -> Config:
         [p for p in (scoring_path, sources_path) if p.exists()]
         + files
         + subject_files
-        + learned_files
         + ([tg_path] if tg_path.exists() else [])
     ):
         h.update(p.name.encode())
         h.update(p.read_bytes())
+    try:
+        for p in learned_files:  # fichiers appris : termes et poids seulement (voir learned.py)
+            h.update(p.name.encode())
+            h.update(canonical_digest(p))
+    except LearnedError as exc:
+        raise ConfigError(str(exc)) from exc
     return Config(scoring, sources, grappes, h.hexdigest()[:16], telegram_names)
 
 

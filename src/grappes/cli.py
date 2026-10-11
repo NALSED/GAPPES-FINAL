@@ -89,6 +89,34 @@ def _search(args, cfg) -> int:
     return 0
 
 
+def _cycle(args) -> int:
+    from grappes.cycle.engine import BUSY, DRY, FAILED, OK, STOPPED, rollback_last, run_cycle
+
+    try:
+        if args.cmd == "rollback":
+            out = rollback_last(args.config, args.db, args.out, args.data)
+            if out.status == OK:
+                print(f"cycle {out.n} annulé : état d'avant restauré")
+                return 0
+        else:
+            out = run_cycle(args.config, args.db, args.out, args.data, dry_run=args.dry_run)
+    except ConfigError as exc:
+        print(f"configuration invalide : {exc}", file=sys.stderr)
+        return 2
+    reason = out.extra.get("reason", "")
+    if out.status == BUSY or out.status == STOPPED and not out.report:
+        print(reason, file=sys.stderr)
+    elif out.status == FAILED and not out.report:
+        print(reason or "échec", file=sys.stderr)
+    else:
+        print(out.report, end="")
+        if out.report_path:
+            print(f"\nrapport : {out.report_path}")
+        if out.status == DRY:
+            print("simulation : rien n'a été appelé ni écrit.")
+    return out.code
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="grappes")
     p.add_argument("--db", default="donnees/grappes.db")
@@ -120,6 +148,19 @@ def main(argv: list[str] | None = None) -> int:
     se.add_argument("--sujet", help="phrase du sujet : gabarit {sujet} et mot-clé de départ")
     se.add_argument("--no-internal", action="store_true", help="sans les liens déjà cités")
     se.add_argument("--out", default="sorties")
+    cy = sub.add_parser(
+        "cycle", help="boucle automatique (simulation tant que `autonome` est faux)"
+    )
+    cy.add_argument(
+        "--dry-run", action="store_true", help="simulation : rien n'est appelé ni écrit"
+    )
+    cy.add_argument("--out", default="sorties")
+    cy.add_argument(
+        "--data", default="donnees", help="dossier du verrou, du journal et des instantanés"
+    )
+    rb = sub.add_parser("rollback", help="annule le dernier cycle terminé")
+    rb.add_argument("--out", default="sorties")
+    rb.add_argument("--data", default="donnees")
     args = p.parse_args(argv)
     try:
         cfg = load_config(args.config)
@@ -128,6 +169,8 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if args.cmd == "search":
         return _search(args, cfg)
+    if args.cmd in ("cycle", "rollback"):
+        return _cycle(args)
     if args.cmd == "mcp":
         from grappes.mcp.server import create_server
 

@@ -37,6 +37,9 @@ apprentissage:               # uniquement à partir des entités confirmées (>=
   max_termes_total: 30
   poids: 0.3
   expiration_cycles: 4
+  support_min: 0.3             # part des confirmées qui contiennent le terme
+  rarete_max: 0.1              # part des autres entités qui le contiennent
+  exiger_racine_de_confiance: true   # enseignant = descendant d'une ancre ou d'une source trouvée par la recherche
 recalibrage:                 # seuils bornés, sur les confirmées uniquement
   actif: true
   variation_max: 5.0
@@ -47,5 +50,6 @@ stabilite:                   # au-delà d'un seuil : retour en arrière automati
   max_taux_ambiguite: 0.5
   chute_max_confirmes: 0.3
   max_derive_lexique: 1.0
+  min_entites: 10              # en dessous de ce nombre d'entités rangées, on ne juge pas (trop peu de données)
 instantanes_conserves: 10
 rapports_dir: rapports

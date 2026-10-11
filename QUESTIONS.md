@@ -8,6 +8,9 @@ Statut au 2026-10-06. Référence unique : `FINAL.md`. Aucune réponse inventée
 * **Q10** Clients MCP visés et lieu d'exécution ? Défaut : serveur MCP stdio en lecture seule.
 * **Q11** Scoring par embeddings plus tard, oui ou non ? Défaut : non (lexique et recoupement).
 
+* **Q20** Garde-fou de la boucle d'apprentissage (D41) : une entité confirmée n'enseigne des mots que si elle descend d'une ancre ou d'une source trouvée par la recherche. Sans ancre et avant la première recherche réelle, rien n'est appris. Faut-il relâcher cette exigence (`apprentissage.exiger_racine_de_confiance: false`) ? Défaut : non, par prudence.
+* **Q21** Personnes physiques (D32) : exclues de `resultat.csv` par défaut ; un compte X ou Instagram sans indice institutionnel explicite dans son nom est traité comme une personne (« en cas de doute, une personne »). La liste d'indices est intégrée (`resultat.indices_institution` pour la remplacer). Défaut : à garder.
+
 ## À trancher sur les premières vraies données collectées (Q16 à Q19)
 
 Aucun export n'est attendu de Sednal (`FINAL.md` § 3) : ces points se tranchent sur les premières données réellement ramenées par la collecte, quelle qu'en soit l'origine. Les formats actuels viennent d'échantillons construits d'après les documentations officielles ; aucun champ n'a été supposé au-delà (détail dans `docs/conception/formats_json.md`).

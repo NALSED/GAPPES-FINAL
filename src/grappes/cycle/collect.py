@@ -187,6 +187,8 @@ def collect(
         if not added:
             rep.refused["observation déjà connue"] += 1
             continue
+        for o in obs:
+            db.set_origin(o.source.key, "recherche" if depth == 0 else "exploration")
         rep.observations_new += added
         if is_new:
             new_domains.add(domain)

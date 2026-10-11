@@ -1,6 +1,6 @@
 # ETAT — grappes
 
-Dernière mise à jour : 2026-10-06. Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
+Dernière mise à jour : 2026-10-11. Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
 
 ## En attente de Sednal
 
@@ -11,17 +11,16 @@ Dernière mise à jour : 2026-10-06. Référence unique : `FINAL.md` (les fichie
 
 ## Où on en est
 
-* v1 terminée (phases 0 à 6) : `ingest → run → export`, `explain`, `purge`, serveur MCP en lecture seule, 8 outils. Lecteurs de fichiers X, Telegram, Instagram et web, conservés mais plus le chemin principal.
-* Multiprise de recherche (`grappes search`, `src/grappes/search/`, D27, D28) : fournisseurs par fichier YAML (`http`, `mcp`) ou plugin Python ; dry-run tant que `autonome` est faux ; aucun appel réel lancé.
-* Sortie finale `sorties/resultat.csv` (une colonne `NOM`), valeurs de cadre D30 (`retention_days` 90, `redact_persons` actif) : en cours d'application, voir `DECISIONS.md`.
-* Reste à construire, dans l'ordre de `FINAL.md` § 14 : corpus synthétique à 3 grappes, test de bout en bout jusqu'à `resultat.csv`, robustesse et charge, amorçage, récupérateur de pages, ingestion automatique, boucle `grappes cycle`, rapport.
-* Tests : voir la dernière exécution de `.venv/bin/pytest` ; `ruff` propre.
-* Journal du compte gratuit : `donnees/.journal_ccr.log` (tâches mécaniques uniquement). Aucune interruption « session limit » constatée (à noter ici à chaque occurrence).
+* **Fait, selon `FINAL.md` § 14** : corrections du § 3 et nettoyage des fichiers obsolètes ; corpus synthétique à 3 grappes (~540 observations, formats réels) ; parcours complet jusqu'à `resultat.csv` (`tests/test_bout_en_bout.py`) ; robustesse et charge (lecture en flux, 500 000 enregistrements en 9,5 s) ; multiprise (YAML `http`, client MCP, plugins Python) ; amorçage depuis une phrase ; récupérateur de pages publiques ; ingestion automatique ; boucle `grappes cycle` avec apprentissage borné, recalibrage, instantanés, retour en arrière et rapport ; sortie finale `resultat.csv` (une colonne `NOM`) ; D25 (table d'équivalence Telegram) ; bilan des jetons.
+* **Aucune collecte réelle n'a été lancée** : `autonome` est faux, aucun fournisseur n'est branché, tous les tests utilisent de faux serveurs locaux.
+* v1 conservée : `ingest → run → export`, `explain`, `purge`, serveur MCP en lecture seule (8 outils), lecteurs de fichiers X, Telegram, Instagram et web (plus le chemin principal).
+* Documents : `docs/conception/cycle.md` (boucle), `docs/conception/phase8.md` (multiprise), `docs/conception/formats_json.md`, `docs/conception/charge.md`, `docs/utilisateur.md` ; correctifs proposés pour `MISSION.md` : `docs/conception/corrections_mission.md`.
+* Journal du compte gratuit : `donnees/.journal_ccr.log` (tâches mécaniques uniquement). Aucune interruption « session limit » constatée ; une coupure du serveur tmux le 2026-10-11 (`RELANCE.md`), reprise sans perte.
 
 ## Limites connues
 
 * Q16 à Q19 (formats Telegram, X, Instagram, web) restent ouvertes : elles se trancheront sur les premières vraies données collectées.
-* L'identité des canaux Telegram dérivée du nom affiché est une hypothèse (D25), à encadrer selon `FINAL.md` § 11.
+* L'identité d'un canal Telegram absent de `config/telegram.yaml` est une hypothèse (D33) : ses citations sont conservées mais ne valident jamais un recoupement.
 
 ## Économies de jetons
 

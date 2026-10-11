@@ -8,6 +8,7 @@ from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import ClassVar
 
 from grappes import __version__
 from grappes.models import Observation, SourceRef
@@ -18,7 +19,7 @@ CREATE TABLE IF NOT EXISTS runs (
 );
 CREATE TABLE IF NOT EXISTS sources (
     ref_key TEXT PRIMARY KEY, ecosystem TEXT NOT NULL, ident TEXT NOT NULL,
-    weight REAL NOT NULL, display_name TEXT, native_id TEXT
+    weight REAL NOT NULL, display_name TEXT, native_id TEXT, origin TEXT
 );
 CREATE TABLE IF NOT EXISTS observations (
     obs_id TEXT PRIMARY KEY, source_key TEXT NOT NULL, ts TEXT, text TEXT NOT NULL,
@@ -73,7 +74,7 @@ class Database:
         """Ajoute les colonnes apparues après la première version (bases existantes)."""
         wanted = {
             "observations": [("ingested_at", "TEXT"), ("hypo", "TEXT NOT NULL DEFAULT '[]'")],
-            "sources": [("native_id", "TEXT")],
+            "sources": [("native_id", "TEXT"), ("origin", "TEXT")],
             "citations": [("hypothesis", "INTEGER NOT NULL DEFAULT 0")],
         }
         for table, columns in wanted.items():
@@ -144,6 +145,25 @@ class Database:
                         (name, o.source.key),
                     )
         return new
+
+    # « recherche » > « exploration » > « fichier » : la provenance la plus fiable est conservée
+    _ORIGIN_RANK: ClassVar[dict[str, int]] = {"recherche": 3, "exploration": 2, "fichier": 1}
+
+    def set_origin(self, ref_key: str, origin: str) -> None:
+        """Provenance d'une source : trouvée par la recherche, par exploration de liens, ou lue dans
+        un fichier (défaut). Sert à décider quelles sources peuvent enseigner des mots (phase 9)."""
+        row = self.conn.execute("SELECT origin FROM sources WHERE ref_key=?", (ref_key,)).fetchone()
+        if row is None:
+            return
+        if self._ORIGIN_RANK.get(origin, 0) > self._ORIGIN_RANK.get(row["origin"] or "fichier", 1):
+            self.conn.execute("UPDATE sources SET origin=? WHERE ref_key=?", (origin, ref_key))
+            self.conn.commit()
+
+    def origins(self) -> dict[str, str]:
+        return {
+            r["ref_key"]: r["origin"] or "fichier"
+            for r in self.conn.execute("SELECT ref_key, origin FROM sources")
+        }
 
     def native_ids(self) -> dict[str, str]:
         """Identifiants natifs connus des sources : `ref_key` -> identifiant (canaux Telegram)."""

@@ -64,7 +64,8 @@ def test_mot_trop_repandu_ne_discrimine_pas():
 
 def test_sans_resultat_phrase_seule_ou_rien():
     seed = extract_terms([], PHRASE)
-    assert set(seed.terms) == {"jardins", "partages", "potagers", "collectifs", "ville"}
+    assert {"jardins", "partages", "potagers", "collectifs", "ville"} <= set(seed.terms)
+    assert {"jardin", "partage", "potager", "collectif"} <= set(seed.terms)  # singuliers
     empty = extract_terms([], "")
     assert empty.terms == {} and "aucun résultat" in empty.reason
     assert "répète" in extract_terms(["alpha bravo", "charlie delta"], "").reason

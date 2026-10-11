@@ -29,6 +29,12 @@ TERMS = {
     B: ["potager", "semis", "tomates", "#jardinage", "marché"],
     C: ["concert", "guitare", "#musique", "partition", "orchestre"],
 }
+# Vocabulaire du thème absent des lexiques : ce que la boucle d'apprentissage doit découvrir.
+EXTRA = {
+    A: ["mijoter", "bouillon", "casserole", "gratin"],
+    B: ["bêcher", "arrosoir", "paillage", "semoir"],
+    C: ["accord", "refrain", "solfège", "mandoline"],
+}
 NOISE = [
     "bonjour",
     "demain",
@@ -52,6 +58,9 @@ GRAPPES_YAML = {
 class Corpus:
     def __init__(self, seed: int):
         self.rnd = random.Random(seed)
+        self.rx = random.Random(
+            seed + 1
+        )  # flux séparé : le vocabulaire EXTRA ne décale aucun autre tirage
         self.web: list[dict] = []
         self.x: dict[str, dict] = {}  # handle -> {name, tweets}
         self.tg: dict[str, dict] = {}  # clé -> {name, id, messages}
@@ -63,7 +72,10 @@ class Corpus:
     def themed(self, g: str, k: int = 4) -> str:
         words = self.rnd.sample(TERMS[g], k=min(k, len(TERMS[g]))) + self.rnd.choices(NOISE, k=3)
         self.rnd.shuffle(words)
-        return " ".join(words)
+        return " ".join(words + self.rx.sample(EXTRA[g], 2))
+
+    def extra_only(self, g: str) -> str:
+        return " ".join(self.rx.sample(EXTRA[g], 3) + self.rx.choices(NOISE, k=3))
 
     def neutral(self) -> str:
         return " ".join(self.rnd.choices(NOISE, k=6))
@@ -288,16 +300,36 @@ def build(seed: int = 11) -> Corpus:
         c.page("sans-rapport.test", "Sans Rapport", c.neutral())
     att["web:sans-rapport.test"] = {"statut": "non_classe"}
 
+    # --- entités « enrichies » : confirmées par recoupement, texte au vocabulaire du thème (EXTRA) ------
+    a0 = c.attendu
+    a0["enrichies"], a0["cachees"] = {}, {}
+    for g in (A, B, C):
+        a0["enrichies"][g] = []
+        for i in range(1, 4):
+            dom, nom = f"cible-enrichie-{low[g]}-{i}.test", f"Cible Enrichie {labels[g]} {i}"
+            for _ in range(3):
+                c.page(dom, nom, c.extra_only(g))
+            cited_by(g, f"https://{dom}/", 7)
+            att[f"web:{dom}"] = {"grappe": g, "via": "recoupement"}
+            a0["enrichies"][g].append(nom)
+        # entités « cachées » : seulement le vocabulaire EXTRA, jamais citées, donc non classées au départ
+        a0["cachees"][g] = []
+        for i in range(1, 3):
+            dom, nom = f"cachee-{low[g]}-{i}.test", f"Découverte {labels[g]} {i}"
+            for _ in range(4):
+                c.page(dom, nom, c.extra_only(g))
+            a0["cachees"][g].append(f"web:{dom}")
+
     # --- noms de personnes et comptes sans nom --------------------------------------------
     c.insta("insta_sans_nom", c.themed(B))  # Instagram ne donne aucun nom lisible
     # --- ce que doit produire la chaîne complète (intention de conception) ---------------------
     a = c.attendu
     a["resultat"] = {
-        A: ["Café Crème Actu", "Canal Cuisine Un", "Chaîne Recettes", "Cible Validée Cuisine", "Cuisine Demo",
+        A: ["Cible Enrichie Cuisine 1", "Cible Enrichie Cuisine 2", "Cible Enrichie Cuisine 3", "Café Crème Actu", "Canal Cuisine Un", "Chaîne Recettes", "Cible Validée Cuisine", "Cuisine Demo",
             *[f"Cuisine Info {i}" for i in range(2, 7)], "Journal Cuisine Demo"],
-        B: ["Association Jardin Demo", "Canal Jardin", "Canal Potager Trois", "Cible Validée Jardin",
+        B: ["Cible Enrichie Potager 1", "Cible Enrichie Potager 2", "Cible Enrichie Potager 3", "Association Jardin Demo", "Canal Jardin", "Canal Potager Trois", "Cible Validée Jardin",
             *[f"Potager Info {i}" for i in range(1, 7)], "Radio Potager Demo"],
-        C: ["Canal Musique Un", "Cible Validée Musique", "Musique Demo",
+        C: ["Cible Enrichie Musique 1", "Cible Enrichie Musique 2", "Cible Enrichie Musique 3", "Canal Musique Un", "Cible Validée Musique", "Musique Demo",
             *[f"Musique Info {i}" for i in range(2, 6)], "Orchestre Demo Officiel", "Scène Ouverte"],
     }  # fmt: skip
     a["hors_resultat"] = [
@@ -306,6 +338,7 @@ def build(seed: int = 11) -> Corpus:
         "Cible Peu Citée", "Cible Hors Fenêtre", "Cible Mono Écosystème", "Cible Bruit",  # recoupements refusés
         "Mixte Cuisine Jardin", "Mixte Jardin Musique", "Marché Info",  # ambigus ou faibles
         "Sans Rapport", *[f"Cercle {i}" for i in range(5)],
+        *[f"Découverte {n} {i}" for n in ("Cuisine", "Potager", "Musique") for i in (1, 2)],  # non classées au départ
     ]  # fmt: skip
     a["canaux"] = {
         "homonymes": ["telegram:canal_jardin", "telegram:canal_jardin~2002"],
@@ -313,6 +346,62 @@ def build(seed: int = 11) -> Corpus:
         "exacts": ["telegram:canal_cuisine_un", "telegram:canal_potager_trois", "telegram:canal_musique_un"],
     }  # fmt: skip
     return c
+
+
+SPAM = ["promoxyz", "gratuitement", "bonusmirage", "cliquezici"]
+
+
+def ajouter_cercle_piege(out: Path) -> dict:
+    """Corpus piégé : un cercle de fausses sources (web et X) qui bourrent le lexique de la grappe
+    cuisine, se citent entre elles et « confirment » de fausses cibles bourrées de mots de spam.
+    Aucune ancre ni source trouvée par la recherche ne les cite : elles ne doivent rien enseigner."""
+    rnd = random.Random(99)
+    web = []
+    domaines = [f"fausse-{i}.test" for i in range(6)]
+    cibles = [f"fausse-cible-{j}.test" for j in range(3)]
+    bourrage = " ".join(TERMS[A][:4])
+
+    def page(dom, titre, texte, liens):
+        return {
+            "url": f"https://{dom}/p", "canonical_url": f"https://{dom}/p", "title": "Page",
+            "text": texte, "site_name": titre, "published_at": "2026-09-20T10:00:00Z",
+            "links": [{"href": f"https://{h}/", "anchor": "lien"} for h in liens],
+        }  # fmt: skip
+
+    for i, dom in enumerate(domaines):
+        pairs = [d for d in domaines if d != dom]
+        for k in range(4):
+            web.append(
+                page(
+                    dom,
+                    f"Fausse Source {i}",
+                    f"{bourrage} {' '.join(rnd.sample(SPAM, 3))}",
+                    rnd.sample(pairs, 2) + cibles,
+                )
+            )
+    for j, dom in enumerate(cibles):
+        for _ in range(3):
+            web.append(
+                page(dom, f"Fausse Cible {j}", " ".join(rnd.choices(SPAM, k=5)) + " bonjour", [])
+            )
+    for i in range(3):
+        handle = f"faux_x_{i}"
+        tw = [
+            {"id": str(9 * 10**18 + i * 10 + k), "text": f"{bourrage} {' '.join(rnd.sample(SPAM, 3))}", "author_id": f"id_{handle}",
+             "created_at": "2026-09-20T10:00:00.000Z", "entities": {"urls": [{"url": f"https://t.co/{k}", "expanded_url": f"https://{cibles[k % 3]}/"} for k in range(3)]}}
+            for k in range(4)
+        ]  # fmt: skip
+        doc = {
+            "data": tw,
+            "includes": {
+                "users": [{"id": f"id_{handle}", "username": handle, "name": f"Faux Compte {i}"}]
+            },
+        }
+        (out / "x" / f"x_{handle}.json").write_text(json.dumps(doc, ensure_ascii=False), "utf-8")
+    with (out / "web" / "piege.jsonl").open("w", encoding="utf-8") as f:
+        for r in web:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    return {"spam": SPAM, "cibles": cibles, "sources": domaines}
 
 
 def write(out: Path, seed: int = 11) -> dict:

@@ -37,6 +37,21 @@ def learned_dir(config_dir: str | Path) -> Path:
     return Path(config_dir) / APPRIS_DIR
 
 
+def canonical_digest(path: Path) -> bytes:
+    """Contenu qui compte pour le scoring dans un fichier appris (termes et poids, seuils), sans les
+    numéros de cycle : revoir un terme ne change pas `config_hash`, donc pas le `run_id`."""
+    import json
+
+    data = _read(path)
+    if "termes" in data:
+        core = sorted(
+            (t, round(float(s.get("poids", 0)), 4)) for t, s in (data["termes"] or {}).items()
+        )
+    else:
+        core = sorted((k, round(float(v), 4)) for k, v in data.items() if k in THRESHOLD_KEYS)
+    return json.dumps(core, ensure_ascii=False).encode()
+
+
 def lexicon_path(config_dir: str | Path, grappe_id: str) -> Path:
     return learned_dir(config_dir) / f"lexique_appris_{_SAFE.sub('_', grappe_id)}.yaml"
 

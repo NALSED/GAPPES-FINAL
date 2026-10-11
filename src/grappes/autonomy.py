@@ -57,6 +57,11 @@ class Autonomy:
     max_termes_total: int = 30
     poids_appris: float = 0.3
     expiration_cycles: int = 4
+    support_min: float = 0.3  # part minimale des entités confirmées qui contiennent le terme
+    rarete_max: float = 0.1  # part maximale des autres entités qui le contiennent
+    exiger_racine_de_confiance: bool = (
+        True  # un enseignant doit descendre d'une racine de confiance
+    )
     # recalibrage borné
     recalibrage_actif: bool = True
     variation_max: float = 5.0
@@ -67,6 +72,7 @@ class Autonomy:
     max_taux_ambiguite: float = 0.5
     chute_max_confirmes: float = 0.3
     max_derive_lexique: float = 1.0
+    min_entites: int = 10  # en dessous, trop peu d'entités rangées pour juger de la stabilité
     instantanes_conserves: int = 10
     rapports_dir: Path = Path("rapports")
 
@@ -175,6 +181,9 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
         max_termes_total=int(_num(ap, "max_termes_total", base.max_termes_total, path)),
         poids_appris=_num(ap, "poids", base.poids_appris, path),
         expiration_cycles=int(_num(ap, "expiration_cycles", base.expiration_cycles, path, 1)),
+        support_min=_num(ap, "support_min", base.support_min, path),
+        rarete_max=_num(ap, "rarete_max", base.rarete_max, path),
+        exiger_racine_de_confiance=bool(ap.get("exiger_racine_de_confiance", True)),
         recalibrage_actif=bool(rc.get("actif", True)),
         variation_max=_num(rc, "variation_max", base.variation_max, path),
         bornes_seuil_min=_bounds(rc, "bornes_seuil_min", base.bornes_seuil_min, path),
@@ -183,6 +192,7 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
         max_taux_ambiguite=_num(st, "max_taux_ambiguite", base.max_taux_ambiguite, path),
         chute_max_confirmes=_num(st, "chute_max_confirmes", base.chute_max_confirmes, path),
         max_derive_lexique=_num(st, "max_derive_lexique", base.max_derive_lexique, path),
+        min_entites=int(_num(st, "min_entites", base.min_entites, path)),
         instantanes_conserves=int(
             _num(d, "instantanes_conserves", base.instantanes_conserves, path, 1)
         ),

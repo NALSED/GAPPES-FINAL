@@ -1,0 +1,11 @@
+# Planification hebdomadaire par défaut (fréquence modifiable : OnCalendar=daily, Mon *-*-* 03:00, etc.).
+[Unit]
+Description=Grappes : planification de la boucle automatique
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target

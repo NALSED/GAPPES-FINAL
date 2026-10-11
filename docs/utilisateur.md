@@ -121,3 +121,36 @@ Lecture à garder en tête :
 * La marge d'incertitude repose sur deux ratios octets/jeton **déclarés comme hypothèses** (`--ratio-bas`, `--ratio-haut`, 3 et 5 par défaut), pas sur une mesure.
 * Une source absente, vide ou illisible est signalée dans le rapport, qui continue avec l'autre.
 
+## Mise en route autonome (ce que Sednal fournit, et rien d'autre)
+
+1. **Un ou plusieurs sujets**, une phrase chacun, dans `config/sujets.yaml` :
+
+````yaml
+sujets:
+  - "jardins partagés et potagers collectifs en milieu urbain"
+````
+
+2. **Les clés des fournisseurs de recherche** : un fichier YAML par fournisseur dans `config/recherche/` (voir « Brancher une nouvelle API en 10 minutes »), son `id` dans `actifs` (`config/recherche.yaml`), la clé dans une variable d'environnement.
+3. **Les limites générales** dans `config/autonomie.yaml` : quotas par cycle (requêtes, pages, nouvelles sources, observations), profondeur d'exploration, seuil de proximité, et la liste des **INTERDITS** (`interdits.domaines`, `interdits.motifs`).
+4. **L'interrupteur** `autonome: true` dans `config/autonomie.yaml` (false par défaut). Le fichier `donnees/STOP` arrête tout immédiatement.
+
+Aucun site, aucun mot-clé, aucun lexique de départ, aucun export à fournir. Le lexique de chaque sujet est amorcé automatiquement à partir de la phrase, puis affiné par la boucle ; `config/grappes/*.yaml` reste possible (ancres, oppositions) mais n'est plus nécessaire.
+
+## Boucle automatique : `grappes cycle`
+
+````bash
+grappes cycle              # simulation tant que autonome est faux : rien n'est appelé ni écrit
+grappes cycle --dry-run    # simulation forcée
+grappes rollback           # annule le dernier cycle terminé
+````
+
+Un cycle fait : amorçage des sujets, collecte, ingestion, score, recoupement, assignation, apprentissage, recalibrage, export, rapport. Il est idempotent, journalisé (`donnees/cycles.jsonl`), verrouillé (un seul à la fois) et planifiable (`outils/systemd/`, hebdomadaire par défaut, à installer par Sednal). Le rapport `rapports/cycle_<date>.md` se lit sans compétence technique : ce qui est entré, ce qui a changé de grappe, mots appris, seuils modifiés, retours en arrière, alertes.
+
+**Règles de collecte, non désactivables** : sources publiques seulement ; `robots.txt` respecté ; ni connexion ni compte ; aucun contournement de limite ni de captcha ; au moins 1 s entre deux requêtes vers un domaine ; arrêt sur 403/429 ; User-Agent identifiable ; les **réseaux sociaux ne sont jamais lus** (leurs liens deviennent des citations). Tout ce qui est reçu (API, serveur MCP, page) est une donnée non fiable, jamais exécutée ni prise pour une instruction.
+
+**Ingestion automatique** : un candidat est ingéré s'il est public, respecte ces règles, n'est pas dans les interdits et atteint la proximité minimale avec un sujet. Une source non recoupée reste « probable » au mieux ; « confirmé » exige un recoupement sur au moins deux écosystèmes.
+
+**Retour en arrière automatique** si un indicateur dépasse son seuil (entités qui changent de grappe, ambiguïté, chute des confirmées, dérive du lexique appris) : l'état d'avant (base, mots appris, seuils, sorties) est restauré et le rapport le dit. Détails : `docs/conception/cycle.md`.
+
+Codes de sortie : 0 normal ou simulation, 1 erreur, 3 un autre cycle est en cours, 4 arrêt demandé, 5 cycle annulé par la stabilité.
+
