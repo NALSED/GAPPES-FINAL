@@ -1,6 +1,6 @@
 # ETAT — grappes
 
-Dernière mise à jour : 2026-10-11. Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
+Dernière mise à jour : 2026-10-11 (cycle réel avec Q22 et Q23 appliquées). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
 
 ## En attente de Sednal
 
@@ -17,16 +17,27 @@ Dernière mise à jour : 2026-10-11. Référence unique : `FINAL.md` (les fichie
 * Documents : `docs/conception/cycle.md` (boucle), `docs/conception/phase8.md` (multiprise), `docs/conception/formats_json.md`, `docs/conception/charge.md`, `docs/utilisateur.md` ; correctifs proposés pour `MISSION.md` : `docs/conception/corrections_mission.md`.
 * Journal du compte gratuit : `donnees/.journal_ccr.log` (tâches mécaniques uniquement). Aucune interruption « session limit » constatée ; une coupure du serveur tmux le 2026-10-11 (`RELANCE.md`), reprise sans perte.
 
-## Premier cycle réel (2026-10-11)
+## Cycle réel avec le nouveau sujet (2026-10-11) — décisions Q22 et Q23 appliquées
 
-Sujet : « Les acteurs de l'actualité française en ce moment ». Fournisseur : Tavily (14 requêtes en tout, dont 1 de vérification et 6 d'un cycle annulé). Rapport le plus récent : `rapports/dernier_cycle.md` (cycle 4) ; historique : `rapports/cycle_2026-10-11*.md`.
+Sujet : « Les acteurs des blocages et mobilisations étudiantes en France en ce moment ». Fournisseurs : Tavily (web), Wikipédia (écosystème `wikipedia`), flux RSS de L'Étudiant et de Libération (écosystème `rss`). Rapport du cycle propre : `rapports/cycle_2026-10-11_6.md` (c'est le cycle n° 9 du journal ; les cycles 5 et 6, qui avaient ingéré du bruit, ont été annulés par `grappes rollback`, voir D48 et D49).
 
-* **Résultat** : 5 sources **probables**, **0 confirmée**. `sorties/resultat.csv` : Made in Marseille, OpenAI, Parlons Politique, Serieously. L'ensemble est modeste et de pertinence inégale (la phrase du sujet est large : « acteurs » ramène aussi des sites de cinéma ou d'IA).
-* **Règles tenues** : `robots.txt` lu pour chaque hôte (13 à 16 pages refusées par `robots.txt` à chaque cycle) ; 1 s au moins entre deux requêtes d'un même domaine ; arrêt sur 403 (`themeforest.net`, `openai.com` selon le cycle) ; aucun réseau social ni domaine interdit visité ; chaque appel est dans `donnees/journal_recherche.log` ; la clé n'apparaît ni dans le dépôt, ni dans les journaux, ni dans les rapports.
-* **Retour en arrière** : aucun déclenchement automatique (aucun indicateur dépassé). Un retour manuel (`grappes rollback`) a servi à annuler le premier cycle après correction de défauts de mon code (D44).
-* **Pourquoi aucune confirmée, et pourquoi la boucle d'apprentissage n'a encore rien appris** : « confirmée » exige un recoupement sur au moins 2 écosystèmes. Avec Tavily seul, toutes les sources lues sont du web : un seul écosystème. Tant qu'aucun adaptateur officiel (Telegram, X, Instagram...) n'est branché comme fournisseur, aucune entité ne peut être confirmée, donc ni apprentissage de mots, ni recalibrage (voir Q22).
-* **Formats (Q16 à Q19)** : Q19 (web) **confirmée en partie** — de vraies pages donnent bien titre, texte, `site_name` (4 sources sur 5 ont un nom lisible), langue, liens avec ancre ; la date de publication d'une page n'est pas extraite (on garde la date de récupération). **Q16, Q17, Q18 non testables** : les réseaux ne sont pas lus, donc aucun export Telegram, aucun JSON X ni Instagram n'a été vu. Seuls leurs **liens** ont été observés sur de vraies pages : `x.com/<compte>` cite bien `x:<compte>` ; une publication Instagram (`/p/...`) ne cite rien, comme prévu (D24). Réponse de Tavily conforme à la documentation (`title`, `url`, `content`, `score`, `published_date` pour 4 résultats sur 8, `raw_content`, `id`).
-* **Défauts de mon code trouvés et corrigés grâce à ces données** : D44, D45. Un incident de test (appels réels possibles depuis la suite de tests avec la vraie clé) est aussi corrigé, D43.
+* **Résultat** : 10 sources ingérées, 7 **probables**, **0 confirmée**. `sorties/resultat.csv` : L'Étudiant, Le Bonbon, Mouvement contre le contrat première embauche de 2006, Mouvement lycéen et étudiant de 2026 en France, Mouvements étudiants en France, Mouvements lycéens, Union nationale des étudiants de France. Pertinent pour les articles Wikipédia et L'Étudiant ; Le Bonbon (magazine culturel parisien) est du bruit.
+* **Q22 appliquée** (D46) : écosystèmes `rss` et `wikipedia`, distincts de `web`. Wikipédia : 10 articles par requête, avec leurs liens externes ; les articles de personnes physiques sont écartés (7 par cycle). RSS : `robots.txt` consulté avant chaque flux. Wikidata n'est pas branché (explication dans D46). Google Actualités est écarté : son flux interdit expressément tout usage automatique.
+* **Q23 appliquée** (D47) : nouveau sujet ; `seuil_ingestion` auto-ajustable dans [5 ; 40], départ 20. Il s'est ajusté seul au cycle 6 (20 → 25, « 3 sources sur 10 rangées : trop de bruit »), tracé dans le rapport ; cet ajustement a été annulé avec le cycle. Dans le cycle propre : inchangé (7 sources sur 10 rangées).
+* **Règles tenues** : `robots.txt` respecté (flux et pages), 1 s entre deux requêtes d'un domaine, arrêt sur 403, aucun réseau social visité, journal complet (`donnees/journal_recherche.log` : 25 requêtes Tavily, 36 Wikipédia/RSS, 195 pages sur l'ensemble des cycles de la journée, annulés compris).
+* **Défauts de mon code corrigés en route** : D48 (les 8 premiers articles Wikipédia prenaient tous les emplacements de « nouvelles sources » : plafond désormais partagé entre écosystèmes) et D49 (requêtes avec des variantes du même mot ; un mot répété suffisait à faire ingérer un article : deux radicaux distincts exigés).
+
+## Point bloquant du même type que Q22 : Q24 (décris-le et arrête-toi dessus)
+
+**Constat** : après ce cycle, 4 sites sont cités par au moins 3 sources (`lemonde.fr` par 4 articles Wikipédia, `huffingtonpost.fr`, `lexpress.fr`, `liberation.fr` par 3), mais **tous les citants sont de l'écosystème `wikipedia`**. Un recoupement exige 3 citants membres venant d'**au moins 2 écosystèmes**. Aucun citant `rss` n'existe, parce qu'un élément de flux RSS ne contient que titre, résumé et l'adresse de son propre article : il **ne cite personne**. Les pages web (Tavily) qui pourraient citer les mêmes sites sont rares : 8 pages visitées, une seule ingérée (66 résultats refusés pour proximité insuffisante, 4 pour `robots.txt`). Résultat : toujours **0 confirmée**, donc la boucle n'apprend ni mots ni seuils.
+
+**Pourquoi je m'arrête** : les pistes pour y remédier changent la règle de recoupement ou le sens de « écosystème », donc ce n'est pas un réglage :
+1. faire citer le média par son propre flux (`rss:liberation.fr` cite `web:liberation.fr`) : un site qui se cite lui-même, ce n'est pas un recoupement indépendant ;
+2. associer une entité nommée dans le texte d'un élément RSS à un site (extraction d'entités) : fonctionnalité nouvelle, hors du périmètre actuel ;
+3. ingérer beaucoup plus de pages web par cycle (quotas plus larges, seuil de proximité plus bas) : plus de volume, plus de bruit, plus de requêtes sur des sites tiers ;
+4. accepter que ce sujet reste « probable » tant qu'un fournisseur, comme un autre écosystème qui cite réellement des sites, n'est pas branché.
+
+Détail et défaut retenu : `QUESTIONS.md`, Q24. Je ne lance pas d'autre cycle réel dans cette situation : il coûterait des requêtes pour le même résultat.
 
 ## Limites connues
 

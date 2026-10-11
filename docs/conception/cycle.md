@@ -51,3 +51,12 @@ En dessous de `min_entites` (10) entités rangées, on ne juge pas. Au-delà d'u
 * Le texte de recherche d'un candidat est celui que le fournisseur renvoie (titre, description) ; une page n'est ingérée qu'après récupération et seuil de proximité.
 * Une source n'est enseignante que si un chemin de confiance existe : sans ancre ni source trouvée par la recherche, rien n'est appris (comportement sûr, à relâcher via `exiger_racine_de_confiance: false`).
 * L'identification personne / compte institutionnel repose sur des indices explicites dans le nom (D32).
+
+## Ajouts du 2026-10-11 (D46 à D49)
+
+* **Documents en main** : un résultat de fournisseur peut être le document (flux RSS, article Wikipédia) ; il est ingéré sous son écosystème propre sans récupérer de page (`Candidate.doc`). Les articles de personnes physiques sont écartés (catégories biographiques, texte « né le… », aucune catégorie : en cas de doute, une personne).
+* **Partage équitable** du plafond de nouvelles sources entre écosystèmes ; seconde chance pour les documents dont la part est prise.
+* **Ingestion** : proximité >= seuil ET au moins `ingestion_termes_min` (2) radicaux distincts du lexique.
+* **Seuil d'ingestion auto-ajusté** dans ses bornes d'après la part de sources ingérées ensuite rangées ; raison tracée dans le rapport.
+* **Limite constatée (Q24)** : le recoupement exige des citants d'au moins 2 écosystèmes ; un élément RSS ne cite personne et peu de pages web sont ingérées, donc aucune entité n'est encore confirmée.
+

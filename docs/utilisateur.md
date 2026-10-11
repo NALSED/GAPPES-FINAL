@@ -154,3 +154,31 @@ Un cycle fait : amorçage des sujets, collecte, ingestion, score, recoupement, a
 
 Codes de sortie : 0 normal ou simulation, 1 erreur, 3 un autre cycle est en cours, 4 arrêt demandé, 5 cycle annulé par la stabilité.
 
+## Fournisseurs sous leur propre écosystème : RSS et Wikipédia
+
+Un fournisseur dont le résultat EST le document (flux RSS, article Wikipédia) se déclare avec un bloc `observation` dans son fichier YAML. Le résultat est alors ingéré tel quel, sous l'écosystème choisi, sans récupérer de page :
+
+````yaml
+observation:
+  ecosysteme: rss                 # « wikipedia », « rss »... jamais web, x, telegram, instagram (réservés)
+  source: {default: letudiant.fr} # identifiant de la source (constante, ou chemin / gabarit {champ})
+  nom: {default: "L'Étudiant"}    # nom lisible (utilisé dans resultat.csv)
+  liens: "extlinks[].url"         # chemin vers les URL citées (devient des citations)
+  exclure:                        # règles d'exclusion : l'élément n'est pas ingéré
+    - {path: "categories[].title", regex: "^Catégorie:Naissance ", motif: "personne physique"}
+    - {absent: "categories[].title", motif: "en cas de doute, une personne"}
+````
+
+Options utiles d'un fournisseur `type: http` : `respecter_robots: true` (consulte `robots.txt` avant de lire un flux), `sans_mots_cles: true` (flux sans requête : lu une seule fois par exécution), `limite_resultats: 50`. Livrés dans `config/recherche/` : `wikipedia.yaml` (API MediaWiki publique, sans clé), `rss_letudiant.yaml`, `rss_liberation.yaml`, `tavily.yaml`. À vérifier : les conditions d'usage des flux. Le flux de Google Actualités est volontairement absent : il interdit tout usage automatique.
+
+Le plafond de « nouvelles sources » par cycle est **partagé équitablement entre écosystèmes** : un fournisseur très bavard (Wikipédia) ne peut pas empêcher les pages web d'entrer.
+
+## Seuil d'ingestion auto-ajustable
+
+````yaml
+seuil_ingestion: {valeur: 20, min: 5, max: 40, auto_ajustable: true}   # un nombre seul reste accepté
+ingestion_termes_min: 2     # radicaux différents du lexique exigés dans un texte pour l'ingérer
+````
+
+À la fin de chaque cycle, la boucle regarde quelle part des sources ingérées est ensuite rangée dans un sujet : moins d'un tiers, le seuil monte de 5 points ; plus de 80 % avec au moins 20 % des résultats refusés pour proximité insuffisante, il baisse ; sinon, ou avec moins de 3 sources, il ne bouge pas. Il reste dans [min ; max]. Chaque décision et sa raison figurent dans le rapport de cycle (section « Mots appris, seuils »). Un retour en arrière restaure aussi le seuil.
+
