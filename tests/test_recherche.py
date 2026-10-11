@@ -558,6 +558,7 @@ def test_exemples_de_configuration_se_chargent():
         f.name for f in (ROOT / "config" / "recherche").glob("*.yaml")
     } == {  # les fournisseurs branchés
         "tavily.yaml",
+        "rss_franceinfo.yaml",
         "wikipedia.yaml",
         "rss_letudiant.yaml",
         "rss_liberation.yaml",
