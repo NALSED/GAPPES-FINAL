@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from conftest import CONFIG_CLAIR
 from fakes_recherche import KEY, FakeServer
 from grappes.config import ConfigError
 from grappes.search.base import SearchProvider, register_provider, registered_types
@@ -553,8 +554,10 @@ def test_exemples_de_configuration_se_chargent():
     for f in sorted((ROOT / "config" / "recherche" / "exemples").glob("*.yaml")):
         d = yaml.safe_load(f.read_text("utf-8"))
         assert d["id"] and d["type"] in registered_types(), f.name
-    assert not list((ROOT / "config" / "recherche").glob("*.yaml"))  # rien d'actif par défaut
-    assert load_search_config(ROOT / "config").actifs == ()
+    assert [f.name for f in (ROOT / "config" / "recherche").glob("*.yaml")] == [
+        "tavily.yaml"
+    ]  # le seul fournisseur branché
+    assert load_search_config(ROOT / "config").actifs == ("tavily",)
 
 
 # --- liens déjà cités et CLI ------------------------------------------------------------------
@@ -567,7 +570,7 @@ def base_liens(tmp_path):
     from grappes.pipeline import ingest, run
     from grappes.storage.db import Database
 
-    cfg = load_config(ROOT / "config")
+    cfg = load_config(CONFIG_CLAIR)
     db = Database(tmp_path / "liens.db")
     ech = ROOT / "tests" / "fixtures" / "echantillons"
     for eco, nom in (("x", "x_1.json"), ("telegram", "telegram_1.json"), ("web", "web_1.json")):
@@ -599,7 +602,7 @@ def test_cli_search_dry_run_et_liens_internes(tmp_path, base_liens, capsys, monk
 
     _, db_path = base_liens
     cfg = tmp_path / "cfg"
-    shutil.copytree(ROOT / "config", cfg)
+    shutil.copytree(CONFIG_CLAIR, cfg)
     (cfg / "recherche").mkdir(exist_ok=True)
     (cfg / "recherche" / "api.yaml").write_text(
         "id: api\ntype: http\nurl: http://127.0.0.1:9/x\nresponse: {items: r}\nfields: {url: u}\n"
@@ -634,7 +637,7 @@ def test_cli_search_dry_run_et_liens_internes(tmp_path, base_liens, capsys, monk
 def test_cli_search_sans_mot_cle_ni_lien(tmp_path, capsys):
     from grappes.cli import main
 
-    code = main(["--db", str(tmp_path / "absente.db"), "--config", str(ROOT / "config"), "search"])
+    code = main(["--db", str(tmp_path / "absente.db"), "--config", str(CONFIG_CLAIR), "search"])
     assert code == 2 and "aucun mot-clé" in capsys.readouterr().err
 
 
@@ -646,7 +649,7 @@ def test_cli_search_grappe_inconnue(tmp_path, capsys):
             "--db",
             str(tmp_path / "x.db"),
             "--config",
-            str(ROOT / "config"),
+            str(CONFIG_CLAIR),
             "search",
             "--grappe",
             "G-NOPE",
@@ -663,7 +666,7 @@ def test_cli_search_grappe_utilise_son_lexique(tmp_path, capsys):
             "--db",
             str(tmp_path / "x.db"),
             "--config",
-            str(ROOT / "config"),
+            str(CONFIG_CLAIR),
             "search",
             "--grappe",
             "G-DEMO-A",
@@ -683,7 +686,7 @@ def _cfg_cli(tmp_path, srv, autonomie: str | None):
     import shutil
 
     cfg = tmp_path / "cfg"
-    shutil.copytree(ROOT / "config", cfg)
+    shutil.copytree(CONFIG_CLAIR, cfg)
     (cfg / "recherche").mkdir(exist_ok=True)
     (cfg / "recherche" / "api.yaml").write_text(
         f"id: api\ntype: http\nurl: {srv.base}/pages\nresponse: {{items: results}}\nfields: {{id: id, title: title}}\n"

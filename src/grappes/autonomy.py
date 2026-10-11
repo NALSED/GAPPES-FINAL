@@ -10,6 +10,7 @@ la liste des INTERDITS (domaines, motifs) et les quotas.
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -131,12 +132,45 @@ def _bounds(d: dict[str, Any], key: str, default: tuple[float, float], path: Pat
     return (lo, hi)
 
 
+_QUOTA_KEYS = (
+    "requetes_par_cycle",
+    "pages_par_cycle",
+    "nouvelles_sources_par_cycle",
+    "elements_par_cycle",
+)
+
+
+def _normalize_autonomy(d: dict[str, Any], path: Path) -> dict[str, Any]:
+    """Accepte aussi la forme courte : quotas groupés sous `quotas:`, `profondeur_max` pour
+    `profondeur`, et `interdits` en simple liste (un nom de domaine -> domaine interdit, sinon motif).
+    Le fichier de Sednal n'est jamais réécrit."""
+    d = dict(d)
+    quotas = d.pop("quotas", None)
+    if quotas is not None:
+        if not isinstance(quotas, dict):
+            raise ConfigError(f"{path}: quotas doit être un mapping")
+        for k, v in quotas.items():
+            d.setdefault(k, v)
+    if "profondeur_max" in d:
+        d.setdefault("profondeur", d.pop("profondeur_max"))
+    interdits = d.get("interdits")
+    if isinstance(interdits, list):
+        if not all(isinstance(x, str) and x.strip() for x in interdits):
+            raise ConfigError(f"{path}: interdits doit être une liste de textes non vides")
+        domaines = [x for x in interdits if re.fullmatch(r"[\w-]+(\.[\w-]+)+", x.strip())]
+        d["interdits"] = {
+            "domaines": domaines,
+            "motifs": [x for x in interdits if x not in domaines],
+        }
+    return d
+
+
 def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
     """`config/autonomie.yaml` ; absent = tout par défaut, donc `autonome: false`."""
     path = Path(config_dir) / "autonomie.yaml"
     if not path.exists():
         return Autonomy()
-    d = _yaml(path)
+    d = _normalize_autonomy(_yaml(path), path)
     base = Autonomy()
     ap, rc, st = (d.get(k) or {} for k in ("apprentissage", "recalibrage", "stabilite"))
     for name, section in (("apprentissage", ap), ("recalibrage", rc), ("stabilite", st)):
@@ -210,18 +244,35 @@ def slug(phrase: str) -> str:
     return "sujet-" + "-".join(words) if words else "sujet"
 
 
+def _subject_entry(entry: Any, path: Path) -> tuple[str, str]:
+    """Un sujet : une phrase, ou `{nom: identifiant, phrase: "..."}`. Retourne (phrase, identifiant)."""
+    if isinstance(entry, str) and entry.strip():
+        return entry, ""
+    if isinstance(entry, dict) and isinstance(entry.get("phrase"), str) and entry["phrase"].strip():
+        nom = entry.get("nom")
+        if nom is not None and (
+            not isinstance(nom, str) or not re.fullmatch(r"[\w.-]+", nom.strip())
+        ):
+            raise ConfigError(
+                f"{path}: `nom` d'un sujet : lettres, chiffres, _ . - seulement ({nom!r})"
+            )
+        return entry["phrase"], nom.strip() if nom else ""
+    raise ConfigError(f"{path}: un sujet est une phrase, ou {{nom, phrase}}")
+
+
 def load_subjects(config_dir: str | Path = "config") -> Subjects:
     """`config/sujets.yaml` : `sujets: ["une phrase", ...]`. Absent = aucun sujet."""
     path = Path(config_dir) / "sujets.yaml"
     if not path.exists():
         return Subjects()
     raw = _yaml(path).get("sujets") or []
-    if not isinstance(raw, list) or not all(isinstance(x, str) and x.strip() for x in raw):
-        raise ConfigError(f"{path}: `sujets` doit être une liste de phrases")
+    if not isinstance(raw, list):
+        raise ConfigError(f"{path}: `sujets` doit être une liste")
     seen: dict[str, Subject] = {}
-    for phrase in raw:
+    for entry in raw:
+        phrase, sid = _subject_entry(entry, path)
         phrase = " ".join(phrase.split())
-        sid = slug(phrase)
+        sid = sid or slug(phrase)
         if sid in seen and seen[sid].phrase != phrase:
             n = 2
             while f"{sid}-{n}" in seen:

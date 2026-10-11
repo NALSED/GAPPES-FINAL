@@ -192,6 +192,26 @@ class Handler(BaseHTTPRequestHandler):
                     ]
                 }
             )
+        if p == "/tavily":
+            if (
+                self.headers.get("Authorization", "").startswith("Bearer tvly-")
+                and method == "POST"
+            ):
+                resultats = [
+                    {"title": f"Titre {i}", "url": f"https://journal-{i}.example.test/article", "content": f"Contenu {i}",
+                     "score": 0.9 - i / 10, "published_date": "Tue, 01 Sep 2026 08:00:00 GMT" if i == 0 else None, "id": f"r{i}"}
+                    for i in range(3)
+                ]  # fmt: skip
+                return self._json(
+                    {
+                        "query": "q",
+                        "results": resultats,
+                        "response_time": 0.5,
+                        "usage": {"credits": 1},
+                        "request_id": "x",
+                    }
+                )
+            return self._json({"detail": "Unauthorized"}, 401)
         if p == "/gros":
             return self._send(200, b"x" * 3_000_000)
         return self._json({"erreur": "inconnu"}, 404)

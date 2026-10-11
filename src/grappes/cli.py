@@ -167,6 +167,13 @@ def main(argv: list[str] | None = None) -> int:
     except ConfigError as exc:
         print(f"configuration invalide : {exc}", file=sys.stderr)
         return 2
+    if args.cmd in (
+        "search",
+        "cycle",
+    ):  # secrets (clés des fournisseurs) : config/secrets.env, hors dépôt
+        from grappes.env import load_secrets
+
+        load_secrets(Path(args.config) / "secrets.env")
     if args.cmd == "search":
         return _search(args, cfg)
     if args.cmd in ("cycle", "rollback"):
