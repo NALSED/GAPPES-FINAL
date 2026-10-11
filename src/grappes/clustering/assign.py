@@ -123,7 +123,10 @@ def assign(
     # S(e, g) : calculé une fois ; texte propre, à défaut contexte des citations (§9.2)
     sem: dict[tuple[str, str], float] = {}
     for ref in refs:
-        context = texts_own.get(ref) or texts_cited.get(ref, [])
+        # texte propre ; à défaut, contexte des citations — mais seulement si au moins N sources distinctes
+        # citent l'élément : un lien isolé (pied de page) ne dit rien de lui (premières données réelles)
+        enough = len(stats_by_ref[ref].citing) >= sc.contexte_min_citants
+        context = texts_own.get(ref) or (texts_cited.get(ref, []) if enough else [])
         for g in cfg.grappes:
             kw = {**g.lexicon.terms, **{k: -v for k, v in g.lexicon.negative.items()}}
             sem[ref, g.grappe_id] = _top_mean(

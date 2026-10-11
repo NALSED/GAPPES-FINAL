@@ -1,0 +1,46 @@
+grappe: actualite_fr
+termes:
+  acteur:
+    poids: 0.4
+    ajoute_cycle: 1
+    vu_cycle: 1
+  acteurs:
+    poids: 0.4
+    ajoute_cycle: 1
+    vu_cycle: 1
+  actualite:
+    poids: 0.4
+    ajoute_cycle: 1
+    vu_cycle: 1
+  avait:
+    poids: 0.2444
+    ajoute_cycle: 1
+    vu_cycle: 1
+  crise:
+    poids: 0.2444
+    ajoute_cycle: 1
+    vu_cycle: 1
+  europe:
+    poids: 0.2444
+    ajoute_cycle: 1
+    vu_cycle: 1
+  francais:
+    poids: 0.2444
+    ajoute_cycle: 1
+    vu_cycle: 1
+  francaise:
+    poids: 0.4
+    ajoute_cycle: 1
+    vu_cycle: 1
+  france:
+    poids: 0.3111
+    ajoute_cycle: 1
+    vu_cycle: 1
+  moment:
+    poids: 0.4
+    ajoute_cycle: 1
+    vu_cycle: 1
+  octobre:
+    poids: 0.2667
+    ajoute_cycle: 1
+    vu_cycle: 1

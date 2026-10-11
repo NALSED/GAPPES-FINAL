@@ -25,6 +25,8 @@ DEFAULT_UA = "grappes-collecte/1 (collecte automatique de pages publiques ; resp
 DEFAULT_SOCIAL = (
     "x.com", "twitter.com", "t.co", "t.me", "telegram.me", "instagram.com", "facebook.com",
     "fb.com", "tiktok.com", "linkedin.com", "snapchat.com", "threads.net", "whatsapp.com",
+    "bsky.app", "youtube.com", "youtu.be", "pinterest.com", "tumblr.com", "vk.com", "discord.com",
+    "twitch.tv", "reddit.com", "mastodon.social", "wa.me",
 )  # fmt: skip
 
 

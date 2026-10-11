@@ -10,9 +10,11 @@ au mieux. Les réseaux sociaux ne sont jamais lus (leurs liens sont des citation
 
 from __future__ import annotations
 
+import re
 from collections import Counter, deque
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
+from urllib.parse import urlsplit
 
 from grappes.autonomy import Autonomy
 from grappes.canon import canonical_domain, canonical_url, link_target
@@ -26,7 +28,7 @@ from grappes.semantic.scoring import score_proximity
 from grappes.storage.db import Database
 
 MAX_PAGES_PER_DOMAIN = 5  # par cycle : explorer un site, pas l'aspirer
-TOP_TERMS = 4  # termes du lexique ajoutés à la phrase comme mots-clés de recherche
+TOP_TERMS = 4  # termes du lexique combinés par deux avec la phrase pour varier les requêtes
 
 
 @dataclass(slots=True)
@@ -67,6 +69,21 @@ def proximity(text: str, grappe: Grappe) -> float:
     return score_proximity(text, lexicon_terms(grappe), scale=grappe.scale) if text.strip() else 0.0
 
 
+def search_queries(g: Grappe) -> list[str]:
+    """Requêtes d'un sujet : sa phrase, puis ses meilleurs termes combinés par deux (un mot seul
+    ramène du bruit : constaté sur les premières données réelles)."""
+    top = sorted(g.lexicon.terms, key=lambda t: (-g.lexicon.terms[t], t))[:TOP_TERMS]
+    pairs = [" ".join(top[i : i + 2]) for i in range(0, len(top) - 1, 2)]
+    return list(dict.fromkeys([g.subject, *pairs]))
+
+
+def link_relevant(anchor: str, url: str, subjects: list[Grappe]) -> bool:
+    """Un lien n'est suivi que si son texte ou son adresse touche au sujet : les liens de pied de page
+    (cookies, mentions légales, applications) ne sont pas explorés."""
+    words = re.sub(r"[^\w]+", " ", urlsplit(url).path)
+    return any(proximity(f"{anchor} {words}", g) > 0 for g in subjects)
+
+
 def best_subject(text: str, subjects: list[Grappe]) -> tuple[Grappe | None, float]:
     best: tuple[Grappe | None, float] = (None, 0.0)
     for g in subjects:
@@ -103,10 +120,9 @@ def collect(
         remaining = max(auto.requetes_par_cycle - used, 0)
         if remaining == 0 or should_stop():
             break
-        top = sorted(g.lexicon.terms, key=lambda t: (-g.lexicon.terms[t], t))[:TOP_TERMS]
         res = run_search(
             replace(scfg, quota_total=min(scfg.quota_total, remaining)),
-            [g.subject, *top],
+            search_queries(g),
             execute=True,
             sujet=g.subject,
             journaliser=log,
@@ -193,9 +209,16 @@ def collect(
         if is_new:
             new_domains.add(domain)
         rep.ingested.append(Ingested(key, domain, owner.grappe_id, round(score, 2), depth, is_new))
-        if depth < auto.profondeur:  # exploration : liens sortants web des pages ingérées
-            for link in res.links:
-                if link_target(link).startswith("web:") and canonical_url(link) not in seen_urls:
+        if depth < auto.profondeur:  # exploration : liens web sortants qui touchent au sujet
+            for item in res.record.get("links", []):
+                link = item["href"]
+                dom = canonical_domain(link)
+                if (
+                    link_target(link).startswith("web:")
+                    and canonical_url(link) not in seen_urls
+                    and per_domain[dom] < MAX_PAGES_PER_DOMAIN
+                    and link_relevant(item.get("anchor", ""), link, ready)
+                ):
                     queue.append((0.0, link, depth + 1))
     return rep
 

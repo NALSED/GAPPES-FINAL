@@ -25,7 +25,15 @@ def canonical_domain(host: str) -> str:
 _TME_HOSTS = {"t.me", "telegram.me"}
 _X_HOSTS = {"x.com", "twitter.com", "mobile.twitter.com"}
 _IG_HOSTS = {"instagram.com"}
-_SHORTENERS = {"t.co"}  # cible inconnaissable sans résolution réseau : jamais citée
+_SHORTENERS = {"t.co"}
+# Plateformes sociales dont un lien ne désigne pas une source identifiable (profil non reconnu sans les
+# lire) : un lien vers elles ne crée aucune entité `web:<plateforme>` (constaté sur les premières
+# données réelles : pieds de page de sites d'actualité).
+_OPAQUE_PLATFORMS = {
+    "facebook.com", "fb.com", "tiktok.com", "linkedin.com", "youtube.com", "youtu.be", "bsky.app",
+    "pinterest.com", "snapchat.com", "threads.net", "whatsapp.com", "wa.me", "tumblr.com", "vk.com",
+    "discord.com", "twitch.tv", "reddit.com", "mastodon.social",
+}  # fmt: skip  # cible inconnaissable sans résolution réseau : jamais citée
 _TME_RESERVED = {"joinchat", "c", "addstickers", "share", "iv", "proxy", "socks", "login"}
 _X_RESERVED = {
     "i", "home", "hashtag", "search", "intent", "share", "explore", "settings", "messages",
@@ -62,7 +70,7 @@ def link_target(url: str) -> str:
         return ""
     segments = [seg for seg in parts.path.split("/") if seg]
     first = segments[0] if segments else ""
-    if host in _SHORTENERS:
+    if host in _SHORTENERS or any(host == h or host.endswith("." + h) for h in _OPAQUE_PLATFORMS):
         return ""
     if host in _TME_HOSTS:
         if first.casefold() == "s" and len(segments) > 1:  # aperçu web d'un canal public

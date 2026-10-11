@@ -97,7 +97,7 @@ class PagesHandler(BaseHTTPRequestHandler):
                 _article(
                     "Jardins partagés A",
                     "Les jardins partagés : potager collectif, compost et semis en ville.",
-                    "<a href='/jardin-c'>suite</a> <a href='https://x.com/jardin_demo'>x</a>",
+                    "<a href='/jardin-c'>suite : compost du potager</a> <a href='/hors-sujet'>mentions légales</a> <a href='https://x.com/jardin_demo'>x</a>",
                 ),
             ),
             "/jardin-b": lambda: self._send(
@@ -112,7 +112,7 @@ class PagesHandler(BaseHTTPRequestHandler):
                 _article(
                     "Compost C",
                     "Du compost et des semis pour le potager, partagés entre voisins.",
-                    "<a href='/jardin-d'>plus loin</a>",
+                    "<a href='/jardin-d'>semis du jardin partagé</a>",
                 ),
             ),
             "/jardin-d": lambda: self._send(

@@ -23,6 +23,9 @@ def _copie_claire() -> Path:
     shutil.copytree(
         ROOT / "config", dest, ignore=shutil.ignore_patterns(*ACTIVATION, "apprentissage")
     )
+    # jeux d'essai (2 grappes de démonstration) : hors de la configuration réelle, copiés ici seulement
+    demo = ROOT / "tests" / "fixtures" / "config_demo" / "grappes"
+    shutil.copytree(demo, dest / "grappes", dirs_exist_ok=True)
     path = dest / "scoring.yaml"
     path.write_text(
         path.read_text(encoding="utf-8").replace("redact_persons: true", "redact_persons: false"),

@@ -227,3 +227,24 @@ def test_proximite_et_choix_du_sujet(tmp_path, srv):
     assert proximity("jardins partagés, potager collectif, compost et semis", g) > 50
     assert proximity("garage voiture lundi", g) == 0 and proximity("   ", g) == 0
     assert best_subject("compost semis", [g])[0] is g and best_subject("rien", [g])[0] is None
+
+
+# --- leçons des premières données réelles ----------------------------------------------------------------
+
+
+def test_liens_de_pied_de_page_non_suivis(tmp_path, srv):
+    """Un lien dont ni le texte ni l'adresse ne touchent au sujet (« mentions légales ») n'est pas exploré."""
+    _, _db, rep, _ = lancer(tmp_path, srv, profondeur=2)
+    assert srv.hits("/hors-sujet") == 0  # la page jardin-a le lie, mais sans rapport avec le sujet
+    assert {"jardin-c", "jardin-d"} <= {
+        i.url.rsplit("/", 1)[-1] for i in rep.ingested
+    }  # les liens pertinents, si
+
+
+def test_requetes_phrase_puis_termes_combines_par_deux(tmp_path, srv):
+    from grappes.cycle.collect import search_queries
+
+    cfg, *_ = monde(tmp_path, srv)
+    q = search_queries(cfg.grappes[0])
+    assert q[0] == cfg.grappes[0].subject  # la phrase d'abord
+    assert all(" " in x for x in q[1:]) and len(q) <= 3  # jamais un mot seul : trop de bruit

@@ -216,3 +216,55 @@ def test_garde_fou_aucune_requete_reelle_dans_les_tests():
     with pytest.raises(AssertionError, match="requête réelle interdite"):
         urllib_transport("GET", "https://api.tavily.com/search", {}, None, 5.0, 1000)
     assert "TAVILY_API_KEY" not in os.environ  # la vraie clé n'est jamais visible des tests
+
+
+# --- leçons du premier cycle réel ---------------------------------------------------------------------------
+
+
+def test_reseaux_sociaux_et_plateformes_jamais_lus_ni_cites_comme_sites():
+    from grappes.autonomy import DEFAULT_SOCIAL
+    from grappes.canon import link_target
+
+    for hote in (
+        "bsky.app",
+        "youtube.com",
+        "tiktok.com",
+        "linkedin.com",
+        "facebook.com",
+        "reddit.com",
+    ):
+        assert hote in DEFAULT_SOCIAL  # le récupérateur ne les lit jamais
+        assert (
+            link_target(f"https://www.{hote}/une/page") == ""
+        )  # et un lien vers eux ne crée aucune entité web
+    assert (
+        link_target("https://x.com/compte") == "x:compte"
+        and link_target("https://lemonde.fr/a") == "web:lemonde.fr"
+    )
+
+
+def test_lien_isole_ne_classe_pas_une_entite_jamais_lue():
+    """Un pied de page qui cite un site ne dit rien de ce site : son contexte ne compte qu'à partir de
+    deux sources citantes distinctes."""
+    import tempfile
+
+    from grappes.clustering.assign import assign
+    from test_phase4 import STRONG, make_cfg, obs
+
+    cfg = make_cfg(Path(tempfile.mkdtemp()), seuil_min=30)
+    seul = [obs("web:page1.test", STRONG, links=["https://pied-de-page.test/"])]
+    res = assign(seul, cfg)
+    ref = {e.primary_ref: e.entity_id for e in res.entities}["web:pied-de-page.test"]
+    assert not [m for m in res.memberships if m["entity_id"] == ref and m["confidence"] > 0]
+    deux = [*seul, obs("web:page2.test", STRONG, links=["https://pied-de-page.test/"])]
+    res2 = assign(deux, cfg)
+    ref2 = {e.primary_ref: e.entity_id for e in res2.entities}["web:pied-de-page.test"]
+    assert [m for m in res2.memberships if m["entity_id"] == ref2 and m["confidence"] > 0]
+
+
+def test_la_configuration_reelle_ne_contient_aucun_jeu_d_essai():
+    assert (
+        not list((ROOT / "config" / "grappes").glob("*.yaml"))
+        if (ROOT / "config" / "grappes").exists()
+        else True
+    )

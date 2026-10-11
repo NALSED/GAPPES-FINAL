@@ -28,6 +28,7 @@ crossref:
   min_weight_sum: 3.0
   min_citer_confidence: 50.0
   window_days: 180
+contexte_min_citants: 2      # entité sans texte propre : son contexte ne compte que si >= 2 sources distinctes la citent
 max_fichier_mo: 200        # taille maximale d'un fichier .json (un .jsonl est lu en flux, sans limite) ; null = aucune
 retention_days: 90         # données brutes (observations) conservées 90 jours ; null = illimité (D30)
 redact_persons: true       # entités de type `person` : nom et identifiant masqués dans les sorties (D30)
