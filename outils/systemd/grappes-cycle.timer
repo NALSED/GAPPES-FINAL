@@ -1,11 +1,12 @@
-# Planification hebdomadaire par défaut (fréquence modifiable : OnCalendar=daily, Mon *-*-* 03:00, etc.).
+# Planification quotidienne à 04:00 (heure creuse), décalage aléatoire jusqu'à 30 min (D57).
+# Autres fréquences : OnCalendar=weekly, Mon *-*-* 03:00, etc.
 [Unit]
 Description=Grappes : planification de la boucle automatique
 
 [Timer]
-OnCalendar=weekly
+OnCalendar=*-*-* 04:00:00
 Persistent=true
-RandomizedDelaySec=1h
+RandomizedDelaySec=30min
 
 [Install]
 WantedBy=timers.target
