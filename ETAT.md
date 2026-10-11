@@ -1,6 +1,6 @@
 # ETAT — grappes
 
-Dernière mise à jour : 2026-10-11 (cycle réel avec Q22 et Q23 appliquées). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
+Dernière mise à jour : 2026-10-11 (cycle réel après Q24 : Admiralty, registres, Tranco). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
 
 ## En attente de Sednal
 
@@ -12,7 +12,7 @@ Dernière mise à jour : 2026-10-11 (cycle réel avec Q22 et Q23 appliquées). R
 ## Où on en est
 
 * **Fait, selon `FINAL.md` § 14** : corrections du § 3 et nettoyage des fichiers obsolètes ; corpus synthétique à 3 grappes (~540 observations, formats réels) ; parcours complet jusqu'à `resultat.csv` (`tests/test_bout_en_bout.py`) ; robustesse et charge (lecture en flux, 500 000 enregistrements en 9,5 s) ; multiprise (YAML `http`, client MCP, plugins Python) ; amorçage depuis une phrase ; récupérateur de pages publiques ; ingestion automatique ; boucle `grappes cycle` avec apprentissage borné, recalibrage, instantanés, retour en arrière et rapport ; sortie finale `resultat.csv` (une colonne `NOM`) ; D25 (table d'équivalence Telegram) ; bilan des jetons.
-* **Aucune collecte réelle n'a été lancée** : `autonome` est faux, aucun fournisseur n'est branché, tous les tests utilisent de faux serveurs locaux.
+* **Collectes réelles lancées** (`autonome: true`, Tavily, Wikipédia, RSS) : voir les sections ci-dessous et `rapports/`.
 * v1 conservée : `ingest → run → export`, `explain`, `purge`, serveur MCP en lecture seule (8 outils), lecteurs de fichiers X, Telegram, Instagram et web (plus le chemin principal).
 * Documents : `docs/conception/cycle.md` (boucle), `docs/conception/phase8.md` (multiprise), `docs/conception/formats_json.md`, `docs/conception/charge.md`, `docs/utilisateur.md` ; correctifs proposés pour `MISSION.md` : `docs/conception/corrections_mission.md`.
 * Journal du compte gratuit : `donnees/.journal_ccr.log` (tâches mécaniques uniquement). Aucune interruption « session limit » constatée ; une coupure du serveur tmux le 2026-10-11 (`RELANCE.md`), reprise sans perte.
