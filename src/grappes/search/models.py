@@ -12,7 +12,7 @@ CSV_COLUMNS = [
 
 @dataclass(frozen=True, slots=True)
 class Candidate:
-    """Un résultat de recherche, nettoyé. Jamais ingéré sans règle explicite d'autonomie."""
+    """Un résultat de recherche, nettoyé. Ingéré seulement par `grappes cycle`, selon les règles générales et les INTERDITS."""
 
     ecosystem: str  # x | telegram | instagram | web | inconnu
     ident: str  # compte, canal ou domaine canonique

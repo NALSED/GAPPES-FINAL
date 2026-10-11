@@ -1,6 +1,6 @@
 # Formats JSON d'entrée
 
-Sources : `donnees/echantillons/*_1.json` (copies dans `tests/fixtures/echantillons/`), fournis par Sednal (Q2, `REPONSES_SEDNAL_3.md`). **Ce ne sont pas des exports réels** : valeurs inventées, structures construites d'après les documentations officielles (export Telegram Desktop, API X v2, API Instagram Graph). `web_1.json` est une **proposition de format** : il n'existe pas de standard. Tout ce qui suit reste à confirmer sur de vrais exports (voir `QUESTIONS.md`, Q16 à Q19).
+Sources : `donnees/echantillons/*_1.json` (copies dans `tests/fixtures/echantillons/`), fournis par Sednal (échantillons synthétiques, archive `docs/archive/REPONSES_SEDNAL_3.md`). **Ce ne sont pas des exports réels** : valeurs inventées, structures construites d'après les documentations officielles (export Telegram Desktop, API X v2, API Instagram Graph). `web_1.json` est une **proposition de format** : il n'existe pas de standard. Tout ce qui suit reste à confirmer sur les premières vraies données collectées (voir `QUESTIONS.md`, Q16 à Q19) ; aucun export n'est attendu de Sednal.
 
 Entrée : fichiers `.json` (objet ou liste) et `.jsonl` (un objet par ligne), UTF-8 avec ou sans BOM. Chaque fetcher défait l'enveloppe de son format (`unwrap`). Les champs absents sont tolérés sauf ceux marqués obligatoires ; un enregistrement invalide est rejeté et compté, sans interrompre le lot ; un enregistrement valide sans contenu à analyser (message de service Telegram) est compté « ignoré ». Le format plat historique (phase 1) reste accepté pour X, Telegram et web.
 
