@@ -22,10 +22,6 @@ TEXTES = [
 
 def test_mots_vides_chiffres_et_courts_exclus():
     assert tokens("Les 123 jardins avec fleurs") == ["jardins", "fleurs"]
-        "jardins",
-        "fleurs",
-        "ici",
-    ] or "avec" not in tokens("avec")
     assert tokens("pour dans avec plus") == []
     assert tokens("Café-crème 2026 ABC") == [
         "cafe-creme"
