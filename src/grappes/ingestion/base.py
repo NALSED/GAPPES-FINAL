@@ -31,11 +31,27 @@ class RejectReport:
     accepted: int = 0
     duplicates: int = 0
     ignored: int = 0
-    rejected: list[tuple[int, str]] = field(default_factory=list)  # (index, motif)
+    rejected: list[tuple[int, str]] = field(default_factory=list)  # (index, motif), borné
+    total_rejected: int = 0  # nombre réel de rejets, même au-delà de la liste détaillée
+    MAX_DETAILS = 1000  # au-delà, seuls les comptes sont gardés (fichiers très gros)
+
+    def reject(self, index: int, reason: str) -> None:
+        self.total_rejected += 1
+        if len(self.rejected) < self.MAX_DETAILS:
+            self.rejected.append((index, reason))
+
+    def absorb(self, other: RejectReport) -> None:
+        """Cumule un lot dans ce rapport (ingestion par lots)."""
+        self.accepted += other.accepted
+        self.duplicates += other.duplicates
+        self.ignored += other.ignored
+        self.total_rejected += other.total_rejected
+        room = self.MAX_DETAILS - len(self.rejected)
+        self.rejected.extend(other.rejected[: max(room, 0)])
 
     @property
     def n_rejected(self) -> int:
-        return len(self.rejected)
+        return self.total_rejected
 
 
 class BaseFetcher(ABC):
@@ -63,24 +79,30 @@ class BaseFetcher(ABC):
         """Un enregistrement JSON brut -> Observations. Pure, sans I/O."""
 
     def parse_many(
-        self, raws: Iterable[Mapping[str, Any]]
+        self,
+        raws: Iterable[Mapping[str, Any]],
+        seen: set[str] | None = None,
+        offset: int = 0,
     ) -> tuple[list[Observation], RejectReport]:
-        """Tolérant : invalides comptés et journalisés, doublons (même obs_id) écartés."""
+        """Tolérant : invalides comptés et journalisés, doublons (même obs_id) écartés.
+
+        `seen` : identifiants déjà vus, partagé entre lots ; `offset` : rang du premier
+        enregistrement du lot, pour des index de rejet continus."""
         report = RejectReport()
-        seen: set[str] = set()
+        seen = set() if seen is None else seen
         out: list[Observation] = []
-        for i, raw in enumerate(raws):
+        for i, raw in enumerate(raws, start=offset):
             try:
                 obs_list = list(self.parse(raw))
             except Skip:
                 report.ignored += 1
                 continue
             except FetcherError as exc:
-                report.rejected.append((i, str(exc)))
+                report.reject(i, str(exc))
                 log.warning("%s: enregistrement %d rejeté : %s", self.ecosystem, i, exc)
                 continue
             except (TypeError, ValueError, KeyError, AttributeError) as exc:
-                report.rejected.append((i, f"{type(exc).__name__}: {exc}"))
+                report.reject(i, f"{type(exc).__name__}: {exc}")
                 log.warning("%s: enregistrement %d invalide : %s", self.ecosystem, i, exc)
                 continue
             for obs in obs_list:

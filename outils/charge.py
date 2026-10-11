@@ -1,7 +1,10 @@
 """Test de charge : N observations synthétiques (thèmes neutres), ingest -> run -> export.
 
 Usage : .venv/bin/python outils/charge.py [N] [dossier_travail]
-Mesure le temps de chaque étape et le pic mémoire (ru_maxrss).
+        .venv/bin/python outils/charge.py --ingestion [N] [dossier_travail]
+Mesure le temps de chaque étape et le pic mémoire (ru_maxrss). Avec `--ingestion` : lecture en flux
+d'un gros fichier `.jsonl` de N enregistrements (`grappes ingest`), puis `run` et `export`
+(dont `resultat.csv`), pour vérifier que la mémoire reste bornée.
 """
 
 from __future__ import annotations
@@ -49,9 +52,53 @@ def synth(n: int, n_sources: int, seed: int = 7):
         )
 
 
+def mesure_ingestion(n: int, work: Path) -> None:
+    """Fichier .jsonl de N enregistrements X (format plat) -> ingest par lots -> run -> export."""
+    import json
+
+    from grappes.pipeline import export, ingest, run
+
+    src = work / "entree"
+    src.mkdir(parents=True, exist_ok=True)
+    rnd = random.Random(7)
+    t0 = time.perf_counter()
+    with (src / "gros.jsonl").open("w", encoding="utf-8") as f:
+        for i in range(n):
+            theme = rnd.choice(WORDS_A + WORDS_B + NOISE)
+            rec = {
+                "id": str(i),
+                "author": f"src{i % max(100, n // 20)}",
+                "text": f"{theme} {rnd.choice(NOISE)}",
+            }
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    taille = (src / "gros.jsonl").stat().st_size / 1e6
+    t1 = time.perf_counter()
+    cfg = load_config(Path(__file__).resolve().parents[1] / "config")
+    db = Database(work / "charge.db")
+    new, rep = ingest(db, src, "x", cfg)
+    t2 = time.perf_counter()
+    _, res = run(db, cfg)
+    t3 = time.perf_counter()
+    export(db, cfg, work / "sorties")
+    t4 = time.perf_counter()
+    rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    print(f"fichier={taille:.0f} Mo enregistrements={n} nouvelles={new} rejets={rep.n_rejected}")
+    print(
+        f"génération={t1 - t0:.1f}s ingestion={t2 - t1:.1f}s run={t3 - t2:.1f}s "
+        f"export+resultat={t4 - t3:.1f}s total={t4 - t1:.1f}s"
+    )
+    print(
+        f"pic mémoire={rss:.0f} Mo ; base={Path(db.path).stat().st_size / 1e6:.0f} Mo ; entités={len(res.entities)}"
+    )
+
+
 def main() -> None:
-    n = int(sys.argv[1]) if len(sys.argv) > 1 else 100_000
-    work = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(tempfile.mkdtemp(prefix="charge_"))
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    n = int(args[0]) if args else 100_000
+    work = Path(args[1]) if len(args) > 1 else Path(tempfile.mkdtemp(prefix="charge_"))
+    if "--ingestion" in sys.argv:
+        mesure_ingestion(n, work)
+        return
     cfg = load_config(Path(__file__).resolve().parents[1] / "config")
     db = Database(work / "charge.db")
     t0 = time.perf_counter()

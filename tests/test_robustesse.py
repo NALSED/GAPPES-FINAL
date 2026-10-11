@@ -128,3 +128,102 @@ def test_csv_neutralise_les_formules(tmp_path, cfg):
     )
     for r in rows[1:]:
         assert r[2][:1] not in "=+-@" and r[3][:1] not in "=+-@"
+
+
+# --- gros fichiers, lecture en flux, encodages (FINAL.md § 14, étape 4) --------------------------
+
+
+def _ingest(tmp_path, files, eco="x", batch=5000, config=None):
+    from grappes.pipeline import ingest
+
+    src = tmp_path / "gros"
+    src.mkdir()
+    for name, content in files.items():
+        (src / name).write_bytes(content if isinstance(content, bytes) else content.encode())
+    cfg = load_config(config or CONFIG)
+    db = Database(tmp_path / "g.db")
+    new, rep = ingest(db, src, eco, cfg, batch=batch)
+    return db, new, rep
+
+
+def test_fichier_jsonl_volumineux_lu_en_flux_par_lots(tmp_path):
+    import tracemalloc
+
+    n = 60_000
+    ligne = lambda i: rec(i, f"u{i % 50}", "soupe recette " + "x" * 200)
+    contenu = "\n".join(ligne(i) for i in range(n)) + "\n"
+    assert len(contenu) > 14_000_000  # plusieurs dizaines de Mo en mémoire si tout était chargé
+    tracemalloc.start()
+    _, new, rep = _ingest(tmp_path, {"a.jsonl": contenu}, batch=2000)
+    _, pic = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    assert new == n and rep.accepted == n and rep.n_rejected == 0
+    assert pic < 0.6 * len(contenu) * 3  # le pic reste très inférieur à « tout lu + tout parsé »
+
+
+def test_doublons_entre_lots_comptes_et_non_reinseres(tmp_path):
+    _, new, rep = _ingest(
+        tmp_path, {"a.jsonl": "\n".join([rec(1, "u", "soupe")] * 7) + "\n"}, batch=2
+    )
+    assert new == 1 and rep.accepted == 1 and rep.duplicates == 6  # même en changeant de lot
+
+
+def test_json_monolithique_trop_gros_refuse_mais_pas_le_jsonl(tmp_path):
+    import shutil
+
+    cfgdir = tmp_path / "cfg"
+    shutil.copytree(CONFIG, cfgdir)
+    p = cfgdir / "scoring.yaml"
+    p.write_text(p.read_text("utf-8").replace("max_fichier_mo: 200", "max_fichier_mo: 1"), "utf-8")
+    gros = json.dumps(
+        [{"id": str(i), "author": "u", "text": "soupe " + "x" * 90} for i in range(20_000)]
+    )
+    assert len(gros) > 1_048_576
+    _, new, rep = _ingest(
+        tmp_path, {"a.json": gros, "b.jsonl": rec(1, "u", "soupe")}, config=cfgdir
+    )
+    assert new == 1 and rep.n_rejected == 1  # le .json trop gros est rejeté, le .jsonl passe
+
+
+def test_ligne_geante_rejetee_sans_exploser(tmp_path):
+    from grappes import pipeline
+
+    geante = b'{"id": "1", "author": "u", "text": "' + b"a" * (pipeline.MAX_LINE + 10) + b'"}\n'
+    _, new, rep = _ingest(tmp_path, {"a.jsonl": geante + rec(2, "u", "soupe").encode() + b"\n"})
+    assert new == 1 and rep.n_rejected == 1
+
+
+def test_octet_invalide_rejette_la_ligne_et_pas_le_fichier(tmp_path):
+    bon = rec(1, "u", "soupe").encode()
+    mauvais = b'{"id": "2", "author": "u", "text": "caf\xe9"}'  # latin-1 dans un fichier UTF-8
+    _, new, rep = _ingest(
+        tmp_path, {"a.jsonl": bon + b"\n" + mauvais + b"\n" + rec(3, "u", "recette").encode()}
+    )
+    assert new == 2 and rep.n_rejected == 1
+
+
+def test_bom_seulement_en_tete_de_fichier(tmp_path):
+    _, new, rep = _ingest(
+        tmp_path,
+        {
+            "a.jsonl": b"\xef\xbb\xbf"
+            + rec(1, "u", "soupe").encode()
+            + b"\n"
+            + rec(2, "u", "x").encode()
+        },
+    )
+    assert new == 2 and rep.n_rejected == 0
+
+
+def test_details_de_rejets_bornes_mais_compte_exact(tmp_path):
+    from grappes.ingestion.base import RejectReport
+
+    n = RejectReport.MAX_DETAILS + 500
+    _, new, rep = _ingest(tmp_path, {"a.jsonl": "\n".join(["{pas du json"] * n) + "\n"}, batch=700)
+    assert new == 0 and rep.n_rejected == n and len(rep.rejected) == RejectReport.MAX_DETAILS
+
+
+def test_index_de_rejet_continus_entre_lots(tmp_path):
+    lignes = [rec(i, "u", "soupe") if i % 3 else "{casse" for i in range(1, 10)]
+    _, _, rep = _ingest(tmp_path, {"a.jsonl": "\n".join(lignes) + "\n"}, batch=2)
+    assert [i for i, _ in rep.rejected] == [2, 5, 8]  # rangs absolus, pas relatifs au lot

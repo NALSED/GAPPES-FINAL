@@ -52,6 +52,7 @@ class ScoringConfig:
     c_anchor: float = 0.4
     crossref_floor: float = 60.0
     max_iter: int = 3
+    max_fichier_mo: int | None = 200  # taille maximale d'un .json (un .jsonl n'a pas de limite)
     retention_days: int | None = 90  # données brutes ; None = conservation illimitée (D30)
     redact_persons: bool = True  # entités de type `person` masquées dans les sorties (D30)
     resultat_confiance_min: float | None = None  # seuil de resultat.csv ; None = niveau_probable
@@ -197,6 +198,11 @@ def load_scoring(path: Path) -> ScoringConfig:
             w_anchor=float(w.get("ancrage", default.w_anchor)),
             crossref_floor=float(d.get("crossref_floor", default.crossref_floor)),
             max_iter=int(d.get("max_iter", default.max_iter)),
+            max_fichier_mo=(
+                None
+                if d.get("max_fichier_mo", 200) in (None, 0)
+                else int(d.get("max_fichier_mo", 200))
+            ),
             retention_days=(
                 None
                 if d.get("retention_days", 90) in (None, 0)

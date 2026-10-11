@@ -5,7 +5,10 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+from collections.abc import Iterator
+from itertools import islice
 from pathlib import Path
+from typing import Any
 
 from grappes.clustering.assign import AssignResult, assign
 from grappes.clustering.export import export_csv
@@ -17,51 +20,94 @@ from grappes.storage.db import Database
 log = logging.getLogger(__name__)
 
 
-def read_json_records(folder: str | Path) -> list[dict]:
-    """Lit tous les `.json` (liste ou objet) et `.jsonl` d'un dossier, dans l'ordre des noms.
-    Les objets sont rendus tels quels : `Fetcher.unwrap` défait les enveloppes d'export.
+BATCH = 5000  # enregistrements traités (puis écrits) à la fois : mémoire bornée
+MAX_LINE = 10 * 1024 * 1024  # une ligne .jsonl plus longue est rejetée sans être chargée en entier
 
-    UTF-8 avec ou sans BOM. Un fichier illisible (encodage, JSON invalide) ou une ligne
-    invalide devient un enregistrement `None`, compté comme rejet par le fetcher : le lot
-    n'est jamais interrompu.
+
+def iter_json_records(folder: str | Path, max_file_mb: int | None = 200) -> Iterator[Any]:
+    """Enregistrements des `.json` (liste ou objet) et `.jsonl` d'un dossier, dans l'ordre des noms.
+
+    Les objets sont rendus tels quels : `Fetcher.unwrap` défait les enveloppes d'export. UTF-8 avec
+    ou sans BOM. Un `.jsonl` est lu ligne à ligne (taille de fichier illimitée) ; un `.json`, qui
+    doit être chargé en entier, est refusé au-delà de `max_file_mb`. Tout fichier, ligne ou
+    encodage invalide devient un enregistrement `None`, compté comme rejet : le lot n'est jamais
+    interrompu.
     """
-    records: list[dict] = []
     for p in sorted(Path(folder).iterdir()):
         if p.suffix not in (".json", ".jsonl") or not p.is_file():
             continue
-        try:
-            text = p.read_text(encoding="utf-8-sig")
-        except UnicodeDecodeError as exc:
-            log.warning("%s: encodage UTF-8 invalide (%s), fichier rejeté", p.name, exc)
-            records.append(None)
-            continue
         if p.suffix == ".jsonl":
-            for line in text.splitlines():
-                if line.strip():
-                    try:
-                        records.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        records.append(None)
+            yield from _iter_jsonl(p)
         else:
-            try:
-                data = json.loads(text)
-            except json.JSONDecodeError as exc:
-                log.warning("%s: JSON invalide (%s), fichier rejeté", p.name, exc)
-                records.append(None)
+            yield from _read_json(p, max_file_mb)
+
+
+def _iter_jsonl(path: Path) -> Iterator[Any]:
+    first = True
+    with path.open("rb") as f:
+        while True:
+            raw = f.readline(MAX_LINE + 1)
+            if not raw:
+                return
+            if len(raw) > MAX_LINE and not raw.endswith(b"\n"):
+                log.warning("%s: ligne de plus de %d octets rejetée", path.name, MAX_LINE)
+                while (rest := f.readline(MAX_LINE)) and not rest.endswith(b"\n"):
+                    pass  # on saute le reste de la ligne sans la garder en mémoire
+                yield None
+                first = False
                 continue
-            records.extend(data if isinstance(data, list) else [data])
-    return records
+            try:
+                line = raw.decode("utf-8-sig" if first else "utf-8")
+            except UnicodeDecodeError:
+                first = False
+                yield None  # encodage invalide : cette ligne seulement
+                continue
+            first = False
+            if line.strip():
+                try:
+                    yield json.loads(line)
+                except json.JSONDecodeError:
+                    yield None
+
+
+def _read_json(path: Path, max_file_mb: int | None) -> Iterator[Any]:
+    if max_file_mb is not None and path.stat().st_size > max_file_mb * 1024 * 1024:
+        log.warning("%s: plus de %d Mo, fichier rejeté (utiliser .jsonl)", path.name, max_file_mb)
+        yield None
+        return
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except UnicodeDecodeError as exc:
+        log.warning("%s: encodage UTF-8 invalide (%s), fichier rejeté", path.name, exc)
+        yield None
+        return
+    except (json.JSONDecodeError, RecursionError) as exc:
+        log.warning("%s: JSON invalide (%s), fichier rejeté", path.name, type(exc).__name__)
+        yield None
+        return
+    yield from (data if isinstance(data, list) else [data])
+
+
+def read_json_records(folder: str | Path) -> list[Any]:
+    """Version liste de `iter_json_records` (petits dossiers, tests)."""
+    return list(iter_json_records(folder))
 
 
 def ingest(
-    db: Database, folder: str | Path, ecosystem: str, cfg: Config
+    db: Database, folder: str | Path, ecosystem: str, cfg: Config, batch: int = BATCH
 ) -> tuple[int, RejectReport]:
+    """Lit, normalise et stocke un dossier, par lots : mémoire bornée quelle que soit la taille."""
     fetcher = get_fetcher(ecosystem).configure(cfg)
-    records = [r for doc in read_json_records(folder) for r in fetcher.unwrap(doc)]
-    obs, report = fetcher.parse_many(records)
-    obs = fetcher.finalize(obs, db)
-    weights = {o.source.key: cfg.sources.weight(o.source.key) for o in obs}
-    new = db.add_observations(obs, weights)
+    report, seen, new, offset = RejectReport(), set(), 0, 0
+    records = iter_json_records(folder, cfg.scoring.max_fichier_mo)
+    while chunk := list(islice(records, batch)):
+        raws = [r for doc in chunk for r in fetcher.unwrap(doc)]
+        obs, rep = fetcher.parse_many(raws, seen=seen, offset=offset)
+        obs = fetcher.finalize(obs, db)
+        weights = {o.source.key: cfg.sources.weight(o.source.key) for o in obs}
+        new += db.add_observations(obs, weights)
+        report.absorb(rep)
+        offset += len(raws)
     return new, report
 
 
