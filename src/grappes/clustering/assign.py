@@ -66,9 +66,13 @@ def entity_id_for(primary_ref: str) -> str:
     return "E-" + hashlib.sha1(primary_ref.encode()).hexdigest()[:12]
 
 
-def level(confidence: float, cfg: Config) -> str:
-    if confidence >= cfg.scoring.niveau_confirme:
+def level(confidence: float, cfg: Config, validated: bool = True) -> str:
+    """confirmé / probable / faible. « Confirmé » exige un recoupement validé (FINAL.md § 7) : une
+    source non recoupée reste « probable » au mieux, quelle que soit sa confiance sémantique."""
+    if confidence >= cfg.scoring.niveau_confirme and validated:
         return "confirmé"
+    if confidence >= cfg.scoring.niveau_confirme:
+        return "probable"
     if confidence >= cfg.scoring.niveau_probable:
         return "probable"
     return "faible"

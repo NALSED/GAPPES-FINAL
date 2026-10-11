@@ -75,7 +75,9 @@ def export_csv(result: AssignResult, cfg: Config, run_id: str, out_dir: str | Pa
                     ",".join(sorted(st.ecosystems)),
                     main["grappe_id"] if classed else "",
                     f"{main['confidence']:.2f}" if main else "0.00",
-                    level(main["confidence"], cfg) if main else "faible",
+                    level(main["confidence"], cfg, main["via"] == "recoupement")
+                    if main
+                    else "faible",
                     main["status"] if main else NON_CLASSE,
                     f"{main['semantic']:.2f}" if main else "0.00",
                     f"{main['ecosystem']:.2f}" if main else "0.00",

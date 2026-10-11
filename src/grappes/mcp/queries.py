@@ -7,6 +7,7 @@ import math
 import sqlite3
 from pathlib import Path
 
+from grappes.clustering.assign import level
 from grappes.config import Config
 from grappes.redact import pseudonym
 from grappes.semantic.scoring import score_detail
@@ -107,15 +108,8 @@ class Queries:
         members = self._members(grappe_id, run)
         levels = {"confirmé": 0, "probable": 0, "faible": 0}
         for m in members.values():
-            c = m["confidence"]
-            lvl = (
-                "confirmé"
-                if c >= self.cfg.scoring.niveau_confirme
-                else "probable"
-                if c >= self.cfg.scoring.niveau_probable
-                else "faible"
-            )
-            levels[lvl] += 1
+            # « confirmé » exige un recoupement validé ; sinon « probable » au mieux (FINAL.md § 7)
+            levels[level(m["confidence"], self.cfg, m["via"] == "recoupement")] += 1
         n_valid = self.conn.execute(
             "SELECT COUNT(*) FROM validations WHERE grappe_id=? AND validated=1 AND run_id=?",
             (grappe_id, run),

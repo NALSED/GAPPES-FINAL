@@ -31,6 +31,7 @@ log = logging.getLogger(__name__)
 @dataclass(slots=True)
 class SearchReport:
     candidates: list[MergedCandidate] = field(default_factory=list)
+    raw: list[Candidate] = field(default_factory=list)  # avant fusion : un par résultat (par URL)
     status: dict[str, str] = field(default_factory=dict)  # fournisseur -> issue
     executed: bool = False
     requests: int = 0
@@ -50,6 +51,7 @@ def run_search(
     execute: bool = False,
     extra: Iterable[Candidate] = (),
     sujet: str = "",
+    journaliser: bool = True,
     sleep: Callable[[float], None] | None = None,
     transport=None,
 ) -> SearchReport:
@@ -67,7 +69,7 @@ def run_search(
     real = bool(execute)
     ctx = SearchContext(
         execute=real,
-        journal=Journal(cfg.journal),
+        journal=Journal(cfg.journal if journaliser else None),
         delay_s=cfg.delai_s,
         quota_total=cfg.quota_total,
         sujet=sujet,
@@ -114,6 +116,7 @@ def run_search(
                 report.status[pid] = f"erreur : {type(exc).__name__}"
                 ctx.journal.log(pid, kw, "-", f"erreur plugin : {type(exc).__name__}")
                 log.warning("fournisseur %s : %s", pid, exc)
+    report.raw = found
     report.candidates = merge(found + list(extra))
     report.requests = ctx.used_total
     return report

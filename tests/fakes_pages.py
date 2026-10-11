@@ -4,6 +4,14 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
+
+def _article(titre, texte, liens=""):
+    return (
+        f"<html lang='fr'><head><title>{titre}</title><meta property='og:site_name' content='Site {titre}'></head>"
+        f"<body><main><p>{texte}</p>{liens}</main></body></html>"
+    ).encode()
+
+
 PAGE = """<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Jardins partagés — Info</title>
 <meta name="description" content="Guide des jardins partagés et du compost."><meta property="og:site_name" content="Jardins Info">
 <link rel="canonical" href="/page"><style>.x{color:red}</style><script>var secret = "ne pas lire";</script></head>
@@ -84,9 +92,67 @@ class PagesHandler(BaseHTTPRequestHandler):
                 "text/html; charset=iso-8859-1",
             ),
             "/piege": self._piege,
+            "/jardin-a": lambda: self._send(
+                200,
+                _article(
+                    "Jardins partagés A",
+                    "Les jardins partagés : potager collectif, compost et semis en ville.",
+                    "<a href='/jardin-c'>suite</a> <a href='https://x.com/jardin_demo'>x</a>",
+                ),
+            ),
+            "/jardin-b": lambda: self._send(
+                200,
+                _article(
+                    "Potager collectif B",
+                    "Le potager collectif et le jardin partagé : compost, semis, récolte.",
+                ),
+            ),
+            "/jardin-c": lambda: self._send(
+                200,
+                _article(
+                    "Compost C",
+                    "Du compost et des semis pour le potager, partagés entre voisins.",
+                    "<a href='/jardin-d'>plus loin</a>",
+                ),
+            ),
+            "/jardin-d": lambda: self._send(
+                200,
+                _article("Semis D", "Semis de printemps au jardin partagé, potager et compost."),
+            ),
+            "/hors-sujet": lambda: self._send(
+                200, _article("Voitures", "Garage, voiture, lundi et train, rien à voir.")
+            ),
+            "/api": self._api,
         }
         handler = routes.get(path)
         return handler() if handler else self._send(404, b"inconnu")
+
+    def _api(self):
+        base = f"http://{self.headers['Host']}"
+        alias = f"http://localhost:{self.server.server_address[1]}"  # autre hôte : domaines « fautifs » isolés
+        proche = "Jardins partagés et potager collectif : compost, semis et récolte."
+        items = [
+            ("a", f"{base}/jardin-a", proche),
+            ("b", f"{base}/jardin-b", proche),
+            ("autre-hote", f"{alias}/jardin-b", proche),
+            ("loin", f"{base}/hors-sujet", "Garage voiture lundi train."),
+            ("social", "https://x.com/jardin_demo", proche),
+            ("robots", f"{base}/interdit/secret", proche),
+            ("login", f"{alias}/login", proche),
+            ("403", f"{alias}/403", proche),
+            ("motif", f"{base}/jardin-b?motifinterdit", proche + " motifinterdit"),
+            ("dup", f"{base}/jardin-a", proche),
+            ("sans-texte", f"{base}/jardin-d", ""),
+        ]
+        import json as _json
+
+        self._send(
+            200,
+            _json.dumps(
+                {"results": [{"title": t, "link": u, "snippet": d} for t, u, d in items]}
+            ).encode(),
+            "application/json",
+        )
 
     def _piege(self):
         body = (
