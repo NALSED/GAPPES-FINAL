@@ -42,6 +42,10 @@ class Registre:
     etat_valeur: str = ""
     identifiant: tuple[str, ...] = ()
     pagination: dict[str, Any] = field(default_factory=dict)
+    champ_ville: str = (
+        ""  # chemin de la commune dans la réponse (ville de l'organisme, jamais déduite)
+    )
+    pays: str = ""  # code ISO 2 lettres du pays du registre (source fiable du pays), ou vide
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,6 +89,8 @@ def load_registres(path: Path) -> RegistresConfig:
                 etat_valeur=str(etat.get("valeur", "")),
                 identifiant=tuple(str(x) for x in s.get("identifiant") or ()),
                 pagination=dict(s.get("pagination") or {}),
+                champ_ville=str(s.get("champ_ville", "")),
+                pays=str(s.get("pays", "")).upper(),
             )
         )
     return RegistresConfig(
@@ -130,7 +136,7 @@ def refresh_domaines(
     if not _stale(last, now, cfg.cache_jours):
         return 0
     pas = int(spec.pagination.get("pas", 100))
-    domains: set[str] = set()
+    domains: dict[str, str] = {}  # domaine -> commune ('' si le registre n'en donne pas)
     n = 0
     for page in range(int(spec.pagination.get("max_pages", 1))):
         params = dict(spec.params)
@@ -144,15 +150,17 @@ def refresh_domaines(
         for row in rows:
             u = clean_url(first(row, spec.champ_url) or "")
             if u:
-                domains.add(canonical_domain(u))
+                d = canonical_domain(u)
+                town = str(first(row, spec.champ_ville) or "") if spec.champ_ville else ""
+                domains[d] = domains.get(d) or town
         if len(rows) < pas:
             break
     if domains:
         with db.transaction() as c:
             c.execute("DELETE FROM registre_domaines WHERE registre=?", (spec.id,))
             c.executemany(
-                "INSERT INTO registre_domaines(registre, domaine, maj) VALUES (?,?,?)",
-                [(spec.id, d, now.isoformat()) for d in sorted(domains)],
+                "INSERT INTO registre_domaines(registre, domaine, maj, ville) VALUES (?,?,?,?)",
+                [(spec.id, d, now.isoformat(), domains[d]) for d in sorted(domains)],
             )
     return n
 
@@ -185,8 +193,10 @@ def lookup_nom(
     trouve = (
         1 if len(actifs) == 1 and len(exact) == 1 else 0
     )  # homonymes ou organisme fermé : jamais de correspondance
-    ident = ""
+    ident, ville = "", ""
     if trouve:
+        if spec.champ_ville:
+            ville = str(first(actifs[0], spec.champ_ville) or "")
         for p in spec.identifiant:
             v = first(actifs[0], p)
             if v:
@@ -194,8 +204,8 @@ def lookup_nom(
                 break
     with db.transaction() as c:
         c.execute(
-            "INSERT OR REPLACE INTO registre_noms(registre, nom, trouve, identifiant, maj) VALUES (?,?,?,?,?)",
-            (spec.id, key, trouve, ident, now.isoformat()),
+            "INSERT OR REPLACE INTO registre_noms(registre, nom, trouve, identifiant, maj, ville) VALUES (?,?,?,?,?,?)",
+            (spec.id, key, trouve, ident, now.isoformat(), ville),
         )
     return 1
 
@@ -226,26 +236,40 @@ def update(db: Database, cfg: RegistresConfig, now: datetime, transport, journal
     return stats
 
 
-def matched_refs(db: Database, cfg: RegistresConfig) -> frozenset[str]:
-    """Sources placées en A par les caches (aucun réseau) : domaine officiel, ou nom exact d'un organisme actif."""
-    out: set[str] = set()
+def matched_info(db: Database, cfg: RegistresConfig) -> dict[str, tuple[str, str]]:
+    """Sources placées en A par les caches (aucun réseau) : domaine officiel, ou nom exact d'un organisme actif.
+    Valeur : (commune, pays) fournis par le registre, chaînes vides si inconnus (jamais devinés)."""
+    out: dict[str, tuple[str, str]] = {}
     if not cfg.registres:
-        return frozenset()
-    domains = {r[0] for r in db.conn.execute("SELECT DISTINCT domaine FROM registre_domaines")}
+        return out
+    by_id = {r.id: r for r in cfg.registres}
+    domains = {
+        r["domaine"]: (r["ville"], by_id[r["registre"]].pays if r["registre"] in by_id else "")
+        for r in db.conn.execute("SELECT registre, domaine, ville FROM registre_domaines")
+    }
     found = {
-        (r["registre"], r["nom"])
-        for r in db.conn.execute("SELECT registre, nom FROM registre_noms WHERE trouve=1")
+        (r["registre"], r["nom"]): r["ville"]
+        for r in db.conn.execute("SELECT registre, nom, ville FROM registre_noms WHERE trouve=1")
     }
     for r in db.conn.execute("SELECT ref_key, ecosystem, ident, display_name FROM sources"):
         if r["ecosystem"] in ("web", "rss"):
             host = canonical_domain(r["ident"])
-            if any(host == d or host.endswith("." + d) for d in domains):
-                out.add(r["ref_key"])
-        if r["ecosystem"] == "web" and r["display_name"]:
+            for d, info in domains.items():
+                if host == d or host.endswith("." + d):
+                    out[r["ref_key"]] = info
+                    break
+        if r["ecosystem"] == "web" and r["display_name"] and r["ref_key"] not in out:
             key = norm_nom(r["display_name"])
-            if any((spec.id, key) in found for spec in cfg.registres if spec.methode == "nom"):
-                out.add(r["ref_key"])
-    return frozenset(out)
+            for spec in cfg.registres:
+                if spec.methode == "nom" and (spec.id, key) in found:
+                    out[r["ref_key"]] = (found[spec.id, key], spec.pays)
+                    break
+    return out
+
+
+def matched_refs(db: Database, cfg: RegistresConfig) -> frozenset[str]:
+    """Sources placées en A par les caches (aucun réseau)."""
+    return frozenset(matched_info(db, cfg))
 
 
 def default_now() -> datetime:

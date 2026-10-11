@@ -16,6 +16,8 @@ registres:
     pagination: {param: offset, pas: 100, max_pages: 5}
     items: results
     champ_url: url               # site officiel de l'établissement
+    champ_ville: com_nom         # commune de l'établissement (colonne `ville` de resultat_tsites.csv)
+    pays: FR
   sirene_rna:
     nom: "Annuaire des entreprises : SIRENE (entreprises) et RNA (associations)"
     methode: nom                 # égalité EXACTE du nom normalisé, organisme ACTIF, un seul résultat
@@ -25,3 +27,5 @@ registres:
     champs_nom: [nom_complet, nom_raison_sociale]
     etat: {path: etat_administratif, valeur: A}     # A = actif
     identifiant: [complements.identifiant_association, siren]   # RNA (W...) sinon SIREN
+    champ_ville: siege.libelle_commune   # commune du siège (colonne `ville` de resultat_tsites.csv)
+    pays: FR

@@ -1,4 +1,4 @@
-# Rapport du cycle 14 — 11/10/2026 12:24
+# Rapport du cycle 15 — 11/10/2026 17:12
 
 **Mode : réel.** Cycle terminé normalement.
 
@@ -13,19 +13,18 @@ Aucune alerte.
 ## Ce qui est entré
 
 * Requêtes de recherche : 9
-* Résultats examinés : 149
-* Pages visitées : 7
+* Résultats examinés : 139
+* Pages visitées : 2
 * Nouvelles sources : **0**
 * Observations ajoutées : **0**
 * Refusé, et pourquoi :
-  * 97 × proximité insuffisante avec les sujets
-  * 21 × document déjà ingéré
-  * 11 × réseau social ou identité sans page : citation seulement, jamais lu
-  * 7 × robots.txt : visite interdite ou illisible
+  * 106 × proximité insuffisante avec les sujets
+  * 19 × document déjà ingéré
   * 6 × personne physique (catégorie biographique)
-  * 2 × page déjà ingérée
+  * 2 × robots.txt : visite interdite ou illisible
   * 1 × personne physique (texte biographique)
   * 1 × aucune catégorie lisible : en cas de doute, une personne
+  * 1 × page déjà ingérée
 * Fiabilité des sources (code Admiralty) : B : 3, C : 12, D : 2
 * Registres officiels : 0 requête(s) ce cycle, 0 source(s) placée(s) en A
 * Classement Tranco : liste 8PXYV du 2026-10-10T22:00:02.102152 (tranco-list.eu)

@@ -18,7 +18,7 @@ from grappes.clustering.resultat import write_resultat
 from grappes.config import Config
 from grappes.fiabilite import Reliability
 from grappes.ingestion import RejectReport, get_fetcher
-from grappes.registres import load_registres, matched_refs
+from grappes.registres import load_registres, matched_info, matched_refs
 from grappes.storage.db import Database
 from grappes.tranco import ranks_for, read_meta
 
@@ -173,4 +173,14 @@ def run(db: Database, cfg: Config) -> tuple[str, AssignResult]:
 
 def export(db: Database, cfg: Config, out_dir: str | Path) -> list[Path]:
     run_id, result = run(db, cfg)
-    return [*export_csv(result, cfg, run_id, out_dir), *write_resultat(result, cfg, out_dir)]
+    return [
+        *export_csv(result, cfg, run_id, out_dir),
+        *write_resultat(result, cfg, out_dir, places=places_for(db, cfg)),
+    ]
+
+
+def places_for(db: Database, cfg: Config) -> dict[str, tuple[str, str]]:
+    """(commune, pays) fournis par les registres officiels en cache, par clé de source (aucun réseau)."""
+    if cfg.racine is None or not (cfg.racine / "registres.yaml").exists():
+        return {}
+    return matched_info(db, load_registres(cfg.racine / "registres.yaml"))

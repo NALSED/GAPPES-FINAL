@@ -14,6 +14,7 @@ import re
 import unicodedata
 from pathlib import Path
 
+from grappes.autonomy import Autonomy, load_autonomy
 from grappes.clustering.assign import AMBIGU, CLASSE, AssignResult
 from grappes.clustering.export import safe_cell
 from grappes.config import Config
@@ -54,15 +55,15 @@ def sort_key(name: str) -> tuple[str, str]:
     return (re.sub(r"[^\w]+", " ", normalize(name)).strip(), name)
 
 
-def select_names(result: AssignResult, cfg: Config) -> dict[str, list[tuple[str, float]]]:
-    """grappe -> [(nom, confiance)] des entités retenues, avant fusion des variantes."""
+def select_rows(result: AssignResult, cfg: Config) -> dict[str, list[tuple[str, float, str]]]:
+    """grappe -> [(nom, confiance, clé de source)] des entités retenues, avant fusion des variantes."""
     sc = cfg.scoring
     threshold = (
         sc.niveau_probable if sc.resultat_confiance_min is None else sc.resultat_confiance_min
     )
     kept = {CLASSE, AMBIGU} if sc.resultat_inclure_ambigus else {CLASSE}
     ents = {e.entity_id: e for e in result.entities}
-    out: dict[str, list[tuple[str, float]]] = {g.grappe_id: [] for g in cfg.grappes}
+    out: dict[str, list[tuple[str, float, str]]] = {g.grappe_id: [] for g in cfg.grappes}
     for m in result.memberships:
         e = ents[m["entity_id"]]
         if m["status"] not in kept or m["confidence"] < threshold:
@@ -71,21 +72,33 @@ def select_names(result: AssignResult, cfg: Config) -> dict[str, list[tuple[str,
             continue  # personnes physiques exclues par défaut (en cas de doute : une personne)
         name = readable_name(result.names.get(e.primary_ref), e.primary_ref.split(":", 1)[-1])
         if name:
-            out[m["grappe_id"]].append((name, m["confidence"]))
+            out[m["grappe_id"]].append((name, m["confidence"], e.primary_ref))
     return out
 
 
-def merge_variants(rows: list[tuple[str, float]], suffixes: tuple[str, ...] = ()) -> list[str]:
-    """Fusionne les variantes d'un même nom ; garde la plus fiable (puis l'ordre alphabétique)."""
-    best: dict[str, tuple[str, float]] = {}
-    for name, conf in rows:
+def select_names(result: AssignResult, cfg: Config) -> dict[str, list[tuple[str, float]]]:
+    """grappe -> [(nom, confiance)] des entités retenues, avant fusion des variantes."""
+    return {g: [(n, c) for n, c, _ in rows] for g, rows in select_rows(result, cfg).items()}
+
+
+def merge_rows(
+    rows: list[tuple[str, float, str]], suffixes: tuple[str, ...] = ()
+) -> list[tuple[str, str]]:
+    """Fusionne les variantes d'un même nom ; garde la plus fiable (puis l'ordre alphabétique). (nom, clé de source)."""
+    best: dict[str, tuple[str, float, str]] = {}
+    for name, conf, ref in rows:
         key = dedup_key(name, suffixes)
         if not key:
             continue
         cur = best.get(key)
         if cur is None or (-conf, sort_key(name)) < (-cur[1], sort_key(cur[0])):
-            best[key] = (name, conf)
-    return sorted((n for n, _ in best.values()), key=sort_key)
+            best[key] = (name, conf, ref)
+    return [(n, r) for n, _, r in sorted(best.values(), key=lambda v: sort_key(v[0]))]
+
+
+def merge_variants(rows: list[tuple[str, float]], suffixes: tuple[str, ...] = ()) -> list[str]:
+    """Fusionne les variantes d'un même nom ; garde la plus fiable (puis l'ordre alphabétique)."""
+    return [n for n, _ in merge_rows([(n, c, "") for n, c in rows], suffixes)]
 
 
 def _write(path: Path, names: list[str]) -> Path:
@@ -97,15 +110,59 @@ def _write(path: Path, names: list[str]) -> Path:
     return path
 
 
-def write_resultat(result: AssignResult, cfg: Config, out_dir: str | Path) -> list[Path]:
+TSITES_HEADER = ["nom", "ville", "pays"]
+
+
+def _town(raw: str) -> str:
+    """Commune telle que fournie par le registre ; les registres la donnent en capitales : mise en forme seulement."""
+    t = " ".join(raw.split())
+    return t.title() if t.isupper() else t
+
+
+def write_tsites(
+    path: Path,
+    rows: list[tuple[str, str]],
+    auto: Autonomy,
+    places: dict[str, tuple[str, str]] | None = None,
+) -> Path:
+    """`resultat_tsites.csv` (compatibilité trouver-sites, D59) : nom;ville;pays, UTF-8 sans BOM. Mêmes noms que
+    `resultat.csv`. Ville : seulement celle d'un registre officiel, sinon vide (jamais déduite). Pays : celui du
+    registre s'il en donne un, sinon `export_tsites.pays_defaut`."""
+    places = places or {}
+    with path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f, delimiter=";", lineterminator="\n")
+        w.writerow(TSITES_HEADER)
+        for name, ref in rows:
+            town, country = places.get(ref, ("", ""))
+            w.writerow([safe_cell(name), _town(town), country or auto.export_tsites_pays_defaut])
+    return path
+
+
+def write_resultat(
+    result: AssignResult,
+    cfg: Config,
+    out_dir: str | Path,
+    auto: Autonomy | None = None,
+    places: dict[str, tuple[str, str]] | None = None,
+) -> list[Path]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     sfx = cfg.scoring.resultat_suffixes
-    by_grappe = select_names(result, cfg)
+    by_grappe = select_rows(result, cfg)
     everything = [row for rows in by_grappe.values() for row in rows]
-    paths = [_write(out / "resultat.csv", merge_variants(everything, sfx))]
+    merged = merge_rows(everything, sfx)
+    paths = [_write(out / "resultat.csv", [n for n, _ in merged])]
     if len(cfg.grappes) > 1:
         for gid, rows in by_grappe.items():
             slug = re.sub(r"[^\w.-]", "_", gid)
-            paths.append(_write(out / f"resultat_{slug}.csv", merge_variants(rows, sfx)))
+            paths.append(
+                _write(out / f"resultat_{slug}.csv", [n for n, _ in merge_rows(rows, sfx)])
+            )
+    if auto is None:
+        auto = load_autonomy(cfg.racine) if cfg.racine is not None else Autonomy()
+    tsites = out / "resultat_tsites.csv"
+    if auto.export_tsites_actif:
+        paths.append(write_tsites(tsites, merged, auto, places))
+    else:
+        tsites.unlink(missing_ok=True)  # sortie désactivée : pas de fichier périmé
     return paths

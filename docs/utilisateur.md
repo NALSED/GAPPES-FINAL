@@ -186,3 +186,17 @@ ingestion_termes_min: 2     # radicaux différents du lexique exigés dans un te
 ## Fiabilité des sources (code Admiralty, registres, Tranco)
 
 Chaque source reçoit une lettre de fiabilité A à F selon `config/fiabilite_sources.yaml` (A : registre officiel ; B : média établi nommé ; C : Wikipédia ; D : web générique ; E, F : inconnu). Les poids viennent d'une méthode publiée (centroïde de rang), pas d'un barème saisi. Le classement Tranco affine seulement les sources D, sans jamais les placer au niveau de B ou A. Les registres officiels (`config/registres.yaml`) placent en A une source dont le site ou le nom correspond à un organisme actif. Une source, même A, ne confirme jamais seule : deux écosystèmes restent exigés. Les colonnes `admiralty` (ex. « B2 ») d'`entites.csv` donnent la lettre et la crédibilité 1 à 6 ; `sorties/resultat.csv` ne change pas.
+
+## Sortie de compatibilité `sorties/resultat_tsites.csv` (trouver-sites)
+
+`sorties/resultat.csv` (une colonne `NOM`) reste la sortie de référence et ne change pas. À chaque cycle, `sorties/resultat_tsites.csv` est écrit en plus, pour alimenter le projet trouver-sites : en-tête `nom;ville;pays` (minuscules), séparateur point-virgule, UTF-8 sans BOM, **les mêmes noms que `resultat.csv`**, même tri et même déduplication, aucun filtrage supplémentaire.
+
+* **ville** : renseignée seulement quand un registre officiel déjà branché la fournit (commune du siège d'un organisme SIRENE/RNA, commune d'un établissement d'enseignement supérieur) ; sinon vide. Jamais déduite, jamais remplacée par un département ou une région. Les données collectées aujourd'hui (texte court des articles Wikipédia, éléments RSS, pages) ne contiennent pas de ville explicite exploitable : la plupart des lignes ont donc une ville vide.
+* **pays** : `export_tsites.pays_defaut` de `config/autonomie.yaml` (FR par défaut), ou le code pays du registre quand l'entité y a été retrouvée.
+* **Configuration** (`config/autonomie.yaml`) :
+
+````yaml
+export_tsites:
+  actif: true        # false : le fichier n'est plus écrit (et l'ancien est supprimé)
+  pays_defaut: FR    # code ISO à deux lettres
+````

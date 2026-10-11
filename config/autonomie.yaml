@@ -12,3 +12,9 @@ seuil_ingestion:
   min: 5
   max: 40
   auto_ajustable: true
+
+# Sortie de compatibilité sorties/resultat_tsites.csv (nom;ville;pays) pour trouver-sites (D59).
+# actif: false supprime cette sortie. pays_defaut s'applique à toutes les lignes, sauf code pays fourni par un registre.
+export_tsites:
+  actif: true
+  pays_defaut: FR

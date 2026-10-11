@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from grappes.fiabilite import Reliability, load_fiabilite
-from grappes.registres import load_registres, matched_refs, update
+from grappes.registres import load_registres, matched_info, matched_refs, update
 from grappes.search.base import Journal
 from grappes.search.http import Response
 from grappes.storage.db import Database
@@ -185,3 +185,40 @@ def test_tranco_affine_d_sans_jamais_depasser_c_ni_b():
     assert r.factor("wikipedia:Jardin") == c  # Tranco ne touche que web/rss
     assert r.fingerprint != Reliability(TABLE).fingerprint
     assert r.letter("web:gros.com") == "D"  # la lettre ne change pas, seul le poids est affiné
+
+
+def test_ville_et_pays_viennent_du_registre(tmp_path):
+    db, j = setup(tmp_path)
+    add_source(db, "web:univ-exemple.fr")
+    add_source(db, "web:asso.org", "Association Les Jardins Unis")
+    esr = {"results": [{"url": "https://www.univ-exemple.fr/", "com_nom": "Avignon"}]}
+    siege = org("ASSOCIATION LES JARDINS UNIS") | {"siege": {"libelle_commune": "MONTLUCON"}}
+    t = Fake({"enseignementsup": (200, esr), "recherche-entreprises": (200, sirene(siege))})
+    update(db, REG, NOW, t, j)
+    assert matched_info(db, REG) == {
+        "web:univ-exemple.fr": ("Avignon", "FR"),
+        "web:asso.org": ("MONTLUCON", "FR"),
+    }
+
+
+def test_ancien_cache_sans_ville_vide_une_fois(tmp_path):
+    import sqlite3
+
+    path = tmp_path / "old.db"
+    con = sqlite3.connect(path)
+    con.execute(
+        "CREATE TABLE registre_domaines (registre TEXT NOT NULL, domaine TEXT NOT NULL, maj TEXT NOT NULL, PRIMARY KEY (registre, domaine))"
+    )
+    con.execute("INSERT INTO registre_domaines VALUES ('r','x.fr','2026-10-01')")
+    con.commit()
+    con.close()
+    db = Database(path)  # migration : colonne ajoutée, ancien cache vidé pour être rechargé
+    assert db.conn.execute("SELECT COUNT(*) FROM registre_domaines").fetchone()[0] == 0
+    db.close()
+    db = Database(path)  # deuxième ouverture : rien de plus à migrer
+    with db.transaction() as c:
+        c.execute(
+            "INSERT INTO registre_domaines(registre, domaine, maj, ville) VALUES ('r','y.fr','2026-10-01','Lyon')"
+        )
+    db.close()
+    assert Database(path).conn.execute("SELECT COUNT(*) FROM registre_domaines").fetchone()[0] == 1

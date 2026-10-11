@@ -107,6 +107,8 @@ Une ligne par entité retenue, rien d'autre dans le fichier. UTF-8 sans BOM, tri
   compte institutionnel par des indices explicites ; en cas de doute, traite comme une personne.
 Inchangés : `entites.csv`, `appartenances.csv`, la base SQLite et le serveur MCP en lecture seule,
 qui gardent scores, confiance et explications.
+`resultat.csv` reste la sortie de référence. `sorties/resultat_tsites.csv` (`nom;ville;pays`, mêmes noms,
+même tri) est une sortie de compatibilité pour trouver-sites, pilotée par `export_tsites` (D59).
 
 ## 10. CADRE DE DONNÉES (valeurs proposées par Claude, réversibles par Sednal)
 Sources publiques uniquement. retention_days = 90 pour les données brutes. redact_persons actif.

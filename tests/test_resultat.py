@@ -122,8 +122,13 @@ def test_un_fichier_par_grappe(cfgdir):
     o = [obs("web:a.test", STRONG), obs("web:b.test", STRONG_B)]
     names = {"web:a.test": "Cuisine Info", "web:b.test": "Jardin Info"}
     paths, _ = sortie(cfgdir, o, names)
-    assert sorted(p.name for p in paths) == ["resultat.csv", "resultat_G-A.csv", "resultat_G-B.csv"]
-    by = {p.name: [r[0] for r in lire(p)[1:]] for p in paths}
+    assert sorted(p.name for p in paths) == [
+        "resultat.csv",
+        "resultat_G-A.csv",
+        "resultat_G-B.csv",
+        "resultat_tsites.csv",
+    ]
+    by = {p.name: [r[0] for r in lire(p)[1:]] for p in paths if p.name != "resultat_tsites.csv"}
     assert by["resultat_G-A.csv"] == ["Cuisine Info"] and by["resultat_G-B.csv"] == ["Jardin Info"]
     assert by["resultat.csv"] == ["Cuisine Info", "Jardin Info"]
 

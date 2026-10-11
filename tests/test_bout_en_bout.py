@@ -243,6 +243,7 @@ def test_parcours_complet_par_la_cli(monde, tmp_path, capsys):
         f"resultat_{A}.csv",
         f"resultat_{B}.csv",
         f"resultat_{C}.csv",
+        "resultat_tsites.csv",
     ]
 
 

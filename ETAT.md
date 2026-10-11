@@ -36,6 +36,12 @@ Décision de Sednal : « probable » est le niveau maximal accepté pour le suje
 * **Une voix par éditeur** dans le recoupement : `agency.x.fr`, `x.fr` et le flux `rss:x.fr` ne comptent plus que pour une voix (plus de « deux écosystèmes » fabriqués par une même rédaction). Plus prudent qu'avant, aucun seuil changé. 525 tests verts ; cycle réel de contrôle : mêmes 8 noms, 0 confirmée.
 * **Constat non traité** : le système classe des sources qui parlent du sujet (médias comme L'Étudiant, Le Bonbon, Valeurs actuelles ; articles Wikipédia sur d'anciens mouvements), pas des « acteurs ». Filtrer les médias demanderait une règle de Sednal (je n'invente pas de critère).
 
+## Passerelle trouver-sites et timer 10h00 (D59, D60)
+
+* **`sorties/resultat_tsites.csv`** (`nom;ville;pays`, UTF-8 sans BOM, mêmes 8 noms que `resultat.csv`, même tri) écrit à chaque cycle ; `resultat.csv` inchangé. `export_tsites` (actif, `pays_defaut: FR`) ajouté à `config/autonomie.yaml`. Ville : uniquement celle d'un registre officiel (commune du siège SIRENE/RNA, commune ESR, 241 domaines ESR en cache avec leur commune) ; **aucune des 8 lignes actuelles n'a de ville** (aucune n'est appariée à un registre), colonne vide, rien d'inventé. Pays : FR par défaut. 533 tests verts. Cycle réel de validation : `rapports/cycle_2026-10-11_12.md`, 0 confirmée, 8 probables, sortie conforme.
+* **Timer** : quotidien à **10h00** (D60), vérifié par `systemctl --user list-timers` (prochain passage 2026-10-12 vers 10:02).
+* **À trancher par Sednal (Q25)** : écarter les articles Wikipédia de concepts ou d'événements (essai à blanc : 4 des 8 lignes). Rien n'est appliqué.
+
 ## Limites connues
 
 * Q16 à Q19 (formats Telegram, X, Instagram, web) restent ouvertes : elles se trancheront sur les premières vraies données collectées.

@@ -58,6 +58,9 @@ class Autonomy:
     # amorçage
     amorcage_max_termes: int = 20
     amorcage_poids: float = 0.4
+    # sortie de compatibilité resultat_tsites.csv (D59)
+    export_tsites_actif: bool = True
+    export_tsites_pays_defaut: str = "FR"
     # apprentissage
     apprentissage_actif: bool = True
     min_confirmees: int = 3
@@ -204,6 +207,21 @@ def _ingestion_settings(
     return value, lo, hi, auto
 
 
+def _export_tsites(section: Any, path: Path, base: Autonomy) -> tuple[bool, str]:
+    """Section `export_tsites` : `actif` (booléen, vrai par défaut) et `pays_defaut` (code ISO 2 lettres, FR)."""
+    if section is None:
+        return base.export_tsites_actif, base.export_tsites_pays_defaut
+    if not isinstance(section, dict):
+        raise ConfigError(f"{path}: export_tsites doit être un mapping (actif, pays_defaut)")
+    actif = section.get("actif", base.export_tsites_actif)
+    if not isinstance(actif, bool):
+        raise ConfigError(f"{path}: export_tsites.actif doit être true ou false")
+    pays = section.get("pays_defaut", base.export_tsites_pays_defaut)
+    if not isinstance(pays, str) or pays.strip() and not re.fullmatch(r"[A-Za-z]{2}", pays.strip()):
+        raise ConfigError(f"{path}: export_tsites.pays_defaut doit être un code pays de 2 lettres")
+    return actif, pays.strip().upper()
+
+
 def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
     """`config/autonomie.yaml` ; absent = tout par défaut, donc `autonome: false`."""
     path = Path(config_dir) / "autonomie.yaml"
@@ -222,6 +240,7 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
     interdits = d.get("interdits") or {}
     if not isinstance(interdits, dict):
         raise ConfigError(f"{path}: interdits doit être un mapping (domaines, motifs)")
+    tsites = _export_tsites(d.get("export_tsites"), path, base)
     ua = d.get("user_agent", base.user_agent)
     if not isinstance(ua, str) or not ua.strip():
         raise ConfigError(f"{path}: user_agent doit être un texte (identifiable)")
@@ -254,6 +273,8 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
         max_octets_page=int(_num(d, "max_octets_page", base.max_octets_page, path, 1000)),
         amorcage_max_termes=int(_num(amorcage, "max_termes", base.amorcage_max_termes, path)),
         amorcage_poids=_num(amorcage, "poids", base.amorcage_poids, path),
+        export_tsites_actif=tsites[0],
+        export_tsites_pays_defaut=tsites[1],
         apprentissage_actif=bool(ap.get("actif", True)),
         min_confirmees=int(_num(ap, "min_confirmees", base.min_confirmees, path, 1)),
         min_ecosystemes=int(_num(ap, "min_ecosystemes", base.min_ecosystemes, path, 1)),

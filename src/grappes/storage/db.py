@@ -50,11 +50,12 @@ CREATE TABLE IF NOT EXISTS validations (
     reasons TEXT NOT NULL, run_id TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS registre_domaines (
-    registre TEXT NOT NULL, domaine TEXT NOT NULL, maj TEXT NOT NULL, PRIMARY KEY (registre, domaine)
+    registre TEXT NOT NULL, domaine TEXT NOT NULL, maj TEXT NOT NULL, ville TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY (registre, domaine)
 );
 CREATE TABLE IF NOT EXISTS registre_noms (
     registre TEXT NOT NULL, nom TEXT NOT NULL, trouve INTEGER NOT NULL, identifiant TEXT NOT NULL DEFAULT '',
-    maj TEXT NOT NULL, PRIMARY KEY (registre, nom)
+    maj TEXT NOT NULL, ville TEXT NOT NULL DEFAULT '', PRIMARY KEY (registre, nom)
 );
 CREATE INDEX IF NOT EXISTS idx_obs_source ON observations(source_key);
 CREATE INDEX IF NOT EXISTS idx_cit_cited ON citations(cited);
@@ -90,6 +91,8 @@ class Database:
             ],
             "memberships": [("fiabilite_admiralty", "TEXT"), ("credibilite_admiralty", "INTEGER")],
             "sources": [("native_id", "TEXT"), ("origin", "TEXT")],
+            "registre_domaines": [("ville", "TEXT NOT NULL DEFAULT ''")],
+            "registre_noms": [("ville", "TEXT NOT NULL DEFAULT ''")],
             "citations": [
                 ("hypothesis", "INTEGER NOT NULL DEFAULT 0"),
                 ("fiabilite_admiralty", "TEXT"),
@@ -102,6 +105,9 @@ class Database:
             for name, decl in columns:
                 if name not in have:
                     self.conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {decl}")
+                    if table == "registre_domaines" and name == "ville":
+                        # ancien cache sans commune : vidé une fois, il sera rechargé au prochain cycle
+                        self.conn.execute("DELETE FROM registre_domaines")
         self.conn.commit()
 
     def close(self) -> None:

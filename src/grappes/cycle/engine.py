@@ -54,7 +54,7 @@ from grappes.learned import (
     save_learned_thresholds,
 )
 from grappes.models import EntityType
-from grappes.pipeline import reliability_for, run
+from grappes.pipeline import places_for, reliability_for, run
 from grappes.registres import load_registres
 from grappes.registres import update as registres_update
 from grappes.search.base import Journal
@@ -366,7 +366,7 @@ def _execute(
                 paths, db, snap, data, "Indicateur de stabilité au-delà de son seuil.", CANCELLED
             )
         export_csv(res, cfg, run_id, paths.out)
-        write_resultat(res, cfg, paths.out)
+        write_resultat(res, cfg, paths.out, auto=auto, places=places_for(db, cfg))
         prune_snapshots(paths.snapshots, auto.instantanes_conserves)
         return _finish(paths, auto, data, run_id, db)
     except StopRequested:

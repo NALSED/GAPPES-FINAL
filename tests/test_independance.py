@@ -25,7 +25,7 @@ def _validations(tmp_path, citers):
     o = [obs("web:cible.org", STRONG)]
     o += [obs(c, STRONG, links=["https://cible.org/page"]) for c in citers]
     res = assign(o, cfg, None, Reliability(TABLE))
-    return [v for v in res.validations if v.cited == "web:cible.org" and v.grappe_id == "G-A"][0]
+    return next(v for v in res.validations if v.cited == "web:cible.org" and v.grappe_id == "G-A")
 
 
 def test_flux_et_site_du_meme_editeur_ne_font_pas_deux_ecosystemes(tmp_path):
