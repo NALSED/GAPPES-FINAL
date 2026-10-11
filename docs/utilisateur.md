@@ -106,3 +106,18 @@ Valeurs proposées, réversibles dans `config/scoring.yaml` : sources publiques 
 
 L'export Telegram Desktop ne donne que le nom affiché d'un canal. `config/telegram.yaml` associe un nom affiché à l'identifiant public (celui de `t.me/<identifiant>`). Sans entrée, l'identifiant est déduit du nom et marqué « hypothèse » : `grappes explain` liste ces citations (`citations_hypothetiques`) et elles ne valident jamais un recoupement. Deux canaux de même nom ne sont jamais fusionnés.
 
+## Bilan des économies de jetons
+
+````bash
+.venv/bin/python outils/bilan_jetons.py          # régénère ECONOMIES.md
+````
+
+Le rapport `ECONOMIES.md` croise deux sources, et seulement elles : `donnees/.journal_ccr.log` (les appels routés vers le compte gratuit) et `rtk gain --daily --format json` (le hook RTK). Il donne le nombre d'appels gratuits et la période couverte, le gain RTK du projet et du compte, un total consolidé avec sa marge d'incertitude, une ligne par jour et le détail des hypothèses.
+
+Lecture à garder en tête :
+
+* **Le gain RTK est une estimation** (octets / 4) limitée à la sortie interceptée par rtk ; ce n'est pas l'économie totale de jetons ni de coût.
+* **Le journal gratuit ne contient ni jetons ni octets** : le volume est affiché « non disponible », jamais estimé. Le total consolidé est donc un minimum chiffrable.
+* La marge d'incertitude repose sur deux ratios octets/jeton **déclarés comme hypothèses** (`--ratio-bas`, `--ratio-haut`, 3 et 5 par défaut), pas sur une mesure.
+* Une source absente, vide ou illisible est signalée dans le rapport, qui continue avec l'autre.
+

@@ -23,6 +23,10 @@ Dernière mise à jour : 2026-10-06. Référence unique : `FINAL.md` (les fichie
 * Q16 à Q19 (formats Telegram, X, Instagram, web) restent ouvertes : elles se trancheront sur les premières vraies données collectées.
 * L'identité des canaux Telegram dérivée du nom affiché est une hypothèse (D25), à encadrer selon `FINAL.md` § 11.
 
+## Économies de jetons
+
+`ECONOMIES.md` (régénérable : `.venv/bin/python outils/bilan_jetons.py`) : appels routés vers le compte gratuit et gain RTK, présenté comme une estimation. Voir `docs/utilisateur.md`.
+
 ## Rapports de cycle
 
 `rapports/cycle_<date>.md` (créés par `grappes cycle`, lisibles par un non-informaticien) ; dernier : `rapports/dernier_cycle.md`.
