@@ -29,7 +29,7 @@ Sujet : « Les acteurs des blocages et mobilisations étudiantes en France en ce
 
 ## Q24 : close (acceptée, D56)
 
-Décision de Sednal : « probable » est le niveau maximal accepté pour le sujet actuel (trop pointu pour se recouper naturellement). D50 à D55 (Admiralty, registres, Tranco, mentions textuelles, flux franceinfo) restent en place pour d'autres sujets ; pas de nouveau flux, pas de changement de sujet, règle des deux écosystèmes inchangée. Dernier état : 8 probables, 0 confirmée (`rapports/cycle_2026-10-11_9.md`). Plus aucun point bloquant ouvert : les cycles reprennent selon le planning normal (`outils/cycle.sh`, timer systemd).
+Décision de Sednal : « probable » est le niveau maximal accepté pour le sujet actuel (trop pointu pour se recouper naturellement). D50 à D55 (Admiralty, registres, Tranco, mentions textuelles, flux franceinfo) restent en place pour d'autres sujets ; pas de nouveau flux, pas de changement de sujet, règle des deux écosystèmes inchangée. Dernier état : 8 probables, 0 confirmée (`rapports/cycle_2026-10-11_9.md`). Plus aucun point bloquant ouvert : les cycles reprennent selon le planning normal : timer systemd **quotidien à 04:00** installé (D57, service utilisateur), premier passage prévu le 2026-10-12 ; cycle de vérification du 2026-10-11 sans alerte (`rapports/cycle_2026-10-11_10.md`). D50 à D57 actées.
 
 ## Limites connues
 
