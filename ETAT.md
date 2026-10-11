@@ -31,6 +31,11 @@ Sujet : « Les acteurs des blocages et mobilisations étudiantes en France en ce
 
 Décision de Sednal : « probable » est le niveau maximal accepté pour le sujet actuel (trop pointu pour se recouper naturellement). D50 à D55 (Admiralty, registres, Tranco, mentions textuelles, flux franceinfo) restent en place pour d'autres sujets ; pas de nouveau flux, pas de changement de sujet, règle des deux écosystèmes inchangée. Dernier état : 8 probables, 0 confirmée (`rapports/cycle_2026-10-11_9.md`). Plus aucun point bloquant ouvert : les cycles reprennent selon le planning normal : timer systemd **quotidien à 04:00** installé (D57, service utilisateur), premier passage prévu le 2026-10-12 ; cycle de vérification du 2026-10-11 sans alerte (`rapports/cycle_2026-10-11_10.md`). D50 à D57 actées.
 
+## Fiabilité des sorties (D58)
+
+* **Une voix par éditeur** dans le recoupement : `agency.x.fr`, `x.fr` et le flux `rss:x.fr` ne comptent plus que pour une voix (plus de « deux écosystèmes » fabriqués par une même rédaction). Plus prudent qu'avant, aucun seuil changé. 525 tests verts ; cycle réel de contrôle : mêmes 8 noms, 0 confirmée.
+* **Constat non traité** : le système classe des sources qui parlent du sujet (médias comme L'Étudiant, Le Bonbon, Valeurs actuelles ; articles Wikipédia sur d'anciens mouvements), pas des « acteurs ». Filtrer les médias demanderait une règle de Sednal (je n'invente pas de critère).
+
 ## Limites connues
 
 * Q16 à Q19 (formats Telegram, X, Instagram, web) restent ouvertes : elles se trancheront sur les premières vraies données collectées.
