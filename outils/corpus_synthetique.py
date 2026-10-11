@@ -1,205 +1,402 @@
-"""Corpus synthétique (~2 000 observations, 3 écosystèmes, thèmes neutres inventés).
+"""Corpus synthétique reproductible : quelques centaines d'observations, 3 grappes, 4 écosystèmes.
 
 Usage : .venv/bin/python outils/corpus_synthetique.py <dossier_sortie> [graine]
-Écrit `<sortie>/x/x.jsonl`, `<sortie>/telegram/telegram.jsonl`, `<sortie>/web/web.jsonl`,
-au format des fixtures (`tests/fixtures`), et `<sortie>/attendu.json` : le statut attendu
-des cibles de recoupement (validé, refusé, ambigu) pour la vérification automatique.
 
-Grappes visées : `config/grappes/demo_a.yaml` (cuisine) et `demo_b.yaml` (jardinage).
-Aucun lexique réel, aucune donnée réelle.
+Écrit, au format des vrais exports (API X v2, export Telegram Desktop, API Instagram Graph, web) :
+`x/`, `telegram/`, `instagram/`, `web/`, une configuration `config/` (3 grappes, table Telegram)
+et `attendu.json` (ce que la chaîne complète doit produire). Aucune donnée réelle : thèmes et noms
+neutres inventés. Mêmes fichiers à chaque génération (graine fixe).
+
+Grappes : cuisine (A), jardinage (B, opposée à A), musique (C). Le terme « marché » est commun à A
+et B (chevauchement). Cas couverts : recoupements validés, refusés (un seul écosystème, trop peu de
+citants, citants non membres, citations hors fenêtre), ambiguïtés (opposition, marge), cercle de
+sources neutres qui se citent, liens non identifiables (invitations, publications, raccourcis),
+personnes et comptes institutionnels, canaux Telegram connus, inconnus, homonymes et accentués.
 """
 
 from __future__ import annotations
 
 import json
 import random
+import shutil
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-A_TERMS = ["soupe", "recette", "#cuisine", "café crème"]
-B_TERMS = ["potager", "semis", "tomates", "#jardinage"]
-NOISE = ["bonjour", "demain", "voiture", "musique", "ciel", "lundi", "train", "livre", "pluie"]
-BASE = datetime(2026, 3, 1, tzinfo=UTC)
+A, B, C = "G-CUISINE", "G-JARDINAGE", "G-MUSIQUE"
+TERMS = {
+    A: ["soupe", "recette", "#cuisine", "café crème", "marché"],
+    B: ["potager", "semis", "tomates", "#jardinage", "marché"],
+    C: ["concert", "guitare", "#musique", "partition", "orchestre"],
+}
+NOISE = [
+    "bonjour",
+    "demain",
+    "voiture",
+    "ciel",
+    "lundi",
+    "train",
+    "livre",
+    "pluie",
+    "vélo",
+    "lampe",
+]
+BASE = datetime(2026, 9, 30, 12, 0, tzinfo=UTC)
+GRAPPES_YAML = {
+    A: ("Cuisine", ["web:cuisine-demo.test", "x:chef_demo"], [B]),
+    B: ("Jardinage", ["x:jardin_demo"], [A]),
+    C: ("Musique", ["web:musique-demo.test"], []),
+}
 
 
 class Corpus:
     def __init__(self, seed: int):
         self.rnd = random.Random(seed)
-        self.x: list[dict] = []
-        self.tg: list[dict] = []
         self.web: list[dict] = []
-        self._id = 0
+        self.x: dict[str, dict] = {}  # handle -> {name, tweets}
+        self.tg: dict[str, dict] = {}  # clé -> {name, id, messages}
+        self.ig: list[dict] = []
+        self.n = 0
+        self.attendu: dict = {"entites": {}, "resultat": {}, "hors_resultat": []}
 
-    def _ts(self, days_back: int | None = None) -> datetime:
-        d = self.rnd.randrange(0, 60) if days_back is None else days_back
-        return BASE - timedelta(days=d, minutes=self.rnd.randrange(0, 1440))
-
-    def _date(self, ts: datetime | None, eco: str):
-        if ts is None:
-            return None
-        if self.rnd.random() < 0.15:  # formats mêlés : epoch ou ISO
-            return int(ts.timestamp())
-        return ts.isoformat()
-
-    def themed(self, terms: list[str], k: int = 3) -> str:
-        words = self.rnd.choices(terms, k=k) + self.rnd.choices(NOISE, k=3)
+    # --- texte et dates ----------------------------------------------------------------
+    def themed(self, g: str, k: int = 4) -> str:
+        words = self.rnd.sample(TERMS[g], k=min(k, len(TERMS[g]))) + self.rnd.choices(NOISE, k=3)
         self.rnd.shuffle(words)
         return " ".join(words)
 
     def neutral(self) -> str:
         return " ".join(self.rnd.choices(NOISE, k=6))
 
-    def post(self, eco: str, ident: str, text: str, *, mentions=(), links=(), ts="auto"):
-        self._id += 1
-        when = self._ts() if ts == "auto" else ts
-        if eco == "x":
-            body = text + "".join(f" @{m}" for m in mentions)
-            rec = {"id": f"x{self._id}", "author": {"handle": f"@{ident}"}, "text": body}
-            if links:
-                rec["entities"] = {"urls": [{"expanded_url": u} for u in links]}
-            if when:
-                rec["created_at"] = self._date(when, eco)
-            self.x.append(rec)
-        elif eco == "telegram":
-            body = text + "".join(f" @{m}" for m in mentions)
-            rec = {"message_id": self._id, "channel": f"@{ident}", "text": body}
-            if links:
-                rec["entities"] = [{"type": "url", "url": u} for u in links]
-            if when:
-                rec["date"] = self._date(when, eco)
-            self.tg.append(rec)
-        else:
-            rec = {"url": f"https://{ident}/p{self._id}", "title": "", "text": text}
-            if links:
-                rec["outlinks"] = list(links)
-            if when:
-                rec["fetched_at"] = self._date(when, eco)
-            self.web.append(rec)
+    def when(self, old: bool = False) -> datetime:
+        days = 400 + self.rnd.randrange(30) if old else self.rnd.randrange(0, 60)
+        return BASE - timedelta(days=days, minutes=self.rnd.randrange(1440))
+
+    # --- écosystèmes ------------------------------------------------------------------
+    def page(self, domain, site_name, text, links=(), old=False, title=""):
+        self.n += 1
+        ts = self.when(old).isoformat().replace("+00:00", "Z")
+        url = f"https://{domain}/p{self.n}"
+        self.web.append(
+            {
+                "url": f"{url}?utm_source=x", "canonical_url": url, "title": title or "Page",
+                "text": text, "lang": "fr", "published_at": ts, "fetched_at": ts,
+                "site_name": site_name,
+                "links": [{"href": h, "anchor": "lien"} for h in links],
+            }
+        )  # fmt: skip
+
+    def tweet(self, handle, name, text, mentions=(), urls=(), old=False):
+        self.n += 1
+        acc = self.x.setdefault(handle, {"name": name, "tweets": []})
+        ent: dict = {}
+        if mentions:
+            ent["mentions"] = [{"username": m, "id": f"id_{m}"} for m in mentions]
+        if urls:
+            ent["urls"] = [{"url": f"https://t.co/{self.n}", "expanded_url": u} for u in urls]
+        body = text + "".join(f" @{m}" for m in mentions)
+        acc["tweets"].append(
+            {"id": str(10**18 + self.n), "text": body, "author_id": f"id_{handle}",
+             "created_at": self.when(old).strftime("%Y-%m-%dT%H:%M:%S.000Z"), "lang": "fr",
+             "entities": ent}
+        )  # fmt: skip
+
+    def message(self, key, name, cid, text, links=(), forwarded=None, old=False):
+        self.n += 1
+        ch = self.tg.setdefault(key, {"name": name, "id": cid, "messages": []})
+        ts = self.when(old)
+        msg = {
+            "id": len(ch["messages"]) + 2, "type": "message",
+            "date": ts.strftime("%Y-%m-%dT%H:%M:%S"), "date_unixtime": str(int(ts.timestamp())),
+            "from": name, "text": text,
+            "text_entities": [{"type": "plain", "text": text}]
+            + [{"type": "link", "text": u} for u in links],
+        }  # fmt: skip
+        if links:
+            msg["text"] = text + " " + " ".join(links)
+        if forwarded:
+            msg["forwarded_from"] = forwarded
+        ch["messages"].append(msg)
+
+    def insta(self, user, caption):
+        self.n += 1
+        self.ig.append(
+            {"id": f"179{self.n:014d}", "media_type": "IMAGE", "caption": caption, "username": user,
+             "permalink": f"https://www.instagram.com/p/DEMO{self.n}/", "like_count": 3,
+             "comments_count": 0, "timestamp": self.when().strftime("%Y-%m-%dT%H:%M:%S+0000")}
+        )  # fmt: skip
 
 
-def link_to(key: str) -> str:
-    """Lien qui cite l'élément `key` (`web:domaine` ou `telegram:canal`)."""
-    eco, ident = key.split(":", 1)
-    return f"https://{ident}/page" if eco == "web" else f"https://t.me/{ident}/1"
-
-
-def build(seed: int = 11) -> tuple[Corpus, dict[str, str]]:
+def build(seed: int = 11) -> Corpus:
     c = Corpus(seed)
     rnd = c.rnd
-    # --- membres solides des grappes A et B (S élevé), et leurs ancres -------------------
-    members_a = (
-        [("x", f"cuisinier_{i}") for i in range(12)]
-        + [("telegram", f"canal_cuisine_{i}") for i in range(12)]
-        + [("web", f"cuisine-{i}.test") for i in range(8)]
-        + [("x", "chef_demo"), ("web", "exemple-a.test")]
-    )
-    members_b = (
-        [("x", f"jardinier_{i}") for i in range(8)]
-        + [("telegram", f"canal_jardin_{i}") for i in range(8)]
-        + [("web", f"jardin-{i}.test") for i in range(4)]
-        + [("x", "jardin_demo")]
-    )
-    for terms, group in ((A_TERMS, members_a), (B_TERMS, members_b)):
-        for eco, ident in group:
-            for _ in range(28):
-                c.post(eco, ident, c.themed(terms))
-    # chaque membre cite quelques autres membres de sa grappe (liens du même écosystème)
-    for group in (members_a, members_b):
-        for eco, ident in group:
-            peers = [p for p in group if p != (eco, ident)]
-            for _ in range(2):
-                p_eco, p_id = rnd.choice(peers)
-                key = f"{p_eco}:{p_id}"
-                if eco == p_eco and eco != "web":
-                    c.post(
-                        eco,
-                        ident,
-                        c.themed(A_TERMS if group is members_a else B_TERMS),
-                        mentions=[p_id],
-                    )
-                elif p_eco in ("web", "telegram"):
-                    c.post(eco, ident, c.neutral(), links=[link_to(key)])
+    labels = {A: "Cuisine", B: "Potager", C: "Musique"}
+    low = {A: "cuisine", B: "potager", C: "musique"}
+    sites = {
+        g: [
+            (f"{low[g]}-info-{i}.test", f"{labels[g]} Info {i}")
+            for i in range(1, 7 if g != C else 6)
+        ]
+        for g in (A, B, C)
+    }
+    sites[A][0] = ("cuisine-demo.test", "Cuisine Demo")  # ancre
+    sites[C][0] = ("musique-demo.test", "Musique Demo")  # ancre
+    accounts = {  # (identifiant, nom, institutionnel ?)
+        A: [("chef_demo", "Atelier Chef Demo", True), ("alice_cuisine", "Alice Démo", False), ("journal_cuisine", "Journal Cuisine Demo", True), ("bob_four", "Bob Démo", False)],
+        B: [("jardin_demo", "Association Jardin Demo", True), ("clara_semis", "Clara Démo", False), ("radio_potager", "Radio Potager Demo", True)],
+        C: [("orchestre_demo", "Orchestre Demo Officiel", True), ("denis_guitare", "Denis Démo", False)],
+    }  # fmt: skip
+    channels = {  # clé -> (nom affiché, id natif, identifiant public connu ou None)
+        A: [("c1", "Canal Cuisine Un", 1001, "canal_cuisine_un"), ("c2", "Café Crème Actu", 1002, None), ("c3", "Chaîne Recettes", 1003, None)],
+        B: [("j1", "Canal Jardin", 2001, None), ("j2", "Canal Jardin", 2002, None), ("j3", "Canal Potager Trois", 2003, "canal_potager_trois")],
+        C: [("m1", "Canal Musique Un", 3001, "canal_musique_un"), ("m2", "Scène Ouverte", 3002, None)],
+    }  # fmt: skip
+    public = {"c1": "canal_cuisine_un", "c2": "cafe_creme_actu", "c3": "chaine_recettes", "j1": "canal_jardin",
+              "j2": "canal_jardin", "j3": "canal_potager_trois", "m1": "canal_musique_un", "m2": "scene_ouverte"}  # fmt: skip
 
-    # --- cibles de recoupement (texte propre neutre : S ≈ 0) ----------------------------
-    attendu: dict[str, str] = {}
+    def links_to_members(g, k=2):
+        out = []
+        for _ in range(k):
+            kind = rnd.choice(["web", "tg", "x"])
+            if kind == "web":
+                out.append(f"https://{rnd.choice(sites[g])[0]}/")
+            elif kind == "tg":
+                out.append(f"https://t.me/{public[rnd.choice([ch[0] for ch in channels[g]])]}")
+            else:
+                out.append(f"https://x.com/{rnd.choice(accounts[g])[0]}")
+        return out
 
-    def target(eco, ident, expected):
-        for _ in range(3):
-            c.post(eco, ident, c.neutral())
-        attendu[f"{eco}:{ident}"] = expected
-
-    xs_a = [m for m in members_a if m[0] == "x"][:5]
-    tg_a = [m for m in members_a if m[0] == "telegram"][:3]
-    web_a = [m for m in members_a if m[0] == "web"][:3]
-
-    # validé : ≥ 3 citants membres, 3 écosystèmes
-    target("web", "cible-valide.test", "valide")
-    for eco, ident in xs_a[:3] + tg_a[:2] + web_a[:2]:
-        c.post(eco, ident, c.neutral(), links=[link_to("web:cible-valide.test")])
-    target("telegram", "cible_valide_tg", "valide")
-    for eco, ident in xs_a[:3] + web_a[:2] + tg_a[:2]:
-        c.post(eco, ident, c.neutral(), links=[link_to("telegram:cible_valide_tg")])
-    # refusé : un seul écosystème (x uniquement)
-    target("x", "cible_mono_eco", "refuse")
-    for _, ident in xs_a:
-        c.post("x", ident, c.neutral(), mentions=["cible_mono_eco"])
-    # refusé : trop peu de citants (2)
-    target("web", "cible-peu-citee.test", "refuse")
-    for eco, ident in (xs_a[0], tg_a[0]):
-        c.post(eco, ident, c.neutral(), links=[link_to("web:cible-peu-citee.test")])
-    # refusé : citants non membres (bruit, 3 écosystèmes)
-    target("web", "cible-bruit.test", "refuse")
-    for i in range(6):
-        eco = ("x", "telegram", "web")[i % 3]
-        ident = f"bruit_{i}" if eco != "web" else f"bruit-{i}.test"
-        c.post(eco, ident, c.neutral(), links=[link_to("web:cible-bruit.test")])
-    # refusé : citations hors fenêtre (> 180 jours avant la plus récente)
-    target("web", "cible-perimee.test", "refuse")
-    for eco, ident in xs_a[:3] + tg_a[:2] + web_a[:2]:
-        c.post(
-            eco,
-            ident,
-            c.neutral(),
-            links=[link_to("web:cible-perimee.test")],
-            ts=BASE - timedelta(days=400 + rnd.randrange(30)),
-        )
-    # ambigu : texte propre mi-A mi-B
-    for _ in range(6):
-        c.post("x", "mixte", " ".join(rnd.sample(A_TERMS, 3) + rnd.sample(B_TERMS, 3)))
-    attendu["x:mixte"] = "ambigu"
-    # circulaire : trois sources neutres qui se citent entre elles
+    # --- membres solides ------------------------------------------------------------------
+    for g in (A, B, C):
+        for dom, name in sites[g]:
+            for _ in range(14):
+                c.page(
+                    dom,
+                    name,
+                    c.themed(g),
+                    links=links_to_members(g, rnd.randrange(0, 3))
+                    + rnd.choice(
+                        [
+                            [],
+                            ["https://t.me/+InvitationPrivee"],
+                            ["https://www.instagram.com/p/DEMOXYZ/"],
+                            ["https://x.com/i/web/status/1"],
+                        ]
+                    ),
+                )
+        for handle, name, _inst in accounts[g]:
+            for _ in range(10):
+                c.tweet(
+                    handle,
+                    name,
+                    c.themed(g),
+                    urls=[l for l in links_to_members(g, 1) if "x.com" not in l],
+                )
+        for key, name, cid, _pub in channels[g]:
+            for _ in range(12):
+                c.message(
+                    key,
+                    name,
+                    cid,
+                    c.themed(g),
+                    links=[l for l in links_to_members(g, 1) if "t.me" in l or ".test" in l],
+                )
     for i in range(3):
-        for _ in range(4):
-            c.post("x", f"circ{i}", c.neutral(), mentions=[f"circ{(i + 1) % 3}"])
-        attendu[f"x:circ{i}"] = "non_classe"
+        c.insta(
+            f"insta_cuisine_{i}",
+            f"{c.themed(A)} https://cuisine-info-{i + 1}.test/ @insta_cuisine_{(i + 1) % 3}",
+        )
 
-    # --- bruit : sources neutres, doublons, dates absentes, enregistrements invalides ----
-    for i in range(40):
-        eco = ("x", "telegram", "web")[i % 3]
-        ident = f"neutre_{i}" if eco != "web" else f"neutre-{i}.test"
-        for _ in range(14):
-            c.post(eco, ident, c.neutral(), ts=None if rnd.random() < 0.1 else "auto")
-    c.x.extend(rnd.sample(c.x, 40))  # doublons exacts
-    c.tg.append({"text": "sans canal"})
-    c.web.append({"title": "sans url"})
-    return c, attendu
+    # --- cibles de recoupement (texte propre neutre) -------------------------------------
+    att = c.attendu["entites"]
+
+    def cible(domain, name, expected, eco="web"):
+        for _ in range(3):
+            if eco == "web":
+                c.page(domain, name, c.neutral())
+        att[f"web:{domain}"] = expected
+
+    def cited_by(g, target_url, k):  # k citants de la grappe g : web, X, Telegram, par tours
+        pool = (
+            [("web", s) for s in sites[g]]
+            + [("x", a) for a in accounts[g]]
+            + [("tg", ch) for ch in channels[g]]
+        )
+        for kind, who in pool[:k]:
+            if kind == "web":
+                c.page(who[0], who[1], c.neutral(), links=[target_url])
+            elif kind == "x":
+                c.tweet(who[0], who[1], c.neutral(), urls=[target_url])
+            else:
+                c.message(who[0], who[1], who[2], c.neutral(), links=[target_url])
+
+    for g, dom, name in (
+        (A, "cible-valide-a.test", "Cible Validée Cuisine"),
+        (B, "cible-valide-b.test", "Cible Validée Jardin"),
+        (C, "cible-valide-c.test", "Cible Validée Musique"),
+    ):
+        cible(dom, name, {"grappe": g, "via": "recoupement"})
+        cited_by(g, f"https://{dom}/", 7)
+    cible("cible-peu-citee.test", "Cible Peu Citée", {"refus": "citants"})
+    cited_by(A, "https://cible-peu-citee.test/", 2)
+    cible("cible-hors-fenetre.test", "Cible Hors Fenêtre", {"refus": "fenetre"})
+    for who in (sites[A][1], sites[A][2], sites[A][3]):
+        c.page(who[0], who[1], c.neutral(), links=["https://cible-hors-fenetre.test/"], old=True)
+    for who in (accounts[A][0], accounts[A][1]):
+        c.tweet(who[0], who[1], c.neutral(), urls=["https://cible-hors-fenetre.test/"], old=True)
+    # mono-écosystème : 5 sites web seulement citent la cible (un seul écosystème)
+    cible("cible-mono-eco.test", "Cible Mono Écosystème", {"refus": "ecosysteme"})
+    for dom, name in sites[A][:5]:
+        c.page(dom, name, c.neutral(), links=["https://cible-mono-eco.test/"])
+    # citants non membres : 6 sources neutres de 3 écosystèmes
+    cible("cible-bruit.test", "Cible Bruit", {"refus": "non_membres"})
+    for i in range(6):
+        link = "https://cible-bruit.test/"
+        (
+            c.page(f"bruit-{i}.test", f"Bruit {i}", c.neutral(), links=[link])
+            if i % 3 == 0
+            else c.tweet(f"bruit_{i}", f"Bruit {i}", c.neutral(), urls=[link])
+            if i % 3 == 1
+            else c.message(f"b{i}", f"Canal Bruit {i}", 9000 + i, c.neutral(), links=[link])
+        )
+    # cercle fermé de sources neutres qui se citent (mono-écosystème, non membres)
+    ring = [(f"cercle-{i}.test", f"Cercle {i}") for i in range(5)]
+    for i, (dom, name) in enumerate(ring):
+        for _ in range(3):
+            c.page(dom, name, c.neutral(), links=[f"https://{ring[(i + 1) % 5][0]}/"])
+        att[f"web:{dom}"] = {"refus": "cercle"}
+
+    # --- ambiguïtés, oppositions, chevauchements -------------------------------------------
+    for _ in range(8):  # opposition : cuisine ET jardinage
+        c.page(
+            "mixte-ab.test",
+            "Mixte Cuisine Jardin",
+            " ".join(rnd.sample(TERMS[A][:4], 3) + rnd.sample(TERMS[B][:4], 3)),
+        )
+    att["web:mixte-ab.test"] = {"statut": "ambigu"}
+    for _ in range(8):  # pas d'opposition : seule la marge décide (jardinage et musique à égalité)
+        c.page(
+            "mixte-bc.test",
+            "Mixte Jardin Musique",
+            " ".join(rnd.sample(TERMS[B][:4], 3) + rnd.sample(TERMS[C][:4], 3)),
+        )
+    att["web:mixte-bc.test"] = {"statut": "ambigu"}
+    for _ in range(8):  # chevauchement de lexique : « marché » compte pour A et pour B
+        c.page("marche-info.test", "Marché Info", "marché marché marché " + c.neutral())
+    att["web:marche-info.test"] = {"statut": "ambigu_ou_faible"}
+    for _ in range(6):  # sources sans rapport
+        c.page("sans-rapport.test", "Sans Rapport", c.neutral())
+    att["web:sans-rapport.test"] = {"statut": "non_classe"}
+
+    # --- noms de personnes et comptes sans nom --------------------------------------------
+    c.insta("insta_sans_nom", c.themed(B))  # Instagram ne donne aucun nom lisible
+    # --- ce que doit produire la chaîne complète (intention de conception) ---------------------
+    a = c.attendu
+    a["resultat"] = {
+        A: ["Café Crème Actu", "Canal Cuisine Un", "Chaîne Recettes", "Cible Validée Cuisine", "Cuisine Demo",
+            *[f"Cuisine Info {i}" for i in range(2, 7)], "Journal Cuisine Demo"],
+        B: ["Association Jardin Demo", "Canal Jardin", "Canal Potager Trois", "Cible Validée Jardin",
+            *[f"Potager Info {i}" for i in range(1, 7)], "Radio Potager Demo"],
+        C: ["Canal Musique Un", "Cible Validée Musique", "Musique Demo",
+            *[f"Musique Info {i}" for i in range(2, 6)], "Orchestre Demo Officiel", "Scène Ouverte"],
+    }  # fmt: skip
+    a["hors_resultat"] = [
+        "Alice Démo", "Bob Démo", "Clara Démo", "Denis Démo",  # personnes physiques
+        "Atelier Chef Demo",  # aucun indice institutionnel explicite : en cas de doute, une personne
+        "Cible Peu Citée", "Cible Hors Fenêtre", "Cible Mono Écosystème", "Cible Bruit",  # recoupements refusés
+        "Mixte Cuisine Jardin", "Mixte Jardin Musique", "Marché Info",  # ambigus ou faibles
+        "Sans Rapport", *[f"Cercle {i}" for i in range(5)],
+    ]  # fmt: skip
+    a["canaux"] = {
+        "homonymes": ["telegram:canal_jardin", "telegram:canal_jardin~2002"],
+        "hypothese": ["telegram:cafe_creme_actu", "telegram:chaine_recettes", "telegram:canal_jardin"],
+        "exacts": ["telegram:canal_cuisine_un", "telegram:canal_potager_trois", "telegram:canal_musique_un"],
+    }  # fmt: skip
+    return c
 
 
-def write(out: Path, seed: int = 11) -> dict[str, str]:
-    c, attendu = build(seed)
-    for name, rows in (("x", c.x), ("telegram", c.tg), ("web", c.web)):
-        d = out / name
-        d.mkdir(parents=True, exist_ok=True)
-        with (d / f"{name}.jsonl").open("w", encoding="utf-8") as f:
-            for r in rows:
-                f.write(json.dumps(r, ensure_ascii=False) + "\n")
-    (out / "attendu.json").write_text(json.dumps(attendu, indent=2, sort_keys=True), "utf-8")
-    return attendu
+def write(out: Path, seed: int = 11) -> dict:
+    c = build(seed)
+    if out.exists():
+        shutil.rmtree(out)
+    for sub in ("x", "telegram", "instagram", "web", "config/grappes"):
+        (out / sub).mkdir(parents=True, exist_ok=True)
+    for handle, acc in sorted(c.x.items()):
+        users = [{"id": f"id_{handle}", "username": handle, "name": acc["name"]}]
+        users += [
+            {"id": f"id_{m}", "username": m, "name": c.x[m]["name"]}
+            for m in sorted(c.x)
+            if m != handle
+        ][:0]
+        doc = {
+            "data": acc["tweets"],
+            "includes": {"users": users},
+            "meta": {"result_count": len(acc["tweets"])},
+        }
+        # les mentions portent username et id : résolues sans includes supplémentaire
+        (out / "x" / f"x_{handle}.json").write_text(json.dumps(doc, ensure_ascii=False), "utf-8")
+    for key, ch in sorted(c.tg.items()):
+        msgs = [
+            {
+                "id": 1,
+                "type": "service",
+                "action": "create_channel",
+                "date": "2026-01-01T00:00:00",
+                "date_unixtime": "1767225600",
+            },
+            *ch["messages"],
+        ]
+        doc = {"name": ch["name"], "type": "public_channel", "id": ch["id"], "messages": msgs}
+        (out / "telegram" / f"telegram_{key}.json").write_text(
+            json.dumps(doc, ensure_ascii=False), "utf-8"
+        )
+    (out / "instagram" / "instagram_1.json").write_text(
+        json.dumps(
+            {"data": c.ig, "paging": {"cursors": {"before": "B", "after": "A"}}}, ensure_ascii=False
+        ),
+        "utf-8",
+    )
+    with (out / "web" / "web.jsonl").open("w", encoding="utf-8") as f:
+        for r in c.web:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    # configuration : 3 grappes, table Telegram, scoring du dépôt
+    root = Path(__file__).resolve().parents[1] / "config"
+    shutil.copy(root / "scoring.yaml", out / "config" / "scoring.yaml")
+    for gid, (label, anchors, opp) in GRAPPES_YAML.items():
+        lines = [f"id: {gid}", f'label: "{label}"', "lexicon:", "  terms:"]
+        lines += [f'    "{t}": 1.0' for t in TERMS[gid]]
+        lines += ["anchors:"] + [f'  - "{a}"' for a in anchors]
+        if opp:
+            lines += ["oppositions:"] + [f'  - "{o}"' for o in opp]
+        (out / "config" / "grappes" / f"{gid.lower()}.yaml").write_text(
+            "\n".join(lines) + "\n", "utf-8"
+        )
+    (out / "config" / "telegram.yaml").write_text(
+        "equivalences:\n"
+        + "".join(
+            f'  "{n}": {p}\n'
+            for k, n, i, p in [
+                ("c1", "Canal Cuisine Un", 1, "canal_cuisine_un"),
+                ("j3", "Canal Potager Trois", 3, "canal_potager_trois"),
+                ("m1", "Canal Musique Un", 4, "canal_musique_un"),
+            ]
+        ),
+        encoding="utf-8",
+    )
+    c.attendu["n_observations_approx"] = (
+        len(c.web)
+        + sum(len(a["tweets"]) for a in c.x.values())
+        + sum(len(h["messages"]) for h in c.tg.values())
+        + len(c.ig)
+    )
+    (out / "attendu.json").write_text(
+        json.dumps(c.attendu, ensure_ascii=False, indent=2, sort_keys=True), "utf-8"
+    )
+    return c.attendu
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit(__doc__)
-    write(Path(sys.argv[1]), int(sys.argv[2]) if len(sys.argv) > 2 else 11)
-    print("corpus écrit dans", sys.argv[1])
+    att = write(Path(sys.argv[1]), int(sys.argv[2]) if len(sys.argv) > 2 else 11)
+    print("corpus écrit dans", sys.argv[1], "—", att["n_observations_approx"], "observations")
