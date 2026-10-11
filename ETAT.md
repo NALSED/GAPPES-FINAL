@@ -27,17 +27,11 @@ Sujet : « Les acteurs des blocages et mobilisations étudiantes en France en ce
 * **Règles tenues** : `robots.txt` respecté (flux et pages), 1 s entre deux requêtes d'un domaine, arrêt sur 403, aucun réseau social visité, journal complet (`donnees/journal_recherche.log` : 25 requêtes Tavily, 36 Wikipédia/RSS, 195 pages sur l'ensemble des cycles de la journée, annulés compris).
 * **Défauts de mon code corrigés en route** : D48 (les 8 premiers articles Wikipédia prenaient tous les emplacements de « nouvelles sources » : plafond désormais partagé entre écosystèmes) et D49 (requêtes avec des variantes du même mot ; un mot répété suffisait à faire ingérer un article : deux radicaux distincts exigés).
 
-## Point bloquant du même type que Q22 : Q24 (décris-le et arrête-toi dessus)
+## Q24 : pondération Admiralty, registres, Tranco appliqués (D50 à D53)
 
-**Constat** : après ce cycle, 4 sites sont cités par au moins 3 sources (`lemonde.fr` par 4 articles Wikipédia, `huffingtonpost.fr`, `lexpress.fr`, `liberation.fr` par 3), mais **tous les citants sont de l'écosystème `wikipedia`**. Un recoupement exige 3 citants membres venant d'**au moins 2 écosystèmes**. Aucun citant `rss` n'existe, parce qu'un élément de flux RSS ne contient que titre, résumé et l'adresse de son propre article : il **ne cite personne**. Les pages web (Tavily) qui pourraient citer les mêmes sites sont rares : 8 pages visitées, une seule ingérée (66 résultats refusés pour proximité insuffisante, 4 pour `robots.txt`). Résultat : toujours **0 confirmée**, donc la boucle n'apprend ni mots ni seuils.
-
-**Pourquoi je m'arrête** : les pistes pour y remédier changent la règle de recoupement ou le sens de « écosystème », donc ce n'est pas un réglage :
-1. faire citer le média par son propre flux (`rss:liberation.fr` cite `web:liberation.fr`) : un site qui se cite lui-même, ce n'est pas un recoupement indépendant ;
-2. associer une entité nommée dans le texte d'un élément RSS à un site (extraction d'entités) : fonctionnalité nouvelle, hors du périmètre actuel ;
-3. ingérer beaucoup plus de pages web par cycle (quotas plus larges, seuil de proximité plus bas) : plus de volume, plus de bruit, plus de requêtes sur des sites tiers ;
-4. accepter que ce sujet reste « probable » tant qu'un fournisseur, comme un autre écosystème qui cite réellement des sites, n'est pas branché.
-
-Détail et défaut retenu : `QUESTIONS.md`, Q24. Je ne lance pas d'autre cycle réel dans cette situation : il coûterait des requêtes pour le même résultat.
+* **Fait** : fiabilité A à F par type de fournisseur (poids par centroïde de rang, aucun barème inventé), crédibilité 1 à 6, colonne `admiralty` dans `entites.csv` ; registres officiels (ESR par domaine : 241 domaines en cache ; SIRENE/RNA par nom exact, actif, unique) ; Tranco (liste 8PXYV du 2026-10-10, téléchargée une fois, cache 30 jours). 515 tests verts.
+* **Cycle réel après les trois points** (`rapports/cycle_2026-10-11_7.md`) : 4 nouvelles sources, sources par lettre B : 2, C : 11, D : 1, **aucune en A** (le seul nom web interrogé, « Le Bonbon », n'a pas de correspondance exacte), **0 entité confirmée**, 7 rangées « probable ». Rien n'a changé de grappe ; l'ajustement automatique du seuil d'ingestion (20 → 25) a été proposé par le cycle.
+* **Lecture honnête** : la pondération rend la confirmation *plus rapide* quand deux écosystèmes citent la même cible (tests), mais elle ne crée pas de recoupement : tant que les citants d'une cible sont tous de l'écosystème `wikipedia`, la règle des deux écosystèmes bloque, comme voulu (D50, D51). Ce n'est pas un bug ; le résultat reste « probable » pour ce sujet. Les voies restantes de Q24 (extraction d'entités dans le texte RSS, plus de pages web) changent la règle ou le volume : non traitées sans décision de Sednal.
 
 ## Limites connues
 

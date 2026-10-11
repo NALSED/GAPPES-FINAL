@@ -182,3 +182,7 @@ ingestion_termes_min: 2     # radicaux différents du lexique exigés dans un te
 
 À la fin de chaque cycle, la boucle regarde quelle part des sources ingérées est ensuite rangée dans un sujet : moins d'un tiers, le seuil monte de 5 points ; plus de 80 % avec au moins 20 % des résultats refusés pour proximité insuffisante, il baisse ; sinon, ou avec moins de 3 sources, il ne bouge pas. Il reste dans [min ; max]. Chaque décision et sa raison figurent dans le rapport de cycle (section « Mots appris, seuils »). Un retour en arrière restaure aussi le seuil.
 
+
+## Fiabilité des sources (code Admiralty, registres, Tranco)
+
+Chaque source reçoit une lettre de fiabilité A à F selon `config/fiabilite_sources.yaml` (A : registre officiel ; B : média établi nommé ; C : Wikipédia ; D : web générique ; E, F : inconnu). Les poids viennent d'une méthode publiée (centroïde de rang), pas d'un barème saisi. Le classement Tranco affine seulement les sources D, sans jamais les placer au niveau de B ou A. Les registres officiels (`config/registres.yaml`) placent en A une source dont le site ou le nom correspond à un organisme actif. Une source, même A, ne confirme jamais seule : deux écosystèmes restent exigés. Les colonnes `admiralty` (ex. « B2 ») d'`entites.csv` donnent la lettre et la crédibilité 1 à 6 ; `sorties/resultat.csv` ne change pas.

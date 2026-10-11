@@ -1,4 +1,4 @@
-# Rapport du cycle 9 — 11/10/2026 08:15
+# Rapport du cycle 10 — 11/10/2026 09:10
 
 **Mode : réel.** Cycle terminé normalement.
 
@@ -8,41 +8,37 @@ Aucune alerte.
 
 ## Sujets suivis
 
-* « Les acteurs des blocages et mobilisations étudiantes en France en ce moment » — 20 mot(s) de départ (amorcé pendant ce cycle)
+* « Les acteurs des blocages et mobilisations étudiantes en France en ce moment » — 20 mot(s) de départ
 
 ## Ce qui est entré
 
-* Requêtes de recherche : 12
+* Requêtes de recherche : 8
 * Résultats examinés : 113
-* Pages visitées : 8
-* Nouvelles sources : **10**
-  * fr/mouvement_lycéen_et_étudiant_de_2026_en_france
-  * fr/mouvements_lycéens
-  * letudiant.fr
-  * fr/mouvement_contre_le_contrat_première_embauche_de_2006
-  * liberation.fr
-  * lebonbon.fr
-  * fr/union_nationale_des_étudiants_de_france
-  * fr/mouvements_étudiants_en_france
-  * fr/mouvement_social_contre_la_réforme_des_retraites_en_france_de_2023
-  * fr/plan_étudiants
-* Observations ajoutées : **23**
+* Pages visitées : 5
+* Nouvelles sources : **4**
+  * fr/représentation_étudiante_dans_les_œuvres_universitaires
+  * fr/cocarde_étudiante
+  * fr/mouvement_des_gilets_jaunes
+  * fr/union_étudiante
+* Observations ajoutées : **4**
 * Refusé, et pourquoi :
-  * 66 × proximité insuffisante avec les sujets
-  * 6 × réseau social ou identité sans page : citation seulement, jamais lu
-  * 6 × personne physique (catégorie biographique)
-  * 4 × robots.txt : visite interdite ou illisible
-  * 4 × plafond de nouvelles sources atteint
-  * 1 × personne physique (texte biographique)
+  * 65 × proximité insuffisante avec les sujets
+  * 20 × document déjà ingéré
+  * 8 × personne physique (catégorie biographique)
+  * 5 × réseau social ou identité sans page : citation seulement, jamais lu
+  * 5 × robots.txt : visite interdite ou illisible
+  * 2 × page déjà ingérée
   * 1 × aucune catégorie lisible : en cas de doute, une personne
-  * 1 × page déjà ingérée
-  * 1 × page trop éloignée des sujets
+* Fiabilité des sources (code Admiralty) : B : 2, C : 11, D : 1
+* Registres officiels : 4 requête(s) ce cycle, 0 source(s) placée(s) en A
+* Classement Tranco : liste 8PXYV du 2026-10-10T22:00:02.102152 (tranco-list.eu)
 
 ## Où en sont les entités
 
-* Entités connues : 10
+* Entités connues : 14
 * Rangées dans une grappe : 7 (dont 0 ambiguës)
 * Confirmées (recoupées sur au moins deux écosystèmes) : 0
+* Avant ce cycle : 7 rangées, 0 confirmées
 * Une source qui n'est pas recoupée reste « probable » au mieux.
 
 ## Ce qui a changé de grappe
@@ -54,7 +50,7 @@ Aucune entité n'a changé de grappe.
 **Les acteurs des blocages et mobilisations étudiantes en France en ce moment** : 0 entité(s) confirmée(s) fiable(s) sur 0
 * 0 entité(s) confirmée(s) fiable(s) < 3 : rien appris
 * Seuils inchangés (0 entité(s) confirmée(s) < 3 : seuils inchangés).
-* Seuil d'ingestion inchangé (20) : pertinence satisfaisante (7 sur 10 rangée(s), 58% refusés pour proximité).
+* **Seuil d'ingestion modifié** : 20 → 25. Raison : seulement 0 source(s) sur 4 ingérée(s) rangée(s) dans un sujet (0%) : trop de bruit.
 
 ## Stabilité
 
