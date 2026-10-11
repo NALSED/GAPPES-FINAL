@@ -151,6 +151,14 @@ class Reliability:
                 f = f + (self.table.factors["C"] - f) * s
         return f
 
+    def text_factor(self, ref: str) -> float:
+        """Facteur d'une MENTION dans un texte libre (D54) : la lettre juste en dessous de celle de la source (une
+        mention pèse moins qu'un lien explicite) ; pas de Tranco, pas de création de barème : mêmes facteurs ROC."""
+        if not self.table.enabled:
+            return 1.0
+        i = LETTERS.index(self.letter(ref))
+        return self.table.factors[LETTERS[min(i + 1, len(LETTERS) - 1)]]
+
     @property
     def fingerprint(self) -> str:
         """Empreinte de ce qui change les poids hors configuration (registres, Tranco) : entre dans le `run_id`."""

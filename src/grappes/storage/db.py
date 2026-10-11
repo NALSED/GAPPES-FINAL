@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS observations (
 CREATE TABLE IF NOT EXISTS citations (
     citer TEXT NOT NULL, cited TEXT NOT NULL, ecosystem TEXT NOT NULL,
     obs_id TEXT NOT NULL, ts TEXT, run_id TEXT NOT NULL, hypothesis INTEGER NOT NULL DEFAULT 0,
-    fiabilite_admiralty TEXT, credibilite_admiralty INTEGER
+    fiabilite_admiralty TEXT, credibilite_admiralty INTEGER, via TEXT NOT NULL DEFAULT 'lien'
 );
 CREATE TABLE IF NOT EXISTS entities (
     entity_id TEXT PRIMARY KEY, type TEXT NOT NULL, primary_ref TEXT NOT NULL UNIQUE,
@@ -94,6 +94,7 @@ class Database:
                 ("hypothesis", "INTEGER NOT NULL DEFAULT 0"),
                 ("fiabilite_admiralty", "TEXT"),
                 ("credibilite_admiralty", "INTEGER"),
+                ("via", "TEXT NOT NULL DEFAULT 'lien'"),
             ],
         }
         for table, columns in wanted.items():
@@ -299,7 +300,7 @@ class Database:
             )
             c.executemany(
                 "INSERT INTO citations(citer, cited, ecosystem, obs_id, ts, run_id, hypothesis,"
-                " fiabilite_admiralty, credibilite_admiralty) VALUES (?,?,?,?,?,?,?,?,?)",
+                " fiabilite_admiralty, credibilite_admiralty, via) VALUES (?,?,?,?,?,?,?,?,?,?)",
                 [
                     (
                         ci.citer,
@@ -311,6 +312,7 @@ class Database:
                         int(ci.hypothesis),
                         ci.reliability or None,
                         ci.credibility,
+                        ci.via,
                     )
                     for ci in citations
                 ],

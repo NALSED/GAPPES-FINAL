@@ -118,7 +118,7 @@ def assign(
     reliability: Reliability | None = None,
 ) -> AssignResult:
     rel = reliability or Reliability(cfg.fiabilite)
-    citations = build_citations(observations)
+    citations = build_citations(observations, names)
     texts_own: dict[str, list[Observation]] = defaultdict(list)
     for o in observations:
         texts_own[o.source.key].append(o)
@@ -166,7 +166,11 @@ def assign(
                 [score_proximity(o.text, kw, scale=g.scale) for o in context], sc.top_n_observations
             )
     firm = [c for c in citations if not c.hypothesis]  # D25 : une hypothèse ne valide rien
-    anc = {g.grappe_id: anchor_scores(g, refs, firm) for g in cfg.grappes}
+    # les ancres ne se lisent que dans les liens explicites : une mention textuelle n'ancre rien (D54)
+    anc = {
+        g.grappe_id: anchor_scores(g, refs, [c for c in firm if c.via != "texte"])
+        for g in cfg.grappes
+    }
     windowed = filter_window(firm, sc.crossref.window_days)
 
     # itération 0 : amorçage sans E
@@ -206,8 +210,9 @@ def assign(
 
             known = prev_members[gid]
             records = validate_crossref(
-                windowed, gid, lambda ref, known=known: ref in known, weight, sc.crossref
-            )
+                windowed, gid, lambda ref, known=known: ref in known, weight, sc.crossref,
+                lambda ref: cfg.sources.weight(ref) * rel.text_factor(ref),
+            )  # fmt: skip
             for r in refs:
                 rec = records.get(r)
                 # E potentiel (citants membres) ; retenu seulement si le recoupement est validé
