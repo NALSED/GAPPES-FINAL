@@ -10,3 +10,9 @@ donnees/journal_recherche.log
 plugins/*.py
 !plugins/__init__.py
 config/secrets.env
+donnees/cycle.lock
+donnees/cycles.jsonl
+donnees/cycle.log
+donnees/instantanes/
+donnees/STOP
+config/apprentissage/
