@@ -89,7 +89,7 @@ def mesurer_classe(w: Wikidata, qid: str) -> dict:
 
 
 def phrase_de(label: str) -> str:
-    return f"Les organisations de type « {label} » en France"
+    return f"{label[:1].upper()}{label[1:]} en France"
 
 
 def tirer(
@@ -111,6 +111,8 @@ def tirer(
         if not 20 <= m["n"] <= 200:
             continue
         lab = classes[qid]["label"]
+        if any(x.notes == lab for x in out):
+            continue  # deux classes de même libellé : sujets non disjoints
         out.append(
             Sujet(
                 id=f"g-{qid.lower()}",
@@ -208,3 +210,52 @@ TEMOINS: list[
         difficulte="temoin",
     ),
 ]
+
+
+# --- composition des trois jeux ------------------------------------------------------------------------------------
+JEUX = ("dev", "validation", "test")
+PAR_STRATE = 2  # sujets positifs par difficulté et par jeu (+ un contrôle négatif par jeu)
+PREFERENCE = {"handball-pro": "dev", "festivals-elec": "dev", "cac40": "validation", "supporters-foot": "validation"}
+
+
+def composer(w: Wikidata, generes: list[Sujet], seed: int = SEED, log=print) -> list[Sujet]:
+    """Trois jeux disjoints, même proportion de difficultés (2 faciles, 2 moyens, 2 difficiles + 1 témoin).
+
+    La difficulté des sujets d'amorçage est calculée comme celle des sujets générés (mêmes seuils de terciles) :
+    présence de leurs acteurs dans Wikidata (site officiel) et dans les registres (SIREN)."""
+    ordre = sorted(generes, key=lambda s: (-(s.part_site + s.part_siren) / 2, s.id))
+    n = len(ordre)
+    seuils = ((ordre[n // 3 - 1].part_site + ordre[n // 3 - 1].part_siren) / 2, (ordre[2 * n // 3 - 1].part_site + ordre[2 * n // 3 - 1].part_siren) / 2)
+    difficultes(generes)
+    amorces = []
+    for s in AMORCAGE:
+        ref = build(w, s.id, s.phrase, s.where, s.classes_ok)
+        s.r = ref.r
+        s.part_site = round(sum(1 for e in ref.entities if e.domains) / ref.r, 3) if ref.r else 0.0
+        s.part_siren = round(sum(1 for e in ref.entities if e.siren) / ref.r, 3) if ref.r else 0.0
+        score = (s.part_site + s.part_siren) / 2
+        s.difficulte = "facile" if score >= seuils[0] else "moyen" if score >= seuils[1] else "difficile"
+        amorces.append(s)
+        log(f"{s.id} : R={s.r} site={s.part_site} siren={s.part_siren} -> {s.difficulte}")
+    rng = random.Random(seed)
+    place: dict[tuple[str, str], list[Sujet]] = {(j, d): [] for j in JEUX for d in ("facile", "moyen", "difficile")}
+    for s in amorces:
+        pref = PREFERENCE.get(s.id)
+        cands = ([pref] if pref else []) + [j for j in JEUX if j != pref]
+        for j in cands:
+            if len(place[j, s.difficulte]) < PAR_STRATE:
+                s.jeu = j
+                place[j, s.difficulte].append(s)
+                break
+    pool = {d: [s for s in generes if s.difficulte == d] for d in ("facile", "moyen", "difficile")}
+    for d in pool:
+        rng.shuffle(pool[d])
+    for (j, d), lst in place.items():
+        while len(lst) < PAR_STRATE and pool[d]:
+            s = pool[d].pop()
+            s.jeu = j
+            lst.append(s)
+    temoins = list(TEMOINS)
+    for j, t in zip(JEUX, temoins, strict=True):
+        t.jeu = j
+    return [s for lst in place.values() for s in lst] + temoins

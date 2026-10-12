@@ -1,40 +1,53 @@
-# Rapport du cycle 15 — 11/10/2026 17:12
+# Rapport du cycle 1 — 12/10/2026 05:59
 
 **Mode : réel.** Cycle terminé normalement.
 
 ## Alertes
 
-Aucune alerte.
+* Sites qui ont refusé les visites (403/429 ou contrôle anti-robot), arrêt sur ces sites : academic.oup.com
 
 ## Sujets suivis
 
-* « Les acteurs des blocages et mobilisations étudiantes en France en ce moment » — 20 mot(s) de départ
+* « Les clubs de handball professionnels en France » — 20 mot(s) de départ (amorcé pendant ce cycle)
 
 ## Ce qui est entré
 
-* Requêtes de recherche : 9
-* Résultats examinés : 139
-* Pages visitées : 2
-* Nouvelles sources : **0**
-* Observations ajoutées : **0**
+* Requêtes de recherche : 4
+* Résultats examinés : 58
+* Pages visitées : 77
+* Nouvelles sources : **14**
+  * clubfrance.org.mx
+  * ligue-feminine-handball.fr
+  * diplomeo.com
+  * franceclubusa.com
+  * chabalahandball.fr
+  * flyovergreen.com
+  * alumni.georgetown.edu
+  * istreshandball.com
+  * englandhandball.com
+  * clubfrancetaiwan.com
+  * handball-plandecuques.fr
+  * metz-handball.com
+  * book.golf
+  * today.advancement.georgetown.edu
+* Observations ajoutées : **38**
 * Refusé, et pourquoi :
-  * 106 × proximité insuffisante avec les sujets
-  * 19 × document déjà ingéré
-  * 6 × personne physique (catégorie biographique)
-  * 2 × robots.txt : visite interdite ou illisible
-  * 1 × personne physique (texte biographique)
-  * 1 × aucune catégorie lisible : en cas de doute, une personne
-  * 1 × page déjà ingérée
-* Fiabilité des sources (code Admiralty) : B : 3, C : 12, D : 2
-* Registres officiels : 0 requête(s) ce cycle, 0 source(s) placée(s) en A
+  * 44 × plafond de pages par domaine atteint
+  * 36 × robots.txt : visite interdite ou illisible
+  * 9 × réseau social ou identité sans page : citation seulement, jamais lu
+  * 8 × proximité insuffisante avec les sujets
+  * 1 × échec de la requête (SearchError)
+  * 1 × refus du serveur (403/429) : arrêt sur ce domaine
+  * 1 × la page demande à ne pas être indexée : ignorée
+* Fiabilité des sources (code Admiralty) : A : 3, D : 11
+* Registres officiels : 16 requête(s) ce cycle, 3 source(s) placée(s) en A
 * Classement Tranco : liste 8PXYV du 2026-10-10T22:00:02.102152 (tranco-list.eu)
 
 ## Où en sont les entités
 
-* Entités connues : 17
-* Rangées dans une grappe : 8 (dont 0 ambiguës)
+* Entités connues : 14
+* Rangées dans une grappe : 14 (dont 0 ambiguës)
 * Confirmées (recoupées sur au moins deux écosystèmes) : 0
-* Avant ce cycle : 8 rangées, 0 confirmées
 * Une source qui n'est pas recoupée reste « probable » au mieux.
 
 ## Ce qui a changé de grappe
@@ -43,10 +56,9 @@ Aucune entité n'a changé de grappe.
 
 ## Mots appris, seuils
 
-**Les acteurs des blocages et mobilisations étudiantes en France en ce moment** : 0 entité(s) confirmée(s) fiable(s) sur 0
+**Les clubs de handball professionnels en France** : 0 entité(s) confirmée(s) fiable(s) sur 0
 * 0 entité(s) confirmée(s) fiable(s) < 3 : rien appris
 * Seuils inchangés (0 entité(s) confirmée(s) < 3 : seuils inchangés).
-* Seuil d'ingestion inchangé (25) : 0 source(s) ingérée(s) < 3 : trop peu pour juger de la pertinence.
 
 ## Stabilité
 

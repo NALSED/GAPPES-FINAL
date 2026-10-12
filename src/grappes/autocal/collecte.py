@@ -55,10 +55,10 @@ raison: "résultat Tavily (général) pour « {mot_cle} »"
 DERIVES_WIKIDATA = ("wikipedia.org", "wikidata.org", "wikimedia.org", "wikiwand.com", "dbpedia.org")
 
 PLAFONDS = {
-    "requetes_par_cycle": 6,
-    "pages_par_cycle": 150,
-    "nouvelles_sources_par_cycle": 150,
-    "elements_par_cycle": 400,
+    "requetes_par_cycle": 8,
+    "pages_par_cycle": 200,
+    "nouvelles_sources_par_cycle": 200,
+    "elements_par_cycle": 600,
     "profondeur": 1,
 }
 
