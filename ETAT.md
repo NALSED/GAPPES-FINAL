@@ -40,7 +40,7 @@ Décision de Sednal : « probable » est le niveau maximal accepté pour le suje
 
 * **`sorties/resultat_tsites.csv`** (`nom;ville;pays`, UTF-8 sans BOM, mêmes 8 noms que `resultat.csv`, même tri) écrit à chaque cycle ; `resultat.csv` inchangé. `export_tsites` (actif, `pays_defaut: FR`) ajouté à `config/autonomie.yaml`. Ville : uniquement celle d'un registre officiel (commune du siège SIRENE/RNA, commune ESR, 241 domaines ESR en cache avec leur commune) ; **aucune des 8 lignes actuelles n'a de ville** (aucune n'est appariée à un registre), colonne vide, rien d'inventé. Pays : FR par défaut. 533 tests verts. Cycle réel de validation : `rapports/cycle_2026-10-11_12.md`, 0 confirmée, 8 probables, sortie conforme.
 * **Timer** : quotidien à **10h00** (D60), vérifié par `systemctl --user list-timers` (prochain passage 2026-10-12 vers 10:02).
-* **À trancher par Sednal (Q25)** : écarter les articles Wikipédia de concepts ou d'événements (essai à blanc : 4 des 8 lignes). Rien n'est appliqué.
+* **Q25 close (D61)** : aucun filtre, toutes les sources conservées ; la ville est un résultat de trouver-sites (jamais inventée ici, vide sans registre).
 
 ## Limites connues
 
