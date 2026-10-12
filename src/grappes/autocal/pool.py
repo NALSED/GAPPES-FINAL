@@ -37,6 +37,7 @@ class Candidat:
     propre: bool = False  # l'entité a un texte propre (source lue)
     registres: set[str] = field(default_factory=set)  # registres qui la nomment (wikidata, sirene)
     ville: str = ""  # commune donnée par un registre, jamais déduite
+    ner_sites: dict[str, float] = field(default_factory=dict)  # éditeur -> confiance moyenne du modèle (noms dans les textes)
 
     @property
     def exportable_actuel(self) -> bool:
@@ -56,6 +57,7 @@ class Contexte:
     lues: set[str]  # sources dont on a lu le texte
     nommes: dict = field(default_factory=dict)  # organisations nommées dans les textes (chantier 2)
     decouverts: list = field(default_factory=list)  # entités de registre (chantier 1), archivées par sujet
+    memo_variantes: dict = field(default_factory=dict)  # regroupements nomenklatura déjà calculés
 
 
 def charger(cible: str | Path, cfg: Config | None = None) -> Contexte:

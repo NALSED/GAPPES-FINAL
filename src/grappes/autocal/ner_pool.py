@@ -40,6 +40,8 @@ def ajouter(
             )  # fmt: skip
             cands.append(c)
             par_nom[norm_name(n.nom)] = c
+        for site, conf in n.score_par_site.items():
+            c.ner_sites[site] = max(c.ner_sites.get(site, 0.0), conf)
         for oid in sorted(n.pages):
             if oid in obs_source:
                 cits.append((obs_source[oid], c.ref))

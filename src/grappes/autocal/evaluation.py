@@ -35,6 +35,9 @@ class Params:
     editeur_unique: bool = True  # une voix par éditeur (D58), comme dans le recoupement actuel
     nom_requis: bool = True
     registres: tuple[str, ...] = ()  # registres de découverte utilisés (wikidata, sirene) ; vide = système d'avant D63
+    variantes: bool = True  # variantes de noms regroupées par nomenklatura avant la notation (méthode « lr »)
+    seuil_variantes: float = 0.8
+    lr: tuple[tuple[str, float], ...] = ()  # surcharges des valeurs de config/lr.yaml (réglage Optuna)
     ner: bool = False  # entités nommées dans le texte (chantier 2, D63) ajoutées aux candidats et aux citations
     w_rw: float = 0.0  # poids de l'appartenance à Wikidata (classe du sujet) dans le score
     w_rs: float = 0.0  # poids de l'appartenance à SIRENE/RNA (existence, pas appartenance au sujet : D51)
@@ -88,6 +91,18 @@ def classer(ctx: Contexte, p: Params) -> list[Classe]:
 
         base, extra_cits = ajouter(ctx, base, ctx.nommes)
     cands = [c for c in base if (c.nom is not None or not p.nom_requis)]
+    if p.methode == "lr":
+        from grappes import vraisemblance as vr
+        from grappes.autocal import indice
+
+        cfg_lr = vr.charger().avec(**dict(p.lr))
+        if p.variantes:
+            cands = indice.fusion_variantes(ctx, cands, p.seuil_variantes)
+        rows = []
+        for c in cands:
+            lg = vr.total(indice.elements(ctx, c, cfg_lr), cfg_lr)
+            rows.append(Classe(c.ref, c.nom or c.nom_brut, 1.0 / (1.0 + 10 ** (-lg)), c.s / 100.0, lg, 0.0))
+        return sorted(rows, key=lambda r: (-r.score, r.ref))
     if p.methode == "actuel":
         seuil = (
             ctx.cfg.scoring.niveau_probable

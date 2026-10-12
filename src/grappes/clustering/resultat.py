@@ -151,18 +151,37 @@ def write_resultat(
     by_grappe = select_rows(result, cfg)
     everything = [row for rows in by_grappe.values() for row in rows]
     merged = merge_rows(everything, sfx)
-    paths = [_write(out / "resultat.csv", [n for n, _ in merged])]
-    if len(cfg.grappes) > 1:
-        for gid, rows in by_grappe.items():
-            slug = re.sub(r"[^\w.-]", "_", gid)
-            paths.append(
-                _write(out / f"resultat_{slug}.csv", [n for n, _ in merge_rows(rows, sfx)])
-            )
+    from grappes.sortie import LigneSortie, charger_profils
+    from grappes.sortie import ecrire as ecrire_profils
+
+    profils = {p.id: p for p in charger_profils(cfg.racine if cfg.racine is not None else "config")}
+    paths = []
+    if profils.get("resultat") is None or profils["resultat"].actif:
+        paths.append(_write(out / "resultat.csv", [n for n, _ in merged]))
+        if len(cfg.grappes) > 1:
+            for gid, rows in by_grappe.items():
+                slug = re.sub(r"[^\w.-]", "_", gid)
+                paths.append(
+                    _write(out / f"resultat_{slug}.csv", [n for n, _ in merge_rows(rows, sfx)])
+                )
+    else:
+        (out / "resultat.csv").unlink(missing_ok=True)
     if auto is None:
         auto = load_autonomy(cfg.racine) if cfg.racine is not None else Autonomy()
     tsites = out / "resultat_tsites.csv"
-    if auto.export_tsites_actif:
+    if auto.export_tsites_actif and (profils.get("tsites") is None or profils["tsites"].actif):
         paths.append(write_tsites(tsites, merged, auto, places))
     else:
         tsites.unlink(missing_ok=True)  # sortie désactivée : pas de fichier périmé
+    # profils configurables (D64) : tout autre profil (ex. `brut`), depuis les mêmes lignes retenues
+    places = places or {}
+    conf = {ref: c for rows in by_grappe.values() for _, c, ref in rows}
+    lignes = [
+        LigneSortie(
+            n, _town(places.get(ref, ("", ""))[0]), places.get(ref, ("", ""))[1] or auto.export_tsites_pays_defaut,
+            conf.get(ref), "", "non calibré (score historique du système)", [ref], [], "retenu",
+        )
+        for n, ref in merged
+    ]  # fmt: skip
+    paths += ecrire_profils(lignes, [p for p in profils.values()], out, ignorer=frozenset({"resultat", "tsites"}))
     return paths

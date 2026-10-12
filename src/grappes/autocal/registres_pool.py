@@ -47,7 +47,7 @@ def _groupes(ds: list[Decouvert]) -> list[dict]:
         if g is None:
             g = {"nom": d.nom, "registres": set(), "ids": {}, "ville": "", "domaine": "", "siren": ""}
             groupes.append(g)
-        g["registres"].add(d.registre)
+        g["registres"].add("sirene_naf" if d.registre == "sirene" and d.requete.startswith("NAF") else d.registre if d.registre != "sirene" else "sirene_nom")
         g["ids"].setdefault(d.registre, d.identifiant)
         g["ville"] = g["ville"] or d.ville
         g["domaine"] = g["domaine"] or d.domaine
@@ -72,7 +72,7 @@ def fusionner(ctx: Contexte, ds: list[Decouvert], sources: tuple[str, ...]) -> l
             c.registres = c.registres | g["registres"]
             c.ville = c.ville or g["ville"]
             continue
-        reg = "wikidata" if "wikidata" in g["registres"] else sorted(g["registres"])[0]
+        reg = "wikidata" if "wikidata" in g["registres"] else "sirene"
         ref = f"reg:{reg}:{g['ids'][reg]}" + (f"|{g['siren']}" if g["siren"] else "")
         cands.append(
             Candidat(ref, g["nom"], g["nom"], 0.0, "registre", 0.0, 0.0, 0.0, facteur=facteur,

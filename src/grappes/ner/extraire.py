@@ -169,6 +169,7 @@ class Nomme:
     sites: set[str] = field(default_factory=set)  # clés de site des pages
     scores: list[float] = field(default_factory=list)
     modeles: set[str] = field(default_factory=set)
+    score_par_site: dict[str, float] = field(default_factory=dict)  # éditeur -> meilleur score du modèle
 
 
 def norm_cle(nom: str) -> str:
@@ -189,6 +190,7 @@ def extraire(pages: list[tuple[str, str, str]], cfg: NerConfig, cache: Path | No
                 n.surfaces[nom] += 1
                 n.pages.add(oid)
                 n.sites.add(site)
+                n.score_par_site[site] = max(n.score_par_site.get(site, 0.0), me.score)
                 n.scores.append(me.score)
                 n.modeles.add(me.modele)
     for n in res.values():
