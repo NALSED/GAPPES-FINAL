@@ -1,0 +1,532 @@
+{
+ "jeu": "validation",
+ "sujets": [
+  {
+   "id": "cac40",
+   "phrase": "Les entreprises du CAC 40",
+   "difficulte": "facile",
+   "candidats": 695,
+   "p_max": 0.07082470297750247,
+   "n_p_tau": 0,
+   "sirene_total": 0,
+   "R": 40,
+   "Rprec": 0.35,
+   "Rprec_ex_aequo": 0.35,
+   "bpref": 0.5000000000000001,
+   "infAP": 0.2702713453587434,
+   "map": 0.2702712906762098,
+   "comptes": {
+    "juste": 37,
+    "faux": 130,
+    "non_verifiable": 517
+   },
+   "comptes_R": {
+    "juste": 14,
+    "faux": 14,
+    "non_verifiable": 12
+   },
+   "faux_p_tau": 0,
+   "rendus_si_N_egal_R": 40,
+   "remplissage": {
+    "20": 1.0,
+    "50": 1.0,
+    "100": 1.0,
+    "200": 1.0
+   },
+   "permutation": {
+    "observe": 0.35,
+    "permute_moyen": 0.054525000000000004,
+    "permute_p95": 0.125,
+    "chance_attendu": 0.054093567251461985,
+    "p_valeur": 0.0,
+    "k_justes": 37,
+    "n_rendus": 684
+   }
+  },
+  {
+   "id": "g-q654502",
+   "phrase": "Société par actions simplifiée en France",
+   "difficulte": "facile",
+   "candidats": 528,
+   "p_max": 0.10645579780178953,
+   "n_p_tau": 0,
+   "sirene_total": 160,
+   "R": 21,
+   "Rprec": 0.0,
+   "Rprec_ex_aequo": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "map": 0.0,
+   "comptes": {
+    "juste": 0,
+    "faux": 148,
+    "non_verifiable": 380
+   },
+   "comptes_R": {
+    "juste": 0,
+    "faux": 10,
+    "non_verifiable": 11
+   },
+   "faux_p_tau": 0,
+   "rendus_si_N_egal_R": 21,
+   "remplissage": {
+    "20": 1.0,
+    "50": 1.0,
+    "100": 1.0,
+    "200": 1.0
+   },
+   "permutation": {
+    "observe": 0.0,
+    "permute_moyen": 0.0,
+    "permute_p95": 0.0,
+    "chance_attendu": 0.0,
+    "p_valeur": 1.0,
+    "k_justes": 0,
+    "n_rendus": 528
+   }
+  },
+  {
+   "id": "g-q2190251",
+   "phrase": "Centre des arts en France",
+   "difficulte": "moyen",
+   "candidats": 392,
+   "p_max": 0.06299176861402547,
+   "n_p_tau": 0,
+   "sirene_total": 196,
+   "R": 89,
+   "Rprec": 0.0,
+   "Rprec_ex_aequo": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "map": 0.0,
+   "comptes": {
+    "juste": 0,
+    "faux": 84,
+    "non_verifiable": 308
+   },
+   "comptes_R": {
+    "juste": 0,
+    "faux": 38,
+    "non_verifiable": 51
+   },
+   "faux_p_tau": 0,
+   "rendus_si_N_egal_R": 89,
+   "remplissage": {
+    "20": 1.0,
+    "50": 1.0,
+    "100": 1.0,
+    "200": 1.0
+   },
+   "permutation": {
+    "observe": 0.0,
+    "permute_moyen": 0.0,
+    "permute_p95": 0.0,
+    "chance_attendu": 0.0,
+    "p_valeur": 1.0,
+    "k_justes": 0,
+    "n_rendus": 392
+   }
+  },
+  {
+   "id": "g-q56199177",
+   "phrase": "Conseil régional de l'ordre des experts-comptable en France",
+   "difficulte": "moyen",
+   "candidats": 284,
+   "p_max": 0.5992000021388423,
+   "n_p_tau": 0,
+   "sirene_total": 13,
+   "R": 23,
+   "Rprec": 0.043478260869565216,
+   "Rprec_ex_aequo": 0.043478260869565216,
+   "bpref": 0.04158790170132325,
+   "infAP": 0.015264890021742196,
+   "map": 0.01526474212730842,
+   "comptes": {
+    "juste": 3,
+    "faux": 77,
+    "non_verifiable": 203
+   },
+   "comptes_R": {
+    "juste": 1,
+    "faux": 8,
+    "non_verifiable": 14
+   },
+   "faux_p_tau": 0,
+   "rendus_si_N_egal_R": 23,
+   "remplissage": {
+    "20": 1.0,
+    "50": 1.0,
+    "100": 1.0,
+    "200": 1.0
+   },
+   "permutation": {
+    "observe": 0.043478260869565216,
+    "permute_moyen": 0.011347826086956524,
+    "permute_p95": 0.043478260869565216,
+    "chance_attendu": 0.01060070671378092,
+    "p_valeur": 0.241,
+    "k_justes": 3,
+    "n_rendus": 283
+   }
+  },
+  {
+   "id": "supporters-foot",
+   "phrase": "Les groupes de supporters de clubs de football français",
+   "difficulte": "difficile",
+   "candidats": 599,
+   "p_max": 0.06093526100566902,
+   "n_p_tau": 0,
+   "sirene_total": 0,
+   "R": 4,
+   "Rprec": 0.0,
+   "Rprec_ex_aequo": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "map": 0.0,
+   "comptes": {
+    "juste": 0,
+    "faux": 331,
+    "non_verifiable": 266
+   },
+   "comptes_R": {
+    "juste": 0,
+    "faux": 2,
+    "non_verifiable": 2
+   },
+   "faux_p_tau": 0,
+   "rendus_si_N_egal_R": 4,
+   "remplissage": {
+    "20": 1.0,
+    "50": 1.0,
+    "100": 1.0,
+    "200": 1.0
+   },
+   "permutation": {
+    "observe": 0.0,
+    "permute_moyen": 0.0,
+    "permute_p95": 0.0,
+    "chance_attendu": 0.0,
+    "p_valeur": 1.0,
+    "k_justes": 0,
+    "n_rendus": 597
+   }
+  },
+  {
+   "id": "g-q43009164",
+   "phrase": "Club de rugby à XV en France",
+   "difficulte": "difficile",
+   "candidats": 657,
+   "p_max": 0.06259959583388314,
+   "n_p_tau": 0,
+   "sirene_total": 29,
+   "R": 104,
+   "Rprec": 0.0673076923076923,
+   "Rprec_ex_aequo": 0.0673076923076923,
+   "bpref": 0.08006656804733728,
+   "infAP": 0.012154299464253709,
+   "map": 0.01215427795335298,
+   "comptes": {
+    "juste": 16,
+    "faux": 156,
+    "non_verifiable": 479
+   },
+   "comptes_R": {
+    "juste": 7,
+    "faux": 37,
+    "non_verifiable": 60
+   },
+   "faux_p_tau": 0,
+   "rendus_si_N_egal_R": 104,
+   "remplissage": {
+    "20": 1.0,
+    "50": 1.0,
+    "100": 1.0,
+    "200": 1.0
+   },
+   "permutation": {
+    "observe": 0.0673076923076923,
+    "permute_moyen": 0.02424038461538461,
+    "permute_p95": 0.04807692307692308,
+    "chance_attendu": 0.02457757296466974,
+    "p_valeur": 0.005,
+    "k_justes": 16,
+    "n_rendus": 651
+   }
+  },
+  {
+   "id": "temoin-dragons",
+   "phrase": "Les éleveurs de dragons verts en Corrèze",
+   "difficulte": "temoin",
+   "candidats": 167,
+   "p_max": 0.14925949962933224,
+   "n_p_tau": 0,
+   "sirene_total": 0,
+   "temoin": true
+  }
+ ],
+ "calibration": {
+  "n": 3155,
+  "positifs": 74,
+  "ece": 0.0076356309394103004,
+  "brier": 0.023038028922211268,
+  "brier_constant": 0.0229047043783796,
+  "p_max": 0.5992000021388423
+ },
+ "comparaisons": {
+  "complet (réglé, sans Wikidata)": {
+   "Rprec": 0.07679765886287625,
+   "Rprec_ex_aequo": 0.07679765886287625,
+   "bpref": 0.10360907829144345
+  },
+  "sans SIRENE/RNA": {
+   "Rprec": 0.07679765886287625,
+   "Rprec_ex_aequo": 0.07679765886287625,
+   "bpref": 0.10360907829144345
+  },
+  "sans noms lus": {
+   "Rprec": 0.014492753623188406,
+   "Rprec_ex_aequo": 0.020531400966183572,
+   "bpref": 0.008454106280193236
+  },
+  "sans proximité du texte propre": {
+   "Rprec": 0.08513099219620958,
+   "Rprec_ex_aequo": 0.08513099219620958,
+   "bpref": 0.10738302237484297
+  },
+  "sans écosystèmes": {
+   "Rprec": 0.07679765886287625,
+   "Rprec_ex_aequo": 0.07679765886287625,
+   "bpref": 0.10360907829144345
+  },
+  "sans citations": {
+   "Rprec": 0.07679765886287625,
+   "Rprec_ex_aequo": 0.07679765886287625,
+   "bpref": 0.10322550689216752
+  },
+  "web seul (aucun fournisseur)": {
+   "Rprec": 0.007246376811594203,
+   "Rprec_ex_aequo": 0.007246376811594203,
+   "bpref": 0.006038647342995169
+  },
+  "système d'avant (actuel)": {
+   "Rprec": 0.007246376811594203,
+   "Rprec_ex_aequo": 0.007246376811594203,
+   "bpref": 0.006038647342995169
+  },
+  "vote majoritaire": {
+   "Rprec": 0.007246376811594203,
+   "Rprec_ex_aequo": 0.007246376811594203,
+   "bpref": 0.007246376811594203
+  }
+ },
+ "ligne_b": {
+  "cac40": {
+   "R": 40,
+   "total_sirene_info": 0,
+   "ferme": true
+  },
+  "g-q654502": {
+   "R": 21,
+   "total_sirene_info": 160,
+   "ferme": false
+  },
+  "g-q2190251": {
+   "R": 89,
+   "total_sirene_info": 196,
+   "ferme": false
+  },
+  "g-q56199177": {
+   "R": 23,
+   "total_sirene_info": 13,
+   "ferme": true
+  },
+  "supporters-foot": {
+   "R": 4,
+   "total_sirene_info": 0,
+   "ferme": false
+  },
+  "g-q43009164": {
+   "R": 104,
+   "total_sirene_info": 29,
+   "ferme": false
+  }
+ },
+ "pytest": "569 passed in 18.86s",
+ "verdict": {
+  "ligne_A": {
+   "criteres": {
+    "1": {
+     "valeur": 0.07679765886287625,
+     "bpref": 0.10360907829144345,
+     "seuil": 0.9,
+     "ok": false,
+     "sujets": [
+      "cac40",
+      "g-q654502",
+      "g-q2190251",
+      "g-q56199177",
+      "supporters-foot",
+      "g-q43009164"
+     ]
+    },
+    "2": {
+     "taux": 1.0,
+     "ok": true,
+     "seuil": 0.8,
+     "remplissage": {
+      "20": 1.0,
+      "50": 1.0,
+      "100": 1.0,
+      "200": 1.0
+     },
+     "par_sujet": {
+      "cac40": [
+       40,
+       40
+      ],
+      "g-q654502": [
+       21,
+       21
+      ],
+      "g-q2190251": [
+       89,
+       89
+      ],
+      "g-q56199177": [
+       23,
+       23
+      ],
+      "g-q43009164": [
+       104,
+       104
+      ]
+     }
+    },
+    "3": {
+     "ok": true,
+     "note": "rapporté à part, sans seuil"
+    },
+    "4a": {
+     "p_max_temoin": 0.14925949962933224,
+     "ok": true
+    },
+    "4b": {
+     "faux_a_p_tau": 0,
+     "ok": true
+    },
+    "4c": {
+     "permute_moyen": 0.01501886845039019,
+     "hasard_R_sur_n": 0.09505441563948547,
+     "borne": 0.14505441563948546,
+     "part_depassant_p95": 0.3333333333333333,
+     "ok": false
+    },
+    "5": {
+     "ece": 0.0076356309394103004,
+     "brier": 0.023038028922211268,
+     "brier_constant": 0.0229047043783796,
+     "ok": false
+    },
+    "6": {
+     "ok": true
+    },
+    "7": {
+     "ok": true
+    },
+    "8": {
+     "ok": true
+    }
+   },
+   "certifie": false
+  },
+  "ligne_B": {
+   "criteres": {
+    "1": {
+     "valeur": 0.19673913043478258,
+     "bpref": 0.27079395085066166,
+     "seuil": 0.9,
+     "ok": false,
+     "sujets": [
+      "cac40",
+      "g-q56199177"
+     ]
+    },
+    "2": {
+     "taux": 1.0,
+     "ok": true,
+     "seuil": 0.8,
+     "remplissage": {
+      "20": 1.0,
+      "50": 1.0,
+      "100": 1.0,
+      "200": 1.0
+     },
+     "par_sujet": {
+      "cac40": [
+       40,
+       40
+      ],
+      "g-q654502": [
+       21,
+       21
+      ],
+      "g-q2190251": [
+       89,
+       89
+      ],
+      "g-q56199177": [
+       23,
+       23
+      ],
+      "g-q43009164": [
+       104,
+       104
+      ]
+     }
+    },
+    "3": {
+     "ok": true,
+     "note": "rapporté à part, sans seuil"
+    },
+    "4a": {
+     "p_max_temoin": 0.14925949962933224,
+     "ok": true
+    },
+    "4b": {
+     "faux_a_p_tau": 0,
+     "ok": true
+    },
+    "4c": {
+     "permute_moyen": 0.01501886845039019,
+     "hasard_R_sur_n": 0.09505441563948547,
+     "borne": 0.14505441563948546,
+     "part_depassant_p95": 0.3333333333333333,
+     "ok": false
+    },
+    "5": {
+     "ece": 0.0076356309394103004,
+     "brier": 0.023038028922211268,
+     "brier_constant": 0.0229047043783796,
+     "ok": false
+    },
+    "6": {
+     "ok": true
+    },
+    "7": {
+     "ok": true
+    },
+    "8": {
+     "ok": true
+    }
+   },
+   "certifie": false,
+   "evaluable": true,
+   "sujets_fermes": [
+    "cac40",
+    "g-q56199177"
+   ]
+  }
+ },
+ "rejeux_identiques_octet_pour_octet": true,
+ "empreinte_rejeu": "5d024c477297e62a"
+}
