@@ -64,9 +64,16 @@ def rejeu(sid: str, refaire: bool = False) -> Path:
     return cible
 
 
-def charger_sujet(s: Sujet, w: Wikidata | None = None, juger: bool = True) -> DonneesSujet:
+def charger_sujet(s: Sujet, w: Wikidata | None = None, juger: bool = True, ner: bool = False) -> DonneesSujet:
     cible = rejeu(s.id)
     ctx = charger(cible)
+    from grappes.autocal.registres_pool import decouverts
+
+    ctx.decouverts = decouverts(s.id, s.phrase)  # archivé : 0 réseau au rejeu
+    if ner:
+        from grappes.autocal.ner_pool import nommes_du_sujet
+
+        ctx.nommes = nommes_du_sujet(ctx)  # modèle local, archivé par texte
     ref, juge = None, None
     if s.origine != "controle_negatif":
         ref = Reference.load(DEFS / "references" / f"{s.id}.json")

@@ -1,0 +1,134 @@
+{
+ "g-q56199177": {
+  "jeu": "validation",
+  "R": 23,
+  "avant (vote)": {
+   "Rprec": 0.043478260869565216,
+   "bpref": 0.043478260869565216,
+   "n": 13,
+   "juste": 1,
+   "faux": 6,
+   "nv": 6,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata": {
+   "Rprec": 0.7391304347826086,
+   "bpref": 0.7391304347826086,
+   "n": 29,
+   "juste": 17,
+   "faux": 6,
+   "nv": 6,
+   "villes": 18,
+   "var": 0
+  },
+  "sirene": {
+   "Rprec": 0.13043478260869565,
+   "bpref": 0.13043478260869565,
+   "n": 25,
+   "juste": 3,
+   "faux": 6,
+   "nv": 16,
+   "villes": 12,
+   "var": 0
+  },
+  "wikidata+sirene": {
+   "Rprec": 0.5652173913043478,
+   "bpref": 0.7391304347826086,
+   "n": 39,
+   "juste": 17,
+   "faux": 6,
+   "nv": 16,
+   "villes": 28,
+   "var": 0
+  }
+ },
+ "supporters-foot": {
+  "jeu": "validation",
+  "R": 4,
+  "avant (vote)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 23,
+   "juste": 0,
+   "faux": 6,
+   "nv": 17,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 23,
+   "juste": 0,
+   "faux": 6,
+   "nv": 17,
+   "villes": 0,
+   "var": 0
+  },
+  "sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 23,
+   "juste": 0,
+   "faux": 6,
+   "nv": 17,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata+sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 23,
+   "juste": 0,
+   "faux": 6,
+   "nv": 17,
+   "villes": 0,
+   "var": 0
+  }
+ },
+ "g-q43009164": {
+  "jeu": "validation",
+  "R": 104,
+  "avant (vote)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 25,
+   "juste": 0,
+   "faux": 6,
+   "nv": 19,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata": {
+   "Rprec": 0.9903846153846154,
+   "bpref": 0.9903846153846154,
+   "n": 128,
+   "juste": 103,
+   "faux": 6,
+   "nv": 19,
+   "villes": 97,
+   "var": 0
+  },
+  "sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 54,
+   "juste": 0,
+   "faux": 6,
+   "nv": 48,
+   "villes": 29,
+   "var": 0
+  },
+  "wikidata+sirene": {
+   "Rprec": 0.7211538461538461,
+   "bpref": 0.9903846153846154,
+   "n": 157,
+   "juste": 103,
+   "faux": 6,
+   "nv": 48,
+   "villes": 126,
+   "var": 0
+  }
+ }
+}

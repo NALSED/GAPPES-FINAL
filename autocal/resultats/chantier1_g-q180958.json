@@ -1,0 +1,46 @@
+{
+ "g-q180958": {
+  "jeu": "dev",
+  "R": 100,
+  "avant (vote)": {
+   "Rprec": 0.03,
+   "bpref": 0.013999999999999999,
+   "n": 21,
+   "juste": 3,
+   "faux": 5,
+   "nv": 13,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata": {
+   "Rprec": 0.98,
+   "bpref": 0.98,
+   "n": 116,
+   "juste": 98,
+   "faux": 5,
+   "nv": 13,
+   "villes": 66,
+   "var": 0
+  },
+  "sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0077777777777777776,
+   "n": 217,
+   "juste": 3,
+   "faux": 9,
+   "nv": 205,
+   "villes": 195,
+   "var": 7
+  },
+  "wikidata+sirene": {
+   "Rprec": 0.03,
+   "bpref": 0.6722222222222229,
+   "n": 312,
+   "juste": 98,
+   "faux": 9,
+   "nv": 205,
+   "villes": 261,
+   "var": 7
+  }
+ }
+}

@@ -1,0 +1,90 @@
+{
+ "festivals-elec": {
+  "jeu": "dev",
+  "R": 7,
+  "avant (vote)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 29,
+   "juste": 0,
+   "faux": 12,
+   "nv": 17,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata": {
+   "Rprec": 0.0,
+   "bpref": 0.8571428571428574,
+   "n": 480,
+   "juste": 7,
+   "faux": 12,
+   "nv": 461,
+   "villes": 169,
+   "var": 3
+  },
+  "sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 31,
+   "juste": 0,
+   "faux": 12,
+   "nv": 19,
+   "villes": 2,
+   "var": 0
+  },
+  "wikidata+sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.8571428571428574,
+   "n": 482,
+   "juste": 7,
+   "faux": 12,
+   "nv": 463,
+   "villes": 171,
+   "var": 3
+  }
+ },
+ "g-q212805": {
+  "jeu": "dev",
+  "R": 45,
+  "avant (vote)": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.0,
+   "n": 15,
+   "juste": 1,
+   "faux": 4,
+   "nv": 10,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata": {
+   "Rprec": 0.9555555555555556,
+   "bpref": 0.9555555555555556,
+   "n": 57,
+   "juste": 43,
+   "faux": 4,
+   "nv": 10,
+   "villes": 23,
+   "var": 0
+  },
+  "sirene": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.0,
+   "n": 16,
+   "juste": 1,
+   "faux": 4,
+   "nv": 11,
+   "villes": 1,
+   "var": 0
+  },
+  "wikidata+sirene": {
+   "Rprec": 0.9555555555555556,
+   "bpref": 0.9555555555555556,
+   "n": 58,
+   "juste": 43,
+   "faux": 4,
+   "nv": 11,
+   "villes": 24,
+   "var": 0
+  }
+ }
+}

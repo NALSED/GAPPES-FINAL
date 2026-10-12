@@ -34,6 +34,10 @@ class Params:
     gamma: float = 0.3  # truthfinder : dampening_factor
     editeur_unique: bool = True  # une voix par éditeur (D58), comme dans le recoupement actuel
     nom_requis: bool = True
+    registres: tuple[str, ...] = ()  # registres de découverte utilisés (wikidata, sirene) ; vide = système d'avant D63
+    ner: bool = False  # entités nommées dans le texte (chantier 2, D63) ajoutées aux candidats et aux citations
+    w_rw: float = 0.0  # poids de l'appartenance à Wikidata (classe du sujet) dans le score
+    w_rs: float = 0.0  # poids de l'appartenance à SIRENE/RNA (existence, pas appartenance au sujet : D51)
 
     def td_params(self) -> dict:
         if self.methode in ("investment", "pooledinvestment"):
@@ -73,7 +77,17 @@ def _confiance_initiale(ctx: Contexte, citants: set[str]) -> dict[str, float]:
 
 def classer(ctx: Contexte, p: Params) -> list[Classe]:
     """Classement complet décroissant (ex æquo : ordre alphabétique de la clé, déterministe)."""
-    cands = [c for c in ctx.candidats if (c.nom is not None or not p.nom_requis)]
+    base = ctx.candidats
+    if p.registres:
+        from grappes.autocal.registres_pool import fusionner
+
+        base = fusionner(ctx, ctx.decouverts, p.registres)
+    extra_cits: list[tuple[str, str]] = []
+    if p.ner:
+        from grappes.autocal.ner_pool import ajouter
+
+        base, extra_cits = ajouter(ctx, base, ctx.nommes)
+    cands = [c for c in base if (c.nom is not None or not p.nom_requis)]
     if p.methode == "actuel":
         seuil = (
             ctx.cfg.scoring.niveau_probable
@@ -87,6 +101,7 @@ def classer(ctx: Contexte, p: Params) -> list[Classe]:
         ]
     else:
         cits = _voix(ctx, p.editeur_unique)
+        cits = sorted(set(cits) | set(extra_cits))
         belief: dict[str, float] = {}
         if cits:
             citants = {s for s, _ in cits}
@@ -94,7 +109,7 @@ def classer(ctx: Contexte, p: Params) -> list[Classe]:
                 cits, p.methode, _confiance_initiale(ctx, citants), lues=ctx.lues, negatifs=p.negatifs,
                 **p.td_params(),
             )  # fmt: skip
-        wsum = (p.w_s + p.w_t + p.w_f) or 1.0
+        wsum = (p.w_s + p.w_t + p.w_f + p.w_rw + p.w_rs) or 1.0
         rows = []
         for c in cands:
             b = belief.get(c.ref, 0.0)
@@ -103,7 +118,7 @@ def classer(ctx: Contexte, p: Params) -> list[Classe]:
                 Classe(
                     c.ref,
                     c.nom or c.nom_brut,
-                    (p.w_s * c.s / 100.0 + p.w_t * b + p.w_f * f) / wsum,
+                    (p.w_s * c.s / 100.0 + p.w_t * b + p.w_f * f + p.w_rw * ("wikidata" in c.registres) + p.w_rs * ("sirene" in c.registres)) / wsum,
                     c.s / 100.0,
                     b,
                     f,

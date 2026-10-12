@@ -47,9 +47,13 @@ class Juge:
             self._cache = json.loads(self.cache_path.read_text(encoding="utf-8"))
         self.by_domain: dict[str, str] = {}
         self.by_label: dict[str, str] = {}
+        self.by_siren: dict[str, str] = {}
+        self.qids = {e.qid for e in ref.entities}
         for e in ref.entities:
             for d in e.domains:
                 self.by_domain.setdefault(site_key(d), e.qid)
+            for sn in e.siren:
+                self.by_siren.setdefault(sn.replace(" ", "")[:9], e.qid)
             for lab in [e.label, *e.aliases]:
                 self.by_label.setdefault(norm_name(lab), e.qid)
         self._compat: dict[str, bool] = {}
@@ -116,6 +120,14 @@ class Juge:
             q = self.by_domain.get(site_key(canonical_domain(ident)))
             if q:
                 return Verdict(JUSTE, q, "domaine = site officiel de la référence")
+        if eco == "reg":  # entité d'un registre : « reg:<registre>:<identifiant>[|siren]»
+            reg, _, rest = ident.partition(":")
+            ident_reg, _, siren = rest.partition("|")
+            if reg == "wikidata" and ident_reg in self.qids:
+                return Verdict(JUSTE, ident_reg, "élément Wikidata de la référence (circulaire : découvert par Wikidata)")
+            q = self.by_siren.get(siren or (ident_reg if reg == "sirene" else ""))
+            if q:
+                return Verdict(JUSTE, q, "SIREN de la référence")
         q = self.by_label.get(norm_name(name))
         if q:
             return Verdict(JUSTE, q, "libellé exact de la référence")

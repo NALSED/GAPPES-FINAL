@@ -15,6 +15,8 @@ grappes = "grappes.cli:main"
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
 # mission autocalibration (D62) : truthdiscovery s'installe avec `--no-deps` (ses versions figées sont obsolètes ; voir docs/conception/calibration.md)
+# reconnaissance de noms (D63, chantier 2) : modèles existants, choisis dans config/ner.yaml ; torch CPU : --index-url https://download.pytorch.org/whl/cpu
+ner = ["torch", "transformers", "sentencepiece", "protobuf"]
 autocal = ["numpy", "scipy", "scikit-learn", "optuna", "pytrec_eval-terrier", "matplotlib", "bidict", "imageio"]
 
 [tool.setuptools.packages.find]

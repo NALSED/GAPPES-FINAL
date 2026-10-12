@@ -31,14 +31,16 @@ def prejuger(d: DonneesSujet) -> int:
     return n
 
 
-def charger_jeu(jeu: str, juger: bool = True, w: Wikidata | None = None) -> list[DonneesSujet]:
+def charger_jeu(jeu: str, juger: bool = True, w: Wikidata | None = None, ner: bool = False, ids: set[str] | None = None) -> list[DonneesSujet]:
     w = w or Wikidata("donnees/autocal/wikidata")
     out = []
     for s in sujets_du_jeu(jeu):
+        if ids is not None and s.id not in ids:
+            continue
         if not (Path("donnees/autocal/sujets") / s.id / "collecte.txt").exists():
             print(f"{s.id} : pas encore collecté, ignoré")
             continue
-        d = charger_sujet(s, w, juger)
+        d = charger_sujet(s, w, juger, ner)
         if juger:
             try:
                 prejuger(d)

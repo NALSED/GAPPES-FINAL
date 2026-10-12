@@ -1,0 +1,90 @@
+{
+ "g-q131186": {
+  "jeu": "dev",
+  "R": 33,
+  "avant (vote)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 15,
+   "juste": 0,
+   "faux": 8,
+   "nv": 7,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata": {
+   "Rprec": 1.0,
+   "bpref": 1.0,
+   "n": 48,
+   "juste": 33,
+   "faux": 8,
+   "nv": 7,
+   "villes": 12,
+   "var": 0
+  },
+  "sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 205,
+   "juste": 0,
+   "faux": 10,
+   "nv": 195,
+   "villes": 190,
+   "var": 0
+  },
+  "wikidata+sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.8696969696969699,
+   "n": 238,
+   "juste": 33,
+   "faux": 10,
+   "nv": 195,
+   "villes": 202,
+   "var": 0
+  }
+ },
+ "g-q742421": {
+  "jeu": "dev",
+  "R": 142,
+  "avant (vote)": {
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.007042253521126761,
+   "n": 23,
+   "juste": 1,
+   "faux": 5,
+   "nv": 17,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata": {
+   "Rprec": 0.9929577464788732,
+   "bpref": 0.9929577464788732,
+   "n": 163,
+   "juste": 141,
+   "faux": 5,
+   "nv": 17,
+   "villes": 44,
+   "var": 1
+  },
+  "sirene": {
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.005868544600938968,
+   "n": 96,
+   "juste": 1,
+   "faux": 6,
+   "nv": 89,
+   "villes": 73,
+   "var": 47
+  },
+  "wikidata+sirene": {
+   "Rprec": 0.4859154929577465,
+   "bpref": 0.8321596244131438,
+   "n": 236,
+   "juste": 141,
+   "faux": 6,
+   "nv": 89,
+   "villes": 117,
+   "var": 48
+  }
+ }
+}

@@ -1,0 +1,134 @@
+{
+ "cac40": {
+  "jeu": "validation",
+  "R": 40,
+  "avant (vote)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 11,
+   "juste": 0,
+   "faux": 5,
+   "nv": 6,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 11,
+   "juste": 0,
+   "faux": 5,
+   "nv": 6,
+   "villes": 0,
+   "var": 0
+  },
+  "sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 11,
+   "juste": 0,
+   "faux": 5,
+   "nv": 6,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata+sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 11,
+   "juste": 0,
+   "faux": 5,
+   "nv": 6,
+   "villes": 0,
+   "var": 0
+  }
+ },
+ "g-q654502": {
+  "jeu": "validation",
+  "R": 21,
+  "avant (vote)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 20,
+   "juste": 0,
+   "faux": 7,
+   "nv": 13,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata": {
+   "Rprec": 1.0,
+   "bpref": 1.0,
+   "n": 41,
+   "juste": 21,
+   "faux": 7,
+   "nv": 13,
+   "villes": 19,
+   "var": 0
+  },
+  "sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 178,
+   "juste": 0,
+   "faux": 11,
+   "nv": 167,
+   "villes": 158,
+   "var": 8
+  },
+  "wikidata+sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.9653679653679654,
+   "n": 199,
+   "juste": 21,
+   "faux": 11,
+   "nv": 167,
+   "villes": 177,
+   "var": 8
+  }
+ },
+ "g-q2190251": {
+  "jeu": "validation",
+  "R": 89,
+  "avant (vote)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 15,
+   "juste": 0,
+   "faux": 5,
+   "nv": 10,
+   "villes": 0,
+   "var": 0
+  },
+  "wikidata": {
+   "Rprec": 0.9662921348314607,
+   "bpref": 0.9662921348314607,
+   "n": 101,
+   "juste": 86,
+   "faux": 5,
+   "nv": 10,
+   "villes": 84,
+   "var": 0
+  },
+  "sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 206,
+   "juste": 0,
+   "faux": 12,
+   "nv": 194,
+   "villes": 190,
+   "var": 2
+  },
+  "wikidata+sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.7275280898876398,
+   "n": 292,
+   "juste": 86,
+   "faux": 12,
+   "nv": 194,
+   "villes": 274,
+   "var": 2
+  }
+ }
+}
