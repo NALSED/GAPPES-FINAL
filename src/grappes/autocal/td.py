@@ -22,12 +22,12 @@ import types
 from collections.abc import Iterable, Mapping
 
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 
 # `truthdiscovery` importe `cairo` pour ses graphiques (inutilisés ici, dépendance système absente) : module vide.
 sys.modules.setdefault("cairo", types.ModuleType("cairo"))
 
-from truthdiscovery import (  # noqa: E402
+from truthdiscovery import (
     AverageLog,
     Investment,
     MajorityVoting,
@@ -36,7 +36,6 @@ from truthdiscovery import (  # noqa: E402
     Sums,
     TruthFinder,
 )
-from truthdiscovery.algorithm.base import BaseIterativeAlgorithm  # noqa: E402
 
 ALGOS = {
     "vote": MajorityVoting,

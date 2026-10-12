@@ -33,7 +33,9 @@ class Reference:
     phrase: str
     where: str  # clause SPARQL sur ?item (traçabilité)
     entities: list[RefEntity] = field(default_factory=list)
-    classes: list[str] = field(default_factory=list)  # classes Wikidata acceptées pour juger (P31 direct)
+    classes: list[str] = field(
+        default_factory=list
+    )  # classes Wikidata acceptées pour juger (P31 direct)
 
     @property
     def r(self) -> int:

@@ -70,9 +70,12 @@ class Juge:
             self._compat[c] = c in accepted
         todo = [c for c in todo if not self._compat[c]]
         if todo and accepted:
-            q = "SELECT DISTINCT ?c WHERE { VALUES ?c { %s } VALUES ?t { %s } ?c wdt:P279* ?t . }" % (
-                " ".join("wd:" + c for c in todo),
-                " ".join("wd:" + c for c in sorted(accepted)),
+            q = (
+                "SELECT DISTINCT ?c WHERE { VALUES ?c { %s } VALUES ?t { %s } ?c wdt:P279* ?t . }"
+                % (
+                    " ".join("wd:" + c for c in todo),
+                    " ".join("wd:" + c for c in sorted(accepted)),
+                )
             )
             ok = {r["c"] for r in self.w.sparql(q)}
             for c in todo:
@@ -80,7 +83,12 @@ class Juge:
         return any(self._compat.get(c, False) for c in p31)
 
     def _entities(self, qids: list[str]) -> dict[str, dict]:
-        d = self.w.api(action="wbgetentities", ids="|".join(qids), props="claims|labels|aliases", languages="fr|en")
+        d = self.w.api(
+            action="wbgetentities",
+            ids="|".join(qids),
+            props="claims|labels|aliases",
+            languages="fr|en",
+        )
         return d.get("entities", {})
 
     @staticmethod
@@ -112,9 +120,15 @@ class Juge:
         if q:
             return Verdict(JUSTE, q, "libellé exact de la référence")
         try:
-            hits = [h for h in self.w.search(name, 8) if norm_name(h.get("label", "")) == norm_name(name)]
+            hits = [
+                h
+                for h in self.w.search(name, 8)
+                if norm_name(h.get("label", "")) == norm_name(name)
+            ]
             if not hits:
-                return Verdict(NON_VERIFIABLE, "x:" + source_key, "aucun élément Wikidata de ce libellé")
+                return Verdict(
+                    NON_VERIFIABLE, "x:" + source_key, "aucun élément Wikidata de ce libellé"
+                )
             ents = self._entities([h["id"] for h in hits[:5]])
         except WikidataError as exc:
             return Verdict(NON_VERIFIABLE, "x:" + source_key, f"Wikidata indisponible ({exc})")
@@ -122,5 +136,9 @@ class Juge:
         for qid, ent in ents.items():
             (compatibles if self._class_ok(self._claim_ids(ent, "P31")) else others).append(qid)
         if compatibles:
-            return Verdict(NON_VERIFIABLE, "x:" + source_key, f"de la bonne classe mais hors référence ({compatibles[0]})")
+            return Verdict(
+                NON_VERIFIABLE,
+                "x:" + source_key,
+                f"de la bonne classe mais hors référence ({compatibles[0]})",
+            )
         return Verdict(FAUX, others[0], "libellé exact d'éléments d'une autre classe")

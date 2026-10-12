@@ -42,7 +42,9 @@ class Sujet:
     classes_ok: list[str] = field(default_factory=list)
 
     def save(self, path: str | Path) -> None:
-        Path(path).write_text(json.dumps(asdict(self), ensure_ascii=False, indent=1), encoding="utf-8")
+        Path(path).write_text(
+            json.dumps(asdict(self), ensure_ascii=False, indent=1), encoding="utf-8"
+        )
 
 
 def classes_organisations(w: Wikidata, log=print) -> dict[str, dict]:
@@ -52,7 +54,9 @@ def classes_organisations(w: Wikidata, log=print) -> dict[str, dict]:
     n = {r["class"]: int(r["n"]) for r in rows}
     labels: dict[str, str] = {}
     for i in range(0, len(ids), 50):
-        d = w.api(action="wbgetentities", ids="|".join(ids[i : i + 50]), props="labels", languages="fr|en")
+        d = w.api(
+            action="wbgetentities", ids="|".join(ids[i : i + 50]), props="labels", languages="fr|en"
+        )
         for k, v in d["entities"].items():
             lab = v.get("labels", {})
             labels[k] = (lab.get("fr") or lab.get("en") or {}).get("value", "")
@@ -77,14 +81,20 @@ def mesurer_classe(w: Wikidata, qid: str) -> dict:
     )
     row = w.sparql(q)[0]
     n = int(row["n"])
-    return {"n": n, "part_site": int(row["ns"]) / n if n else 0.0, "part_siren": int(row["nr"]) / n if n else 0.0}
+    return {
+        "n": n,
+        "part_site": int(row["ns"]) / n if n else 0.0,
+        "part_siren": int(row["nr"]) / n if n else 0.0,
+    }
 
 
 def phrase_de(label: str) -> str:
     return f"Les organisations de type « {label} » en France"
 
 
-def tirer(w: Wikidata, classes: dict[str, dict], combien: int, seed: int = SEED, log=print) -> list[Sujet]:
+def tirer(
+    w: Wikidata, classes: dict[str, dict], combien: int, seed: int = SEED, log=print
+) -> list[Sujet]:
     """Tire au hasard (graine fixée) `combien` classes dont la référence compte 20 à 200 entités."""
     rng = random.Random(seed)
     ordre = sorted(classes)
@@ -103,9 +113,16 @@ def tirer(w: Wikidata, classes: dict[str, dict], combien: int, seed: int = SEED,
         lab = classes[qid]["label"]
         out.append(
             Sujet(
-                id=f"g-{qid.lower()}", phrase=phrase_de(lab), origine="genere", classe=qid, r=m["n"],
-                part_site=round(m["part_site"], 3), part_siren=round(m["part_siren"], 3),
-                where=class_where(qid), classes_ok=[qid], notes=lab,
+                id=f"g-{qid.lower()}",
+                phrase=phrase_de(lab),
+                origine="genere",
+                classe=qid,
+                r=m["n"],
+                part_site=round(m["part_site"], 3),
+                part_siren=round(m["part_siren"], 3),
+                where=class_where(qid),
+                classes_ok=[qid],
+                notes=lab,
             )  # fmt: skip
         )
     return out
@@ -121,3 +138,73 @@ def difficultes(sujets: list[Sujet]) -> None:
 
 def construire_reference(w: Wikidata, s: Sujet) -> Reference:
     return build(w, s.id, s.phrase, s.where, s.classes_ok)
+
+
+# --- sujets d'amorçage fournis par Sednal (DECISION_AUTOCAL.md) -------------------------------------------------
+# Référence = requête Wikidata structurée. Les sujets dont la référence est trop pauvre pour une R-précision
+# (R < 5 : aide alimentaire en Auvergne-Rhône-Alpes, collectifs de locataires en Île-de-France) ne sont pas collectés :
+# aucune référence Wikidata, donc rien à mesurer (consigné dans calibration.md, jamais présenté comme réussi).
+AMORCAGE: list[Sujet] = [
+    Sujet(
+        id="handball-pro",
+        phrase="Les clubs de handball professionnels en France",
+        origine="amorcage",
+        difficulte="moyen",
+        where="?item wdt:P118 ?l . VALUES ?l { wd:Q203172 wd:Q2951241 wd:Q522560 wd:Q2951213 } FILTER NOT EXISTS { ?item wdt:P31 wd:Q5 } ",
+        classes_ok=["Q108320110", "Q10517054", "Q847017"],
+        notes="clubs de première et deuxième division masculine, tels que listés dans Wikidata (P118)",
+    ),
+    Sujet(
+        id="cac40",
+        phrase="Les entreprises du CAC 40",
+        origine="amorcage",
+        difficulte="facile",
+        where="?item p:P361 ?s . ?s ps:P361 wd:Q648828 . FILTER NOT EXISTS { ?s pq:P582 ?e } ",
+        classes_ok=["Q4830453", "Q6881511", "Q783794"],
+        notes="composition actuelle de l'indice (P361 sans date de fin)",
+    ),
+    Sujet(
+        id="supporters-foot",
+        phrase="Les groupes de supporters de clubs de football français",
+        origine="amorcage",
+        difficulte="difficile",
+        where="?item wdt:P31/wdt:P279* wd:Q1070414 . ?item wdt:P17 wd:Q142 . ",
+        classes_ok=["Q1070414", "Q386636"],
+        notes="référence très petite : R-précision bruitée",
+    ),
+    Sujet(
+        id="festivals-elec",
+        phrase="Les festivals de musique électronique en France",
+        origine="amorcage",
+        difficulte="difficile",
+        where="?item wdt:P31/wdt:P279* wd:Q868557 ; wdt:P17 wd:Q142 ; wdt:P136 ?g . ?g wdt:P279* wd:Q9778 . ",
+        classes_ok=["Q868557", "Q131321883", "Q15275719"],
+        notes="référence très petite : R-précision bruitée",
+    ),
+]
+AMORCAGE_NON_MESURABLES = {
+    "aide-alimentaire-ara": "Les associations d'aide alimentaire en Auvergne-Rhône-Alpes",
+    "locataires-idf": "Les collectifs de défense des locataires en Île-de-France",
+}
+TEMOINS: list[
+    Sujet
+] = [  # contrôles négatifs : aucun acteur réel (le premier est fourni par Sednal)
+    Sujet(
+        id="temoin-licornes",
+        phrase="Les fabricants de licornes bleues en Lozère",
+        origine="controle_negatif",
+        difficulte="temoin",
+    ),
+    Sujet(
+        id="temoin-dragons",
+        phrase="Les éleveurs de dragons verts en Corrèze",
+        origine="controle_negatif",
+        difficulte="temoin",
+    ),
+    Sujet(
+        id="temoin-sorciers",
+        phrase="Les écoles de sorcellerie de Haute-Savoie",
+        origine="controle_negatif",
+        difficulte="temoin",
+    ),
+]

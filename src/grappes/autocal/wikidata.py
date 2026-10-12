@@ -74,7 +74,11 @@ class Wikidata:
         for b in json.loads(raw)["results"]["bindings"]:
             rows.append(
                 {
-                    k: (v["value"].rsplit("/", 1)[-1] if v["value"].startswith("http://www.wikidata.org/entity/") else v["value"])
+                    k: (
+                        v["value"].rsplit("/", 1)[-1]
+                        if v["value"].startswith("http://www.wikidata.org/entity/")
+                        else v["value"]
+                    )
                     for k, v in b.items()
                 }
             )

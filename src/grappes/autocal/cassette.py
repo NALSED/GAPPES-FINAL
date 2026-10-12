@@ -51,9 +51,7 @@ class Cassette:
             return None, row[3]
         return Response(row[0], json.loads(row[1]), bytes(row[2])), ""
 
-    def put(
-        self, key: str, method: str, url: str, resp: Response | None, error: str = ""
-    ) -> None:
+    def put(self, key: str, method: str, url: str, resp: Response | None, error: str = "") -> None:
         self.conn.execute(
             "INSERT OR REPLACE INTO reponses VALUES (?,?,?,?,?,?,?)",
             (

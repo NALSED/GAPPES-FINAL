@@ -48,7 +48,9 @@ class Contexte:
     rel: Reliability
     grappe: str
     candidats: list[Candidat]
-    citations: list[tuple[str, str]]  # (citant, cité), liens explicites et mentions, sans hypothèses
+    citations: list[
+        tuple[str, str]
+    ]  # (citant, cité), liens explicites et mentions, sans hypothèses
     lues: set[str]  # sources dont on a lu le texte
 
 

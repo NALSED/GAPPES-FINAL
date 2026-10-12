@@ -39,6 +39,7 @@ body:
     include_answer: false
     include_raw_content: false
     include_images: false
+    exclude_domains: [wikipedia.org, wikidata.org, wikimedia.org, wikiwand.com, dbpedia.org]
 response: {format: json, items: results}
 fields:
   title: title
@@ -50,6 +51,9 @@ raison: "résultat Tavily (général) pour « {mot_cle} »"
 """
 
 # Plafonds de collecte d'un sujet d'évaluation (le volume demandé en dépend). Une requête = 1 crédit Tavily.
+# Dérivés de la source de la référence : jamais collectés (non-circularité, méthode 2).
+DERIVES_WIKIDATA = ("wikipedia.org", "wikidata.org", "wikimedia.org", "wikiwand.com", "dbpedia.org")
+
 PLAFONDS = {
     "requetes_par_cycle": 6,
     "pages_par_cycle": 150,
@@ -63,7 +67,9 @@ def dossier(sujet_id: str, racine: Path = RACINE) -> Path:
     return racine / sujet_id
 
 
-def preparer(sujet_id: str, phrase: str, base_config: str | Path = "config", racine: Path = RACINE) -> Path:
+def preparer(
+    sujet_id: str, phrase: str, base_config: str | Path = "config", racine: Path = RACINE
+) -> Path:
     """Crée le dossier du sujet et sa configuration isolée. Idempotent : ne touche pas à la cassette."""
     d = dossier(sujet_id, racine)
     cfg = d / "config"
@@ -88,7 +94,10 @@ def preparer(sujet_id: str, phrase: str, base_config: str | Path = "config", rac
     (cfg / "recherche.yaml").write_text(yaml.safe_dump(rech, allow_unicode=True), encoding="utf-8")
     auto = yaml.safe_load((Path(base_config) / "autonomie.yaml").read_text(encoding="utf-8"))
     auto.pop("sujets", None)
+    auto["rapports_dir"] = str(d / "rapports")
     auto.update(PLAFONDS, autonome=True, stop_file=str(d / "STOP"), seuil_ingestion=20)
+    interdits = auto.get("interdits") or []
+    auto["interdits"] = list(dict.fromkeys([*interdits, *DERIVES_WIKIDATA]))
     auto["quotas"] = {
         "requetes_par_cycle": PLAFONDS["requetes_par_cycle"],
         "nouvelles_sources_par_cycle": PLAFONDS["nouvelles_sources_par_cycle"],

@@ -46,6 +46,8 @@ def evaluer(
     return {q: dict(m) for q, m in scored.items()}
 
 
-def moyenne(par_sujet: dict[str, dict[str, float]], mesure: str, sujets: list[str] | None = None) -> float:
+def moyenne(
+    par_sujet: dict[str, dict[str, float]], mesure: str, sujets: list[str] | None = None
+) -> float:
     vals = [m[mesure] for q, m in par_sujet.items() if sujets is None or q in sujets]
     return sum(vals) / len(vals) if vals else 0.0
