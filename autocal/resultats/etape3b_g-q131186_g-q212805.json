@@ -1,0 +1,118 @@
+{
+ "g-q212805": {
+  "jeu": "dev",
+  "R": 45,
+  "web seul": {
+   "Rprec": 0.022222222222222223,
+   "Rprec_ea": 0.022222222222222223,
+   "bpref": 0.011111111111111112,
+   "n": 13,
+   "juste": 1,
+   "faux": 4,
+   "nv": 8
+  },
+  "+sirene": {
+   "Rprec": 0.022222222222222223,
+   "Rprec_ea": 0.022222222222222223,
+   "bpref": 0.011111111111111112,
+   "n": 14,
+   "juste": 1,
+   "faux": 4,
+   "nv": 9
+  },
+  "+noms": {
+   "Rprec": 0.022222222222222223,
+   "Rprec_ea": 0.022222222222222223,
+   "bpref": 0.02123456790123457,
+   "n": 413,
+   "juste": 1,
+   "faux": 202,
+   "nv": 210
+  },
+  "+sirene+noms (non circulaire)": {
+   "Rprec": 0.022222222222222223,
+   "Rprec_ea": 0.022222222222222223,
+   "bpref": 0.02123456790123457,
+   "n": 414,
+   "juste": 1,
+   "faux": 202,
+   "nv": 211
+  },
+  "+wikidata seul (circulaire, info)": {
+   "Rprec": 0.9111111111111111,
+   "Rprec_ea": 0.9111111111111111,
+   "bpref": 0.9111111111111111,
+   "n": 53,
+   "juste": 41,
+   "faux": 4,
+   "nv": 8
+  },
+  "tout (circulaire, info)": {
+   "Rprec": 0.8888888888888888,
+   "Rprec_ea": 0.8888888888888888,
+   "bpref": 0.8888888888888888,
+   "n": 453,
+   "juste": 40,
+   "faux": 202,
+   "nv": 211
+  }
+ },
+ "g-q131186": {
+  "jeu": "dev",
+  "R": 33,
+  "web seul": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 15,
+   "juste": 0,
+   "faux": 8,
+   "nv": 7
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 202,
+   "juste": 0,
+   "faux": 9,
+   "nv": 193
+  },
+  "+noms": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 154,
+   "juste": 0,
+   "faux": 49,
+   "nv": 105
+  },
+  "+sirene+noms (non circulaire)": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 354,
+   "juste": 0,
+   "faux": 52,
+   "nv": 302
+  },
+  "+wikidata seul (circulaire, info)": {
+   "Rprec": 0.9393939393939394,
+   "Rprec_ea": 0.9393939393939394,
+   "bpref": 0.9393939393939394,
+   "n": 46,
+   "juste": 31,
+   "faux": 8,
+   "nv": 7
+  },
+  "tout (circulaire, info)": {
+   "Rprec": 0.696969696969697,
+   "Rprec_ea": 0.696969696969697,
+   "bpref": 0.67584940312213,
+   "n": 376,
+   "juste": 23,
+   "faux": 52,
+   "nv": 301
+  }
+ }
+}

@@ -46,3 +46,14 @@ def test_variantes_nomenklatura():
     groupes = [[noms[i] for i in g] for g in regrouper(noms)]
     assert ["Fenix Toulouse Handball", "Fenix Toulouse"] in groupes
     assert ["Boulangerie Dupont"] in groupes and ["Metz Handball"] in groupes
+
+
+def test_rprec_ex_aequo_espere():
+    from grappes.autocal.evaluation import rprec_ex_aequo
+
+    # R = 2 ; a > (b = c = d) ; b et d pertinents : une place reste pour 3 ex æquo dont 2 pertinents
+    run = {"a": 5.0, "b": 3.0, "c": 3.0, "d": 3.0}
+    assert rprec_ex_aequo(run, {"a", "b", "d"}, 2) == pytest.approx((1 + 1 * 2 / 3) / 2)
+    assert rprec_ex_aequo({}, {"x"}, 3) == 0.0
+    # sans ex æquo à la frontière : valeur ordinaire
+    assert rprec_ex_aequo({"a": 3.0, "b": 2.0, "c": 1.0}, {"a", "c"}, 2) == pytest.approx(0.5)

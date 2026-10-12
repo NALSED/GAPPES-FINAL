@@ -41,9 +41,10 @@ def fusion_variantes(ctx: Contexte, cands: list[Candidat], seuil: float) -> list
     """Un candidat par acteur : les variantes de nom (nomenklatura) sont réunies sur le candidat le mieux documenté."""
     memo = ctx.memo_variantes
     noms = [c.nom for c in cands if c.nom]
-    cle = (tuple(noms), seuil)
+    villes = [c.ville for c in cands if c.nom]
+    cle = (tuple(noms), tuple(villes), seuil)
     if cle not in memo:
-        memo[cle] = regrouper(noms, seuil)
+        memo[cle] = regrouper(noms, seuil, villes=villes)
     avec_nom = [c for c in cands if c.nom]
     sans_nom = [c for c in cands if not c.nom]
     out: list[Candidat] = []

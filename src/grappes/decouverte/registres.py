@@ -17,8 +17,11 @@ from pathlib import Path
 
 from grappes.decouverte.client import DecouverteError, Http
 from grappes.decouverte.traduction import (
+    LIENS_DOMAINE,
     ClasseWikidata,
     CodeNaf,
+    DomaineWikidata,
+    domaine_wikidata,
     charger_naf,
     classe_wikidata,
     code_naf,
@@ -52,6 +55,7 @@ class DecouverteConfig:
     seuil_naf: float = 0.6
     pages_sirene: int = 8
     par_page: int = 25
+    domaine: bool = True  # gabarit « type + complément » (clubs de HANDBALL) en plus de la classe
     repli_nom: bool = True  # sans code NAF fiable : recherche par nom, filtrée sur les mots de la phrase
     naf: str = "config/naf_rev2.csv"
 
@@ -80,6 +84,66 @@ def wikidata(cls: ClasseWikidata, http: Http, cfg: DecouverteConfig) -> list[Dec
         if v and not v.startswith("Q") and not d.ville:
             d.ville = v
     return sorted(par.values(), key=lambda d: d.identifiant)
+
+
+ORGANISATION = "Q43229"
+
+
+def _details(items: list[str], http: Http, requete: str) -> list[Decouvert]:
+    out: list[Decouvert] = []
+    for i in range(0, len(items), 150):
+        lot = items[i : i + 150]
+        q = (
+            "SELECT ?item ?itemLabel ?site ?siren ?villeLabel WHERE { VALUES ?item { %s } "
+            "OPTIONAL { ?item wdt:P856 ?site } OPTIONAL { ?item wdt:P1616 ?siren } "
+            "OPTIONAL { ?item wdt:P159|wdt:P131 ?ville } "
+            'SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,en" } }'
+        ) % " ".join("wd:" + x for x in lot)
+        par: dict[str, Decouvert] = {}
+        for r in http.sparql(q):
+            nom = r.get("itemLabel", "")
+            if not nom or nom == r["item"]:
+                continue
+            d = par.setdefault(r["item"], Decouvert(nom, "wikidata", r["item"], requete=requete))
+            d.domaine = d.domaine or r.get("site", "")
+            d.siren = d.siren or r.get("siren", "").replace(" ", "")
+            v = r.get("villeLabel", "")
+            if v and not v.startswith("Q"):
+                d.ville = d.ville or v
+        out += list(par.values())
+    return out
+
+
+def wikidata_domaine(dom: DomaineWikidata, http: Http, cfg: DecouverteConfig) -> list[Decouvert]:
+    """Organisations rattachées au domaine (sport, genre, secteur…), dans le pays de la phrase quand elle en donne un.
+
+    Gabarit unique pour tous les sujets : propriété de rattachement (liste fixe) -> complément ou l'un de ses
+    sous-concepts. Sont gardés les éléments dont une classe est une organisation ou une sous-classe du type du sujet
+    (sinon : saisons, matchs, personnes…)."""
+    pays = f"?item wdt:P17 wd:{dom.pays} ." if dom.pays else ""
+    classes: dict[str, set[str]] = {}
+    for p in LIENS_DOMAINE:
+        for chemin in ("?g wdt:P279* wd:%s .", "FILTER(?g = wd:%s)"):
+            q = "SELECT DISTINCT ?item ?c WHERE { ?item wdt:%s ?g . %s %s ?item wdt:P31 ?c } LIMIT %d" % (
+                p, chemin % dom.entite, pays, cfg.limite_wikidata * 4,
+            )  # fmt: skip
+            try:
+                rows = http.sparql(q)
+            except DecouverteError:
+                continue  # le chemin transitif peut dépasser le délai du service : repli sur le lien direct
+            for r in rows:
+                classes.setdefault(r["item"], set()).add(r["c"])
+            break
+    cibles = [ORGANISATION] + ([dom.type_qid] if dom.type_qid else [])
+    ok: dict[str, bool] = {}
+    for c in sorted({c for cs in classes.values() for c in cs}):
+        q = "SELECT ?x WHERE { wd:%s wdt:P279* ?x . VALUES ?x { %s } } LIMIT 1" % (c, " ".join("wd:" + t for t in cibles))
+        try:
+            ok[c] = bool(http.sparql(q))
+        except DecouverteError:
+            ok[c] = False
+    gardes = sorted(i for i, cs in classes.items() if any(ok.get(c) for c in cs))
+    return _details(gardes, http, f"domaine {dom.entite} « {dom.libelle} »")
 
 
 def _filtre_nom(nom_registre: str, requis: list[str]) -> bool:
@@ -136,12 +200,16 @@ def decouvrir(phrase: str, http: Http, cfg: DecouverteConfig | None = None) -> l
     cfg = cfg or DecouverteConfig()
     out: list[Decouvert] = []
     if "wikidata" in cfg.sources:
+        # priorité : classe qui couvre TOUTE la phrase > gabarit « type + domaine » > classe partielle
         cls = classe_wikidata(phrase, http, cfg.pays_wikidata, cfg.min_instances)
-        if cls is not None:
-            try:
-                out += wikidata(cls, http, cfg)
-            except DecouverteError:
-                pass
+        dom = domaine_wikidata(phrase, http) if cfg.domaine and not (cls and cls.complet) else None
+        try:
+            dec = wikidata_domaine(dom, http, cfg) if dom is not None else []
+            if not dec and cls is not None:
+                dec = wikidata(cls, http, cfg)
+            out += dec
+        except DecouverteError:
+            pass
     if "sirene" in cfg.sources:
         naf = code_naf(phrase, charger_naf(Path(cfg.naf)), cfg.seuil_naf)
         out += sirene(phrase, naf, http, cfg)

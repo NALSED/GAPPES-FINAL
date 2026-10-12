@@ -195,11 +195,29 @@ def comptes(jug: list[Jugement], n: int | None = None) -> dict[str, int]:
     return c
 
 
+def rprec_ex_aequo(run: dict[str, float], pertinents: set[str], r: int) -> float:
+    """R-précision ESPÉRÉE quand les ex æquo sont départagés au hasard (valeur exacte, hypergéométrique) : le résultat ne
+    dépend plus de l'ordre alphabétique des clés. Les documents strictement au-dessus du score de frontière comptent
+    entièrement ; les ex æquo de la frontière se partagent les places restantes à parts égales."""
+    if r <= 0 or not run:
+        return 0.0
+    scores = sorted(run.values(), reverse=True)
+    frontiere = scores[min(r, len(scores)) - 1]
+    dessus = [d for d, v in run.items() if v > frontiere]
+    egaux = [d for d, v in run.items() if v == frontiere]
+    places = min(r, len(scores)) - len(dessus)
+    juste_dessus = sum(1 for d in dessus if d in pertinents)
+    juste_egaux = sum(1 for d in egaux if d in pertinents)
+    return (juste_dessus + places * juste_egaux / len(egaux)) / r
+
+
 def mesurer(ref, jug: list[Jugement]) -> dict:
     qrels = qrels_de(ref, jug)
     run = run_de(ref.sujet_id, jug)
     m = evaluer(qrels, run)[ref.sujet_id]
     r = sum(1 for v in qrels[ref.sujet_id].values() if v > 0)
+    pert = {d for d, v in qrels[ref.sujet_id].items() if v > 0}
+    m["Rprec_ex_aequo"] = rprec_ex_aequo(run[ref.sujet_id], pert, r)
     return {
         "mesures": m,
         "R": r,

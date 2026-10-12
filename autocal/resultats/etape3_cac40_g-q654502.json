@@ -1,0 +1,106 @@
+{
+ "cac40": {
+  "jeu": "validation",
+  "R": 40,
+  "web seul (lr)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 8,
+   "juste": 0,
+   "faux": 5,
+   "nv": 3
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 8,
+   "juste": 0,
+   "faux": 5,
+   "nv": 3
+  },
+  "+noms": {
+   "Rprec": 0.35,
+   "bpref": 0.3949999999999999,
+   "n": 582,
+   "juste": 24,
+   "faux": 118,
+   "nv": 440
+  },
+  "+sirene+noms (sans wikidata)": {
+   "Rprec": 0.35,
+   "bpref": 0.3949999999999999,
+   "n": 582,
+   "juste": 24,
+   "faux": 118,
+   "nv": 440
+  },
+  "idem sans variantes": {
+   "Rprec": 0.3,
+   "bpref": 0.4531249999999997,
+   "n": 780,
+   "juste": 37,
+   "faux": 150,
+   "nv": 593
+  },
+  "+wikidata (circulaire, info)": {
+   "Rprec": 0.35,
+   "bpref": 0.3949999999999999,
+   "n": 582,
+   "juste": 24,
+   "faux": 118,
+   "nv": 440
+  }
+ },
+ "g-q654502": {
+  "jeu": "validation",
+  "R": 21,
+  "web seul (lr)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 20,
+   "juste": 0,
+   "faux": 7,
+   "nv": 13
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 25,
+   "juste": 0,
+   "faux": 7,
+   "nv": 18
+  },
+  "+noms": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 363,
+   "juste": 0,
+   "faux": 147,
+   "nv": 216
+  },
+  "+sirene+noms (sans wikidata)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 358,
+   "juste": 0,
+   "faux": 144,
+   "nv": 214
+  },
+  "idem sans variantes": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 636,
+   "juste": 0,
+   "faux": 186,
+   "nv": 450
+  },
+  "+wikidata (circulaire, info)": {
+   "Rprec": 0.9523809523809523,
+   "bpref": 0.9070294784580499,
+   "n": 378,
+   "juste": 20,
+   "faux": 144,
+   "nv": 214
+  }
+ }
+}

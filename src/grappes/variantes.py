@@ -19,8 +19,13 @@ def _jetons(nom: str) -> set[str]:
     return {t for t in re.split(r"[^\w]+", nom.casefold()) if len(t) > 2}
 
 
-def regrouper(noms: list[str], seuil: float = SEUIL_DEFAUT, base: str | Path = ":memory:") -> list[list[int]]:
-    """Groupes d'indices de `noms` désignant le même acteur. Un nom seul forme un groupe. Déterministe."""
+def regrouper(
+    noms: list[str], seuil: float = SEUIL_DEFAUT, base: str | Path = ":memory:", villes: list[str] | None = None
+) -> list[list[int]]:
+    """Groupes d'indices de `noms` désignant le même acteur. Un nom seul forme un groupe. Déterministe.
+
+    `villes` (facultatif) : commune donnée par un registre pour chaque nom ; deux noms de communes différentes ne sont
+    jamais des variantes (« Conseil régional … de Lyon » / « … de Paris » obtiennent 0,91 de `name-based`)."""
     from followthemoney import model
     from nomenklatura.db import close_db, make_session
     from nomenklatura.judgement import Judgement
@@ -55,6 +60,8 @@ def regrouper(noms: list[str], seuil: float = SEUIL_DEFAUT, base: str | Path = "
                 if p in vues:
                     continue
                 vues.add(p)
+                if villes and villes[p[0]] and villes[p[1]] and villes[p[0]].casefold() != villes[p[1]].casefold():
+                    continue
                 s = algo.compare(ents[p[0]], ents[p[1]], cfg).score
                 if s >= seuil:
                     res.decide(ents[p[0]].id, ents[p[1]].id, Judgement.POSITIVE, score=s)

@@ -1,0 +1,118 @@
+{
+ "supporters-foot": {
+  "jeu": "validation",
+  "R": 4,
+  "web seul": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 23,
+   "juste": 0,
+   "faux": 6,
+   "nv": 17
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 23,
+   "juste": 0,
+   "faux": 6,
+   "nv": 17
+  },
+  "+noms": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 467,
+   "juste": 0,
+   "faux": 282,
+   "nv": 185
+  },
+  "+sirene+noms (non circulaire)": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 467,
+   "juste": 0,
+   "faux": 282,
+   "nv": 185
+  },
+  "+wikidata seul (circulaire, info)": {
+   "Rprec": 1.0,
+   "Rprec_ea": 1.0,
+   "bpref": 1.0,
+   "n": 27,
+   "juste": 4,
+   "faux": 6,
+   "nv": 17
+  },
+  "tout (circulaire, info)": {
+   "Rprec": 1.0,
+   "Rprec_ea": 1.0,
+   "bpref": 1.0,
+   "n": 471,
+   "juste": 4,
+   "faux": 282,
+   "nv": 185
+  }
+ },
+ "g-q43009164": {
+  "jeu": "validation",
+  "R": 104,
+  "web seul": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 25,
+   "juste": 0,
+   "faux": 6,
+   "nv": 19
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 54,
+   "juste": 0,
+   "faux": 6,
+   "nv": 48
+  },
+  "+noms": {
+   "Rprec": 0.057692307692307696,
+   "Rprec_ea": 0.057692307692307696,
+   "bpref": 0.0829326923076923,
+   "n": 463,
+   "juste": 14,
+   "faux": 109,
+   "nv": 340
+  },
+  "+sirene+noms (non circulaire)": {
+   "Rprec": 0.057692307692307696,
+   "Rprec_ea": 0.057692307692307696,
+   "bpref": 0.08200813609467457,
+   "n": 484,
+   "juste": 14,
+   "faux": 109,
+   "nv": 361
+  },
+  "+wikidata seul (circulaire, info)": {
+   "Rprec": 0.9807692307692307,
+   "Rprec_ea": 0.9807692307692307,
+   "bpref": 0.9807692307692307,
+   "n": 127,
+   "juste": 102,
+   "faux": 6,
+   "nv": 19
+  },
+  "tout (circulaire, info)": {
+   "Rprec": 0.5384615384615384,
+   "Rprec_ea": 0.5384615384615384,
+   "bpref": 0.5499260355029586,
+   "n": 524,
+   "juste": 59,
+   "faux": 109,
+   "nv": 356
+  }
+ }
+}

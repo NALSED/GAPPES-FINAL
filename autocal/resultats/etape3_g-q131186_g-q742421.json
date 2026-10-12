@@ -1,0 +1,106 @@
+{
+ "g-q131186": {
+  "jeu": "dev",
+  "R": 33,
+  "web seul (lr)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 15,
+   "juste": 0,
+   "faux": 8,
+   "nv": 7
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 20,
+   "juste": 0,
+   "faux": 8,
+   "nv": 12
+  },
+  "+noms": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 180,
+   "juste": 0,
+   "faux": 57,
+   "nv": 123
+  },
+  "+sirene+noms (sans wikidata)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 194,
+   "juste": 0,
+   "faux": 59,
+   "nv": 135
+  },
+  "idem sans variantes": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 471,
+   "juste": 0,
+   "faux": 84,
+   "nv": 387
+  },
+  "+wikidata (circulaire, info)": {
+   "Rprec": 0.6363636363636364,
+   "bpref": 0.6170798898071622,
+   "n": 214,
+   "juste": 21,
+   "faux": 59,
+   "nv": 134
+  }
+ },
+ "g-q742421": {
+  "jeu": "dev",
+  "R": 142,
+  "web seul (lr)": {
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.007042253521126761,
+   "n": 23,
+   "juste": 1,
+   "faux": 5,
+   "nv": 17
+  },
+  "+sirene": {
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.007042253521126761,
+   "n": 32,
+   "juste": 1,
+   "faux": 5,
+   "nv": 26
+  },
+  "+noms": {
+   "Rprec": 0.014084507042253521,
+   "bpref": 0.010755441741357235,
+   "n": 201,
+   "juste": 2,
+   "faux": 55,
+   "nv": 144
+  },
+  "+sirene+noms (sans wikidata)": {
+   "Rprec": 0.014084507042253521,
+   "bpref": 0.010627400768245839,
+   "n": 203,
+   "juste": 2,
+   "faux": 55,
+   "nv": 146
+  },
+  "idem sans variantes": {
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.011249314066215474,
+   "n": 359,
+   "juste": 2,
+   "faux": 77,
+   "nv": 280
+  },
+  "+wikidata (circulaire, info)": {
+   "Rprec": 0.9225352112676056,
+   "bpref": 0.9058898847631255,
+   "n": 329,
+   "juste": 131,
+   "faux": 55,
+   "nv": 143
+  }
+ }
+}

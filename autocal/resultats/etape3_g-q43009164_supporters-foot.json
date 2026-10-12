@@ -1,0 +1,106 @@
+{
+ "supporters-foot": {
+  "jeu": "validation",
+  "R": 4,
+  "web seul (lr)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 23,
+   "juste": 0,
+   "faux": 6,
+   "nv": 17
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 23,
+   "juste": 0,
+   "faux": 6,
+   "nv": 17
+  },
+  "+noms": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 500,
+   "juste": 0,
+   "faux": 301,
+   "nv": 199
+  },
+  "+sirene+noms (sans wikidata)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 500,
+   "juste": 0,
+   "faux": 301,
+   "nv": 199
+  },
+  "idem sans variantes": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 723,
+   "juste": 0,
+   "faux": 383,
+   "nv": 340
+  },
+  "+wikidata (circulaire, info)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 500,
+   "juste": 0,
+   "faux": 301,
+   "nv": 199
+  }
+ },
+ "g-q43009164": {
+  "jeu": "validation",
+  "R": 104,
+  "web seul (lr)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 25,
+   "juste": 0,
+   "faux": 6,
+   "nv": 19
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 30,
+   "juste": 0,
+   "faux": 6,
+   "nv": 24
+  },
+  "+noms": {
+   "Rprec": 0.057692307692307696,
+   "bpref": 0.07498150887573965,
+   "n": 500,
+   "juste": 13,
+   "faux": 131,
+   "nv": 356
+  },
+  "+sirene+noms (sans wikidata)": {
+   "Rprec": 0.057692307692307696,
+   "bpref": 0.07396449704142014,
+   "n": 497,
+   "juste": 13,
+   "faux": 130,
+   "nv": 354
+  },
+  "idem sans variantes": {
+   "Rprec": 0.0673076923076923,
+   "bpref": 0.07766272189349112,
+   "n": 797,
+   "juste": 16,
+   "faux": 194,
+   "nv": 587
+  },
+  "+wikidata (circulaire, info)": {
+   "Rprec": 0.23076923076923078,
+   "bpref": 0.24399038461538455,
+   "n": 511,
+   "juste": 29,
+   "faux": 129,
+   "nv": 353
+  }
+ }
+}

@@ -1,0 +1,106 @@
+{
+ "festivals-elec": {
+  "jeu": "dev",
+  "R": 7,
+  "web seul (lr)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 28,
+   "juste": 0,
+   "faux": 12,
+   "nv": 16
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 29,
+   "juste": 0,
+   "faux": 12,
+   "nv": 17
+  },
+  "+noms": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 180,
+   "juste": 0,
+   "faux": 91,
+   "nv": 89
+  },
+  "+sirene+noms (sans wikidata)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 181,
+   "juste": 0,
+   "faux": 91,
+   "nv": 90
+  },
+  "idem sans variantes": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 211,
+   "juste": 0,
+   "faux": 102,
+   "nv": 109
+  },
+  "+wikidata (circulaire, info)": {
+   "Rprec": 0.0,
+   "bpref": 0.6122448979591837,
+   "n": 574,
+   "juste": 6,
+   "faux": 90,
+   "nv": 478
+  }
+ },
+ "g-q212805": {
+  "jeu": "dev",
+  "R": 45,
+  "web seul (lr)": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.011111111111111112,
+   "n": 13,
+   "juste": 1,
+   "faux": 4,
+   "nv": 8
+  },
+  "+sirene": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.011111111111111112,
+   "n": 14,
+   "juste": 1,
+   "faux": 4,
+   "nv": 9
+  },
+  "+noms": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.02123456790123457,
+   "n": 495,
+   "juste": 1,
+   "faux": 233,
+   "nv": 261
+  },
+  "+sirene+noms (sans wikidata)": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.02123456790123457,
+   "n": 496,
+   "juste": 1,
+   "faux": 233,
+   "nv": 262
+  },
+  "idem sans variantes": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.02123456790123457,
+   "n": 650,
+   "juste": 1,
+   "faux": 313,
+   "nv": 336
+  },
+  "+wikidata (circulaire, info)": {
+   "Rprec": 0.8888888888888888,
+   "bpref": 0.8888888888888888,
+   "n": 535,
+   "juste": 40,
+   "faux": 233,
+   "nv": 262
+  }
+ }
+}

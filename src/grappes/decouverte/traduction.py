@@ -39,6 +39,11 @@ def racine(mot: str) -> str:
     return mot
 
 
+def singulier(mot: str) -> str:
+    """Pluriel en -s ou -x retiré seulement (la recherche Wikidata veut des mots entiers : « groupe », pas « group »)."""
+    return mot[:-1] if len(mot) > 3 and mot[-1] in "sx" else mot
+
+
 def noyau(phrase: str) -> list[str]:
     """Mots porteurs de sens de la phrase (sans complément de lieu ni articles), dans l'ordre."""
     p = LIEUX.sub("", phrase.strip())
@@ -69,6 +74,7 @@ class ClasseWikidata:
     libelle: str
     segment: str
     instances: int
+    complet: bool = True  # le segment couvre tout le noyau de la phrase (sinon : classe partielle)
 
 
 def classe_wikidata(
@@ -83,7 +89,7 @@ def classe_wikidata(
         texte = " ".join(seg)
         cible = " ".join(racine(m) for m in seg)
         hits: list[dict] = []
-        for variante in dict.fromkeys([texte, " ".join(racine(m) for m in seg)]):
+        for variante in dict.fromkeys([texte, " ".join(singulier(m) for m in seg)]):
             try:
                 hits += http.wd_search(variante, 8)  # l'API ne trouve pas toujours le pluriel
             except DecouverteError:
@@ -101,7 +107,7 @@ def classe_wikidata(
             except (DecouverteError, KeyError, IndexError, ValueError):
                 continue
             if min_instances <= n < plafond:  # n >= plafond : classe trop générale (tout le pays), pas un sujet
-                return ClasseWikidata(h["id"], lib, texte, n)
+                return ClasseWikidata(h["id"], lib, texte, n, len([m for m in seg if m not in ARTICLES]) == plein)
     return None
 
 
@@ -135,3 +141,63 @@ def code_naf(phrase: str, naf: list[tuple[str, str]], seuil: float = 0.6) -> Cod
         return None
     lm = {racine(m) for m in mots(meilleur[3])}
     return CodeNaf(meilleur[2], meilleur[3], meilleur[0], [m for m in noyau(phrase) if racine(m) not in lm])
+
+
+# --- traduction « domaine » : type + complément (« clubs de HANDBALL », « festivals de MUSIQUE ÉLECTRONIQUE ») ----------
+LIENS_DOMAINE = ("P641", "P136", "P101", "P921", "P361", "P463", "P452")
+# sport, genre, domaine d'activité, sujet principal, partie de, membre de, secteur : propriétés Wikidata qui rattachent
+# une organisation à un domaine. Liste fixe et documentée (config/decouverte.yaml), jamais choisie sujet par sujet.
+
+
+@dataclass(slots=True)
+class DomaineWikidata:
+    entite: str  # QID du complément (ex. Q8418 handball)
+    libelle: str
+    segment: str  # mots du sujet qui l'ont désigné
+    type_qid: str  # classe du type (ex. festival), ou "" si introuvable
+    ignores: list[str]  # mots du sujet non résolus (adjectifs : « professionnels »), signalés, jamais devinés
+    pays: str  # QID du pays si la phrase en donne un (« en France »), sinon ""
+
+
+def pays_de_la_phrase(phrase: str) -> str:
+    return "Q142" if re.search(r"\bFrance\b|\bfran[cç]ais(?:es?)?\b", phrase) else ""
+
+
+def _entite_exacte(texte: str, http: Http) -> tuple[str, str] | None:
+    cible = " ".join(racine(m) for m in mots(texte))
+    variantes = dict.fromkeys([texte, " ".join(singulier(m) for m in mots(texte))])
+    for v in variantes:
+        try:
+            hits = http.wd_search(v, 8)
+        except DecouverteError:
+            continue
+        for h in hits:  # la recherche classe par pertinence : on garde le premier libellé identique
+            if " ".join(racine(m) for m in mots(h.get("label", "") or "")) == cible:
+                return h["id"], h.get("label", "")
+    return None
+
+
+def domaine_wikidata(phrase: str, http: Http) -> DomaineWikidata | None:
+    """Sépare la phrase en TYPE (premier mot du noyau) + COMPLÉMENT (le reste). Le complément est cherché dans
+    Wikidata ; les derniers mots sont retirés un à un tant qu'il est introuvable (au plus deux), et signalés."""
+    tous = _mots_phrase_sans_lieu(phrase)
+    plein = noyau(phrase)
+    if len(plein) < 2:
+        return None
+    # le complément commence après le premier mot plein ; les petits mots de liaison ("de") sont écartés
+    debut = next(i for i, m in enumerate(tous) if m == plein[0]) + 1
+    compl = [m for m in tous[debut:]]
+    while compl and compl[0] in ARTICLES:
+        compl = compl[1:]
+    ignores: list[str] = []
+    for _ in range(3):
+        if not compl:
+            return None
+        texte = " ".join(compl)
+        e = _entite_exacte(texte, http)
+        if e:
+            t = _entite_exacte(plein[0], http)
+            return DomaineWikidata(e[0], e[1], texte, t[0] if t else "", ignores, pays_de_la_phrase(phrase))
+        ignores.insert(0, compl[-1])
+        compl = compl[:-1]
+    return None

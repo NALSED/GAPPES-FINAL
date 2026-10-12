@@ -1,0 +1,118 @@
+{
+ "cac40": {
+  "jeu": "validation",
+  "R": 40,
+  "web seul": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 8,
+   "juste": 0,
+   "faux": 5,
+   "nv": 3
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 8,
+   "juste": 0,
+   "faux": 5,
+   "nv": 3
+  },
+  "+noms": {
+   "Rprec": 0.35,
+   "Rprec_ea": 0.35,
+   "bpref": 0.41187499999999994,
+   "n": 542,
+   "juste": 25,
+   "faux": 109,
+   "nv": 408
+  },
+  "+sirene+noms (non circulaire)": {
+   "Rprec": 0.35,
+   "Rprec_ea": 0.35,
+   "bpref": 0.41187499999999994,
+   "n": 542,
+   "juste": 25,
+   "faux": 109,
+   "nv": 408
+  },
+  "+wikidata seul (circulaire, info)": {
+   "Rprec": 0.825,
+   "Rprec_ea": 0.8333333333333334,
+   "bpref": 0.9071428571428575,
+   "n": 56,
+   "juste": 40,
+   "faux": 7,
+   "nv": 9
+  },
+  "tout (circulaire, info)": {
+   "Rprec": 0.9,
+   "Rprec_ea": 0.9,
+   "bpref": 0.9731250000000001,
+   "n": 555,
+   "juste": 39,
+   "faux": 108,
+   "nv": 408
+  }
+ },
+ "g-q654502": {
+  "jeu": "validation",
+  "R": 21,
+  "web seul": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 20,
+   "juste": 0,
+   "faux": 7,
+   "nv": 13
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 170,
+   "juste": 0,
+   "faux": 11,
+   "nv": 159
+  },
+  "+noms": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 289,
+   "juste": 0,
+   "faux": 118,
+   "nv": 171
+  },
+  "+sirene+noms (non circulaire)": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 286,
+   "juste": 0,
+   "faux": 116,
+   "nv": 170
+  },
+  "+wikidata seul (circulaire, info)": {
+   "Rprec": 1.0,
+   "Rprec_ea": 1.0,
+   "bpref": 1.0,
+   "n": 41,
+   "juste": 21,
+   "faux": 7,
+   "nv": 13
+  },
+  "tout (circulaire, info)": {
+   "Rprec": 0.9523809523809523,
+   "Rprec_ea": 0.9523809523809523,
+   "bpref": 0.9070294784580499,
+   "n": 306,
+   "juste": 20,
+   "faux": 116,
+   "nv": 170
+  }
+ }
+}

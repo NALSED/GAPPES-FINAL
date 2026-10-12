@@ -1,0 +1,118 @@
+{
+ "g-q2190251": {
+  "jeu": "validation",
+  "R": 89,
+  "web seul": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 15,
+   "juste": 0,
+   "faux": 5,
+   "nv": 10
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 192,
+   "juste": 0,
+   "faux": 11,
+   "nv": 181
+  },
+  "+noms": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 172,
+   "juste": 0,
+   "faux": 67,
+   "nv": 105
+  },
+  "+sirene+noms (non circulaire)": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 314,
+   "juste": 0,
+   "faux": 72,
+   "nv": 242
+  },
+  "+wikidata seul (circulaire, info)": {
+   "Rprec": 0.9662921348314607,
+   "Rprec_ea": 0.9662921348314607,
+   "bpref": 0.9662921348314607,
+   "n": 101,
+   "juste": 86,
+   "faux": 5,
+   "nv": 10
+  },
+  "tout (circulaire, info)": {
+   "Rprec": 0.9662921348314607,
+   "Rprec_ea": 0.9662921348314607,
+   "bpref": 0.9662921348314607,
+   "n": 400,
+   "juste": 86,
+   "faux": 72,
+   "nv": 242
+  }
+ },
+ "g-q56199177": {
+  "jeu": "validation",
+  "R": 23,
+  "web seul": {
+   "Rprec": 0.043478260869565216,
+   "Rprec_ea": 0.043478260869565216,
+   "bpref": 0.036231884057971016,
+   "n": 12,
+   "juste": 1,
+   "faux": 6,
+   "nv": 5
+  },
+  "+sirene": {
+   "Rprec": 0.13043478260869565,
+   "Rprec_ea": 0.13043478260869565,
+   "bpref": 0.07246376811594205,
+   "n": 23,
+   "juste": 3,
+   "faux": 6,
+   "nv": 14
+  },
+  "+noms": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 174,
+   "juste": 0,
+   "faux": 53,
+   "nv": 121
+  },
+  "+sirene+noms (non circulaire)": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 172,
+   "juste": 0,
+   "faux": 53,
+   "nv": 119
+  },
+  "+wikidata seul (circulaire, info)": {
+   "Rprec": 0.7391304347826086,
+   "Rprec_ea": 0.7391304347826086,
+   "bpref": 0.7391304347826086,
+   "n": 28,
+   "juste": 17,
+   "faux": 6,
+   "nv": 5
+  },
+  "tout (circulaire, info)": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 172,
+   "juste": 0,
+   "faux": 53,
+   "nv": 119
+  }
+ }
+}

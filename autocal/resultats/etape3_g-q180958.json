@@ -1,0 +1,54 @@
+{
+ "g-q180958": {
+  "jeu": "dev",
+  "R": 100,
+  "web seul (lr)": {
+   "Rprec": 0.02,
+   "bpref": 0.016,
+   "n": 20,
+   "juste": 2,
+   "faux": 5,
+   "nv": 13
+  },
+  "+sirene": {
+   "Rprec": 0.02,
+   "bpref": 0.016666666666666666,
+   "n": 98,
+   "juste": 2,
+   "faux": 6,
+   "nv": 90
+  },
+  "+noms": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 245,
+   "juste": 0,
+   "faux": 97,
+   "nv": 148
+  },
+  "+sirene+noms (sans wikidata)": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "n": 311,
+   "juste": 0,
+   "faux": 98,
+   "nv": 213
+  },
+  "idem sans variantes": {
+   "Rprec": 0.03,
+   "bpref": 0.031,
+   "n": 555,
+   "juste": 4,
+   "faux": 147,
+   "nv": 404
+  },
+  "+wikidata (circulaire, info)": {
+   "Rprec": 0.08,
+   "bpref": 0.07918367346938775,
+   "n": 318,
+   "juste": 8,
+   "faux": 98,
+   "nv": 212
+  }
+ }
+}

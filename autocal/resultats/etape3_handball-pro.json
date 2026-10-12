@@ -1,0 +1,54 @@
+{
+ "handball-pro": {
+  "jeu": "dev",
+  "R": 17,
+  "web seul (lr)": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.0,
+   "n": 15,
+   "juste": 1,
+   "faux": 2,
+   "nv": 12
+  },
+  "+sirene": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.0,
+   "n": 16,
+   "juste": 1,
+   "faux": 2,
+   "nv": 13
+  },
+  "+noms": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.05190311418685121,
+   "n": 188,
+   "juste": 2,
+   "faux": 47,
+   "nv": 139
+  },
+  "+sirene+noms (sans wikidata)": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.05190311418685121,
+   "n": 187,
+   "juste": 2,
+   "faux": 47,
+   "nv": 138
+  },
+  "idem sans variantes": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.05190311418685121,
+   "n": 280,
+   "juste": 4,
+   "faux": 64,
+   "nv": 212
+  },
+  "+wikidata (circulaire, info)": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.11072664359861592,
+   "n": 198,
+   "juste": 3,
+   "faux": 47,
+   "nv": 148
+  }
+ }
+}

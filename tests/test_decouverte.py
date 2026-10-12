@@ -72,3 +72,24 @@ def test_sirene_repli_nom_filtre(monkeypatch):
     out = sirene("Clubs de handball", None, H(), DecouverteConfig(pages_sirene=2))
     assert [d.siren for d in out] == ["111111111"] and out[0].ville == "X"
     assert isinstance(out[0], Decouvert)
+
+
+def test_domaine_type_plus_complement_et_mots_ignores():
+    from grappes.decouverte.traduction import domaine_wikidata, pays_de_la_phrase, singulier
+
+    assert singulier("groupes") == "groupe" and singulier("bus") == "bus" and singulier("pas") == "pas"
+    assert pays_de_la_phrase("Les clubs de handball en France") == "Q142"
+    assert pays_de_la_phrase("Les festivals de jazz") == ""
+
+    class H:
+        def wd_search(self, texte, limite=8, langue="fr"):
+            base = {"handball": [{"id": "Q8418", "label": "handball"}], "club": [{"id": "Q988108", "label": "club"}]}
+            return base.get(texte, [])
+
+    d = domaine_wikidata("Les clubs de handball professionnels en France", H())
+    assert d is not None and d.entite == "Q8418" and d.ignores == ["professionnels"] and d.pays == "Q142"
+    assert d.type_qid == "Q988108"
+    # complément introuvable (même après retrait de deux mots) : rien, on n'invente pas
+    assert domaine_wikidata("Les éleveurs de dragons verts en Corrèze", H()) is None
+    # un seul mot : pas de complément
+    assert domaine_wikidata("Brasserie en France", H()) is None
