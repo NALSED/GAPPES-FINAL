@@ -200,8 +200,21 @@ La valeur 1 ajoute **+35 % de candidats** web (+64 en dev, +68 en validation) **
 * `config/calibration.json` : **calibration non valide** (méthode « aucune », `valide: false`) ; le score affiché est `p = LR/(1+LR)` (rapport de cotes a priori 1:1), plafonné à 99, toujours étiqueté estimation étendue. Il passera à « mesuré » seulement quand une calibration battra le prédicteur constant en validation.
 * Les réponses des registres sont mises en cache sur disque avec une durée de vie de 30 jours.
 
-## 11. Reste à faire (ordre)
+## 11. Ouverture du jeu test et verdict (2026-10-12)
 
-1. Décision de Sednal sur les options du § 5 (critère 0,90) avant ouverture du test ; activation éventuelle de `classement.actif`.
-2. Décider du sort de la fusion de variantes (§ 4) et du poids de Wikidata dans l'indice (valeur d'expert, non mesurable).
-3. Ouverture unique du jeu test (journal `autocal/test_ouvert.json`, paramètres figés, date et heure), verdict dans `docs/CERTIFICATION.md`.
+Option 2 retenue par Sednal (D66), règle de la ligne B fixée avant ouverture, test ouvert une fois (D67). Résultat :
+**non certifié** sur les deux lignes ; R-précision stricte moyenne **0,0178** (cible 0,90), Brier 0,00680 contre 0,00651
+pour le prédicteur constant, 1 sujet sur 6 au-dessus du 95e centile de permutation. Cause mesurée : **11 acteurs de la
+référence sur 356 (3,1 %)** sont parmi les candidats, tous classements confondus ; le classement ne peut donc pas
+corriger ce que les sources ne fournissent pas. Le gain des noms lus observé en validation (0,007 → 0,077) tenait
+presque entièrement à cac40 et ne se retrouve pas sur le test (0,0160 → 0,0178). Détail, tableaux, hypothèses
+contredites : `docs/CERTIFICATION.md` § 2. Diagramme : `docs/conception/fiabilite_test.png`.
+
+## 12. Reste à faire (propositions à Sednal, rien de décidé)
+
+1. Wikidata comme fournisseur de **découverte** en production (« estimation étendue », car circulaire) : seul levier qui
+   a montré un rappel élevé (0,58 / 0,92 sur dev / validation, non probant).
+2. Référence indépendante d'un registre pour quelques sujets (option 4 du § 5) afin de mesurer SIRENE/RNA.
+3. Mesurer un élargissement de la collecte web (point 6) sur dev d'abord ; un nouveau jeu test (nouvelle graine) sera
+   nécessaire pour toute certification ultérieure.
+4. Activation éventuelle de `config/classement.yaml: actif`, sort de la fusion de variantes (§ 4), poids de Wikidata dans l'indice.

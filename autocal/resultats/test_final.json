@@ -1,0 +1,560 @@
+{
+ "jeu": "test",
+ "sujets": [
+  {
+   "id": "g-q3412193",
+   "phrase": "Pôle de compétitivité en France",
+   "difficulte": "facile",
+   "candidats": 316,
+   "p_max": 0.10959217053057892,
+   "n_p_tau": 0,
+   "sirene_total": 6,
+   "R": 22,
+   "Rprec": 0.0,
+   "Rprec_ex_aequo": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "map": 0.0,
+   "comptes": {
+    "juste": 0,
+    "faux": 143,
+    "non_verifiable": 173
+   },
+   "comptes_R": {
+    "juste": 0,
+    "faux": 14,
+    "non_verifiable": 8
+   },
+   "faux_p_tau": 0,
+   "rendus_si_N_egal_R": 22,
+   "remplissage": {
+    "20": 1.0,
+    "50": 1.0,
+    "100": 1.0,
+    "200": 1.0
+   },
+   "permutation": {
+    "observe": 0.0,
+    "permute_moyen": 0.0,
+    "permute_p95": 0.0,
+    "chance_attendu": 0.0,
+    "p_valeur": 1.0,
+    "k_justes": 0,
+    "n_rendus": 316
+   }
+  },
+  {
+   "id": "g-q17487523",
+   "phrase": "Conservatoire à rayonnement régional en France",
+   "difficulte": "facile",
+   "candidats": 245,
+   "p_max": 0.06150170804419038,
+   "n_p_tau": 0,
+   "sirene_total": 14,
+   "R": 46,
+   "Rprec": 0.06521739130434782,
+   "Rprec_ex_aequo": 0.06521739130434782,
+   "bpref": 0.06427221172022683,
+   "infAP": 0.03478259420299517,
+   "map": 0.034782608695652174,
+   "comptes": {
+    "juste": 3,
+    "faux": 95,
+    "non_verifiable": 147
+   },
+   "comptes_R": {
+    "juste": 3,
+    "faux": 19,
+    "non_verifiable": 24
+   },
+   "faux_p_tau": 0,
+   "rendus_si_N_egal_R": 46,
+   "remplissage": {
+    "20": 1.0,
+    "50": 1.0,
+    "100": 1.0,
+    "200": 1.0
+   },
+   "permutation": {
+    "observe": 0.06521739130434782,
+    "permute_moyen": 0.011652173913043476,
+    "permute_p95": 0.043478260869565216,
+    "chance_attendu": 0.012244897959183673,
+    "p_valeur": 0.005,
+    "k_justes": 3,
+    "n_rendus": 245
+   }
+  },
+  {
+   "id": "g-q856234",
+   "phrase": "Bibliothèque universitaire en France",
+   "difficulte": "moyen",
+   "candidats": 209,
+   "p_max": 0.3236071590215437,
+   "n_p_tau": 0,
+   "sirene_total": 8,
+   "R": 117,
+   "Rprec": 0.0,
+   "Rprec_ex_aequo": 0.0,
+   "bpref": 0.0002191540653079107,
+   "infAP": 0.0001267302468040642,
+   "map": 0.00012672941134083697,
+   "comptes": {
+    "juste": 2,
+    "faux": 78,
+    "non_verifiable": 129
+   },
+   "comptes_R": {
+    "juste": 0,
+    "faux": 47,
+    "non_verifiable": 70
+   },
+   "faux_p_tau": 0,
+   "rendus_si_N_egal_R": 117,
+   "remplissage": {
+    "20": 1.0,
+    "50": 1.0,
+    "100": 1.0,
+    "200": 1.0
+   },
+   "permutation": {
+    "observe": 0.0,
+    "permute_moyen": 0.009572649572649571,
+    "permute_p95": 0.017094017094017096,
+    "chance_attendu": 0.00956937799043062,
+    "p_valeur": 1.0,
+    "k_justes": 2,
+    "n_rendus": 209
+   }
+  },
+  {
+   "id": "g-q1666019",
+   "phrase": "Groupe de pression en France",
+   "difficulte": "moyen",
+   "candidats": 213,
+   "p_max": 0.047218197185855765,
+   "n_p_tau": 0,
+   "sirene_total": 2,
+   "R": 60,
+   "Rprec": 0.0,
+   "Rprec_ex_aequo": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "map": 0.0,
+   "comptes": {
+    "juste": 0,
+    "faux": 109,
+    "non_verifiable": 100
+   },
+   "comptes_R": {
+    "juste": 0,
+    "faux": 41,
+    "non_verifiable": 19
+   },
+   "faux_p_tau": 0,
+   "rendus_si_N_egal_R": 60,
+   "remplissage": {
+    "20": 1.0,
+    "50": 1.0,
+    "100": 1.0,
+    "200": 1.0
+   },
+   "permutation": {
+    "observe": 0.0,
+    "permute_moyen": 0.0,
+    "permute_p95": 0.0,
+    "chance_attendu": 0.0,
+    "p_valeur": 1.0,
+    "k_justes": 0,
+    "n_rendus": 209
+   }
+  },
+  {
+   "id": "g-q131734",
+   "phrase": "Brasserie en France",
+   "difficulte": "difficile",
+   "candidats": 367,
+   "p_max": 0.4362881660479069,
+   "n_p_tau": 0,
+   "sirene_total": 200,
+   "R": 72,
+   "Rprec": 0.041666666666666664,
+   "Rprec_ex_aequo": 0.041666666666666664,
+   "bpref": 0.0461033950617284,
+   "infAP": 0.004190392692521067,
+   "map": 0.004190377336043247,
+   "comptes": {
+    "juste": 6,
+    "faux": 116,
+    "non_verifiable": 245
+   },
+   "comptes_R": {
+    "juste": 3,
+    "faux": 22,
+    "non_verifiable": 47
+   },
+   "faux_p_tau": 0,
+   "rendus_si_N_egal_R": 72,
+   "remplissage": {
+    "20": 1.0,
+    "50": 1.0,
+    "100": 1.0,
+    "200": 1.0
+   },
+   "permutation": {
+    "observe": 0.041666666666666664,
+    "permute_moyen": 0.015875,
+    "permute_p95": 0.041666666666666664,
+    "chance_attendu": 0.01634877384196185,
+    "p_valeur": 0.097,
+    "k_justes": 6,
+    "n_rendus": 367
+   }
+  },
+  {
+   "id": "g-q2088357",
+   "phrase": "Ensemble musical en France",
+   "difficulte": "difficile",
+   "candidats": 329,
+   "p_max": 0.12976508719319377,
+   "n_p_tau": 0,
+   "sirene_total": 113,
+   "R": 39,
+   "Rprec": 0.0,
+   "Rprec_ex_aequo": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "map": 0.0,
+   "comptes": {
+    "juste": 0,
+    "faux": 75,
+    "non_verifiable": 254
+   },
+   "comptes_R": {
+    "juste": 0,
+    "faux": 16,
+    "non_verifiable": 23
+   },
+   "faux_p_tau": 0,
+   "rendus_si_N_egal_R": 39,
+   "remplissage": {
+    "20": 1.0,
+    "50": 1.0,
+    "100": 1.0,
+    "200": 1.0
+   },
+   "permutation": {
+    "observe": 0.0,
+    "permute_moyen": 0.0,
+    "permute_p95": 0.0,
+    "chance_attendu": 0.0,
+    "p_valeur": 1.0,
+    "k_justes": 0,
+    "n_rendus": 329
+   }
+  },
+  {
+   "id": "temoin-sorciers",
+   "phrase": "Les écoles de sorcellerie de Haute-Savoie",
+   "difficulte": "temoin",
+   "candidats": 168,
+   "p_max": 0.34005673189195007,
+   "n_p_tau": 0,
+   "sirene_total": 0,
+   "temoin": true
+  }
+ ],
+ "calibration": {
+  "n": 1679,
+  "positifs": 11,
+  "ece": 0.010496988779631913,
+  "brier": 0.006800978230204834,
+  "brier_constant": 0.006508596363089433,
+  "p_max": 0.4362881660479069
+ },
+ "comparaisons": {
+  "complet (réglé, sans Wikidata)": {
+   "Rprec": 0.017814009661835748,
+   "Rprec_ex_aequo": 0.017814009661835748,
+   "bpref": 0.018432460141210524
+  },
+  "sans SIRENE/RNA": {
+   "Rprec": 0.017814009661835748,
+   "Rprec_ex_aequo": 0.017814009661835748,
+   "bpref": 0.017211779606961613
+  },
+  "sans noms lus": {
+   "Rprec": 0.01603338288120897,
+   "Rprec_ex_aequo": 0.017833794403842713,
+   "bpref": 0.017210029377453126
+  },
+  "sans proximité du texte propre": {
+   "Rprec": 0.013300507865725257,
+   "Rprec_ex_aequo": 0.013300507865725257,
+   "bpref": 0.012119736079079216
+  },
+  "sans écosystèmes": {
+   "Rprec": 0.017814009661835748,
+   "Rprec_ex_aequo": 0.017814009661835748,
+   "bpref": 0.018432460141210524
+  },
+  "sans citations": {
+   "Rprec": 0.017814009661835748,
+   "Rprec_ex_aequo": 0.017814009661835748,
+   "bpref": 0.018589990071897353
+  },
+  "web seul (aucun fournisseur)": {
+   "Rprec": 0.014608881456707544,
+   "Rprec_ex_aequo": 0.014608881456707544,
+   "bpref": 0.011506719930632974
+  },
+  "système d'avant (actuel)": {
+   "Rprec": 0.014608881456707544,
+   "Rprec_ex_aequo": 0.014608881456707544,
+   "bpref": 0.012026972624798711
+  },
+  "vote majoritaire": {
+   "Rprec": 0.014608881456707544,
+   "Rprec_ex_aequo": 0.014608881456707544,
+   "bpref": 0.010298990462033942
+  }
+ },
+ "ligne_b": {
+  "g-q3412193": {
+   "R": 22,
+   "total_sirene_info": 6,
+   "ferme": true
+  },
+  "g-q17487523": {
+   "R": 46,
+   "total_sirene_info": 14,
+   "ferme": true
+  },
+  "g-q856234": {
+   "R": 117,
+   "total_sirene_info": 8,
+   "ferme": false
+  },
+  "g-q1666019": {
+   "R": 60,
+   "total_sirene_info": 2,
+   "ferme": false
+  },
+  "g-q131734": {
+   "R": 72,
+   "total_sirene_info": 200,
+   "ferme": false
+  },
+  "g-q2088357": {
+   "R": 39,
+   "total_sirene_info": 113,
+   "ferme": false
+  }
+ },
+ "pytest": "571 passed in 19.14s",
+ "verdict": {
+  "ligne_A": {
+   "criteres": {
+    "1": {
+     "valeur": 0.017814009661835748,
+     "bpref": 0.018432460141210524,
+     "seuil": 0.9,
+     "ok": false,
+     "sujets": [
+      "g-q3412193",
+      "g-q17487523",
+      "g-q856234",
+      "g-q1666019",
+      "g-q131734",
+      "g-q2088357"
+     ]
+    },
+    "2": {
+     "taux": 1.0,
+     "ok": true,
+     "seuil": 0.8,
+     "remplissage": {
+      "20": 1.0,
+      "50": 1.0,
+      "100": 1.0,
+      "200": 1.0
+     },
+     "par_sujet": {
+      "g-q3412193": [
+       22,
+       22
+      ],
+      "g-q17487523": [
+       46,
+       46
+      ],
+      "g-q856234": [
+       117,
+       117
+      ],
+      "g-q1666019": [
+       60,
+       60
+      ],
+      "g-q131734": [
+       72,
+       72
+      ],
+      "g-q2088357": [
+       39,
+       39
+      ]
+     }
+    },
+    "3": {
+     "ok": true,
+     "note": "rapporté à part, sans seuil"
+    },
+    "4a": {
+     "p_max_temoin": 0.34005673189195007,
+     "ok": true
+    },
+    "4b": {
+     "faux_a_p_tau": 0,
+     "ok": true
+    },
+    "4c": {
+     "permute_moyen": 0.0061833039142821745,
+     "hasard_R_sur_n": 0.23560007133813798,
+     "borne": 0.285600071338138,
+     "part_depassant_p95": 0.16666666666666666,
+     "ok": false
+    },
+    "5": {
+     "ece": 0.010496988779631913,
+     "brier": 0.006800978230204834,
+     "brier_constant": 0.006508596363089433,
+     "ok": false
+    },
+    "6": {
+     "ok": true
+    },
+    "7": {
+     "ok": true
+    },
+    "8": {
+     "ok": true,
+     "Rprec": {
+      "validation": 0.07679765886287625,
+      "test": 0.017814009661835748,
+      "ecart": 0.0589836492010405
+     },
+     "Rprec_ex_aequo": {
+      "validation": 0.07679765886287625,
+      "test": 0.017814009661835748,
+      "ecart": 0.0589836492010405
+     }
+    }
+   },
+   "certifie": false
+  },
+  "ligne_B": {
+   "criteres": {
+    "1": {
+     "valeur": 0.03260869565217391,
+     "bpref": 0.032136105860113416,
+     "seuil": 0.9,
+     "ok": false,
+     "sujets": [
+      "g-q3412193",
+      "g-q17487523"
+     ]
+    },
+    "2": {
+     "taux": 1.0,
+     "ok": true,
+     "seuil": 0.8,
+     "remplissage": {
+      "20": 1.0,
+      "50": 1.0,
+      "100": 1.0,
+      "200": 1.0
+     },
+     "par_sujet": {
+      "g-q3412193": [
+       22,
+       22
+      ],
+      "g-q17487523": [
+       46,
+       46
+      ],
+      "g-q856234": [
+       117,
+       117
+      ],
+      "g-q1666019": [
+       60,
+       60
+      ],
+      "g-q131734": [
+       72,
+       72
+      ],
+      "g-q2088357": [
+       39,
+       39
+      ]
+     }
+    },
+    "3": {
+     "ok": true,
+     "note": "rapporté à part, sans seuil"
+    },
+    "4a": {
+     "p_max_temoin": 0.34005673189195007,
+     "ok": true
+    },
+    "4b": {
+     "faux_a_p_tau": 0,
+     "ok": true
+    },
+    "4c": {
+     "permute_moyen": 0.0061833039142821745,
+     "hasard_R_sur_n": 0.23560007133813798,
+     "borne": 0.285600071338138,
+     "part_depassant_p95": 0.16666666666666666,
+     "ok": false
+    },
+    "5": {
+     "ece": 0.010496988779631913,
+     "brier": 0.006800978230204834,
+     "brier_constant": 0.006508596363089433,
+     "ok": false
+    },
+    "6": {
+     "ok": true
+    },
+    "7": {
+     "ok": true
+    },
+    "8": {
+     "ok": true,
+     "Rprec": {
+      "validation": 0.07679765886287625,
+      "test": 0.017814009661835748,
+      "ecart": 0.0589836492010405
+     },
+     "Rprec_ex_aequo": {
+      "validation": 0.07679765886287625,
+      "test": 0.017814009661835748,
+      "ecart": 0.0589836492010405
+     }
+    }
+   },
+   "certifie": false,
+   "evaluable": true,
+   "sujets_fermes": [
+    "g-q3412193",
+    "g-q17487523"
+   ]
+  }
+ },
+ "rejeux_identiques_octet_pour_octet": true,
+ "empreinte_rejeu": "12550bc6643ff286"
+}

@@ -76,3 +76,12 @@ Sednal choisit l'option 2 du § 5 de `docs/conception/calibration.md` : seconde 
 fermée et quasi complète, à côté de la première. Règle objective écrite dans `docs/CERTIFICATION.md` § 1 bis avant
 l'ouverture (R/T >= 0,5 contre le total SIRENE/RNA du code NAF). Critères et seuils inchangés. La ligne A reste celle
 qui fait foi. Ouverture unique par `grappes.autocal.test_final`.
+
+## D67 — Ouverture du jeu test et verdict (2026-10-12)
+
+Jeu test ouvert une fois (16:54:55 → 19:05:27 UTC, commit 51a4ae1) par `grappes.autocal.test_final`. Verdict
+**non certifié** sur les deux lignes (A : six sujets ; B : pôle de compétitivité et conservatoire à rayonnement
+régional, listes fermées par définition, figées dans `autocal/ligne_b.json`). Critères en échec : 1 (0,0178), 4c (1
+sujet sur 6 au-dessus du 95e centile), 5 (Brier 0,00680 > 0,00651). Cause mesurée : 11 acteurs sur 356 présents parmi
+les candidats (3,1 %). Le test est brûlé ; la suite (Wikidata en découverte, référence indépendante, collecte élargie)
+est proposée à Sednal, non décidée. Détail : `docs/CERTIFICATION.md` § 2.

@@ -63,3 +63,12 @@ Instructions de Sednal : `DECISION_AUTOCAL.md` (méthode) et `DECISION_FIABILITE
 ## Rapports de cycle
 
 `rapports/cycle_<date>.md` (créés par `grappes cycle`, lisibles par un non-informaticien) ; dernier : `rapports/dernier_cycle.md`.
+
+
+## Mission D62/D64 : verdict rendu (2026-10-12)
+
+* Jeu test ouvert une fois (16:54:55 → 19:05:27 UTC) : **non certifié** (lignes A et B). R-précision stricte 0,0178 ;
+  critères 1, 4c, 5 en échec ; 2, 4a, 4b, 6, 7 remplis ; 8 rapporté (+0,059). `docs/CERTIFICATION.md` § 2, D66, D67.
+* Cause : 3,1 % des acteurs de la référence parmi les candidats. Test brûlé pour cette version du système.
+* En attente de Sednal (non bloquant, rien n'est appliqué) : propositions du § 12 de `docs/conception/calibration.md`.
+* Étape 4 (personnes) : toujours préparée seulement, collecte inactive.
