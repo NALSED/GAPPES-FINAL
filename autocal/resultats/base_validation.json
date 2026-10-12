@@ -1,0 +1,494 @@
+{
+ "cac40": {
+  "R": 40,
+  "candidats": 21,
+  "difficulte": "facile",
+  "actuel": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 11,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 6
+   }
+  },
+  "vote": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 11,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 6
+   }
+  },
+  "sums": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 11,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 6
+   }
+  },
+  "averagelog": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 11,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 6
+   }
+  },
+  "investment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 11,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 6
+   }
+  },
+  "pooledinvestment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 11,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 6
+   }
+  },
+  "truthfinder": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 11,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 6
+   }
+  }
+ },
+ "g-q654502": {
+  "R": 21,
+  "candidats": 37,
+  "difficulte": "facile",
+  "actuel": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 19,
+   "comptes": {
+    "juste": 0,
+    "faux": 7,
+    "non_verifiable": 12
+   }
+  },
+  "vote": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 20,
+   "comptes": {
+    "juste": 0,
+    "faux": 7,
+    "non_verifiable": 13
+   }
+  },
+  "sums": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 20,
+   "comptes": {
+    "juste": 0,
+    "faux": 7,
+    "non_verifiable": 13
+   }
+  },
+  "averagelog": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 20,
+   "comptes": {
+    "juste": 0,
+    "faux": 7,
+    "non_verifiable": 13
+   }
+  },
+  "investment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 20,
+   "comptes": {
+    "juste": 0,
+    "faux": 7,
+    "non_verifiable": 13
+   }
+  },
+  "pooledinvestment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 20,
+   "comptes": {
+    "juste": 0,
+    "faux": 7,
+    "non_verifiable": 13
+   }
+  },
+  "truthfinder": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 20,
+   "comptes": {
+    "juste": 0,
+    "faux": 7,
+    "non_verifiable": 13
+   }
+  }
+ },
+ "g-q2190251": {
+  "R": 89,
+  "candidats": 29,
+  "difficulte": "moyen",
+  "actuel": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 14,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 9
+   }
+  },
+  "vote": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 15,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 10
+   }
+  },
+  "sums": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 15,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 10
+   }
+  },
+  "averagelog": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 15,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 10
+   }
+  },
+  "investment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 15,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 10
+   }
+  },
+  "pooledinvestment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 15,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 10
+   }
+  },
+  "truthfinder": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 15,
+   "comptes": {
+    "juste": 0,
+    "faux": 5,
+    "non_verifiable": 10
+   }
+  }
+ },
+ "g-q56199177": {
+  "R": 23,
+  "candidats": 33,
+  "difficulte": "moyen",
+  "actuel": {
+   "Rprec": 0.043478260869565216,
+   "bpref": 0.036231884057971016,
+   "infAP": 0.021739347821739217,
+   "n": 13,
+   "comptes": {
+    "juste": 1,
+    "faux": 6,
+    "non_verifiable": 6
+   }
+  },
+  "vote": {
+   "Rprec": 0.043478260869565216,
+   "bpref": 0.043478260869565216,
+   "infAP": 0.043478260869565216,
+   "n": 13,
+   "comptes": {
+    "juste": 1,
+    "faux": 6,
+    "non_verifiable": 6
+   }
+  },
+  "sums": {
+   "Rprec": 0.043478260869565216,
+   "bpref": 0.043478260869565216,
+   "infAP": 0.043478260869565216,
+   "n": 13,
+   "comptes": {
+    "juste": 1,
+    "faux": 6,
+    "non_verifiable": 6
+   }
+  },
+  "averagelog": {
+   "Rprec": 0.043478260869565216,
+   "bpref": 0.043478260869565216,
+   "infAP": 0.043478260869565216,
+   "n": 13,
+   "comptes": {
+    "juste": 1,
+    "faux": 6,
+    "non_verifiable": 6
+   }
+  },
+  "investment": {
+   "Rprec": 0.043478260869565216,
+   "bpref": 0.043478260869565216,
+   "infAP": 0.043478260869565216,
+   "n": 13,
+   "comptes": {
+    "juste": 1,
+    "faux": 6,
+    "non_verifiable": 6
+   }
+  },
+  "pooledinvestment": {
+   "Rprec": 0.043478260869565216,
+   "bpref": 0.043478260869565216,
+   "infAP": 0.043478260869565216,
+   "n": 13,
+   "comptes": {
+    "juste": 1,
+    "faux": 6,
+    "non_verifiable": 6
+   }
+  },
+  "truthfinder": {
+   "Rprec": 0.043478260869565216,
+   "bpref": 0.043478260869565216,
+   "infAP": 0.043478260869565216,
+   "n": 13,
+   "comptes": {
+    "juste": 1,
+    "faux": 6,
+    "non_verifiable": 6
+   }
+  }
+ },
+ "supporters-foot": {
+  "R": 4,
+  "candidats": 29,
+  "difficulte": "difficile",
+  "actuel": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 22,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 16
+   }
+  },
+  "vote": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 23,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 17
+   }
+  },
+  "sums": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 23,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 17
+   }
+  },
+  "averagelog": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 23,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 17
+   }
+  },
+  "investment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 23,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 17
+   }
+  },
+  "pooledinvestment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 23,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 17
+   }
+  },
+  "truthfinder": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 23,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 17
+   }
+  }
+ },
+ "g-q43009164": {
+  "R": 104,
+  "candidats": 37,
+  "difficulte": "difficile",
+  "actuel": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 25,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 19
+   }
+  },
+  "vote": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 25,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 19
+   }
+  },
+  "sums": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 25,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 19
+   }
+  },
+  "averagelog": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 25,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 19
+   }
+  },
+  "investment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 25,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 19
+   }
+  },
+  "pooledinvestment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 25,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 19
+   }
+  },
+  "truthfinder": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 25,
+   "comptes": {
+    "juste": 0,
+    "faux": 6,
+    "non_verifiable": 19
+   }
+  }
+ }
+}

@@ -1,0 +1,494 @@
+{
+ "handball-pro": {
+  "R": 17,
+  "candidats": 28,
+  "difficulte": "facile",
+  "actuel": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.019607843137254905,
+   "infAP": 0.008403445377310931,
+   "n": 17,
+   "comptes": {
+    "juste": 1,
+    "faux": 3,
+    "non_verifiable": 13
+   }
+  },
+  "vote": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.019607843137254905,
+   "infAP": 0.005882411764117653,
+   "n": 17,
+   "comptes": {
+    "juste": 1,
+    "faux": 3,
+    "non_verifiable": 13
+   }
+  },
+  "sums": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.019607843137254905,
+   "infAP": 0.005882411764117653,
+   "n": 17,
+   "comptes": {
+    "juste": 1,
+    "faux": 3,
+    "non_verifiable": 13
+   }
+  },
+  "averagelog": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.019607843137254905,
+   "infAP": 0.005882411764117653,
+   "n": 17,
+   "comptes": {
+    "juste": 1,
+    "faux": 3,
+    "non_verifiable": 13
+   }
+  },
+  "investment": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.019607843137254905,
+   "infAP": 0.005882411764117653,
+   "n": 17,
+   "comptes": {
+    "juste": 1,
+    "faux": 3,
+    "non_verifiable": 13
+   }
+  },
+  "pooledinvestment": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.019607843137254905,
+   "infAP": 0.005882411764117653,
+   "n": 17,
+   "comptes": {
+    "juste": 1,
+    "faux": 3,
+    "non_verifiable": 13
+   }
+  },
+  "truthfinder": {
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.019607843137254905,
+   "infAP": 0.005882411764117653,
+   "n": 17,
+   "comptes": {
+    "juste": 1,
+    "faux": 3,
+    "non_verifiable": 13
+   }
+  }
+ },
+ "festivals-elec": {
+  "R": 7,
+  "candidats": 36,
+  "difficulte": "facile",
+  "actuel": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 27,
+   "comptes": {
+    "juste": 0,
+    "faux": 12,
+    "non_verifiable": 15
+   }
+  },
+  "vote": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 29,
+   "comptes": {
+    "juste": 0,
+    "faux": 12,
+    "non_verifiable": 17
+   }
+  },
+  "sums": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 29,
+   "comptes": {
+    "juste": 0,
+    "faux": 12,
+    "non_verifiable": 17
+   }
+  },
+  "averagelog": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 29,
+   "comptes": {
+    "juste": 0,
+    "faux": 12,
+    "non_verifiable": 17
+   }
+  },
+  "investment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 29,
+   "comptes": {
+    "juste": 0,
+    "faux": 12,
+    "non_verifiable": 17
+   }
+  },
+  "pooledinvestment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 29,
+   "comptes": {
+    "juste": 0,
+    "faux": 12,
+    "non_verifiable": 17
+   }
+  },
+  "truthfinder": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 29,
+   "comptes": {
+    "juste": 0,
+    "faux": 12,
+    "non_verifiable": 17
+   }
+  }
+ },
+ "g-q212805": {
+  "R": 45,
+  "candidats": 31,
+  "difficulte": "moyen",
+  "actuel": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.011111111111111112,
+   "infAP": 0.004444488888444449,
+   "n": 12,
+   "comptes": {
+    "juste": 1,
+    "faux": 4,
+    "non_verifiable": 7
+   }
+  },
+  "vote": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.0,
+   "infAP": 0.001851870370277778,
+   "n": 15,
+   "comptes": {
+    "juste": 1,
+    "faux": 4,
+    "non_verifiable": 10
+   }
+  },
+  "sums": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.0,
+   "infAP": 0.001851870370277778,
+   "n": 15,
+   "comptes": {
+    "juste": 1,
+    "faux": 4,
+    "non_verifiable": 10
+   }
+  },
+  "averagelog": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.0,
+   "infAP": 0.001851870370277778,
+   "n": 15,
+   "comptes": {
+    "juste": 1,
+    "faux": 4,
+    "non_verifiable": 10
+   }
+  },
+  "investment": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.0,
+   "infAP": 0.001851870370277778,
+   "n": 15,
+   "comptes": {
+    "juste": 1,
+    "faux": 4,
+    "non_verifiable": 10
+   }
+  },
+  "pooledinvestment": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.0,
+   "infAP": 0.001851870370277778,
+   "n": 15,
+   "comptes": {
+    "juste": 1,
+    "faux": 4,
+    "non_verifiable": 10
+   }
+  },
+  "truthfinder": {
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.0,
+   "infAP": 0.001851870370277778,
+   "n": 15,
+   "comptes": {
+    "juste": 1,
+    "faux": 4,
+    "non_verifiable": 10
+   }
+  }
+ },
+ "g-q131186": {
+  "R": 33,
+  "candidats": 27,
+  "difficulte": "moyen",
+  "actuel": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 11,
+   "comptes": {
+    "juste": 0,
+    "faux": 4,
+    "non_verifiable": 7
+   }
+  },
+  "vote": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 15,
+   "comptes": {
+    "juste": 0,
+    "faux": 8,
+    "non_verifiable": 7
+   }
+  },
+  "sums": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 15,
+   "comptes": {
+    "juste": 0,
+    "faux": 8,
+    "non_verifiable": 7
+   }
+  },
+  "averagelog": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 15,
+   "comptes": {
+    "juste": 0,
+    "faux": 8,
+    "non_verifiable": 7
+   }
+  },
+  "investment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 15,
+   "comptes": {
+    "juste": 0,
+    "faux": 8,
+    "non_verifiable": 7
+   }
+  },
+  "pooledinvestment": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 15,
+   "comptes": {
+    "juste": 0,
+    "faux": 8,
+    "non_verifiable": 7
+   }
+  },
+  "truthfinder": {
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "infAP": 0.0,
+   "n": 15,
+   "comptes": {
+    "juste": 0,
+    "faux": 8,
+    "non_verifiable": 7
+   }
+  }
+ },
+ "g-q742421": {
+  "R": 142,
+  "candidats": 30,
+  "difficulte": "difficile",
+  "actuel": {
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.007042253521126761,
+   "infAP": 0.0017605633802816902,
+   "n": 20,
+   "comptes": {
+    "juste": 1,
+    "faux": 5,
+    "non_verifiable": 14
+   }
+  },
+  "vote": {
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.007042253521126761,
+   "infAP": 0.0035211267605633804,
+   "n": 23,
+   "comptes": {
+    "juste": 1,
+    "faux": 5,
+    "non_verifiable": 17
+   }
+  },
+  "sums": {
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.007042253521126761,
+   "infAP": 0.0035211267605633804,
+   "n": 23,
+   "comptes": {
+    "juste": 1,
+    "faux": 5,
+    "non_verifiable": 17
+   }
+  },
+  "averagelog": {
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.007042253521126761,
+   "infAP": 0.0035211267605633804,
+   "n": 23,
+   "comptes": {
+    "juste": 1,
+    "faux": 5,
+    "non_verifiable": 17
+   }
+  },
+  "investment": {
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.007042253521126761,
+   "infAP": 0.0035211267605633804,
+   "n": 23,
+   "comptes": {
+    "juste": 1,
+    "faux": 5,
+    "non_verifiable": 17
+   }
+  },
+  "pooledinvestment": {
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.007042253521126761,
+   "infAP": 0.0035211267605633804,
+   "n": 23,
+   "comptes": {
+    "juste": 1,
+    "faux": 5,
+    "non_verifiable": 17
+   }
+  },
+  "truthfinder": {
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.007042253521126761,
+   "infAP": 0.0035211267605633804,
+   "n": 23,
+   "comptes": {
+    "juste": 1,
+    "faux": 5,
+    "non_verifiable": 17
+   }
+  }
+ },
+ "g-q180958": {
+  "R": 100,
+  "candidats": 29,
+  "difficulte": "difficile",
+  "actuel": {
+   "Rprec": 0.03,
+   "bpref": 0.01,
+   "infAP": 0.004647148487542344,
+   "n": 21,
+   "comptes": {
+    "juste": 3,
+    "faux": 5,
+    "non_verifiable": 13
+   }
+  },
+  "vote": {
+   "Rprec": 0.03,
+   "bpref": 0.013999999999999999,
+   "infAP": 0.005650814825220859,
+   "n": 21,
+   "comptes": {
+    "juste": 3,
+    "faux": 5,
+    "non_verifiable": 13
+   }
+  },
+  "sums": {
+   "Rprec": 0.03,
+   "bpref": 0.013999999999999999,
+   "infAP": 0.005650814825220859,
+   "n": 21,
+   "comptes": {
+    "juste": 3,
+    "faux": 5,
+    "non_verifiable": 13
+   }
+  },
+  "averagelog": {
+   "Rprec": 0.03,
+   "bpref": 0.013999999999999999,
+   "infAP": 0.005650814825220859,
+   "n": 21,
+   "comptes": {
+    "juste": 3,
+    "faux": 5,
+    "non_verifiable": 13
+   }
+  },
+  "investment": {
+   "Rprec": 0.03,
+   "bpref": 0.013999999999999999,
+   "infAP": 0.005650814825220859,
+   "n": 21,
+   "comptes": {
+    "juste": 3,
+    "faux": 5,
+    "non_verifiable": 13
+   }
+  },
+  "pooledinvestment": {
+   "Rprec": 0.03,
+   "bpref": 0.013999999999999999,
+   "infAP": 0.005650814825220859,
+   "n": 21,
+   "comptes": {
+    "juste": 3,
+    "faux": 5,
+    "non_verifiable": 13
+   }
+  },
+  "truthfinder": {
+   "Rprec": 0.03,
+   "bpref": 0.013999999999999999,
+   "infAP": 0.005650814825220859,
+   "n": 21,
+   "comptes": {
+    "juste": 3,
+    "faux": 5,
+    "non_verifiable": 13
+   }
+  }
+ }
+}

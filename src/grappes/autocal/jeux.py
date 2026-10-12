@@ -43,11 +43,21 @@ def sujets_du_jeu(jeu: str) -> list[Sujet]:
     ]
 
 
+def echecs_collecte(sid: str) -> int:
+    """Requêtes qui avaient échoué (réseau) pendant la collecte réelle, donc absentes de la cassette : au rejeu elles
+    échouent de la même façon, ce ne sont pas des requêtes nouvelles. Écart `requetes_reseau − reponses`."""
+    f = RACINE / sid / "collecte.txt"
+    if not f.exists():
+        return 0
+    kv = dict(t.split("=", 1) for t in f.read_text().split() if "=" in t)
+    return max(0, int(kv.get("requetes_reseau", 0)) - int(kv.get("reponses", 0)))
+
+
 def rejeu(sid: str, refaire: bool = False) -> Path:
     cible = REJEUX / sid
     if refaire or not (cible / "grappes.db").exists():
         out, rep = rejouer_collecte(sid, cible, racine=RACINE)
-        if rep.misses:
+        if len(rep.misses) > echecs_collecte(sid):
             raise RuntimeError(f"{sid} : {len(rep.misses)} requête(s) hors cassette au rejeu")
         if out.status != "ok":
             raise RuntimeError(f"{sid} : rejeu {out.status} {out.extra}")
