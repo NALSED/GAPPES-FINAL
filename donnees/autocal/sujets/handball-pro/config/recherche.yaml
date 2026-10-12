@@ -1,0 +1,7 @@
+actifs:
+- tavily_general
+delai_s: 0.5
+journal: donnees/autocal/sujets/handball-pro/journal_recherche.log
+limite_par_mot_cle: 20
+plugins_dir: plugins
+quota_total: 6

@@ -14,6 +14,8 @@ grappes = "grappes.cli:main"
 
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
+# mission autocalibration (D62) : truthdiscovery s'installe avec `--no-deps` (ses versions figées sont obsolètes ; voir docs/conception/calibration.md)
+autocal = ["numpy", "scipy", "scikit-learn", "optuna", "pytrec_eval-terrier", "matplotlib", "bidict", "imageio"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
