@@ -41,6 +41,32 @@ majoritaire (`vote`), et chaque ingrédient retiré à tour de rôle (étude d'a
 Remontés sans application (AUTONOMIE) : mesure de `min_ecosystemes = 1` (rapportée, jamais appliquée) ; tout
 changement de format de `resultat.csv` ; toute suppression de données collectées.
 
+### 1 bis. Addendum du 2026-10-12 (décision de Sednal : option 2), AVANT toute ouverture du jeu test
+
+Sednal a choisi d'ajouter une **seconde ligne de verdict**, présentée **à côté** de la première sans la remplacer.
+Les critères 1 à 8 et leurs seuils ci-dessus restent **inchangés** ; seul l'ensemble de sujets sur lequel on les lit
+diffère.
+
+* **Ligne A (principale, inchangée)** : les six sujets positifs du jeu test.
+* **Ligne B (complémentaire)** : les seuls sujets positifs du test à « liste fermée et quasi complète ». Règle
+  **objective, fixée ici avant ouverture** : pour un sujet, si un code d'activité NAF recouvre la phrase (recouvrement
+  >= 0,6, `decouverte.traduction.code_naf`), on compte le total T d'établissements actifs que SIRENE/RNA renvoie pour ce
+  code (même requête que `docs/conception/calibration.md` § 5) ; le sujet est « à liste fermée » si **R / T >= 0,5**
+  (le conseil régional de l'ordre : 72 % ; les chorales : 1,7 %). Sans code NAF fiable, ou sans total lisible : le sujet
+  n'est **pas** classé fermé (on ne devine pas). Si aucun sujet ne remplit la règle, la ligne B est « non évaluable »
+  et le dit. La règle ne regarde que la phrase, R et le registre, jamais un résultat du système.
+* Sur la ligne B, le critère 1 (R-précision stricte moyenne >= 0,90) est lu sur ce sous-ensemble ; les critères 2 à 8
+  sont les mêmes qu'en ligne A (ils ne dépendent pas du choix du sous-ensemble) ; la ligne B est « certifié » seulement
+  si les huit sont remplis. Les deux lignes sont rendues, jamais fusionnées ; la ligne A fait foi pour « certifié ».
+* Probabilité calibrée utilisée par les critères 4 et 5 : la sigmoïde de Platt ajustée sur dev + validation (sans
+  Wikidata) et figée dans `config/calibration.json` (`ajustement_platt_non_valide`, a = 1,0993, b = −4,3049). Elle est
+  déclarée « non valide » (pas de pouvoir discriminant mesuré en validation) : le verdict le dira, il ne la remplace pas.
+* Système mesuré : paramètres Optuna de `autocal/resultats/etape3_optuna.json` (= `config/lr.yaml`), registres
+  [sirene], noms lus (`config/ner.yaml`, seuil 0,93), Wikidata désactivé, variantes désactivées, N maximal 200.
+* Mécanisme d'ouverture unique : `python -m grappes.autocal.test_final`. Il écrit `autocal/test_ouvert.json` (date,
+  heure UTC, empreintes des paramètres et des critères) **avant** de lire quoi que ce soit du test ; une seconde
+  exécution est refusée et consignée dans `reouvertures`, ce qui « brûle » le test et doit figurer dans le verdict.
+
 ## 2. Verdict
 
 *(à écrire après l'ouverture unique du jeu test)*
