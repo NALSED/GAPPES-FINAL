@@ -42,6 +42,14 @@ Décision de Sednal : « probable » est le niveau maximal accepté pour le suje
 * **Timer** : quotidien à **10h00** (D60), vérifié par `systemctl --user list-timers` (prochain passage 2026-10-12 vers 10:02).
 * **Q25 close (D61)** : aucun filtre, toutes les sources conservées ; la ville est un résultat de trouver-sites (jamais inventée ici, vide sans registre).
 
+## Mission autocalibration (D62) — en cours
+
+Instructions de Sednal : `DECISION_AUTOCAL.md`. Critères de certification **pré-enregistrés** (2026-10-12, avant toute mesure) : `docs/CERTIFICATION.md`. Verdict : non rendu.
+
+* **Fait** : package `src/grappes/autocal/` (cassette réseau « collecter une fois, rejouer mille fois », client Wikidata en cache, référence silver standard, juge à trois comptes, métriques `pytrec_eval`, découverte de vérité `truthdiscovery`), tirage des sujets (graine 20261012, 3 jeux disjoints de 7 sujets, un témoin par jeu), `requetes_termes` réglable (défaut inchangé).
+* **Constats** : (1) le plafond Tavily n'est pas « largement entamé » : 43 crédits sur 1 000 au 2026-10-12 ; (2) les entités du système sont des **sources** (domaines, articles), pas des acteurs extraits du texte ; (3) `truthdiscovery` 1.0.4 ne s'installe qu'avec `--no-deps` (versions figées de 2023) et exige un module `cairo` factice ; (4) un moteur de recherche web ramène Wikipédia : exclu des collectes d'évaluation (non-circularité).
+* **Suite** : collecte unique des 21 sujets, juge, mesures de base (actuel, vote), puis Optuna.
+
 ## Limites connues
 
 * Q16 à Q19 (formats Telegram, X, Instagram, web) restent ouvertes : elles se trancheront sur les premières vraies données collectées.
