@@ -92,3 +92,9 @@ Texte dans `DECISION_SOURCES.md` (Sednal le numérote « D67 », déjà pris par
 catalogue des APIs publiques via le MCP data.gouv.fr, un YAML par source dans `config/recherche/`, aucun code propre à un
 sujet. Chantier B : sujets ambigus, lectures listées et dites, aucune règle de départage inventée. Mesure sur dev
 seulement ; jeu test brûlé, non rouvert. SearxNG, Overpass, expansion d'ensembles : notés, non commencés.
+
+D68 (suite, 2026-10-13) : prises YAML `type: registre` dans `config/recherche/` (aucun code propre à un sujet), source `yaml`
+ajoutée à `config/classement.yaml` (classement inactif), poids `registre_source` 0,19 = valeur d'expert non mesurée.
+Mesure sur dev seulement : +8 acteurs de référence sur 344 parmi les candidats, sans gain de R-précision. Sources non
+dérivées de Wikidata, mais 3 des 6 acteurs BnF trouvés portent l'identifiant BnF dans Wikidata (indépendance partielle).
+Chantier B : lectures listées (`ambiguite.json`), aucune règle de départage. `docs/conception/sources.md`.

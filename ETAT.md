@@ -72,3 +72,12 @@ Instructions de Sednal : `DECISION_AUTOCAL.md` (méthode) et `DECISION_FIABILITE
 * Cause : 3,1 % des acteurs de la référence parmi les candidats. Test brûlé pour cette version du système.
 * En attente de Sednal (non bloquant, rien n'est appliqué) : propositions du § 12 de `docs/conception/calibration.md`.
 * Étape 4 (personnes) : toujours préparée seulement, collecte inactive.
+
+## Chantiers A et B de D68 (2026-10-13)
+
+* Chantier A : serveur MCP data.gouv.fr branché ; 4 prises YAML (`config/recherche/` : BnF, ESR, festivals et licences de
+  spectacles du ministère de la Culture) lues par `decouverte/sources_yaml.py`. Mesure sur dev : 11 -> 19 acteurs de
+  référence parmi les candidats (+8 sur 344), +2 063 candidats, R-précision inchangée (0,0197 contre 0,0209).
+  `docs/conception/sources.md`.
+* Chantier B : `traduction.lectures` + `ambiguite.json` (liste, ne départage pas).
+* Classement toujours inactif par défaut ; jeu test non rouvert ; SearxNG, Overpass, expansion d'ensembles non commencés.

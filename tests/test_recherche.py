@@ -562,6 +562,11 @@ def test_exemples_de_configuration_se_chargent():
         "wikipedia.yaml",
         "rss_letudiant.yaml",
         "rss_liberation.yaml",
+        # prises de découverte `type: registre` (D68) : lues par decouverte/sources_yaml.py, jamais des fournisseurs actifs
+        "bnf_organisations.yaml",
+        "esr_etablissements.yaml",
+        "culture_festivals.yaml",
+        "culture_spectacles_licences.yaml",
     }
     assert set(load_search_config(ROOT / "config").actifs) == {
         "tavily",

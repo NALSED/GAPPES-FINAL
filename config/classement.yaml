@@ -6,7 +6,7 @@ version: 1
 actif: false
 remplace_resultat: false        # vrai : resultat.csv et resultat_tsites.csv sortent du nouveau classement
 fournisseurs:
-  registres: [wikidata, sirene]   # Wikidata est mesurable seulement en dehors des sujets dont la référence en vient (D64)
+  registres: [wikidata, sirene, yaml]   # « yaml » : prises de config/recherche/ (data.gouv.fr, D68). Wikidata est mesurable seulement en dehors des sujets dont la référence en vient (D64)
   noms: true                      # reconnaissance de noms dans les textes (config/ner.yaml)
 variantes:
   actif: false                    # D65 : désactivé, le regroupement enchaîne des noms sans rapport (calibration.md § 4)

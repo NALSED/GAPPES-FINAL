@@ -18,7 +18,7 @@ from grappes.variantes import regrouper
 def elements(ctx: Contexte, c: Candidat, cfg: vr.LrConfig) -> list[vr.Element]:
     out: list[vr.Element] = []
     for r in sorted(c.registres):
-        out.append(vr.Element(f"registre_{r}", r, "A", cfg.v(f"registre_{r}") * vr.poids_lettre("A")))
+        out.append(vr.Element(f"registre_{r}", r, "A", cfg.valeurs.get(f"registre_{r}", cfg.v("registre_source")) * vr.poids_lettre("A")))
     if c.ner_sites:
         parts = []
         for site, conf in sorted(c.ner_sites.items()):

@@ -18,6 +18,7 @@ bornes:
   total: 6.0            # le total est borné à ±6 (LR 10^6 : « extrêmement fort »)
 elements:
   registre_wikidata: 2.0      # membre de la classe du sujet dans Wikidata. Non mesurable sur notre référence (circulaire) : valeur d'expert annoncée
+  registre_source: 0.19         # toute autre prise YAML de config/recherche/ (data.gouv.fr, D68) : valeur d'EXPERT, égale à SIRENE par code d'activité, non mesurée
   registre_sirene_naf: 0.190    # SIRENE/RNA, code d'activité qui recouvre le sujet (l'existence est attestée, l'appartenance l'est moins : D51)
   registre_sirene_nom: 0.112    # SIRENE/RNA, trouvé par nom seulement
   nom_dans_texte: 1.901         # par éditeur distinct qui nomme l'organisation (modèle ORG), × poids Admiralty de l'éditeur × confiance du modèle

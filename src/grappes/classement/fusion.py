@@ -59,7 +59,7 @@ def fusionner(ctx: Contexte, ds: list[Decouvert], sources: tuple[str, ...]) -> l
             c.registres = c.registres | g["registres"]
             c.ville = c.ville or g["ville"]
             continue
-        reg = "wikidata" if "wikidata" in g["registres"] else "sirene"
+        reg = "wikidata" if "wikidata" in g["registres"] else "sirene" if "sirene" in g["ids"] else sorted(g["ids"])[0]
         ref = f"reg:{reg}:{g['ids'][reg]}" + (f"|{g['siren']}" if g["siren"] else "")
         cands.append(
             Candidat(ref, g["nom"], g["nom"], 0.0, "registre", 0.0, 0.0, 0.0, facteur=facteur,

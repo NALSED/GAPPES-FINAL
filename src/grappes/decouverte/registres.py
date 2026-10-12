@@ -58,6 +58,8 @@ class DecouverteConfig:
     domaine: bool = True  # gabarit « type + complément » (clubs de HANDBALL) en plus de la classe
     repli_nom: bool = True  # sans code NAF fiable : recherche par nom, filtrée sur les mots de la phrase
     naf: str = "config/naf_rev2.csv"
+    dossier_sources: str = "config/recherche"  # prises YAML (`type: registre`), activées par « yaml » dans `sources`
+    ids_yaml: tuple[str, ...] = ()  # vide = toutes les prises actives du dossier
 
 
 def wikidata(cls: ClasseWikidata, http: Http, cfg: DecouverteConfig) -> list[Decouvert]:
@@ -213,4 +215,10 @@ def decouvrir(phrase: str, http: Http, cfg: DecouverteConfig | None = None) -> l
     if "sirene" in cfg.sources:
         naf = code_naf(phrase, charger_naf(Path(cfg.naf)), cfg.seuil_naf)
         out += sirene(phrase, naf, http, cfg)
+    if "yaml" in cfg.sources:  # prises décrites en YAML (data.gouv.fr, D68) : aucune ne dérive de Wikidata
+        from grappes.decouverte.sources_yaml import charger_sources, interroger
+
+        for s in charger_sources(cfg.dossier_sources):
+            if s.actif and (not cfg.ids_yaml or s.id in cfg.ids_yaml):
+                out += interroger(s, phrase, http)
     return out

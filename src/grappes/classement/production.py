@@ -87,7 +87,10 @@ def charger_calibreur(path: str | Path) -> Calibreur:
 
 def classer(ctx: Contexte, cfg: ClassementConfig, lr: vr.LrConfig, cal: Calibreur) -> list[tuple[Candidat, float, float]]:
     """(candidat, log10 LR, probabilité calibrée), du mieux au moins bien classé ; ex æquo : ordre alphabétique."""
-    cands = fusion.fusionner(ctx, ctx.decouverts, cfg.registres) if cfg.registres else list(ctx.candidats)
+    sources = set(cfg.registres)
+    if "yaml" in sources:  # prises décrites en YAML : leurs entités portent l'identifiant de la prise (D68)
+        sources |= {d.registre for d in ctx.decouverts}
+    cands = fusion.fusionner(ctx, ctx.decouverts, tuple(sources)) if cfg.registres else list(ctx.candidats)
     if cfg.noms:
         cands, _ = fusion.ajouter(ctx, cands, ctx.nommes)
     cands = [c for c in cands if c.nom]
@@ -121,13 +124,24 @@ def classer_production(db: Database, cfg: Config, config_dir: str | Path, data_d
     data = Path(data_dir)
     if cc.registres:
         http = http or Http(data / "decouverte_cache", delai_s=1.0, ttl_jours=cc.cache_jours)
-        ctx.decouverts = decouvrir(phrase, http, DecouverteConfig(sources=tuple(cc.registres), naf=str(Path(config_dir) / "naf_rev2.csv")))
+        ctx.decouverts = decouvrir(phrase, http, DecouverteConfig(sources=tuple(cc.registres), naf=str(Path(config_dir) / "naf_rev2.csv"), dossier_sources=str(Path(config_dir) / "recherche")))
     if cc.noms:
         ner = charger_ner(config_dir)
         ctx.nommes = extraire([(o.obs_id, o.source.key, o.text) for o in db.load_observations()], ner, data / "ner_cache") if ner.modeles else {}
     lr = vr.charger(Path(config_dir) / "lr.yaml")
     cal = charger_calibreur(Path(config_dir) / Path(cc.calibration).name)
     return lignes(classer(ctx, cc, lr, cal), cc, lr, cal, pays)
+
+
+def ambiguites(cfg: Config, data_dir: str | Path, http: Http | None = None) -> list[dict]:
+    """Lectures possibles du sujet quand il y en a plusieurs (D68, chantier B). Liste seulement : aucun départage."""
+    from dataclasses import asdict
+
+    from grappes.decouverte.traduction import lectures
+
+    http = http or Http(Path(data_dir) / "decouverte_cache", delai_s=1.0, ttl_jours=30)
+    lec = lectures(cfg.grappes[0].subject, http)
+    return [asdict(x) for x in lec] if len(lec) > 1 else []
 
 
 def appliquer(db: Database, cfg: Config, config_dir: str | Path, out_dir: str | Path, data_dir: str | Path, pays: str = "FR") -> list[Path]:
@@ -146,6 +160,15 @@ def appliquer(db: Database, cfg: Config, config_dir: str | Path, out_dir: str | 
         ignorer = frozenset() if cc.remplace_resultat else frozenset({"resultat", "tsites"})
         chemins = ecrire_profils(ls, charger_profils(config_dir), out, ignorer=ignorer)
         erreur.unlink(missing_ok=True)
+        amb = out / "ambiguite.json"
+        lec = ambiguites(cfg, data_dir)
+        if lec:
+            amb.write_text(json.dumps({
+                "sujet": cfg.grappes[0].subject, "ambigu": True, "lectures": lec,
+                "note": "Plusieurs lectures du sujet existent ; aucune n'est choisie par une règle. Les sources en plein texte (data.gouv.fr, noms lus) les couvrent toutes sans les distinguer ; la classe Wikidata retenue, si elle est utilisée, est la première trouvée.",
+            }, ensure_ascii=False, indent=1), encoding="utf-8")
+        else:
+            amb.unlink(missing_ok=True)
         return chemins
     except Exception as exc:  # noqa: BLE001 - le classement est un ajout : il ne doit jamais faire échouer le cycle
         out.mkdir(parents=True, exist_ok=True)

@@ -112,6 +112,44 @@ def classe_wikidata(
 
 
 @dataclass(slots=True)
+class Lecture:
+    qid: str
+    libelle: str
+    description: str
+    instances: int  # éléments de cette classe dans le pays (information, jamais un critère de choix)
+
+
+def lectures(phrase: str, http: Http, pays: str = "Q142") -> list[Lecture]:
+    """Toutes les lectures possibles du sujet (D68, chantier B) : éléments Wikidata dont le libellé est identique au
+    segment retenu de la phrase (« brasserie » : lieu de brassage, café-restaurant...). Plus d'une lecture = sujet
+    ambigu. Cette fonction LISTE ; elle ne départage pas et n'invente aucune règle pour le faire."""
+    tous = _mots_phrase_sans_lieu(phrase)
+    plein = len(noyau(phrase))
+    for seg in segments(noyau(phrase), tous):
+        if plein > 1 and len([m for m in seg if m not in ARTICLES]) < 2:
+            continue
+        cible = " ".join(racine(m) for m in seg)
+        trouves: dict[str, Lecture] = {}
+        for variante in dict.fromkeys([" ".join(seg), " ".join(singulier(m) for m in seg)]):
+            try:
+                hits = http.wd_search(variante, 10)
+            except DecouverteError:
+                continue
+            for h in hits:
+                if " ".join(racine(m) for m in mots(h.get("label", "") or "")) == cible and h["id"] not in trouves:
+                    trouves[h["id"]] = Lecture(h["id"], h.get("label", ""), h.get("description", "") or "", -1)
+        if trouves:
+            for lec in trouves.values():
+                q = "SELECT (COUNT(*) AS ?n) WHERE { { SELECT ?i WHERE { ?i wdt:P31 wd:%s ; wdt:P17 wd:%s . } LIMIT 1001 } }" % (lec.qid, pays)
+                try:
+                    lec.instances = int(http.sparql(q)[0]["n"])
+                except (DecouverteError, KeyError, IndexError, ValueError):
+                    pass
+            return sorted(trouves.values(), key=lambda x: x.qid)
+    return []
+
+
+@dataclass(slots=True)
 class CodeNaf:
     code: str
     libelle: str

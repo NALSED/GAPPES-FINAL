@@ -69,6 +69,22 @@ class Http:
                 raise DecouverteError(f"réseau : {type(exc).__name__}") from exc
         raise DecouverteError("épuisé")  # pragma: no cover
 
+    def get_text(self, url: str, encoding: str = "utf-8-sig") -> str:
+        """Fichier texte (CSV) téléchargé une seule fois, gardé sur disque comme les réponses JSON."""
+        p = self._path(url).with_suffix(".txt")
+        if p.exists() and not self._perime(p):
+            return p.read_text(encoding="utf-8")
+        if self.offline:
+            raise DecouverteError("hors ligne : fichier absent du cache")
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=300) as r:
+                texte = r.read().decode(encoding, errors="replace").lstrip("\ufeff")
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            raise DecouverteError(f"réseau : {type(exc).__name__}") from exc
+        p.write_text(texte, encoding="utf-8")
+        return texte
+
     def sparql(self, query: str) -> list[dict[str, str]]:
         url = "https://query.wikidata.org/sparql?" + urllib.parse.urlencode({"query": query, "format": "json"})
         rows = []
