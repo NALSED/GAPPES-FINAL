@@ -165,9 +165,43 @@ Diagramme de fiabilité : `docs/conception/fiabilite_validation.png`.
 
 Lecture honnête : l'ECE est bas **parce que presque tout est proche du taux de base** (1 à 2 %), pas parce que l'indice est bien calibré ; et le score de Brier **n'est pas meilleur que celui du prédicteur constant** en validation (0,0234 contre 0,0229). Sur le système sans Wikidata, l'indice n'a donc pas de pouvoir discriminant mesurable contre cette référence, ce qui ferait échouer le critère 5 de la certification (Brier < constant). Aucun candidat n'atteint 0,9 : aucun résultat ne serait présenté en confiance haute. La calibration d'un système AVEC Wikidata serait circulaire (beaucoup de positifs, mais ce sont les siens) et n'est pas présentée comme une mesure ; hors du domaine calibré (sujets informels, personnes), le chiffre est une estimation étendue, dit sur la ligne de sortie (colonne `calibre`).
 
-## 9. Reste à faire (ordre)
+## 9. Ablations et mesure de `min_ecosystemes = 1`
 
-1. Ablations (retrait de chaque élément de l'indice) ; comparaison au chiffre du matin et au vote ; mesure de `min_ecosystemes = 1` avec le système complet (rapportée, jamais appliquée).
-2. Intégration en production des fournisseurs (registres, noms) et de l'indice dans le cycle ; profils de sortie alimentés ; choix de la valeur de l'indice pour Wikidata (non mesurable ici : valeur d'expert annoncée).
-3. Décision de Sednal sur les options du § 5 avant ouverture du test.
-4. Ouverture unique du jeu test, verdict dans `docs/CERTIFICATION.md`.
+**Ablations** (système sans Wikidata, paramètres réglés ; R-précision stricte espérée sous ex æquo, moyenne par jeu ; `autocal/resultats/etape3_ablation.json`) :
+
+| configuration | dev | validation | bpref dev | bpref validation |
+|---|---|---|---|---|
+| complet (réglé, sans Wikidata) | 0,0209 | 0,0768 | 0,0205 | 0,1036 |
+| sans SIRENE/RNA | 0,0209 | 0,0768 | 0,0205 | 0,1036 |
+| **sans noms lus** | 0,0197 | **0,0205** | 0,0109 | 0,0085 |
+| sans proximité du texte propre | 0,0073 | 0,0851 | 0,0095 | 0,1074 |
+| sans écosystèmes | 0,0209 | 0,0768 | 0,0205 | 0,1036 |
+| sans citations | 0,0209 | 0,0768 | 0,0203 | 0,1032 |
+| web seul (aucun fournisseur) | 0,0197 | 0,0072 | 0,0106 | 0,0060 |
+| système d'avant la mission (« actuel ») | 0,0197 | 0,0072 | 0,0080 | 0,0060 |
+| vote majoritaire | 0,0197 | 0,0072 | 0,0068 | 0,0072 |
+
+Les **noms lus dans les textes sont le seul élément qui apporte quelque chose** de mesurable (validation 0,0205 -> 0,0768 ; presque tout vient du CAC 40). SIRENE/RNA, les écosystèmes et les citations n'apportent rien contre cette référence (ce qui ne prouve pas qu'ils n'apportent rien : leurs apports ne sont pas vérifiables ici). La proximité du texte propre fait mieux en dev et moins bien en validation : réglage instable. Le système d'avant la mission et le vote majoritaire sont identiques (0,0197 / 0,0072).
+
+**`min_ecosystemes` à 1 (mesure, jamais appliquée).** Le minimum d'écosystèmes du recoupement (`crossref.min_ecosystems`) et celui de l'apprentissage (`autonomie.min_ecosystemes`) passés à 1 sur les 12 sujets, rejeu complet (`autocal/resultats/etape3_min1.json`) :
+
+| | candidats web (dev / val) | R-précision « actuel » (dev / val) | R-précision indice réglé (dev / val) |
+|---|---|---|---|
+| valeur 2 (défaut) | 181 / 186 | 0,0197 / 0,0072 | 0,0209 / 0,0768 |
+| valeur 1 (mesure) | **245 / 254** | 0,0197 / 0,0072 | 0,0209 / 0,0768 |
+
+La valeur 1 ajoute **+35 % de candidats** web (+64 en dev, +68 en validation) **sans aucune bonne réponse de plus** : R-précision strictement identique. Rapporté, non appliqué, comme demandé : le défaut reste deux.
+
+## 10. Intégration en production (inactive par défaut)
+
+* `grappes.classement.production` : candidats du web + registres + noms lus -> indice de vraisemblance -> probabilité -> lignes de sortie. Branché dans le cycle (`cycle/engine.py`) et dans `grappes export` par `config/classement.yaml` ; **`actif: false` par défaut** : tant que Sednal ne l'active pas, le cycle ne change pas.
+* Activé, il écrit les profils de `config/sortie.yaml` (notamment `resultat_brut.csv` : nom, ville, pays, score, bande verbale, `calibre`, registres, sources). `resultat.csv` et `resultat_tsites.csv` ne changent que si `remplace_resultat: true`.
+* Essai de bout en bout sur handball (rejeu, sans réseau) : 211 lignes, communes remplies (Metz, Dijon, Istres, Plan-de-Cuques…), colonne `calibre` = « estimation étendue ». Une erreur du classement n'interrompt jamais le cycle (écrite dans `sorties/classement_erreur.txt`).
+* `config/calibration.json` : **calibration non valide** (méthode « aucune », `valide: false`) ; le score affiché est `p = LR/(1+LR)` (rapport de cotes a priori 1:1), plafonné à 99, toujours étiqueté estimation étendue. Il passera à « mesuré » seulement quand une calibration battra le prédicteur constant en validation.
+* Les réponses des registres sont mises en cache sur disque avec une durée de vie de 30 jours.
+
+## 11. Reste à faire (ordre)
+
+1. Décision de Sednal sur les options du § 5 (critère 0,90) avant ouverture du test ; activation éventuelle de `classement.actif`.
+2. Décider du sort de la fusion de variantes (§ 4) et du poids de Wikidata dans l'indice (valeur d'expert, non mesurable).
+3. Ouverture unique du jeu test (journal `autocal/test_ouvert.json`, paramètres figés, date et heure), verdict dans `docs/CERTIFICATION.md`.
