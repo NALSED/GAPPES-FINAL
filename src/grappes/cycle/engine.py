@@ -22,6 +22,7 @@ from grappes.amorcage import amorcer
 from grappes.autonomy import Autonomy, load_autonomy
 from grappes.clustering.assign import AMBIGU, CLASSE
 from grappes.clustering.export import export_csv
+from grappes.classement.production import appliquer as appliquer_classement
 from grappes.clustering.resultat import write_resultat
 from grappes.config import Config, load_config
 from grappes.cycle.collect import collect
@@ -367,6 +368,7 @@ def _execute(
             )
         export_csv(res, cfg, run_id, paths.out)
         write_resultat(res, cfg, paths.out, auto=auto, places=places_for(db, cfg))
+        appliquer_classement(db, cfg, paths.config, paths.out, paths.data, auto.export_tsites_pays_defaut)
         prune_snapshots(paths.snapshots, auto.instantanes_conserves)
         return _finish(paths, auto, data, run_id, db)
     except StopRequested:

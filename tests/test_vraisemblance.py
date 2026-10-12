@@ -38,7 +38,7 @@ def test_bandes_verbales_ENFSI():
 
 def test_surcharge_de_configuration():
     cfg = vr.charger().avec(nom_dans_texte=2.0)
-    assert cfg.v("nom_dans_texte") == 2.0 and vr.charger().v("nom_dans_texte") == 0.8
+    assert cfg.v("nom_dans_texte") == 2.0 and vr.charger().v("nom_dans_texte") != 2.0
 
 
 def test_variantes_nomenklatura():

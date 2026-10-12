@@ -1,0 +1,92 @@
+{
+ "complet (réglé, sans Wikidata)": {
+  "dev": {
+   "Rprec_ea": 0.02085504311270674,
+   "bpref": 0.02048741595055689
+  },
+  "validation": {
+   "Rprec_ea": 0.07679765886287625,
+   "bpref": 0.10360907829144345
+  }
+ },
+ "sans SIRENE/RNA": {
+  "dev": {
+   "Rprec_ea": 0.02085504311270674,
+   "bpref": 0.02047930275525605
+  },
+  "validation": {
+   "Rprec_ea": 0.07679765886287625,
+   "bpref": 0.10360907829144345
+  }
+ },
+ "sans noms lus": {
+  "dev": {
+   "Rprec_ea": 0.019681334192518947,
+   "bpref": 0.010923164257878426
+  },
+  "validation": {
+   "Rprec_ea": 0.020531400966183572,
+   "bpref": 0.008454106280193236
+  }
+ },
+ "sans proximité du texte propre": {
+  "dev": {
+   "Rprec_ea": 0.007347417840375587,
+   "bpref": 0.009467871473361507
+  },
+  "validation": {
+   "Rprec_ea": 0.08513099219620958,
+   "bpref": 0.10738302237484297
+  }
+ },
+ "sans écosystèmes": {
+  "dev": {
+   "Rprec_ea": 0.02085504311270674,
+   "bpref": 0.02048741595055689
+  },
+  "validation": {
+   "Rprec_ea": 0.07679765886287625,
+   "bpref": 0.10360907829144345
+  }
+ },
+ "sans citations": {
+  "dev": {
+   "Rprec_ea": 0.02085504311270674,
+   "bpref": 0.02032074928389022
+  },
+  "validation": {
+   "Rprec_ea": 0.07679765886287625,
+   "bpref": 0.10322550689216752
+  }
+ },
+ "web seul (aucun fournisseur)": {
+  "dev": {
+   "Rprec_ea": 0.019681334192518947,
+   "bpref": 0.01062686796158213
+  },
+  "validation": {
+   "Rprec_ea": 0.007246376811594203,
+   "bpref": 0.006038647342995169
+  }
+ },
+ "système d'avant (actuel)": {
+  "dev": {
+   "Rprec_ea": 0.019681334192518947,
+   "bpref": 0.007960201294915462
+  },
+  "validation": {
+   "Rprec_ea": 0.007246376811594203,
+   "bpref": 0.006038647342995169
+  }
+ },
+ "vote majoritaire": {
+  "dev": {
+   "Rprec_ea": 0.019681334192518947,
+   "bpref": 0.006775016109730278
+  },
+  "validation": {
+   "Rprec_ea": 0.007246376811594203,
+   "bpref": 0.007246376811594203
+  }
+ }
+}

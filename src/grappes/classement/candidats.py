@@ -60,10 +60,14 @@ class Contexte:
     memo_variantes: dict = field(default_factory=dict)  # regroupements nomenklatura déjà calculés
 
 
-def charger(cible: str | Path, cfg: Config | None = None) -> Contexte:
-    cible = Path(cible)
-    cfg = cfg or load_config(cible / "config")
-    db = Database(cible / "grappes.db")
+def charger(cible: str | Path | None, cfg: Config | None = None, db: Database | None = None) -> Contexte:
+    """Contexte d'un sujet depuis un dossier de rejeu (`cible`) ou, en production, depuis la base et la configuration
+    déjà ouvertes (`db` et `cfg`)."""
+    if db is None:
+        cible = Path(cible)  # type: ignore[arg-type]
+        cfg = cfg or load_config(cible / "config")
+        db = Database(cible / "grappes.db")
+    assert cfg is not None
     rel = reliability_for(db, cfg)
     obs = db.load_observations()
     result = assign(obs, cfg, names=db.load_display_names(), reliability=rel)

@@ -172,10 +172,13 @@ def run(db: Database, cfg: Config) -> tuple[str, AssignResult]:
 
 
 def export(db: Database, cfg: Config, out_dir: str | Path) -> list[Path]:
+    from grappes.classement.production import appliquer
+
     run_id, result = run(db, cfg)
     return [
         *export_csv(result, cfg, run_id, out_dir),
         *write_resultat(result, cfg, out_dir, places=places_for(db, cfg)),
+        *(appliquer(db, cfg, cfg.racine, out_dir, "donnees") if cfg.racine is not None else []),
     ]
 
 

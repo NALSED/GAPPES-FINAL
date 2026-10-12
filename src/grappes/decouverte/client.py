@@ -21,19 +21,27 @@ class DecouverteError(RuntimeError):
 
 
 class Http:
-    def __init__(self, cache_dir: str | Path, delai_s: float = 1.0, offline: bool = False):
+    def __init__(self, cache_dir: str | Path, delai_s: float = 1.0, offline: bool = False, ttl_jours: int | None = None):
         self.cache = Path(cache_dir)
         self.cache.mkdir(parents=True, exist_ok=True)
-        self.delai_s, self.offline = delai_s, offline
+        self.delai_s, self.offline, self.ttl_jours = delai_s, offline, ttl_jours
         self._last = 0.0
         self.appels_reseau = 0
 
     def _path(self, url: str) -> Path:
         return self.cache / f"{hashlib.sha256(url.encode()).hexdigest()[:24]}.json"
 
+    def _perime(self, p: Path) -> bool:
+        """Réponse plus vieille que `ttl_jours` (les registres changent) ; hors ligne, on garde ce qu'on a."""
+        return (
+            self.ttl_jours is not None
+            and not self.offline
+            and time.time() - p.stat().st_mtime > self.ttl_jours * 86400
+        )
+
     def get_json(self, url: str) -> object:
         p = self._path(url)
-        if p.exists():
+        if p.exists() and not self._perime(p):
             return json.loads(p.read_text(encoding="utf-8"))
         if self.offline:
             raise DecouverteError("hors ligne : requête absente du cache")

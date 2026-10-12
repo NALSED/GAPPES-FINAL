@@ -1,0 +1,46 @@
+{
+ "min_ecosystemes = 2 (défaut)": {
+  "actuel": {
+   "dev": {
+    "Rprec_ea": 0.019681334192518947,
+    "candidats_web": 181
+   },
+   "validation": {
+    "Rprec_ea": 0.007246376811594203,
+    "candidats_web": 186
+   }
+  },
+  "lr réglé sans Wikidata": {
+   "dev": {
+    "Rprec_ea": 0.02085504311270674,
+    "candidats_web": 181
+   },
+   "validation": {
+    "Rprec_ea": 0.07679765886287625,
+    "candidats_web": 186
+   }
+  }
+ },
+ "min_ecosystemes = 1 (mesure)": {
+  "actuel": {
+   "dev": {
+    "Rprec_ea": 0.019681334192518947,
+    "candidats_web": 245
+   },
+   "validation": {
+    "Rprec_ea": 0.007246376811594203,
+    "candidats_web": 254
+   }
+  },
+  "lr réglé sans Wikidata": {
+   "dev": {
+    "Rprec_ea": 0.02085504311270674,
+    "candidats_web": 245
+   },
+   "validation": {
+    "Rprec_ea": 0.07679765886287625,
+    "candidats_web": 254
+   }
+  }
+ }
+}
