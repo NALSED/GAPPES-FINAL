@@ -9,6 +9,7 @@ ESR) ne dérivent pas de Wikidata : ils restent actifs.
 
 from __future__ import annotations
 
+import os
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
@@ -73,7 +74,7 @@ def preparer(
 ) -> Path:
     """Crée le dossier du sujet et sa configuration isolée. Idempotent : ne touche pas à la cassette."""
     d = dossier(sujet_id, racine)
-    cfg = d / "config"
+    cfg = d / "config_initiale"  # jamais modifiée : le rejeu repart toujours de là
     if cfg.exists():
         shutil.rmtree(cfg)
     shutil.copytree(
@@ -104,6 +105,10 @@ def preparer(
         "nouvelles_sources_par_cycle": PLAFONDS["nouvelles_sources_par_cycle"],
     }
     (cfg / "autonomie.yaml").write_text(yaml.safe_dump(auto, allow_unicode=True), encoding="utf-8")
+    shutil.rmtree(d / "config", ignore_errors=True)
+    shutil.copytree(
+        cfg, d / "config"
+    )  # copie de travail, modifiée par le cycle (amorçage, termes appris)
     return d
 
 
@@ -142,12 +147,15 @@ def rejouer_collecte(
     cible = Path(cible)
     if cible.exists():
         shutil.rmtree(cible)
-    shutil.copytree(d / "config", cible / "config")
+    shutil.copytree(d / "config_initiale", cible / "config")
     for name, patch in (surcharges or {}).items():
         p = cible / "config" / name
         data = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
         data.update(patch)
         p.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
+    os.environ.setdefault(
+        "TAVILY_API_KEY", "rejeu-sans-reseau"
+    )  # la clé n'entre pas dans la clé de cassette
     cass = Cassette(d / "cassette.sqlite")
     rep = Replayer(cass)
     when = datetime.fromisoformat((d / "date_collecte.txt").read_text(encoding="utf-8"))
