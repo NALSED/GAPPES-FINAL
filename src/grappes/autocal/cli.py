@@ -35,7 +35,8 @@ def credits() -> tuple[int, int]:
     import os
 
     req = urllib.request.Request(
-        "https://api.tavily.com/usage", headers={"Authorization": f"Bearer {os.environ['TAVILY_API_KEY']}"}
+        "https://api.tavily.com/usage",
+        headers={"Authorization": f"Bearer {os.environ['TAVILY_API_KEY']}"},
     )
     with urllib.request.urlopen(req, timeout=30) as r:
         d = json.load(r)["account"]
@@ -51,12 +52,17 @@ def cmd_collecter(args) -> int:
             continue
         used, cap = credits()
         if cap - used < 20:
-            print(f"crédits Tavily insuffisants ({used}/{cap}) : arrêt avant {s.id}", file=sys.stderr)
+            print(
+                f"crédits Tavily insuffisants ({used}/{cap}) : arrêt avant {s.id}", file=sys.stderr
+            )
             return 3
         preparer(s.id, s.phrase)
         out = collecter(s.id)
         used2, _ = credits()
-        print(f"{s.id} : {out.status}, {used2 - used} crédit(s) consommé(s) ({used2}/{cap})", flush=True)
+        print(
+            f"{s.id} : {out.status}, {used2 - used} crédit(s) consommé(s) ({used2}/{cap})",
+            flush=True,
+        )
     return 0
 
 

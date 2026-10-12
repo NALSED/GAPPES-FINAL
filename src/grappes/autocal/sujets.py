@@ -215,7 +215,12 @@ TEMOINS: list[
 # --- composition des trois jeux ------------------------------------------------------------------------------------
 JEUX = ("dev", "validation", "test")
 PAR_STRATE = 2  # sujets positifs par difficulté et par jeu (+ un contrôle négatif par jeu)
-PREFERENCE = {"handball-pro": "dev", "festivals-elec": "dev", "cac40": "validation", "supporters-foot": "validation"}
+PREFERENCE = {
+    "handball-pro": "dev",
+    "festivals-elec": "dev",
+    "cac40": "validation",
+    "supporters-foot": "validation",
+}
 
 
 def composer(w: Wikidata, generes: list[Sujet], seed: int = SEED, log=print) -> list[Sujet]:
@@ -225,7 +230,10 @@ def composer(w: Wikidata, generes: list[Sujet], seed: int = SEED, log=print) -> 
     présence de leurs acteurs dans Wikidata (site officiel) et dans les registres (SIREN)."""
     ordre = sorted(generes, key=lambda s: (-(s.part_site + s.part_siren) / 2, s.id))
     n = len(ordre)
-    seuils = ((ordre[n // 3 - 1].part_site + ordre[n // 3 - 1].part_siren) / 2, (ordre[2 * n // 3 - 1].part_site + ordre[2 * n // 3 - 1].part_siren) / 2)
+    seuils = (
+        (ordre[n // 3 - 1].part_site + ordre[n // 3 - 1].part_siren) / 2,
+        (ordre[2 * n // 3 - 1].part_site + ordre[2 * n // 3 - 1].part_siren) / 2,
+    )
     difficultes(generes)
     amorces = []
     for s in AMORCAGE:
@@ -234,11 +242,15 @@ def composer(w: Wikidata, generes: list[Sujet], seed: int = SEED, log=print) -> 
         s.part_site = round(sum(1 for e in ref.entities if e.domains) / ref.r, 3) if ref.r else 0.0
         s.part_siren = round(sum(1 for e in ref.entities if e.siren) / ref.r, 3) if ref.r else 0.0
         score = (s.part_site + s.part_siren) / 2
-        s.difficulte = "facile" if score >= seuils[0] else "moyen" if score >= seuils[1] else "difficile"
+        s.difficulte = (
+            "facile" if score >= seuils[0] else "moyen" if score >= seuils[1] else "difficile"
+        )
         amorces.append(s)
         log(f"{s.id} : R={s.r} site={s.part_site} siren={s.part_siren} -> {s.difficulte}")
     rng = random.Random(seed)
-    place: dict[tuple[str, str], list[Sujet]] = {(j, d): [] for j in JEUX for d in ("facile", "moyen", "difficile")}
+    place: dict[tuple[str, str], list[Sujet]] = {
+        (j, d): [] for j in JEUX for d in ("facile", "moyen", "difficile")
+    }
     for s in amorces:
         pref = PREFERENCE.get(s.id)
         cands = ([pref] if pref else []) + [j for j in JEUX if j != pref]

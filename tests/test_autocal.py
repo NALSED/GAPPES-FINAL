@@ -136,3 +136,25 @@ def test_decouverte_de_verite_classe_les_plus_citees():
         cits, "vote", None, lues={"web:a.fr", "web:b.fr", "web:c.fr", "web:d.fr"}, negatifs=True
     )
     assert 0 < b["web:y.fr"] < b["web:x.fr"] <= 1
+
+
+def test_calibration_et_permutation():
+    import numpy as np
+
+    from grappes.autocal import controles as c
+
+    rng = np.random.default_rng(0)
+    s = rng.random(2000)
+    y = (rng.random(2000) < s).astype(int)  # score bien calibré par construction
+    for m in ("platt", "isotone"):
+        p = c.ajuster(s, y, m).proba(s)
+        assert c.ece(p, y) < 0.05 and c.brier(p, y) <= c.brier_base(y)
+    assert c.ece(np.full(2000, 0.9), y) > 0.3  # un score trop confiant est vu comme tel
+    docids = [f"d{i}" for i in range(30)]
+    justes = set(docids[:10])  # classement parfait : les 10 justes en tête, R = 10
+    r = c.permutation("s", docids, justes, 10, n_perm=200)
+    assert r["observe"] == 1.0 and r["permute_moyen"] < 0.6 and r["p_valeur"] < 0.05
+    # classement sans lien avec la pertinence : indiscernable du hasard
+    hasard = set(docids[i] for i in range(0, 30, 3))
+    r = c.permutation("s", docids, hasard, 10, n_perm=200)
+    assert r["p_valeur"] > 0.05
