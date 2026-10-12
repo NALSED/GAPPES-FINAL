@@ -77,14 +77,14 @@ def stem(term: str) -> str:
     return t[:-1] if len(t) >= 5 and t.endswith(("s", "x")) and not t.endswith(("ss", "us")) else t
 
 
-def search_queries(g: Grappe) -> list[str]:
+def search_queries(g: Grappe, top_terms: int = TOP_TERMS) -> list[str]:
     """Requêtes d'un sujet : sa phrase, puis ses meilleurs termes combinés par deux. Un mot seul ramène du
     bruit, et deux formes du même mot (« acteur acteurs ») ne diversifient rien : un seul terme par radical
     (constaté sur les premières données réelles)."""
     by_stem: dict[str, str] = {}
     for t in sorted(g.lexicon.terms, key=lambda t: (-g.lexicon.terms[t], len(t), t)):
         by_stem.setdefault(stem(t), t)
-    top = list(by_stem.values())[:TOP_TERMS]
+    top = list(by_stem.values())[:top_terms]
     pairs = [" ".join(top[i : i + 2]) for i in range(0, len(top) - 1, 2)]
     if len(top) >= 2 and len(top) % 2:  # un terme resté seul se joint au premier
         pairs.append(f"{top[-1]} {top[0]}")
@@ -149,7 +149,7 @@ def collect(
             break
         res = run_search(
             replace(scfg, quota_total=min(scfg.quota_total, remaining)),
-            search_queries(g),
+            search_queries(g, auto.requetes_termes),
             execute=True,
             sujet=g.subject,
             journaliser=log,

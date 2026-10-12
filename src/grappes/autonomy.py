@@ -58,6 +58,7 @@ class Autonomy:
     # amorçage
     amorcage_max_termes: int = 20
     amorcage_poids: float = 0.4
+    requetes_termes: int = 4  # termes du lexique combinés par deux avec la phrase (4 = 2 requêtes en plus de la phrase)
     # sortie de compatibilité resultat_tsites.csv (D59)
     export_tsites_actif: bool = True
     export_tsites_pays_defaut: str = "FR"
@@ -273,6 +274,7 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
         max_octets_page=int(_num(d, "max_octets_page", base.max_octets_page, path, 1000)),
         amorcage_max_termes=int(_num(amorcage, "max_termes", base.amorcage_max_termes, path)),
         amorcage_poids=_num(amorcage, "poids", base.amorcage_poids, path),
+        requetes_termes=int(_num(d, "requetes_termes", base.requetes_termes, path, 2)),
         export_tsites_actif=tsites[0],
         export_tsites_pays_defaut=tsites[1],
         apprentissage_actif=bool(ap.get("actif", True)),

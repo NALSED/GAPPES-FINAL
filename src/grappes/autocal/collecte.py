@@ -59,7 +59,8 @@ PLAFONDS = {
     "pages_par_cycle": 200,
     "nouvelles_sources_par_cycle": 200,
     "elements_par_cycle": 600,
-    "profondeur": 1,
+    "profondeur": 2,
+    "requetes_termes": 12,  # phrase + 6 paires de termes = 7 requêtes, plus 1 pour l'amorçage
 }
 
 
