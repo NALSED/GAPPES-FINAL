@@ -85,3 +85,10 @@ régional, listes fermées par définition, figées dans `autocal/ligne_b.json`)
 sujet sur 6 au-dessus du 95e centile), 5 (Brier 0,00680 > 0,00651). Cause mesurée : 11 acteurs sur 356 présents parmi
 les candidats (3,1 %). Le test est brûlé ; la suite (Wikidata en découverte, référence indépendante, collecte élargie)
 est proposée à Sednal, non décidée. Détail : `docs/CERTIFICATION.md` § 2.
+
+## D68 — Sources : data.gouv.fr (MCP) en prise de la multiprise (décision de Sednal, 2026-10-12)
+
+Texte dans `DECISION_SOURCES.md` (Sednal le numérote « D67 », déjà pris par le verdict : numéro libre suivant). Chantier A :
+catalogue des APIs publiques via le MCP data.gouv.fr, un YAML par source dans `config/recherche/`, aucun code propre à un
+sujet. Chantier B : sujets ambigus, lectures listées et dites, aucune règle de départage inventée. Mesure sur dev
+seulement ; jeu test brûlé, non rouvert. SearxNG, Overpass, expansion d'ensembles : notés, non commencés.
