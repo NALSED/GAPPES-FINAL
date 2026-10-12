@@ -1,0 +1,39 @@
+{
+ "params": {
+  "registre_sirene_naf": 0.19032906915343972,
+  "registre_sirene_nom": 0.11220416617458923,
+  "nom_dans_texte": 1.9010545394053304,
+  "nom_dans_texte_plafond": 2.792043308539579,
+  "proximite_pente": 3.3581542961783466,
+  "proximite_pivot": 0.5664740607279882,
+  "ecosysteme": 1.1488542971086397,
+  "citation": 0.9688236072407175,
+  "citation_plafond": 2.717840968561294,
+  "variantes": false,
+  "seuil_variantes": 0.9
+ },
+ "resultats": {
+  "platt": {
+   "ece_dev": 0.0015395451381891834,
+   "brier_dev": 0.00613324490823813,
+   "ece_val": 0.018934028477776255,
+   "brier_val": 0.023435259879780252,
+   "brier_constant_val(taux de base dev)": 0.023198626394268902,
+   "brier_constant_val(taux propre)": 0.0229047043783796,
+   "p_max_val": 0.7907442833247507,
+   "n_val_p>=0.9": 0
+  },
+  "isotone": {
+   "ece_dev": 0.0,
+   "brier_dev": 0.00559361073478323,
+   "ece_val": 0.018582691659760467,
+   "brier_val": 0.023229047711147987,
+   "brier_constant_val(taux de base dev)": 0.023198626394268902,
+   "brier_constant_val(taux propre)": 0.0229047043783796,
+   "p_max_val": 0.4,
+   "n_val_p>=0.9": 0
+  }
+ },
+ "positifs_dev": 13,
+ "positifs_val": 74
+}

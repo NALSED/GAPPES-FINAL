@@ -1,0 +1,59 @@
+{
+ "essais": 108,
+ "meilleur_objectif_dev": 0.020912133543866403,
+ "params": {
+  "registre_sirene_naf": 0.19032906915343972,
+  "registre_sirene_nom": 0.11220416617458923,
+  "nom_dans_texte": 1.9010545394053304,
+  "nom_dans_texte_plafond": 2.792043308539579,
+  "proximite_pente": 3.3581542961783466,
+  "proximite_pivot": 0.5664740607279882,
+  "ecosysteme": 1.1488542971086397,
+  "citation": 0.9688236072407175,
+  "citation_plafond": 2.717840968561294,
+  "variantes": false,
+  "seuil_variantes": 0.9
+ },
+ "expert": {
+  "dev": {
+   "handball-pro": 0.058823529411764705,
+   "festivals-elec": 0.0,
+   "g-q212805": 0.022222222222222223,
+   "g-q131186": 0.0,
+   "g-q742421": 0.014084507042253521,
+   "g-q180958": 0.01
+  },
+  "validation": {
+   "cac40": 0.35,
+   "g-q654502": 0.0,
+   "g-q2190251": 0.0,
+   "g-q56199177": 0.0,
+   "supporters-foot": 0.0,
+   "g-q43009164": 0.057692307692307696
+  },
+  "dev_moyenne": 0.01752170977937341,
+  "validation_moyenne": 0.06794871794871794,
+  "ecart_optimisme": -0.050427008169344534
+ },
+ "optimise": {
+  "dev": {
+   "handball-pro": 0.058823529411764705,
+   "festivals-elec": 0.0,
+   "g-q212805": 0.022222222222222223,
+   "g-q131186": 0.0,
+   "g-q742421": 0.014084507042253521,
+   "g-q180958": 0.03
+  },
+  "validation": {
+   "cac40": 0.35,
+   "g-q654502": 0.0,
+   "g-q2190251": 0.0,
+   "g-q56199177": 0.043478260869565216,
+   "supporters-foot": 0.0,
+   "g-q43009164": 0.0673076923076923
+  },
+  "dev_moyenne": 0.02085504311270674,
+  "validation_moyenne": 0.07679765886287625,
+  "ecart_optimisme": -0.05594261575016951
+ }
+}

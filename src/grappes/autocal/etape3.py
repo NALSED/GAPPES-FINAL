@@ -67,3 +67,41 @@ def echantillon(donnees: list[DonneesSujet], p: ev.Params) -> tuple[list[float],
             y.append(1 if j.verdict == "juste" else 0)
             s.append(d.id)
     return x, y, s
+
+
+def main(essais: int = 150) -> None:
+    """Étude sur dev (sans Wikidata), puis mesure des meilleurs paramètres sur dev ET validation, comparées aux
+    paramètres d'expert (config/lr.yaml) : écart d'optimisme = dev − validation. Écrit autocal/resultats/etape3_optuna.json."""
+    import json
+    from pathlib import Path
+
+    from grappes.autocal import protocole as p
+
+    dev = p.charger_jeu("dev", ner=True)
+    val = p.charger_jeu("validation", ner=True)
+    expert = ev.Params(methode="lr", registres=("sirene",), ner=True)
+    st = etude("etape3-dev-v1", dev, essais)
+    best = params_depuis_essai(st.best_params)
+
+    def mesures(donnees, prm):
+        _, det = optimiser.score_jeu(donnees, prm, "Rprec_ex_aequo")
+        return {k: v["mesures"]["Rprec_ex_aequo"] for k, v in det.items()}
+
+    out = {
+        "essais": len(st.trials), "meilleur_objectif_dev": st.best_value, "params": st.best_params,
+        "expert": {"dev": mesures(dev, expert), "validation": mesures(val, expert)},
+        "optimise": {"dev": mesures(dev, best), "validation": mesures(val, best)},
+    }  # fmt: skip
+    for cle in ("expert", "optimise"):
+        for jeu in ("dev", "validation"):
+            v = list(out[cle][jeu].values())
+            out[cle][jeu + "_moyenne"] = sum(v) / len(v)
+        out[cle]["ecart_optimisme"] = out[cle]["dev_moyenne"] - out[cle]["validation_moyenne"]
+    Path("autocal/resultats/etape3_optuna.json").write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
+    print(json.dumps({k: out[k] for k in ("essais", "params")}, indent=1))
+    for cle in ("expert", "optimise"):
+        print(cle, {k: round(v, 4) for k, v in out[cle].items() if k.endswith("moyenne") or k == "ecart_optimisme"})
+
+
+if __name__ == "__main__":
+    main()

@@ -143,10 +143,31 @@ Chiffre de départ du matin (autocal/resultats/base_dev.json et base_validation.
 
 Lecture honnête. Sans Wikidata, le gain mesurable sur la validation est de 0,007 à 0,068 (surtout le CAC 40 : 0,35 grâce aux noms lus, et le rugby : 0,058) ; sur dev il n'y a **aucun gain** (0,020 -> 0,018). Les chiffres avec Wikidata (0,58 et 0,92) ne prouvent rien : le fournisseur retrouve sa propre liste. Les valeurs de l'indice sont celles d'expert de `config/lr.yaml`, pas encore réglées (Optuna) ni calibrées.
 
-## 8. Reste à faire (ordre)
+## 8. Réglage Optuna et calibration (étape 3, système sans Wikidata)
 
-1. Étude Optuna des paramètres de `config/lr.yaml` sur dev (R-précision stricte espérée sous ex æquo), vérification sur validation, écart d'optimisme.
-2. Calibration (Platt ou isotone) de l'indice, ECE, Brier, **diagramme de fiabilité** ; ligne de sortie « mesuré » ou « estimation étendue ».
-3. Ablations ; comparaison au chiffre du matin et au vote ; mesure de `min_ecosystemes = 1` avec le système complet (rapportée, jamais appliquée).
-4. Intégration en production des fournisseurs (registres, noms) et de l'indice dans le cycle, profils de sortie alimentés.
-5. Ouverture unique du jeu test, verdict dans `docs/CERTIFICATION.md`.
+**Réglage (dev, 108 essais, TPE, graine 62, arrêt par patience ; base `donnees/autocal/optuna.db`, étude `etape3-dev-v1`)**. Objectif : R-précision stricte espérée sous ex æquo (+ 0,01 × précision moyenne pour départager). Bornes fixées avant les résultats (`etape3.BORNES`).
+
+| | dev | validation | écart d'optimisme (dev − val) |
+|---|---|---|---|
+| valeurs d'expert (`config/lr.yaml`) | 0,0175 | 0,0679 | −0,050 |
+| valeurs réglées par Optuna | 0,0209 | 0,0768 | −0,056 |
+
+Le gain du réglage est **négligeable** (+0,003 en dev, +0,009 en validation) et l'écart d'optimisme est négatif (la validation contient le CAC 40, où les noms lus font 0,35). Ce que dit le réglage : fusion de variantes **désactivée** (cohérent avec le § 4), poids SIRENE/RNA presque annulés (0,19 et 0,11), poids des noms lus dans les textes forts (1,9 par éditeur), proximité du texte propre et citations relevées. Le réglage ne peut pas faire mieux parce que **les bons acteurs ne sont pas dans la liste des candidats** (§ 1, § 5), pas parce que l'indice les classe mal.
+
+**Calibration** (ajustée sur dev, vérifiée sur validation, étiquette stricte ; le test n'est pas touché). Peu de positifs : 13 sur 2 060 candidats en dev (0,6 %), 74 sur 3 155 en validation (2,3 %).
+
+| méthode | ECE dev | Brier dev | ECE validation | Brier validation | Brier du prédicteur constant (validation) | p max (validation) | candidats à p ≥ 0,9 |
+|---|---|---|---|---|---|---|---|
+| Platt | 0,0015 | 0,0061 | 0,0189 | 0,0234 | 0,0229 | 0,79 | 0 |
+| isotone | 0,0 | 0,0056 | 0,0186 | 0,0232 | 0,0229 | 0,40 | 0 |
+
+Diagramme de fiabilité : `docs/conception/fiabilite_validation.png`.
+
+Lecture honnête : l'ECE est bas **parce que presque tout est proche du taux de base** (1 à 2 %), pas parce que l'indice est bien calibré ; et le score de Brier **n'est pas meilleur que celui du prédicteur constant** en validation (0,0234 contre 0,0229). Sur le système sans Wikidata, l'indice n'a donc pas de pouvoir discriminant mesurable contre cette référence, ce qui ferait échouer le critère 5 de la certification (Brier < constant). Aucun candidat n'atteint 0,9 : aucun résultat ne serait présenté en confiance haute. La calibration d'un système AVEC Wikidata serait circulaire (beaucoup de positifs, mais ce sont les siens) et n'est pas présentée comme une mesure ; hors du domaine calibré (sujets informels, personnes), le chiffre est une estimation étendue, dit sur la ligne de sortie (colonne `calibre`).
+
+## 9. Reste à faire (ordre)
+
+1. Ablations (retrait de chaque élément de l'indice) ; comparaison au chiffre du matin et au vote ; mesure de `min_ecosystemes = 1` avec le système complet (rapportée, jamais appliquée).
+2. Intégration en production des fournisseurs (registres, noms) et de l'indice dans le cycle ; profils de sortie alimentés ; choix de la valeur de l'indice pour Wikidata (non mesurable ici : valeur d'expert annoncée).
+3. Décision de Sednal sur les options du § 5 avant ouverture du test.
+4. Ouverture unique du jeu test, verdict dans `docs/CERTIFICATION.md`.

@@ -12,7 +12,7 @@ from pathlib import Path
 
 from grappes.autocal.collecte import RACINE, rejouer_collecte
 from grappes.autocal.juger import Juge
-from grappes.autocal.pool import Contexte, charger
+from grappes.classement.candidats import Contexte, charger
 from grappes.autocal.reference import Reference
 from grappes.autocal.sujets import Sujet
 from grappes.autocal.wikidata import Wikidata

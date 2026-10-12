@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from grappes.autocal import td
 from grappes.autocal.juger import FAUX, JUSTE, NON_VERIFIABLE, Juge
 from grappes.autocal.metriques import evaluer
-from grappes.autocal.pool import Contexte
+from grappes.classement.candidats import Contexte
 from grappes.canon import site_key
 
 
