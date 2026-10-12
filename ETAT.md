@@ -48,7 +48,8 @@ Instructions de Sednal : `DECISION_AUTOCAL.md`. Critères de certification **pr�
 
 * **Fait** : package `src/grappes/autocal/` (cassette réseau « collecter une fois, rejouer mille fois », client Wikidata en cache, référence silver standard, juge à trois comptes, métriques `pytrec_eval`, découverte de vérité `truthdiscovery`), tirage des sujets (graine 20261012, 3 jeux disjoints de 7 sujets, un témoin par jeu), `requetes_termes` réglable (défaut inchangé).
 * **Constats** : (1) le plafond Tavily n'est pas « largement entamé » : 43 crédits sur 1 000 au 2026-10-12 ; (2) les entités du système sont des **sources** (domaines, articles), pas des acteurs extraits du texte ; (3) `truthdiscovery` 1.0.4 ne s'installe qu'avec `--no-deps` (versions figées de 2023) et exige un module `cairo` factice ; (4) un moteur de recherche web ramène Wikipédia : exclu des collectes d'évaluation (non-circularité).
-* **Suite** : collecte unique des 21 sujets, juge, mesures de base (actuel, vote), puis Optuna.
+* **Fait (suite)** : collecte réelle des 21 sujets terminée (≈ 182/1000 crédits Tavily) ; mesures de base dev/validation (`autocal/resultats/base_*.json`) : R-précision stricte moyenne 0,020 (dev) et 0,007 (validation), **identique pour actuel, vote et les 5 algorithmes de découverte de vérité** (21 à 37 candidats par sujet pour R de 4 à 142) : le goulot est le rappel de la collecte, pas le classement.
+* **Suite** : mesurer le plafond de rappel par sujet (dev, validation), chiffrer une collecte plus grande avant tout gel, puis Optuna seulement si le classement a de quoi varier ; ouverture unique du test, verdict dans `docs/CERTIFICATION.md` (probablement « non certifié », chiffres et proposition à l'appui).
 
 ## Limites connues
 
