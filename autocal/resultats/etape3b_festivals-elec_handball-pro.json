@@ -1,0 +1,118 @@
+{
+ "handball-pro": {
+  "jeu": "dev",
+  "R": 17,
+  "web seul": {
+   "Rprec": 0.058823529411764705,
+   "Rprec_ea": 0.058823529411764705,
+   "bpref": 0.0,
+   "n": 15,
+   "juste": 1,
+   "faux": 2,
+   "nv": 12
+  },
+  "+sirene": {
+   "Rprec": 0.058823529411764705,
+   "Rprec_ea": 0.058823529411764705,
+   "bpref": 0.0,
+   "n": 17,
+   "juste": 1,
+   "faux": 2,
+   "nv": 14
+  },
+  "+noms": {
+   "Rprec": 0.058823529411764705,
+   "Rprec_ea": 0.058823529411764705,
+   "bpref": 0.07612456747404843,
+   "n": 152,
+   "juste": 3,
+   "faux": 41,
+   "nv": 108
+  },
+  "+sirene+noms (non circulaire)": {
+   "Rprec": 0.058823529411764705,
+   "Rprec_ea": 0.058823529411764705,
+   "bpref": 0.07612456747404843,
+   "n": 151,
+   "juste": 3,
+   "faux": 40,
+   "nv": 108
+  },
+  "+wikidata seul (circulaire, info)": {
+   "Rprec": 0.058823529411764705,
+   "Rprec_ea": 0.1361099184199227,
+   "bpref": 0.47058823529411764,
+   "n": 152,
+   "juste": 16,
+   "faux": 8,
+   "nv": 128
+  },
+  "tout (circulaire, info)": {
+   "Rprec": 0.11764705882352941,
+   "Rprec_ea": 0.11764705882352941,
+   "bpref": 0.57439446366782,
+   "n": 250,
+   "juste": 14,
+   "faux": 44,
+   "nv": 192
+  }
+ },
+ "festivals-elec": {
+  "jeu": "dev",
+  "R": 7,
+  "web seul": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 28,
+   "juste": 0,
+   "faux": 12,
+   "nv": 16
+  },
+  "+sirene": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 30,
+   "juste": 0,
+   "faux": 12,
+   "nv": 18
+  },
+  "+noms": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 147,
+   "juste": 0,
+   "faux": 78,
+   "nv": 69
+  },
+  "+sirene+noms (non circulaire)": {
+   "Rprec": 0.0,
+   "Rprec_ea": 0.0,
+   "bpref": 0.0,
+   "n": 149,
+   "juste": 0,
+   "faux": 78,
+   "nv": 71
+  },
+  "+wikidata seul (circulaire, info)": {
+   "Rprec": 0.2857142857142857,
+   "Rprec_ea": 0.17500000000000002,
+   "bpref": 0.2857142857142857,
+   "n": 68,
+   "juste": 7,
+   "faux": 44,
+   "nv": 17
+  },
+  "tout (circulaire, info)": {
+   "Rprec": 0.2857142857142857,
+   "Rprec_ea": 0.17500000000000002,
+   "bpref": 0.2857142857142857,
+   "n": 189,
+   "juste": 7,
+   "faux": 110,
+   "nv": 72
+  }
+ }
+}

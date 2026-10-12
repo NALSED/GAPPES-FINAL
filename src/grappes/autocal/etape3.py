@@ -33,12 +33,12 @@ def params_lr(trial: optuna.Trial, registres=("sirene",), ner=True) -> ev.Params
     return ev.Params(
         methode="lr", registres=registres, ner=ner, lr=lr,
         variantes=trial.suggest_categorical("variantes", [True, False]),
-        seuil_variantes=trial.suggest_float("seuil_variantes", 0.6, 0.99),
+        seuil_variantes=trial.suggest_categorical("seuil_variantes", [0.7, 0.8, 0.9, 0.95]),  # valeurs discrètes : regroupements mémorisés
     )  # fmt: skip
 
 
 def objectif(donnees: list[DonneesSujet], p: ev.Params) -> float:
-    r, _ = optimiser.score_jeu(donnees, p, "Rprec")
+    r, _ = optimiser.score_jeu(donnees, p, "Rprec_ex_aequo")
     m, _ = optimiser.score_jeu(donnees, p, "map")
     return r + 0.01 * m
 

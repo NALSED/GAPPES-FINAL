@@ -42,16 +42,14 @@ Décision de Sednal : « probable » est le niveau maximal accepté pour le suje
 * **Timer** : quotidien à **10h00** (D60), vérifié par `systemctl --user list-timers` (prochain passage 2026-10-12 vers 10:02).
 * **Q25 close (D61)** : aucun filtre, toutes les sources conservées ; la ville est un résultat de trouver-sites (jamais inventée ici, vide sans registre).
 
-## Mission autocalibration (D62) — en cours
+## Mission autocalibration (D62, D63, D64, D65) — en cours
 
-Instructions de Sednal : `DECISION_AUTOCAL.md`. Critères de certification **pré-enregistrés** (2026-10-12, avant toute mesure) : `docs/CERTIFICATION.md`. Verdict : non rendu.
+Instructions de Sednal : `DECISION_AUTOCAL.md` (méthode) et `DECISION_FIABILITE.md` (ordre des étapes). Critères pré-enregistrés inchangés : `docs/CERTIFICATION.md`. Verdict : non rendu. Rapport de mesures : `docs/conception/calibration.md`.
 
-* **Fait** : package `src/grappes/autocal/` (cassette réseau « collecter une fois, rejouer mille fois », client Wikidata en cache, référence silver standard, juge à trois comptes, métriques `pytrec_eval`, découverte de vérité `truthdiscovery`), tirage des sujets (graine 20261012, 3 jeux disjoints de 7 sujets, un témoin par jeu), `requetes_termes` réglable (défaut inchangé).
-* **Constats** : (1) le plafond Tavily n'est pas « largement entamé » : 43 crédits sur 1 000 au 2026-10-12 ; (2) les entités du système sont des **sources** (domaines, articles), pas des acteurs extraits du texte ; (3) `truthdiscovery` 1.0.4 ne s'installe qu'avec `--no-deps` (versions figées de 2023) et exige un module `cairo` factice ; (4) un moteur de recherche web ramène Wikipédia : exclu des collectes d'évaluation (non-circularité).
-* **Fait (suite)** : collecte réelle des 21 sujets terminée (≈ 182/1000 crédits Tavily) ; mesures de base dev/validation (`autocal/resultats/base_*.json`) : R-précision stricte moyenne 0,020 (dev) et 0,007 (validation), **identique pour actuel, vote et les 5 algorithmes de découverte de vérité** (21 à 37 candidats par sujet pour R de 4 à 142) : le goulot est le rappel de la collecte, pas le classement.
-* **Plafond de rappel mesuré** (candidats vérifiés « justes » / R, dev + validation) : 0 à 17 % selon le sujet (handball 11,8 %, bibliothèque numérique 8,9 %, faculté 5 %, ordre des experts-comptables 17,4 %, 7 sujets à 0 %). Même un classement parfait ne dépasserait donc pas ≈ 0,17 en R-précision stricte : **le critère 1 (≥ 0,90) est hors de portée de la collecte actuelle**, quel que soit l'algorithme. Environ 70 % des candidats restent « non vérifiables ».
-* **Essais de relèvement** : 3 cycles de collecte réelle sur 2 sujets (plafond inchangé) ; `min_ecosystemes = 1` rejoué sur 12 sujets (aucun effet, non appliqué). **Point à trancher par Sednal : Q26** (entités nommées).
-* **Suite** (après décision sur Q26) : chiffrer une collecte plus grande avant tout gel, puis Optuna seulement si le classement a de quoi varier ; ouverture unique du test, verdict dans `docs/CERTIFICATION.md` (probablement « non certifié », chiffres et proposition à l'appui).
+* **Fait** : collecte réelle des 21 sujets (une seule fois) ; fournisseurs de registres (Wikidata classe + gabarit type/domaine, SIRENE/RNA par NAF ou nom) ; noms lus dans les textes (camembert-ner par défaut, wikineural en option, `config/ner.yaml`, seuil 0,93) ; variantes par nomenklatura ; indice par rapport de vraisemblance (`config/lr.yaml`, cadre ENFSI) ; profils de sortie configurables (`config/sortie.yaml`) ; périmètre des personnes préparé et **inactif** (`config/personnes.yaml`).
+* **Chiffres (dev / validation, R-précision stricte, sans Wikidata)** : matin 0,020 / 0,007 -> maintenant 0,018 / 0,068 (indice non réglé). Avec Wikidata (circulaire, non probant) 0,58 / 0,92. Plafond de rappel du fournisseur de registres : 100 % de chaque liste de référence (traduction corrigée).
+* **Constats ouverts** : (1) trois sujets ont des ex æquo massifs (entités SIRENE sans autre indice) : mesure sous ex æquo ajoutée ; (2) la fusion de variantes chaîne des noms sans rapport (§ 4 du rapport) ; (3) le critère 0,90 n'a de sens que sur listes fermées (§ 5) : options présentées à Sednal, rien modifié.
+* **Suite** : Optuna sur dev, validation, calibration + diagramme de fiabilité, ablations, `min_ecosystemes = 1` (mesuré, jamais appliqué), intégration en production, ouverture unique du test.
 
 ## Limites connues
 
