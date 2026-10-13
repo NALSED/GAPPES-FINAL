@@ -192,6 +192,15 @@ def test_flux_rss(tmp_path, srv):
     assert c[("web", "rss-un.example.test")].date == "2026-09-02"  # date RFC 822
 
 
+def test_delai_entre_appels_du_fournisseur(tmp_path, srv):
+    import time
+
+    body = "type: http\nurl: BASE/json\nparams: {q: '{mots_cles}'}\ndelai_entre_appels_s: 0.4\nresponse: {items: results}\nfields: {url: link}\n"
+    t0 = time.monotonic()
+    run_search(make_search(tmp_path, {"api": body}, base=srv.base), ["a", "b", "c"], execute=True)
+    assert len(srv.log) == 3 and time.monotonic() - t0 >= 0.8  # trois appels, au moins 0,4 s entre chacun
+
+
 def test_flux_atom_attribut_href(tmp_path, srv):
     body = "type: http\nurl: BASE/atom\nresponse: {format: xml, items: feed.entry}\nfields: {title: title, url: link.@href, description: summary}\n"
     rep = run_search(make_search(tmp_path, {"flux": body}, base=srv.base), ["x"], execute=True)

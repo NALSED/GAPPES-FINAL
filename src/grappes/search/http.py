@@ -15,6 +15,7 @@ from __future__ import annotations
 import base64
 import json
 import re
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -163,6 +164,16 @@ class HttpProvider(SearchProvider):
 
         return RobotsCache(fetch, ua)
 
+    def _espacer(self, delai_s: float) -> None:
+        """Délai minimal entre deux appels de CE fournisseur (`delai_entre_appels_s`), pour les services qui limitent le débit
+        (ex. GDELT : un appel toutes les 5 secondes). Sans option, aucun délai."""
+        if delai_s <= 0:
+            return
+        attente = getattr(self, "_dernier_appel", 0.0) + delai_s - time.monotonic()
+        if attente > 0:
+            time.sleep(attente)
+        self._dernier_appel = time.monotonic()
+
     # --- recherche -------------------------------------------------------------------------
 
     def search(self, keyword: str, limit: int) -> Iterable[Candidate]:
@@ -251,6 +262,7 @@ class HttpProvider(SearchProvider):
                 )
             self.ctx.take(self.id, quota)
             self.ctx.throttle()
+            self._espacer(float(o.get("delai_entre_appels_s", 0) or 0))
             resp = self.transport(
                 method, url, headers, body, float(o.get("timeout_s", 20)), MAX_BYTES
             )

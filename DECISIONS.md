@@ -131,3 +131,7 @@ rapport d'avancement (`grappes/avancement.py`, inactif par défaut, 4 tests ; cr
 découverte, la recherche, le cycle et le classement). Ligne de commande et résultats inchangés, 589 tests verts. Pilote fait tourner
 grappes dans une COPIE de la configuration par recherche et n'active aucun levier de la vraie configuration (classement inactif).
 Questions ouvertes pour Sednal : `/opt/pilote/QUESTIONS.md` (P1 à P18).
+
+## Option `delai_entre_appels_s` des prises http (2026-10-13)
+
+Ajout générique et facultatif (défaut : aucun délai) pour les services qui limitent le débit par appelant (GDELT : un appel toutes les 5 s). Test : `test_delai_entre_appels_du_fournisseur`. Demandé par la fiche 09 de pilote ; aucun comportement existant ne change.

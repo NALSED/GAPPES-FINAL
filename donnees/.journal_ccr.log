@@ -21,3 +21,9 @@
 2026-10-13T18:11:57+04:00 |   -> code de sortie 0
 2026-10-13T18:15:36+04:00 | fiche 06 : exemples de réponses synthétiques (GLEIF, registre payant, registre FR payant)
 2026-10-13T18:16:34+04:00 |   -> code de sortie 0
+2026-10-13T19:01:30+04:00 | fiche 08 : 4 fixtures synthétiques (Overpass, Nominatim, Google Places, Google Maps/Apify)
+2026-10-13T19:01:34+04:00 |   -> code de sortie 1
+2026-10-13T19:01:41+04:00 | fiche 08 : 4 fixtures synthétiques (Overpass, Nominatim, Google Places, Google Maps/Apify)
+2026-10-13T19:02:52+04:00 |   -> code de sortie 0
+2026-10-13T19:55:06+04:00 | fiche 09 : 5 fixtures synthétiques (GDELT, NewsData, GNews, NewsAPI.ai, flux RSS)
+2026-10-13T19:56:28+04:00 |   -> code de sortie 0
