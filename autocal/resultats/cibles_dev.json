@@ -1,0 +1,143 @@
+{
+ "sujets": {
+  "handball-pro": {
+   "cible": "A",
+   "R": 17,
+   "phrase": "Les clubs de handball professionnels en France",
+   "fige": {
+    "Rprec": 0.058823529411764705,
+    "justes_parmi_candidats": 4,
+    "candidats": 216
+   },
+   "prises": {
+    "Rprec": 0.058823529411764705,
+    "justes_parmi_candidats": 8,
+    "candidats": 499
+   },
+   "prises_type": {
+    "Rprec": 0.058823529411764705,
+    "justes_parmi_candidats": 8,
+    "candidats": 239
+   }
+  },
+  "festivals-elec": {
+   "cible": "B",
+   "R": 7,
+   "phrase": "Les festivals de musique électronique en France",
+   "fige": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 0,
+    "candidats": 171
+   },
+   "prises": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 2,
+    "candidats": 1002
+   },
+   "prises_type": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 2,
+    "candidats": 1001
+   }
+  },
+  "g-q212805": {
+   "cible": "B",
+   "R": 45,
+   "phrase": "Bibliothèque numérique en France",
+   "fige": {
+    "Rprec": 0.022222222222222223,
+    "justes_parmi_candidats": 1,
+    "candidats": 533
+   },
+   "prises": {
+    "Rprec": 0.022222222222222223,
+    "justes_parmi_candidats": 1,
+    "candidats": 932
+   },
+   "prises_type": {
+    "Rprec": 0.022222222222222223,
+    "justes_parmi_candidats": 1,
+    "candidats": 538
+   }
+  },
+  "g-q131186": {
+   "cible": "B",
+   "R": 33,
+   "phrase": "Chorale en France",
+   "fige": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 0,
+    "candidats": 417
+   },
+   "prises": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 1,
+    "candidats": 738
+   },
+   "prises_type": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 1,
+    "candidats": 715
+   }
+  },
+  "g-q742421": {
+   "cible": "B",
+   "R": 142,
+   "phrase": "Troupe théâtrale en France",
+   "fige": {
+    "Rprec": 0.014084507042253521,
+    "justes_parmi_candidats": 2,
+    "candidats": 274
+   },
+   "prises": {
+    "Rprec": 0.007042253521126761,
+    "justes_parmi_candidats": 3,
+    "candidats": 499
+   },
+   "prises_type": {
+    "Rprec": 0.014084507042253521,
+    "justes_parmi_candidats": 3,
+    "candidats": 359
+   }
+  },
+  "g-q180958": {
+   "cible": "B",
+   "R": 100,
+   "phrase": "Faculté en France",
+   "fige": {
+    "Rprec": 0.03,
+    "justes_parmi_candidats": 4,
+    "candidats": 447
+   },
+   "prises": {
+    "Rprec": 0.03,
+    "justes_parmi_candidats": 4,
+    "candidats": 451
+   },
+   "prises_type": {
+    "Rprec": 0.03,
+    "justes_parmi_candidats": 4,
+    "candidats": 448
+   }
+  }
+ },
+ "moyennes": {
+  "A": {
+   "fige": 0.0588,
+   "prises": 0.0588,
+   "prises_type": 0.0588,
+   "sujets": 1,
+   "seuil": 0.9
+  },
+  "B": {
+   "fige": 0.0133,
+   "prises": 0.0119,
+   "prises_type": 0.0133,
+   "sujets": 5,
+   "seuil": [
+    0.3,
+    0.4
+   ]
+  }
+ }
+}

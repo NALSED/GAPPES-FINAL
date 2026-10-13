@@ -1,0 +1,977 @@
+{
+ "cac40": {
+  "phrase": "Les entreprises du CAC 40",
+  "R": 40,
+  "tirages": [
+   {
+    "exemples": [
+     "AXA",
+     "EssilorLuxottica",
+     "Alstom"
+    ],
+    "codes_trouves": [
+     "43.32A",
+     "32.50B",
+     "70.10Z"
+    ],
+    "codes_retenus": [
+     "32.50B",
+     "43.32A",
+     "70.10Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 3,
+    "reseau": 6,
+    "avant": {
+     "justes": 34,
+     "candidats": 682,
+     "Rprec": 0.2972972972972973,
+     "bpref": 0.46676406135865595
+    },
+    "apres": {
+     "justes": 34,
+     "candidats": 682,
+     "Rprec": 0.2972972972972973,
+     "bpref": 0.46676406135865595
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Pernod Ricard",
+     "Renault",
+     "Veolia"
+    ],
+    "codes_trouves": [
+     "70.10Z",
+     "01.13Z",
+     ""
+    ],
+    "codes_retenus": [
+     "01.13Z",
+     "70.10Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 3,
+    "reseau": 4,
+    "avant": {
+     "justes": 34,
+     "candidats": 682,
+     "Rprec": 0.2972972972972973,
+     "bpref": 0.45726807888970034
+    },
+    "apres": {
+     "justes": 34,
+     "candidats": 682,
+     "Rprec": 0.2972972972972973,
+     "bpref": 0.45726807888970034
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "LVMH",
+     "Société générale",
+     "Thales"
+    ],
+    "codes_trouves": [
+     "68.20B",
+     "64.19Z",
+     "70.10Z"
+    ],
+    "codes_retenus": [
+     "64.19Z",
+     "68.20B",
+     "70.10Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 3,
+    "reseau": 5,
+    "avant": {
+     "justes": 34,
+     "candidats": 682,
+     "Rprec": 0.2972972972972973,
+     "bpref": 0.45288531775018254
+    },
+    "apres": {
+     "justes": 34,
+     "candidats": 682,
+     "Rprec": 0.2972972972972973,
+     "bpref": 0.45288531775018254
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "EssilorLuxottica",
+     "Société générale",
+     "Legrand"
+    ],
+    "codes_trouves": [
+     "32.50B",
+     "64.19Z",
+     "70.10Z"
+    ],
+    "codes_retenus": [
+     "32.50B",
+     "64.19Z",
+     "70.10Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 3,
+    "reseau": 1,
+    "avant": {
+     "justes": 34,
+     "candidats": 682,
+     "Rprec": 0.2972972972972973,
+     "bpref": 0.4616508400292184
+    },
+    "apres": {
+     "justes": 34,
+     "candidats": 682,
+     "Rprec": 0.2972972972972973,
+     "bpref": 0.4616508400292184
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Engie",
+     "Saint-Gobain",
+     "Alstom"
+    ],
+    "codes_trouves": [
+     "35.23Z",
+     "23.12Z",
+     "70.10Z"
+    ],
+    "codes_retenus": [
+     "23.12Z",
+     "35.23Z",
+     "70.10Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 3,
+    "reseau": 4,
+    "avant": {
+     "justes": 34,
+     "candidats": 682,
+     "Rprec": 0.2972972972972973,
+     "bpref": 0.48064280496712924
+    },
+    "apres": {
+     "justes": 34,
+     "candidats": 682,
+     "Rprec": 0.2972972972972973,
+     "bpref": 0.48064280496712924
+    },
+    "gain_justes": 0
+   }
+  ]
+ },
+ "g-q654502": {
+  "phrase": "Société par actions simplifiée en France",
+  "R": 21,
+  "tirages": [
+   {
+    "exemples": [
+     "Fotomat SAS",
+     "Baker Tilly France",
+     "E'Maging Computer France"
+    ],
+    "codes_trouves": [
+     "",
+     "94.99Z",
+     "46.66Z"
+    ],
+    "codes_retenus": [
+     "46.66Z",
+     "94.99Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 5,
+    "avant": {
+     "justes": 0,
+     "candidats": 533,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 533,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Club-Auto",
+     "Alter Ego Biotech",
+     "Nolimé"
+    ],
+    "codes_trouves": [
+     "45.11Z",
+     "74.90B",
+     "70.22Z"
+    ],
+    "codes_retenus": [
+     "45.11Z",
+     "70.22Z",
+     "74.90B"
+    ],
+    "ajout_registre": 7,
+    "exemples_deja_candidats": 0,
+    "reseau": 7,
+    "avant": {
+     "justes": 0,
+     "candidats": 533,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 533,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "C-REDIT",
+     "SWAP IMMOBILIER",
+     "E'Maging Computer France"
+    ],
+    "codes_trouves": [
+     "66.22Z",
+     "68.31Z",
+     "46.66Z"
+    ],
+    "codes_retenus": [
+     "46.66Z",
+     "66.22Z",
+     "68.31Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 4,
+    "avant": {
+     "justes": 0,
+     "candidats": 533,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 533,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Alter Ego Biotech",
+     "Smartconcept",
+     "Agrizone"
+    ],
+    "codes_trouves": [
+     "74.90B",
+     "",
+     ""
+    ],
+    "codes_retenus": [
+     "74.90B"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 2,
+    "avant": {
+     "justes": 0,
+     "candidats": 533,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 533,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Smartconcept",
+     "Phoenix France Infrastructures",
+     "Baker Tilly France"
+    ],
+    "codes_trouves": [
+     "",
+     "61.90Z",
+     "94.99Z"
+    ],
+    "codes_retenus": [
+     "61.90Z",
+     "94.99Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 2,
+    "avant": {
+     "justes": 0,
+     "candidats": 533,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 533,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   }
+  ]
+ },
+ "g-q2190251": {
+  "phrase": "Centre des arts en France",
+  "R": 89,
+  "tirages": [
+   {
+    "exemples": [
+     "Centre Culturel de Melun",
+     "Espace Culturel de la Pointe de Caux",
+     "espace culturel Roger-Hanin"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 3,
+    "avant": {
+     "justes": 0,
+     "candidats": 692,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 692,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "La Canopée",
+     "La Ferme du Buisson",
+     "Le Plateau"
+    ],
+    "codes_trouves": [
+     "81.30Z",
+     "55.20Z",
+     "68.20B"
+    ],
+    "codes_retenus": [
+     "55.20Z",
+     "68.20B",
+     "81.30Z"
+    ],
+    "ajout_registre": 3,
+    "exemples_deja_candidats": 0,
+    "reseau": 6,
+    "avant": {
+     "justes": 0,
+     "candidats": 692,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 695,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Centre culturel L’imprévu",
+     "centre d'initiatives artistiques du Mirail",
+     "Maison des Arts du Léman"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     "90.04Z"
+    ],
+    "codes_retenus": [
+     "90.04Z"
+    ],
+    "ajout_registre": 5,
+    "exemples_deja_candidats": 0,
+    "reseau": 4,
+    "avant": {
+     "justes": 0,
+     "candidats": 692,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 696,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Le Village Théâtre Cinéma",
+     "Le Plateau",
+     "Centre culturel Georges Brassens"
+    ],
+    "codes_trouves": [
+     "",
+     "68.20B",
+     "90.04Z"
+    ],
+    "codes_retenus": [
+     "68.20B",
+     "90.04Z"
+    ],
+    "ajout_registre": 8,
+    "exemples_deja_candidats": 0,
+    "reseau": 2,
+    "avant": {
+     "justes": 0,
+     "candidats": 692,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 699,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Le Village Théâtre Cinéma",
+     "Centquatre-Paris",
+     "Centre d'art contemporain d'Anglet"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 2,
+    "avant": {
+     "justes": 0,
+     "candidats": 692,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 692,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   }
+  ]
+ },
+ "g-q56199177": {
+  "phrase": "Conseil régional de l'ordre des experts-comptable en France",
+  "R": 23,
+  "tirages": [
+   {
+    "exemples": [
+     "Conseil régional de l'ordre des experts-comptables de Bretagne",
+     "Conseil régional de l'ordre des experts-comptables d'Aquitaine",
+     "Conseil régional de l'ordre des experts-comptables de Corse"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     "94.12Z"
+    ],
+    "codes_retenus": [
+     "94.12Z"
+    ],
+    "ajout_registre": 12,
+    "exemples_deja_candidats": 1,
+    "reseau": 4,
+    "avant": {
+     "justes": 2,
+     "candidats": 289,
+     "Rprec": 0.05,
+     "bpref": 0.0475
+    },
+    "apres": {
+     "justes": 2,
+     "candidats": 289,
+     "Rprec": 0.05,
+     "bpref": 0.075
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Conseil régional de l'ordre des experts-comptables de Nord - Pas-de-Calais",
+     "Conseil régional de l'ordre des experts-comptables de Lorraine",
+     "Conseil régional de l'ordre des experts-comptables de Bourgogne - Franche-Comté"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 3,
+    "avant": {
+     "justes": 3,
+     "candidats": 290,
+     "Rprec": 0.05,
+     "bpref": 0.0475
+    },
+    "apres": {
+     "justes": 3,
+     "candidats": 290,
+     "Rprec": 0.05,
+     "bpref": 0.0475
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Conseil régional de l'ordre des experts-comptables de Lorraine",
+     "Conseil régional de l'ordre des experts-comptables d'Orléans",
+     "Conseil régional de l'ordre des experts-comptables de Picardie-Ardennes"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 2,
+    "avant": {
+     "justes": 3,
+     "candidats": 290,
+     "Rprec": 0.05,
+     "bpref": 0.0475
+    },
+    "apres": {
+     "justes": 3,
+     "candidats": 290,
+     "Rprec": 0.05,
+     "bpref": 0.0475
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Conseil régional de l'ordre des experts-comptables de Montpellier",
+     "Conseil régional de l'ordre des experts-comptables de Picardie-Ardennes",
+     "Conseil régional de l'ordre des experts-comptables de La Réunion"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 2,
+    "avant": {
+     "justes": 3,
+     "candidats": 290,
+     "Rprec": 0.05,
+     "bpref": 0.0475
+    },
+    "apres": {
+     "justes": 3,
+     "candidats": 290,
+     "Rprec": 0.05,
+     "bpref": 0.0475
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Conseil régional de l'ordre des experts-comptables de Champagne",
+     "Conseil régional de l'ordre des experts-comptables de Bourgogne - Franche-Comté",
+     "Conseil régional de l'ordre des experts-comptables des Pays de la Loire"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 2,
+    "avant": {
+     "justes": 3,
+     "candidats": 290,
+     "Rprec": 0.05,
+     "bpref": 0.0475
+    },
+    "apres": {
+     "justes": 3,
+     "candidats": 290,
+     "Rprec": 0.05,
+     "bpref": 0.0475
+    },
+    "gain_justes": 0
+   }
+  ]
+ },
+ "supporters-foot": {
+  "phrase": "Les groupes de supporters de clubs de football français",
+  "R": 4,
+  "tirages": [
+   {
+    "exemples": [
+     "Mezza Lyon",
+     "Dodger's",
+     "Golden Hornets"
+    ],
+    "codes_trouves": [
+     "",
+     "94.99Z",
+     "93.12Z"
+    ],
+    "codes_retenus": [
+     "93.12Z",
+     "94.99Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 5,
+    "avant": {
+     "justes": 0,
+     "candidats": 598,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 598,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Dodger's",
+     "Golden Hornets",
+     "Mezza Lyon"
+    ],
+    "codes_trouves": [
+     "94.99Z",
+     "93.12Z",
+     ""
+    ],
+    "codes_retenus": [
+     "93.12Z",
+     "94.99Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 0,
+    "avant": {
+     "justes": 0,
+     "candidats": 598,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 598,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Kop of Boulogne",
+     "Dodger's",
+     "Mezza Lyon"
+    ],
+    "codes_trouves": [
+     "",
+     "94.99Z",
+     ""
+    ],
+    "codes_retenus": [
+     "94.99Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 1,
+    "avant": {
+     "justes": 0,
+     "candidats": 598,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 598,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Mezza Lyon",
+     "Kop of Boulogne",
+     "Golden Hornets"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     "93.12Z"
+    ],
+    "codes_retenus": [
+     "93.12Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 0,
+    "avant": {
+     "justes": 0,
+     "candidats": 598,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 598,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Golden Hornets",
+     "Dodger's",
+     "Kop of Boulogne"
+    ],
+    "codes_trouves": [
+     "93.12Z",
+     "94.99Z",
+     ""
+    ],
+    "codes_retenus": [
+     "93.12Z",
+     "94.99Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 0,
+    "avant": {
+     "justes": 0,
+     "candidats": 598,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 598,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   }
+  ]
+ },
+ "g-q43009164": {
+  "phrase": "Club de rugby à XV en France",
+  "R": 104,
+  "tirages": [
+   {
+    "exemples": [
+     "Club sportif nuiton",
+     "XV Corsaire Saint-Malo",
+     "Association sportive fleurantine"
+    ],
+    "codes_trouves": [
+     "93.12Z",
+     "",
+     ""
+    ],
+    "codes_retenus": [
+     "93.12Z"
+    ],
+    "ajout_registre": 64,
+    "exemples_deja_candidats": 0,
+    "reseau": 6,
+    "avant": {
+     "justes": 17,
+     "candidats": 731,
+     "Rprec": 0.07920792079207921,
+     "bpref": 0.08734437800215664
+    },
+    "apres": {
+     "justes": 17,
+     "candidats": 774,
+     "Rprec": 0.07920792079207921,
+     "bpref": 0.08734437800215664
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Rugby Grenade Sports",
+     "Union sportive Morlaàs rugby",
+     "Hasparren Athletic Club"
+    ],
+    "codes_trouves": [
+     "",
+     "93.12Z",
+     "93.12Z"
+    ],
+    "codes_retenus": [
+     "93.12Z"
+    ],
+    "ajout_registre": 64,
+    "exemples_deja_candidats": 0,
+    "reseau": 3,
+    "avant": {
+     "justes": 17,
+     "candidats": 731,
+     "Rprec": 0.07920792079207921,
+     "bpref": 0.08734437800215664
+    },
+    "apres": {
+     "justes": 17,
+     "candidats": 774,
+     "Rprec": 0.07920792079207921,
+     "bpref": 0.08734437800215664
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Amicale Rugby Calaisien",
+     "ASM Clermont Auvergne",
+     "Union Drancy Saint-Denis rugby 93"
+    ],
+    "codes_trouves": [
+     "93.12Z",
+     "93.12Z",
+     ""
+    ],
+    "codes_retenus": [
+     "93.12Z"
+    ],
+    "ajout_registre": 64,
+    "exemples_deja_candidats": 1,
+    "reseau": 3,
+    "avant": {
+     "justes": 16,
+     "candidats": 730,
+     "Rprec": 0.07920792079207921,
+     "bpref": 0.08430546024899518
+    },
+    "apres": {
+     "justes": 16,
+     "candidats": 773,
+     "Rprec": 0.07920792079207921,
+     "bpref": 0.08430546024899518
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Sporting Club albigeois",
+     "Entente Astarac Bigorre XV",
+     "Union sportive dacquoise"
+    ],
+    "codes_trouves": [
+     "93.12Z",
+     "",
+     "93.12Z"
+    ],
+    "codes_retenus": [
+     "93.12Z"
+    ],
+    "ajout_registre": 64,
+    "exemples_deja_candidats": 2,
+    "reseau": 3,
+    "avant": {
+     "justes": 15,
+     "candidats": 729,
+     "Rprec": 0.07920792079207921,
+     "bpref": 0.07842368395255367
+    },
+    "apres": {
+     "justes": 15,
+     "candidats": 772,
+     "Rprec": 0.07920792079207921,
+     "bpref": 0.07842368395255367
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Association sportive de Béziers Hérault",
+     "Union sportive Bardos",
+     "Association amicale et sportive de Sarcelles"
+    ],
+    "codes_trouves": [
+     "",
+     "93.12Z",
+     ""
+    ],
+    "codes_retenus": [
+     "93.12Z"
+    ],
+    "ajout_registre": 64,
+    "exemples_deja_candidats": 1,
+    "reseau": 3,
+    "avant": {
+     "justes": 16,
+     "candidats": 730,
+     "Rprec": 0.07920792079207921,
+     "bpref": 0.08734437800215664
+    },
+    "apres": {
+     "justes": 16,
+     "candidats": 773,
+     "Rprec": 0.07920792079207921,
+     "bpref": 0.08734437800215664
+    },
+    "gain_justes": 0
+   }
+  ]
+ }
+}

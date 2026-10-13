@@ -98,3 +98,22 @@ ajoutée à `config/classement.yaml` (classement inactif), poids `registre_sourc
 Mesure sur dev seulement : +8 acteurs de référence sur 344 parmi les candidats, sans gain de R-précision. Sources non
 dérivées de Wikidata, mais 3 des 6 acteurs BnF trouvés portent l'identifiant BnF dans Wikidata (indépendance partielle).
 Chantier B : lectures listées (`ambiguite.json`), aucune règle de départage. `docs/conception/sources.md`.
+
+## D69 — Cibles, vérificateur de type, amorces (décision de Sednal, 2026-10-13)
+
+Texte dans `DECISION_CIBLE.md` (Sednal la numérote « D69 »). Rapport complet : `docs/conception/cibles.md`.
+
+* **État de l'art vérifié** à la source (vues d'ensemble NIST) : R-précision 0,3075 (REF 2010) et 0,3116 (ELC 2010,
+  Purdue), 0,2908 (REF 2011) ; nDCG@10 0,541 (2022). Les 0,44 (2017) et 0,52 (2025) n'ont pas été retrouvés. Le critère de
+  0,90 appliqué à tous les sujets était hors d'atteinte de tout système publié.
+* **Deux cibles** (`autocal/cibles.json`, figé avant mesure, sur la seule phrase) : A registre officiel (>= 0,90), B sans
+  liste faisant autorité (0,30 à 0,40). Rendues séparées. Aujourd'hui : A 0,06 (mise au point) et 0,13 (validation) ;
+  B 0,013 et 0,022 à 0,026.
+* **Vérificateur de type** (`decouverte/verification_type.py`, actif par défaut sur les prises YAML, en amont du
+  classement) : candidats ajoutés 2 063 → 1 242 (mise au point), 3 167 → 395 (validation) ; aucun acteur de référence
+  perdu ; handball 242 → 4. Le nom n'est pas une preuve de type (circulaire avec la requête relaxée) ; inconnu = gardé.
+  Limite : comparaison lexicale, perte éventuelle invisible à la référence.
+* **Amorces** : 3 exemples, mécanisme « code NAF des exemples » : 0 acteur gagné sur 60 tirages. Le mécanisme
+  « requêtes web à partir des exemples » n'est pas mesuré (collecte interdite sans accord) : gain inconnu.
+* **Réponses D68 appliquées** : `registre_source` gardé à 0,19 ; aucun levier ouvert ; prises mesurées sur la validation :
+  +1 sur 281 (contre +8 sur 344), le +2 points ne se généralise pas. Jeu test non touché.

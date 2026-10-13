@@ -81,3 +81,12 @@ Instructions de Sednal : `DECISION_AUTOCAL.md` (méthode) et `DECISION_FIABILITE
   `docs/conception/sources.md`.
 * Chantier B : `traduction.lectures` + `ambiguite.json` (liste, ne départage pas).
 * Classement toujours inactif par défaut ; jeu test non rouvert ; SearxNG, Overpass, expansion d'ensembles non commencés.
+
+## D69 : cibles, vérificateur de type, amorces (2026-10-13)
+
+* Terminé et commité (voir `docs/conception/cibles.md`, `DECISIONS.md`). Aucune phase en cours.
+* Deux cibles A/B figées (`autocal/cibles.json`) ; vérificateur de type actif sur les prises (aucun acteur de référence
+  perdu) ; amorces mesurées sans rien activer (gain nul avec le mécanisme mesuré, autre mécanisme à mesurer) ; prises
+  data.gouv.fr mesurées sur la validation (+1 sur 281 : le gain de la mise au point ne se généralise pas).
+* En attente de Sednal : thésaurus de types, mesure des amorces par requêtes web (3 crédits Tavily par sujet), nouveau
+  jeu test (nouvelle graine) pour toute certification. SearxNG, Overpass, expansion d'ensembles : toujours notés, non commencés.

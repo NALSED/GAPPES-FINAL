@@ -1,0 +1,958 @@
+{
+ "handball-pro": {
+  "phrase": "Les clubs de handball professionnels en France",
+  "R": 17,
+  "tirages": [
+   {
+    "exemples": [
+     "Saint-Cyr Handball",
+     "Paris Saint-Germain Handball",
+     "Sélestat Alsace Handball"
+    ],
+    "codes_trouves": [
+     "93.12Z",
+     "85.51Z",
+     "85.51Z"
+    ],
+    "codes_retenus": [
+     "85.51Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 4,
+    "avant": {
+     "justes": 8,
+     "candidats": 239,
+     "Rprec": 0.07142857142857142,
+     "bpref": 0.22448979591836732
+    },
+    "apres": {
+     "justes": 8,
+     "candidats": 239,
+     "Rprec": 0.07142857142857142,
+     "bpref": 0.22448979591836732
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Handball Club Cournon d’Auvergne",
+     "USAM Nîmes Gard",
+     "Saint-Cyr Handball"
+    ],
+    "codes_trouves": [
+     "93.12Z",
+     "93.12Z",
+     "93.12Z"
+    ],
+    "codes_retenus": [
+     "93.12Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 1,
+    "reseau": 3,
+    "avant": {
+     "justes": 7,
+     "candidats": 238,
+     "Rprec": 0.07142857142857142,
+     "bpref": 0.22448979591836732
+    },
+    "apres": {
+     "justes": 7,
+     "candidats": 238,
+     "Rprec": 0.07142857142857142,
+     "bpref": 0.22448979591836732
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Chambéry Savoie Mont Blanc Handball",
+     "Cesson Rennes Métropole Handball",
+     "USAM Nîmes Gard"
+    ],
+    "codes_trouves": [
+     "93.12Z",
+     "93.12Z",
+     "93.12Z"
+    ],
+    "codes_retenus": [
+     "93.12Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 2,
+    "reseau": 2,
+    "avant": {
+     "justes": 6,
+     "candidats": 237,
+     "Rprec": 0.07142857142857142,
+     "bpref": 0.18367346938775508
+    },
+    "apres": {
+     "justes": 6,
+     "candidats": 237,
+     "Rprec": 0.07142857142857142,
+     "bpref": 0.18367346938775508
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Handball Club Cournon d’Auvergne",
+     "Sélestat Alsace Handball",
+     "Handball Club de Nantes"
+    ],
+    "codes_trouves": [
+     "93.12Z",
+     "85.51Z",
+     ""
+    ],
+    "codes_retenus": [
+     "85.51Z",
+     "93.12Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 1,
+    "reseau": 1,
+    "avant": {
+     "justes": 7,
+     "candidats": 238,
+     "Rprec": 0.07142857142857142,
+     "bpref": 0.22448979591836732
+    },
+    "apres": {
+     "justes": 7,
+     "candidats": 238,
+     "Rprec": 0.07142857142857142,
+     "bpref": 0.22448979591836732
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Dunkerque Handball Grand Littoral",
+     "Sélestat Alsace Handball",
+     "Saint-Cyr Handball"
+    ],
+    "codes_trouves": [
+     "93.19Z",
+     "85.51Z",
+     "93.12Z"
+    ],
+    "codes_retenus": [
+     "85.51Z",
+     "93.12Z",
+     "93.19Z"
+    ],
+    "ajout_registre": 1,
+    "exemples_deja_candidats": 0,
+    "reseau": 2,
+    "avant": {
+     "justes": 8,
+     "candidats": 239,
+     "Rprec": 0.07142857142857142,
+     "bpref": 0.22448979591836732
+    },
+    "apres": {
+     "justes": 8,
+     "candidats": 239,
+     "Rprec": 0.07142857142857142,
+     "bpref": 0.22448979591836732
+    },
+    "gain_justes": 0
+   }
+  ]
+ },
+ "festivals-elec": {
+  "phrase": "Les festivals de musique électronique en France",
+  "R": 7,
+  "tirages": [
+   {
+    "exemples": [
+     "Électrolapse",
+     "Festival Chorus",
+     "Mayday Festival"
+    ],
+    "codes_trouves": [
+     "90.01Z",
+     "",
+     ""
+    ],
+    "codes_retenus": [
+     "90.01Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 4,
+    "avant": {
+     "justes": 2,
+     "candidats": 1001,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 2,
+     "candidats": 1001,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Mayday Festival",
+     "Festival Chorus",
+     "Elektric Park Festival"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 1,
+    "avant": {
+     "justes": 2,
+     "candidats": 1001,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 2,
+     "candidats": 1001,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Elektric Park Festival",
+     "Festival Chorus",
+     "Électropicales"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     "90.01Z"
+    ],
+    "codes_retenus": [
+     "90.01Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 1,
+    "reseau": 1,
+    "avant": {
+     "justes": 1,
+     "candidats": 1000,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 1,
+     "candidats": 1000,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "I Love Techno",
+     "Électrolapse",
+     "Mayday Festival"
+    ],
+    "codes_trouves": [
+     "",
+     "90.01Z",
+     ""
+    ],
+    "codes_retenus": [
+     "90.01Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 1,
+    "reseau": 1,
+    "avant": {
+     "justes": 1,
+     "candidats": 1000,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 1,
+     "candidats": 1000,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Elektric Park Festival",
+     "Festival Chorus",
+     "I Love Techno"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 1,
+    "reseau": 0,
+    "avant": {
+     "justes": 1,
+     "candidats": 1000,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 1,
+     "candidats": 1000,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   }
+  ]
+ },
+ "g-q212805": {
+  "phrase": "Bibliothèque numérique en France",
+  "R": 45,
+  "tirages": [
+   {
+    "exemples": [
+     "Fédération des sociétés d'histoire et d'archéologie d'Alsace",
+     "1886",
+     "Nicea"
+    ],
+    "codes_trouves": [
+     "",
+     "94.99Z",
+     "68.20A"
+    ],
+    "codes_retenus": [
+     "68.20A",
+     "94.99Z"
+    ],
+    "ajout_registre": 1,
+    "exemples_deja_candidats": 0,
+    "reseau": 5,
+    "avant": {
+     "justes": 1,
+     "candidats": 538,
+     "Rprec": 0.023809523809523808,
+     "bpref": 0.022675736961451247
+    },
+    "apres": {
+     "justes": 1,
+     "candidats": 538,
+     "Rprec": 0.023809523809523808,
+     "bpref": 0.022675736961451247
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "NuBIS",
+     "Nicea",
+     "Bibliothèque numérique du Limousin"
+    ],
+    "codes_trouves": [
+     "28.99B",
+     "68.20A",
+     ""
+    ],
+    "codes_retenus": [
+     "28.99B",
+     "68.20A"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 3,
+    "avant": {
+     "justes": 1,
+     "candidats": 538,
+     "Rprec": 0.023809523809523808,
+     "bpref": 0.022675736961451247
+    },
+    "apres": {
+     "justes": 1,
+     "candidats": 538,
+     "Rprec": 0.023809523809523808,
+     "bpref": 0.022675736961451247
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "bibliothèque numérique de la médiathèque François-Mitterand (Poitiers)",
+     "Armarium",
+     "Argonnaute"
+    ],
+    "codes_trouves": [
+     "",
+     "69.20Z",
+     ""
+    ],
+    "codes_retenus": [
+     "69.20Z"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 4,
+    "avant": {
+     "justes": 1,
+     "candidats": 538,
+     "Rprec": 0.023809523809523808,
+     "bpref": 0.022675736961451247
+    },
+    "apres": {
+     "justes": 1,
+     "candidats": 538,
+     "Rprec": 0.023809523809523808,
+     "bpref": 0.022675736961451247
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Nicea",
+     "Thenc@",
+     "Itinéraires de la collection Bastaire"
+    ],
+    "codes_trouves": [
+     "68.20A",
+     "",
+     ""
+    ],
+    "codes_retenus": [
+     "68.20A"
+    ],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 2,
+    "avant": {
+     "justes": 1,
+     "candidats": 538,
+     "Rprec": 0.023809523809523808,
+     "bpref": 0.022675736961451247
+    },
+    "apres": {
+     "justes": 1,
+     "candidats": 538,
+     "Rprec": 0.023809523809523808,
+     "bpref": 0.022675736961451247
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Gallica",
+     "1886",
+     "SorbonNum"
+    ],
+    "codes_trouves": [
+     "68.20B",
+     "94.99Z",
+     ""
+    ],
+    "codes_retenus": [
+     "68.20B",
+     "94.99Z"
+    ],
+    "ajout_registre": 1,
+    "exemples_deja_candidats": 0,
+    "reseau": 3,
+    "avant": {
+     "justes": 1,
+     "candidats": 538,
+     "Rprec": 0.023809523809523808,
+     "bpref": 0.022675736961451247
+    },
+    "apres": {
+     "justes": 1,
+     "candidats": 538,
+     "Rprec": 0.023809523809523808,
+     "bpref": 0.022675736961451247
+    },
+    "gain_justes": 0
+   }
+  ]
+ },
+ "g-q131186": {
+  "phrase": "Chorale en France",
+  "R": 33,
+  "tirages": [
+   {
+    "exemples": [
+     "Maîtrise des Hauts-de-Seine",
+     "chœur de la paroisse Saint-Séraphin-de-Sarov",
+     "Les Métaboles"
+    ],
+    "codes_trouves": [
+     "85.52Z",
+     "",
+     "90.01Z"
+    ],
+    "codes_retenus": [
+     "85.52Z",
+     "90.01Z"
+    ],
+    "ajout_registre": 311,
+    "exemples_deja_candidats": 0,
+    "reseau": 16,
+    "avant": {
+     "justes": 1,
+     "candidats": 715,
+     "Rprec": 0.0,
+     "bpref": 0.021111111111111112
+    },
+    "apres": {
+     "justes": 1,
+     "candidats": 885,
+     "Rprec": 0.0,
+     "bpref": 0.02
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "chœur de Grenelle",
+     "Manécanterie des Petits Chanteurs de la Vierge noire",
+     "Les Métaboles"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     "90.01Z"
+    ],
+    "codes_retenus": [
+     "90.01Z"
+    ],
+    "ajout_registre": 200,
+    "exemples_deja_candidats": 0,
+    "reseau": 2,
+    "avant": {
+     "justes": 1,
+     "candidats": 715,
+     "Rprec": 0.0,
+     "bpref": 0.021111111111111112
+    },
+    "apres": {
+     "justes": 1,
+     "candidats": 786,
+     "Rprec": 0.0,
+     "bpref": 0.021111111111111112
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Chorale Sipan-Komitas",
+     "Chœur Montjoie Saint-Denis",
+     "Manécanterie des Petits Chanteurs de la Vierge noire"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 1,
+    "reseau": 2,
+    "avant": {
+     "justes": 0,
+     "candidats": 714,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "apres": {
+     "justes": 0,
+     "candidats": 714,
+     "Rprec": 0.0,
+     "bpref": 0.0
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Manécanterie des Petits Chanteurs de la Vierge noire",
+     "la balladine",
+     "Ensemble vocal de Neuilly"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     "94.99Z"
+    ],
+    "codes_retenus": [
+     "94.99Z"
+    ],
+    "ajout_registre": 199,
+    "exemples_deja_candidats": 0,
+    "reseau": 10,
+    "avant": {
+     "justes": 1,
+     "candidats": 715,
+     "Rprec": 0.0,
+     "bpref": 0.021111111111111112
+    },
+    "apres": {
+     "justes": 1,
+     "candidats": 847,
+     "Rprec": 0.0,
+     "bpref": 0.02
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Maîtrise de la Cathédrale Notre-Dame de Reims",
+     "Groupe vocal de France",
+     "Vocissimo"
+    ],
+    "codes_trouves": [
+     "",
+     "90.01Z",
+     ""
+    ],
+    "codes_retenus": [
+     "90.01Z"
+    ],
+    "ajout_registre": 200,
+    "exemples_deja_candidats": 0,
+    "reseau": 3,
+    "avant": {
+     "justes": 1,
+     "candidats": 715,
+     "Rprec": 0.0,
+     "bpref": 0.021111111111111112
+    },
+    "apres": {
+     "justes": 1,
+     "candidats": 786,
+     "Rprec": 0.0,
+     "bpref": 0.021111111111111112
+    },
+    "gain_justes": 0
+   }
+  ]
+ },
+ "g-q742421": {
+  "phrase": "Troupe théâtrale en France",
+  "R": 142,
+  "tirages": [
+   {
+    "exemples": [
+     "Compagnie Vlovajob Pru",
+     "Compagnie Du Hasard",
+     "Théâtre du Soleil"
+    ],
+    "codes_trouves": [
+     "",
+     "90.01Z",
+     "90.01Z"
+    ],
+    "codes_retenus": [
+     "90.01Z"
+    ],
+    "ajout_registre": 49,
+    "exemples_deja_candidats": 0,
+    "reseau": 5,
+    "avant": {
+     "justes": 3,
+     "candidats": 359,
+     "Rprec": 0.014388489208633094,
+     "bpref": 0.01765860039241334
+    },
+    "apres": {
+     "justes": 3,
+     "candidats": 359,
+     "Rprec": 0.007194244604316547,
+     "bpref": 0.01765860039241334
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Théâtre Feydeau",
+     "Compagnie 14-18",
+     "Compagnie Ea Sola"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 3,
+    "avant": {
+     "justes": 3,
+     "candidats": 359,
+     "Rprec": 0.014388489208633094,
+     "bpref": 0.01765860039241334
+    },
+    "apres": {
+     "justes": 3,
+     "candidats": 359,
+     "Rprec": 0.014388489208633094,
+     "bpref": 0.01765860039241334
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Compagnie Decor",
+     "théâtre du Voyageur",
+     "Compagnie De La Citadelle"
+    ],
+    "codes_trouves": [
+     "90.01Z",
+     "90.01Z",
+     "90.01Z"
+    ],
+    "codes_retenus": [
+     "90.01Z"
+    ],
+    "ajout_registre": 49,
+    "exemples_deja_candidats": 0,
+    "reseau": 3,
+    "avant": {
+     "justes": 3,
+     "candidats": 359,
+     "Rprec": 0.014388489208633094,
+     "bpref": 0.01765860039241334
+    },
+    "apres": {
+     "justes": 3,
+     "candidats": 359,
+     "Rprec": 0.007194244604316547,
+     "bpref": 0.01765860039241334
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Compagnie faisan",
+     "Troupe de la Comédie-Française en 1772",
+     "Compagnie Ivan Morane"
+    ],
+    "codes_trouves": [
+     "90.01Z",
+     "",
+     ""
+    ],
+    "codes_retenus": [
+     "90.01Z"
+    ],
+    "ajout_registre": 49,
+    "exemples_deja_candidats": 0,
+    "reseau": 3,
+    "avant": {
+     "justes": 3,
+     "candidats": 359,
+     "Rprec": 0.014388489208633094,
+     "bpref": 0.01765860039241334
+    },
+    "apres": {
+     "justes": 3,
+     "candidats": 359,
+     "Rprec": 0.007194244604316547,
+     "bpref": 0.01765860039241334
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Lou Poulin de Mountblanc",
+     "Comédie-Française",
+     "Nissa la Bella"
+    ],
+    "codes_trouves": [
+     "",
+     "90.01Z",
+     "68.20B"
+    ],
+    "codes_retenus": [
+     "68.20B",
+     "90.01Z"
+    ],
+    "ajout_registre": 49,
+    "exemples_deja_candidats": 1,
+    "reseau": 4,
+    "avant": {
+     "justes": 2,
+     "candidats": 358,
+     "Rprec": 0.007194244604316547,
+     "bpref": 0.010464355788096796
+    },
+    "apres": {
+     "justes": 2,
+     "candidats": 358,
+     "Rprec": 0.0,
+     "bpref": 0.010464355788096796
+    },
+    "gain_justes": 0
+   }
+  ]
+ },
+ "g-q180958": {
+  "phrase": "Faculté en France",
+  "R": 100,
+  "tirages": [
+   {
+    "exemples": [
+     "faculté des lettres et sciences humaines de Nice",
+     "Faculté des lettres de Bordeaux",
+     "faculté de lettres d’Alger"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 3,
+    "avant": {
+     "justes": 4,
+     "candidats": 448,
+     "Rprec": 0.030927835051546393,
+     "bpref": 0.0325220533531725
+    },
+    "apres": {
+     "justes": 4,
+     "candidats": 448,
+     "Rprec": 0.030927835051546393,
+     "bpref": 0.0325220533531725
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Faculté mixte de médecine et de pharmacie de Rennes",
+     "Faculté de chirurgie dentaire de Clermont-Ferrand",
+     "Faculté de pharmacie de Nantes"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 1,
+    "reseau": 3,
+    "avant": {
+     "justes": 3,
+     "candidats": 447,
+     "Rprec": 0.020618556701030927,
+     "bpref": 0.022212775002657035
+    },
+    "apres": {
+     "justes": 3,
+     "candidats": 447,
+     "Rprec": 0.020618556701030927,
+     "bpref": 0.022212775002657035
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Faculté de médecine Cochin Port-Royal",
+     "faculté des sciences de l'université Paris-Cité",
+     "faculté des sciences de Montpellier"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 3,
+    "avant": {
+     "justes": 4,
+     "candidats": 448,
+     "Rprec": 0.030927835051546393,
+     "bpref": 0.0325220533531725
+    },
+    "apres": {
+     "justes": 4,
+     "candidats": 448,
+     "Rprec": 0.030927835051546393,
+     "bpref": 0.0325220533531725
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Faculté de médecine Cochin Port-Royal",
+     "faculté des sciences économiques, sociales et des territoires",
+     "Faculté mixte de médecine et de pharmacie de Rennes"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 1,
+    "avant": {
+     "justes": 4,
+     "candidats": 448,
+     "Rprec": 0.030927835051546393,
+     "bpref": 0.0325220533531725
+    },
+    "apres": {
+     "justes": 4,
+     "candidats": 448,
+     "Rprec": 0.030927835051546393,
+     "bpref": 0.0325220533531725
+    },
+    "gain_justes": 0
+   },
+   {
+    "exemples": [
+     "Faculté de Médecine Paris Descartes",
+     "Faculté libre de droit de l'Institut catholique de Paris",
+     "Faculté des sciences de Rennes"
+    ],
+    "codes_trouves": [
+     "",
+     "",
+     ""
+    ],
+    "codes_retenus": [],
+    "ajout_registre": 0,
+    "exemples_deja_candidats": 0,
+    "reseau": 3,
+    "avant": {
+     "justes": 4,
+     "candidats": 448,
+     "Rprec": 0.030927835051546393,
+     "bpref": 0.0325220533531725
+    },
+    "apres": {
+     "justes": 4,
+     "candidats": 448,
+     "Rprec": 0.030927835051546393,
+     "bpref": 0.0325220533531725
+    },
+    "gain_justes": 0
+   }
+  ]
+ }
+}

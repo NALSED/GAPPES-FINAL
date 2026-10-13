@@ -1,0 +1,143 @@
+{
+ "sujets": {
+  "cac40": {
+   "cible": "A",
+   "R": 40,
+   "phrase": "Les entreprises du CAC 40",
+   "fige": {
+    "Rprec": 0.35,
+    "justes_parmi_candidats": 37,
+    "candidats": 684
+   },
+   "prises": {
+    "Rprec": 0.35,
+    "justes_parmi_candidats": 37,
+    "candidats": 700
+   },
+   "prises_type": {
+    "Rprec": 0.35,
+    "justes_parmi_candidats": 37,
+    "candidats": 685
+   }
+  },
+  "g-q654502": {
+   "cible": "A",
+   "R": 21,
+   "phrase": "Société par actions simplifiée en France",
+   "fige": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 0,
+    "candidats": 528
+   },
+   "prises": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 0,
+    "candidats": 551
+   },
+   "prises_type": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 0,
+    "candidats": 533
+   }
+  },
+  "g-q2190251": {
+   "cible": "B",
+   "R": 89,
+   "phrase": "Centre des arts en France",
+   "fige": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 0,
+    "candidats": 392
+   },
+   "prises": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 0,
+    "candidats": 3157
+   },
+   "prises_type": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 0,
+    "candidats": 692
+   }
+  },
+  "g-q56199177": {
+   "cible": "A",
+   "R": 23,
+   "phrase": "Conseil régional de l'ordre des experts-comptable en France",
+   "fige": {
+    "Rprec": 0.043478260869565216,
+    "justes_parmi_candidats": 3,
+    "candidats": 283
+   },
+   "prises": {
+    "Rprec": 0.043478260869565216,
+    "justes_parmi_candidats": 3,
+    "candidats": 329
+   },
+   "prises_type": {
+    "Rprec": 0.043478260869565216,
+    "justes_parmi_candidats": 3,
+    "candidats": 290
+   }
+  },
+  "supporters-foot": {
+   "cible": "B",
+   "R": 4,
+   "phrase": "Les groupes de supporters de clubs de football français",
+   "fige": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 0,
+    "candidats": 597
+   },
+   "prises": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 0,
+    "candidats": 810
+   },
+   "prises_type": {
+    "Rprec": 0.0,
+    "justes_parmi_candidats": 0,
+    "candidats": 598
+   }
+  },
+  "g-q43009164": {
+   "cible": "B",
+   "R": 104,
+   "phrase": "Club de rugby à XV en France",
+   "fige": {
+    "Rprec": 0.0673076923076923,
+    "justes_parmi_candidats": 16,
+    "candidats": 651
+   },
+   "prises": {
+    "Rprec": 0.07692307692307693,
+    "justes_parmi_candidats": 17,
+    "candidats": 754
+   },
+   "prises_type": {
+    "Rprec": 0.07692307692307693,
+    "justes_parmi_candidats": 17,
+    "candidats": 731
+   }
+  }
+ },
+ "moyennes": {
+  "A": {
+   "fige": 0.1312,
+   "prises": 0.1312,
+   "prises_type": 0.1312,
+   "sujets": 3,
+   "seuil": 0.9
+  },
+  "B": {
+   "fige": 0.0224,
+   "prises": 0.0256,
+   "prises_type": 0.0256,
+   "sujets": 3,
+   "seuil": [
+    0.3,
+    0.4
+   ]
+  }
+ }
+}

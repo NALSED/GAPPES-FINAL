@@ -1,0 +1,681 @@
+{
+ "cac40": {
+  "phrase": "Les entreprises du CAC 40",
+  "R": 40,
+  "avant": {
+   "justes": 37,
+   "candidats": 711,
+   "Rprec": 0.35,
+   "bpref": 0.46249999999999974,
+   "ids_justes": [
+    "Q1034621",
+    "Q1127887",
+    "Q1161666",
+    "Q1172038",
+    "Q13416787",
+    "Q1431486",
+    "Q1475312",
+    "Q151107",
+    "Q1537378",
+    "Q154037",
+    "Q158205",
+    "Q160054",
+    "Q1632461",
+    "Q1886126",
+    "Q2311",
+    "Q2392255",
+    "Q270363",
+    "Q27893",
+    "Q3047407",
+    "Q309084",
+    "Q324846",
+    "Q329426",
+    "Q407448",
+    "Q49053",
+    "Q499707",
+    "Q504998",
+    "Q56853086",
+    "Q590952",
+    "Q636755",
+    "Q661845",
+    "Q6686",
+    "Q678565",
+    "Q837049",
+    "Q843887",
+    "Q895325",
+    "Q931207",
+    "Q97439162"
+   ]
+  },
+  "apres": {
+   "justes": 37,
+   "candidats": 696,
+   "Rprec": 0.35,
+   "bpref": 0.5000000000000001,
+   "ids_justes": [
+    "Q1034621",
+    "Q1127887",
+    "Q1161666",
+    "Q1172038",
+    "Q13416787",
+    "Q1431486",
+    "Q1475312",
+    "Q151107",
+    "Q1537378",
+    "Q154037",
+    "Q158205",
+    "Q160054",
+    "Q1632461",
+    "Q1886126",
+    "Q2311",
+    "Q2392255",
+    "Q270363",
+    "Q27893",
+    "Q3047407",
+    "Q309084",
+    "Q324846",
+    "Q329426",
+    "Q407448",
+    "Q49053",
+    "Q499707",
+    "Q504998",
+    "Q56853086",
+    "Q590952",
+    "Q636755",
+    "Q661845",
+    "Q6686",
+    "Q678565",
+    "Q837049",
+    "Q843887",
+    "Q895325",
+    "Q931207",
+    "Q97439162"
+   ]
+  },
+  "candidats_base": 695,
+  "ajoutes": {
+   "avant": 16,
+   "apres": 1
+  },
+  "perdus": [],
+  "retires_verdicts": {
+   "faux": 3,
+   "non_verifiable": 12
+  },
+  "ajoutes_par_prise": {
+   "bnf_organisations": {
+    "avant": 1,
+    "apres": 1
+   },
+   "culture_festivals": {
+    "avant": 5,
+    "apres": 0
+   },
+   "culture_spectacles": {
+    "avant": 7,
+    "apres": 0
+   },
+   "esr_etablissements": {
+    "avant": 3,
+    "apres": 0
+   }
+  },
+  "par_prise": {
+   "bnf_organisations": {
+    "candidats": 1,
+    "ecartes": 0,
+    "inconnus": 1
+   },
+   "culture_festivals": {
+    "candidats": 5,
+    "ecartes": 5,
+    "inconnus": 0
+   },
+   "culture_spectacles": {
+    "candidats": 15,
+    "ecartes": 15,
+    "inconnus": 0
+   },
+   "esr_etablissements": {
+    "candidats": 3,
+    "ecartes": 3,
+    "inconnus": 0
+   }
+  },
+  "motifs": [
+   [
+    "type « Administration publique générale »",
+    8
+   ],
+   [
+    "type « festival »",
+    5
+   ],
+   [
+    "type « Arts du spectacle vivant »",
+    5
+   ],
+   [
+    "type « établissement d'enseignement supérieur »",
+    3
+   ],
+   [
+    "type « Autres organisations fonctionnant par adhésion volontaire »",
+    2
+   ]
+  ],
+  "exemples_ecartes": [
+   "Scènes d'été [culture_festivals] : type « festival » sans mot de « entrepris »",
+   "Concarn' fait sa Comédie [culture_festivals] : type « festival » sans mot de « entrepris »",
+   "Spring Box Festival [culture_festivals] : type « festival » sans mot de « entrepris »",
+   "Sauveterre Fête Ses Vins [culture_festivals] : type « festival » sans mot de « entrepris »"
+  ]
+ },
+ "g-q654502": {
+  "phrase": "Société par actions simplifiée en France",
+  "R": 21,
+  "avant": {
+   "justes": 0,
+   "candidats": 551,
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "ids_justes": []
+  },
+  "apres": {
+   "justes": 0,
+   "candidats": 533,
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "ids_justes": []
+  },
+  "candidats_base": 528,
+  "ajoutes": {
+   "avant": 23,
+   "apres": 5
+  },
+  "perdus": [],
+  "retires_verdicts": {
+   "non_verifiable": 14,
+   "faux": 4
+  },
+  "ajoutes_par_prise": {
+   "bnf_organisations": {
+    "avant": 5,
+    "apres": 5
+   },
+   "culture_festivals": {
+    "avant": 14,
+    "apres": 0
+   },
+   "culture_spectacles": {
+    "avant": 1,
+    "apres": 0
+   },
+   "esr_etablissements": {
+    "avant": 3,
+    "apres": 0
+   }
+  },
+  "par_prise": {
+   "bnf_organisations": {
+    "candidats": 5,
+    "ecartes": 0,
+    "inconnus": 5
+   },
+   "culture_festivals": {
+    "candidats": 14,
+    "ecartes": 14,
+    "inconnus": 0
+   },
+   "culture_spectacles": {
+    "candidats": 2,
+    "ecartes": 2,
+    "inconnus": 0
+   },
+   "esr_etablissements": {
+    "candidats": 3,
+    "ecartes": 3,
+    "inconnus": 0
+   }
+  },
+  "motifs": [
+   [
+    "type « festival »",
+    14
+   ],
+   [
+    "type « établissement d'enseignement supérieur »",
+    3
+   ],
+   [
+    "type « Arts du spectacle vivant »",
+    2
+   ]
+  ],
+  "exemples_ecartes": [
+   "Lecture par nature [culture_festivals] : type « festival » sans mot de « societ »",
+   "Par monts et par mots [culture_festivals] : type « festival » sans mot de « societ »",
+   "Festival d'art de l'Estran [culture_festivals] : type « festival » sans mot de « societ »",
+   "Tango par la Côte en Côtes-d'Armor [culture_festivals] : type « festival » sans mot de « societ »"
+  ]
+ },
+ "g-q2190251": {
+  "phrase": "Centre des arts en France",
+  "R": 89,
+  "avant": {
+   "justes": 0,
+   "candidats": 3157,
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "ids_justes": []
+  },
+  "apres": {
+   "justes": 0,
+   "candidats": 692,
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "ids_justes": []
+  },
+  "candidats_base": 392,
+  "ajoutes": {
+   "avant": 2765,
+   "apres": 300
+  },
+  "perdus": [],
+  "retires_verdicts": {
+   "non_verifiable": 2207,
+   "faux": 259
+  },
+  "ajoutes_par_prise": {
+   "bnf_organisations": {
+    "avant": 300,
+    "apres": 300
+   },
+   "culture_festivals": {
+    "avant": 1071,
+    "apres": 0
+   },
+   "culture_spectacles": {
+    "avant": 1391,
+    "apres": 0
+   },
+   "esr_etablissements": {
+    "avant": 18,
+    "apres": 0
+   }
+  },
+  "par_prise": {
+   "bnf_organisations": {
+    "candidats": 300,
+    "ecartes": 0,
+    "inconnus": 300
+   },
+   "culture_festivals": {
+    "candidats": 1085,
+    "ecartes": 1085,
+    "inconnus": 0
+   },
+   "culture_spectacles": {
+    "candidats": 2971,
+    "ecartes": 2971,
+    "inconnus": 0
+   },
+   "esr_etablissements": {
+    "candidats": 20,
+    "ecartes": 20,
+    "inconnus": 0
+   }
+  },
+  "motifs": [
+   [
+    "type « Arts du spectacle vivant »",
+    1652
+   ],
+   [
+    "type « festival »",
+    1085
+   ],
+   [
+    "type « Autres organisations fonctionnant par adhésion volontaire »",
+    483
+   ],
+   [
+    "type « Activités de soutien au spectacle vivant »",
+    142
+   ],
+   [
+    "type « Administration publique générale »",
+    127
+   ],
+   [
+    "type « Enseignement culturel »",
+    96
+   ]
+  ],
+  "exemples_ecartes": [
+   "Les Ain'pertinentes [culture_festivals] : type « festival » sans mot de « centr »",
+   "Vraiment??? [culture_festivals] : type « festival » sans mot de « centr »",
+   "Bourk’en’spray [culture_festivals] : type « festival » sans mot de « centr »",
+   "Les estivales de Brou [culture_festivals] : type « festival » sans mot de « centr »"
+  ]
+ },
+ "g-q56199177": {
+  "phrase": "Conseil régional de l'ordre des experts-comptable en France",
+  "R": 23,
+  "avant": {
+   "justes": 3,
+   "candidats": 330,
+   "Rprec": 0.043478260869565216,
+   "bpref": 0.04158790170132325,
+   "ids_justes": [
+    "Q56199211",
+    "Q56199217",
+    "Q56199226"
+   ]
+  },
+  "apres": {
+   "justes": 3,
+   "candidats": 291,
+   "Rprec": 0.043478260869565216,
+   "bpref": 0.04158790170132325,
+   "ids_justes": [
+    "Q56199211",
+    "Q56199217",
+    "Q56199226"
+   ]
+  },
+  "candidats_base": 284,
+  "ajoutes": {
+   "avant": 46,
+   "apres": 7
+  },
+  "perdus": [],
+  "retires_verdicts": {
+   "faux": 13,
+   "non_verifiable": 26
+  },
+  "ajoutes_par_prise": {
+   "bnf_organisations": {
+    "avant": 1,
+    "apres": 1
+   },
+   "culture_festivals": {
+    "avant": 5,
+    "apres": 0
+   },
+   "culture_spectacles": {
+    "avant": 36,
+    "apres": 6
+   },
+   "esr_etablissements": {
+    "avant": 5,
+    "apres": 0
+   }
+  },
+  "par_prise": {
+   "bnf_organisations": {
+    "candidats": 1,
+    "ecartes": 0,
+    "inconnus": 1
+   },
+   "culture_festivals": {
+    "candidats": 5,
+    "ecartes": 5,
+    "inconnus": 0
+   },
+   "culture_spectacles": {
+    "candidats": 65,
+    "ecartes": 58,
+    "inconnus": 0
+   },
+   "esr_etablissements": {
+    "candidats": 5,
+    "ecartes": 5,
+    "inconnus": 0
+   }
+  },
+  "motifs": [
+   [
+    "type « Administration publique générale »",
+    27
+   ],
+   [
+    "type « festival »",
+    5
+   ],
+   [
+    "type « Organisation de foires, salons professionnels et congrès »",
+    5
+   ],
+   [
+    "type « établissement d'enseignement supérieur »",
+    5
+   ],
+   [
+    "type « Arts du spectacle vivant »",
+    4
+   ],
+   [
+    "type « Autres enseignements »",
+    4
+   ]
+  ],
+  "exemples_ecartes": [
+   "Festival Laon dans l'Aisne [culture_festivals] : type « festival » sans mot de « conseil »",
+   "Et Pendant Ce Temps les Avions [culture_festivals] : type « festival » sans mot de « conseil »",
+   "Le Très Grand Conseil Mondial des Clowns [culture_festivals] : type « festival » sans mot de « conseil »",
+   "Fête du livre du Var [culture_festivals] : type « festival » sans mot de « conseil »"
+  ]
+ },
+ "supporters-foot": {
+  "phrase": "Les groupes de supporters de clubs de football français",
+  "R": 4,
+  "avant": {
+   "justes": 0,
+   "candidats": 812,
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "ids_justes": []
+  },
+  "apres": {
+   "justes": 0,
+   "candidats": 600,
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "ids_justes": []
+  },
+  "candidats_base": 599,
+  "ajoutes": {
+   "avant": 213,
+   "apres": 1
+  },
+  "perdus": [],
+  "retires_verdicts": {
+   "faux": 19,
+   "non_verifiable": 193
+  },
+  "ajoutes_par_prise": {
+   "bnf_organisations": {
+    "avant": 1,
+    "apres": 1
+   },
+   "culture_festivals": {
+    "avant": 4,
+    "apres": 0
+   },
+   "culture_spectacles": {
+    "avant": 189,
+    "apres": 0
+   },
+   "esr_etablissements": {
+    "avant": 19,
+    "apres": 0
+   }
+  },
+  "par_prise": {
+   "bnf_organisations": {
+    "candidats": 1,
+    "ecartes": 0,
+    "inconnus": 1
+   },
+   "culture_festivals": {
+    "candidats": 4,
+    "ecartes": 4,
+    "inconnus": 0
+   },
+   "culture_spectacles": {
+    "candidats": 353,
+    "ecartes": 353,
+    "inconnus": 0
+   },
+   "esr_etablissements": {
+    "candidats": 19,
+    "ecartes": 19,
+    "inconnus": 0
+   }
+  },
+  "motifs": [
+   [
+    "type « Arts du spectacle vivant »",
+    209
+   ],
+   [
+    "type « Activités de soutien au spectacle vivant »",
+    27
+   ],
+   [
+    "type « Enregistrement sonore et édition musicale »",
+    23
+   ],
+   [
+    "type « établissement d'enseignement supérieur »",
+    19
+   ],
+   [
+    "type « Autres organisations fonctionnant par adhésion volontaire »",
+    12
+   ],
+   [
+    "type « Organisation de foires, salons professionnels et congrès »",
+    9
+   ]
+  ],
+  "exemples_ecartes": [
+   "Coups de coeur de Saint-Martin [culture_festivals] : type « festival » sans mot de « group »",
+   "Wine Nat / White Heat [culture_festivals] : type « festival » sans mot de « group »",
+   "Festival international de Cuisery [culture_festivals] : type « festival » sans mot de « group »",
+   "Festival Jean Ferrat [culture_festivals] : type « festival » sans mot de « group »"
+  ]
+ },
+ "g-q43009164": {
+  "phrase": "Club de rugby à XV en France",
+  "R": 104,
+  "avant": {
+   "justes": 17,
+   "candidats": 761,
+   "Rprec": 0.07692307692307693,
+   "bpref": 0.08404215976331363,
+   "ids_justes": [
+    "Q109665836",
+    "Q118498",
+    "Q1319827",
+    "Q1361000",
+    "Q1422627",
+    "Q1471265",
+    "Q1473503",
+    "Q15055309",
+    "Q1781643",
+    "Q1857064",
+    "Q1865460",
+    "Q297901",
+    "Q3452866",
+    "Q431412",
+    "Q596985",
+    "Q630112",
+    "Q964957"
+   ]
+  },
+  "apres": {
+   "justes": 17,
+   "candidats": 738,
+   "Rprec": 0.07692307692307693,
+   "bpref": 0.08626109467455621,
+   "ids_justes": [
+    "Q109665836",
+    "Q118498",
+    "Q1319827",
+    "Q1361000",
+    "Q1422627",
+    "Q1471265",
+    "Q1473503",
+    "Q15055309",
+    "Q1781643",
+    "Q1857064",
+    "Q1865460",
+    "Q297901",
+    "Q3452866",
+    "Q431412",
+    "Q596985",
+    "Q630112",
+    "Q964957"
+   ]
+  },
+  "candidats_base": 657,
+  "ajoutes": {
+   "avant": 104,
+   "apres": 81
+  },
+  "perdus": [],
+  "retires_verdicts": {
+   "non_verifiable": 19,
+   "faux": 4
+  },
+  "ajoutes_par_prise": {
+   "bnf_organisations": {
+    "avant": 79,
+    "apres": 79
+   },
+   "culture_festivals": {
+    "avant": 22,
+    "apres": 0
+   },
+   "culture_spectacles": {
+    "avant": 3,
+    "apres": 2
+   }
+  },
+  "par_prise": {
+   "bnf_organisations": {
+    "candidats": 83,
+    "ecartes": 0,
+    "inconnus": 83
+   },
+   "culture_festivals": {
+    "candidats": 22,
+    "ecartes": 22,
+    "inconnus": 0
+   },
+   "culture_spectacles": {
+    "candidats": 5,
+    "ecartes": 2,
+    "inconnus": 0
+   }
+  },
+  "motifs": [
+   [
+    "type « festival »",
+    22
+   ],
+   [
+    "type « Enseignement de disciplines sportives et d'activités de loisirs »",
+    2
+   ]
+  ],
+  "exemples_ecartes": [
+   "Salon du livre d'auteurs du Lions Clubs International [culture_festivals] : type « festival » sans mot de « club »",
+   "Festival des Premieres parties [culture_festivals] : type « festival » sans mot de « club »",
+   "Festiv'arles [culture_festivals] : type « festival » sans mot de « club »",
+   "Briv'en Jazz [culture_festivals] : type « festival » sans mot de « club »"
+  ]
+ }
+}

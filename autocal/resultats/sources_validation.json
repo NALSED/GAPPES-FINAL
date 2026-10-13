@@ -1,0 +1,551 @@
+{
+ "cac40": {
+  "R": 40,
+  "base": {
+   "justes": 37,
+   "candidats": 695,
+   "comptes": {
+    "juste": 37,
+    "faux": 130,
+    "non_verifiable": 517
+   }
+  },
+  "sources": {
+   "bnf_organisations": {
+    "justes": 37,
+    "en_plus": [],
+    "candidats": 696,
+    "ajoutes": 1,
+    "comptes": {
+     "juste": 37,
+     "faux": 130,
+     "non_verifiable": 518
+    }
+   },
+   "culture_festivals": {
+    "justes": 37,
+    "en_plus": [],
+    "candidats": 700,
+    "ajoutes": 5,
+    "comptes": {
+     "juste": 37,
+     "faux": 131,
+     "non_verifiable": 521
+    }
+   },
+   "culture_spectacles": {
+    "justes": 37,
+    "en_plus": [],
+    "candidats": 702,
+    "ajoutes": 7,
+    "comptes": {
+     "juste": 37,
+     "faux": 132,
+     "non_verifiable": 522
+    }
+   },
+   "esr_etablissements": {
+    "justes": 37,
+    "en_plus": [],
+    "candidats": 698,
+    "ajoutes": 3,
+    "comptes": {
+     "juste": 37,
+     "faux": 130,
+     "non_verifiable": 520
+    }
+   }
+  },
+  "cout": {
+   "bnf_organisations": {
+    "n": 1,
+    "secondes": 1.3,
+    "appels_reseau": 2
+   },
+   "culture_festivals": {
+    "n": 5,
+    "secondes": 0.4,
+    "appels_reseau": 0
+   },
+   "culture_spectacles": {
+    "n": 15,
+    "secondes": 0.8,
+    "appels_reseau": 0
+   },
+   "esr_etablissements": {
+    "n": 3,
+    "secondes": 66.0,
+    "appels_reseau": 2
+   }
+  },
+  "toutes": {
+   "justes": 37,
+   "en_plus": 0,
+   "candidats": 711,
+   "ajoutes": 16,
+   "comptes": {
+    "juste": 37,
+    "faux": 133,
+    "non_verifiable": 530
+   },
+   "Rprec": 0.35,
+   "bpref": 0.46249999999999974
+  }
+ },
+ "g-q654502": {
+  "R": 21,
+  "base": {
+   "justes": 0,
+   "candidats": 528,
+   "comptes": {
+    "juste": 0,
+    "faux": 148,
+    "non_verifiable": 380
+   }
+  },
+  "sources": {
+   "bnf_organisations": {
+    "justes": 0,
+    "en_plus": [],
+    "candidats": 533,
+    "ajoutes": 5,
+    "comptes": {
+     "juste": 0,
+     "faux": 148,
+     "non_verifiable": 385
+    }
+   },
+   "culture_festivals": {
+    "justes": 0,
+    "en_plus": [],
+    "candidats": 542,
+    "ajoutes": 14,
+    "comptes": {
+     "juste": 0,
+     "faux": 150,
+     "non_verifiable": 392
+    }
+   },
+   "culture_spectacles": {
+    "justes": 0,
+    "en_plus": [],
+    "candidats": 529,
+    "ajoutes": 1,
+    "comptes": {
+     "juste": 0,
+     "faux": 148,
+     "non_verifiable": 381
+    }
+   },
+   "esr_etablissements": {
+    "justes": 0,
+    "en_plus": [],
+    "candidats": 531,
+    "ajoutes": 3,
+    "comptes": {
+     "juste": 0,
+     "faux": 150,
+     "non_verifiable": 381
+    }
+   }
+  },
+  "cout": {
+   "bnf_organisations": {
+    "n": 5,
+    "secondes": 2.0,
+    "appels_reseau": 2
+   },
+   "culture_festivals": {
+    "n": 14,
+    "secondes": 0.5,
+    "appels_reseau": 0
+   },
+   "culture_spectacles": {
+    "n": 2,
+    "secondes": 0.6,
+    "appels_reseau": 0
+   },
+   "esr_etablissements": {
+    "n": 3,
+    "secondes": 2.5,
+    "appels_reseau": 1
+   }
+  },
+  "toutes": {
+   "justes": 0,
+   "en_plus": 0,
+   "candidats": 551,
+   "ajoutes": 23,
+   "comptes": {
+    "juste": 0,
+    "faux": 152,
+    "non_verifiable": 399
+   },
+   "Rprec": 0.0,
+   "bpref": 0.0
+  }
+ },
+ "g-q2190251": {
+  "R": 89,
+  "base": {
+   "justes": 0,
+   "candidats": 392,
+   "comptes": {
+    "juste": 0,
+    "faux": 84,
+    "non_verifiable": 308
+   }
+  },
+  "sources": {
+   "bnf_organisations": {
+    "justes": 0,
+    "en_plus": [],
+    "candidats": 692,
+    "ajoutes": 300,
+    "comptes": {
+     "juste": 0,
+     "faux": 96,
+     "non_verifiable": 596
+    }
+   },
+   "culture_festivals": {
+    "justes": 0,
+    "en_plus": [],
+    "candidats": 1463,
+    "ajoutes": 1071,
+    "comptes": {
+     "juste": 0,
+     "faux": 234,
+     "non_verifiable": 1229
+    }
+   },
+   "culture_spectacles": {
+    "justes": 0,
+    "en_plus": [],
+    "candidats": 1783,
+    "ajoutes": 1391,
+    "comptes": {
+     "juste": 0,
+     "faux": 188,
+     "non_verifiable": 1595
+    }
+   },
+   "esr_etablissements": {
+    "justes": 0,
+    "en_plus": [],
+    "candidats": 410,
+    "ajoutes": 18,
+    "comptes": {
+     "juste": 0,
+     "faux": 96,
+     "non_verifiable": 314
+    }
+   }
+  },
+  "cout": {
+   "bnf_organisations": {
+    "n": 300,
+    "secondes": 0.9,
+    "appels_reseau": 1
+   },
+   "culture_festivals": {
+    "n": 1085,
+    "secondes": 0.2,
+    "appels_reseau": 0
+   },
+   "culture_spectacles": {
+    "n": 2971,
+    "secondes": 0.6,
+    "appels_reseau": 0
+   },
+   "esr_etablissements": {
+    "n": 20,
+    "secondes": 1.2,
+    "appels_reseau": 1
+   }
+  },
+  "toutes": {
+   "justes": 0,
+   "en_plus": 0,
+   "candidats": 3157,
+   "ajoutes": 2765,
+   "comptes": {
+    "juste": 0,
+    "faux": 356,
+    "non_verifiable": 2801
+   },
+   "Rprec": 0.0,
+   "bpref": 0.0
+  }
+ },
+ "g-q56199177": {
+  "R": 23,
+  "base": {
+   "justes": 3,
+   "candidats": 284,
+   "comptes": {
+    "juste": 3,
+    "faux": 77,
+    "non_verifiable": 203
+   }
+  },
+  "sources": {
+   "bnf_organisations": {
+    "justes": 3,
+    "en_plus": [],
+    "candidats": 285,
+    "ajoutes": 1,
+    "comptes": {
+     "juste": 3,
+     "faux": 77,
+     "non_verifiable": 204
+    }
+   },
+   "culture_festivals": {
+    "justes": 3,
+    "en_plus": [],
+    "candidats": 289,
+    "ajoutes": 5,
+    "comptes": {
+     "juste": 3,
+     "faux": 78,
+     "non_verifiable": 207
+    }
+   },
+   "culture_spectacles": {
+    "justes": 3,
+    "en_plus": [],
+    "candidats": 320,
+    "ajoutes": 36,
+    "comptes": {
+     "juste": 3,
+     "faux": 86,
+     "non_verifiable": 230
+    }
+   },
+   "esr_etablissements": {
+    "justes": 3,
+    "en_plus": [],
+    "candidats": 289,
+    "ajoutes": 5,
+    "comptes": {
+     "juste": 3,
+     "faux": 80,
+     "non_verifiable": 205
+    }
+   }
+  },
+  "cout": {
+   "bnf_organisations": {
+    "n": 1,
+    "secondes": 2.3,
+    "appels_reseau": 3
+   },
+   "culture_festivals": {
+    "n": 5,
+    "secondes": 0.7,
+    "appels_reseau": 0
+   },
+   "culture_spectacles": {
+    "n": 65,
+    "secondes": 1.2,
+    "appels_reseau": 0
+   },
+   "esr_etablissements": {
+    "n": 5,
+    "secondes": 9.8,
+    "appels_reseau": 4
+   }
+  },
+  "toutes": {
+   "justes": 3,
+   "en_plus": 0,
+   "candidats": 330,
+   "ajoutes": 46,
+   "comptes": {
+    "juste": 3,
+    "faux": 90,
+    "non_verifiable": 236
+   },
+   "Rprec": 0.043478260869565216,
+   "bpref": 0.04158790170132325
+  }
+ },
+ "supporters-foot": {
+  "R": 4,
+  "base": {
+   "justes": 0,
+   "candidats": 599,
+   "comptes": {
+    "juste": 0,
+    "faux": 331,
+    "non_verifiable": 266
+   }
+  },
+  "sources": {
+   "bnf_organisations": {
+    "justes": 0,
+    "en_plus": [],
+    "candidats": 600,
+    "ajoutes": 1,
+    "comptes": {
+     "juste": 0,
+     "faux": 331,
+     "non_verifiable": 267
+    }
+   },
+   "culture_festivals": {
+    "justes": 0,
+    "en_plus": [],
+    "candidats": 603,
+    "ajoutes": 4,
+    "comptes": {
+     "juste": 0,
+     "faux": 331,
+     "non_verifiable": 270
+    }
+   },
+   "culture_spectacles": {
+    "justes": 0,
+    "en_plus": [],
+    "candidats": 788,
+    "ajoutes": 189,
+    "comptes": {
+     "juste": 0,
+     "faux": 341,
+     "non_verifiable": 445
+    }
+   },
+   "esr_etablissements": {
+    "justes": 0,
+    "en_plus": [],
+    "candidats": 618,
+    "ajoutes": 19,
+    "comptes": {
+     "juste": 0,
+     "faux": 340,
+     "non_verifiable": 276
+    }
+   }
+  },
+  "cout": {
+   "bnf_organisations": {
+    "n": 1,
+    "secondes": 1.3,
+    "appels_reseau": 2
+   },
+   "culture_festivals": {
+    "n": 4,
+    "secondes": 0.7,
+    "appels_reseau": 0
+   },
+   "culture_spectacles": {
+    "n": 353,
+    "secondes": 1.2,
+    "appels_reseau": 0
+   },
+   "esr_etablissements": {
+    "n": 19,
+    "secondes": 3.5,
+    "appels_reseau": 4
+   }
+  },
+  "toutes": {
+   "justes": 0,
+   "en_plus": 0,
+   "candidats": 812,
+   "ajoutes": 213,
+   "comptes": {
+    "juste": 0,
+    "faux": 350,
+    "non_verifiable": 460
+   },
+   "Rprec": 0.0,
+   "bpref": 0.0
+  }
+ },
+ "g-q43009164": {
+  "R": 104,
+  "base": {
+   "justes": 16,
+   "candidats": 657,
+   "comptes": {
+    "juste": 16,
+    "faux": 156,
+    "non_verifiable": 479
+   }
+  },
+  "sources": {
+   "bnf_organisations": {
+    "justes": 17,
+    "en_plus": [
+     "Q1319827"
+    ],
+    "candidats": 736,
+    "ajoutes": 79,
+    "comptes": {
+     "juste": 17,
+     "faux": 165,
+     "non_verifiable": 547
+    }
+   },
+   "culture_festivals": {
+    "justes": 16,
+    "en_plus": [],
+    "candidats": 679,
+    "ajoutes": 22,
+    "comptes": {
+     "juste": 16,
+     "faux": 160,
+     "non_verifiable": 497
+    }
+   },
+   "culture_spectacles": {
+    "justes": 16,
+    "en_plus": [],
+    "candidats": 660,
+    "ajoutes": 3,
+    "comptes": {
+     "juste": 16,
+     "faux": 156,
+     "non_verifiable": 482
+    }
+   }
+  },
+  "cout": {
+   "bnf_organisations": {
+    "n": 83,
+    "secondes": 1.4,
+    "appels_reseau": 2
+   },
+   "culture_festivals": {
+    "n": 22,
+    "secondes": 0.5,
+    "appels_reseau": 0
+   },
+   "culture_spectacles": {
+    "n": 5,
+    "secondes": 0.8,
+    "appels_reseau": 0
+   },
+   "esr_etablissements": {
+    "n": 0,
+    "secondes": 1.3,
+    "appels_reseau": 2
+   }
+  },
+  "toutes": {
+   "justes": 17,
+   "en_plus": 1,
+   "candidats": 761,
+   "ajoutes": 104,
+   "comptes": {
+    "juste": 17,
+    "faux": 169,
+    "non_verifiable": 568
+   },
+   "Rprec": 0.07692307692307693,
+   "bpref": 0.08404215976331363
+  }
+ }
+}
