@@ -96,3 +96,16 @@ Instructions de Sednal : `DECISION_AUTOCAL.md` (méthode) et `DECISION_FIABILITE
 Nouvelle application `/opt/pilote` (service systemd utilisateur, `https://127.0.0.1:8443`) : Réglages, Ajout, Lancement, Tri. Suivi et
 questions dans `/opt/pilote/ETAT.md` et `/opt/pilote/QUESTIONS.md`. grappes n'a gagné que le rapport d'avancement
 (`GRAPPES_AVANCEMENT`). Aucune phase de grappes n'est en cours.
+
+## Routage §4.5 corrigé (2026-10-13)
+
+* **Diagnostic confirmé** : `outils/appeler_gratuit.sh` n'avait jamais basculé vers `sednal-free` (il journalisait puis exécutait sous l'utilisateur
+  courant) et le gateway CCR n'était pas démarré.
+* **Corrigé** : gateway démarré sous `sednal-free` (`ccr start --daemon --no-open`, écoute sur 127.0.0.1:3456 ; sans `--daemon` la commande reste au premier
+  plan) ; `CLAUDE.md` § routage §4.5 remplacé par la commande qui bascule réellement ; le wrapper note maintenant aussi le code de sortie.
+* **Bascule 1, RÉUSSIE** (18:06, 18:07) : `claude -p "dis juste OK"` sous `sednal-free` avec le modèle `OpenRouter/nvidia/nemotron-3-ultra-550b-a55b:free` répond
+  « OK » (un avertissement `unrecognized_model` du client est sans effet). Preuves : le journal du gateway (`usage_events`, id 39, 14:06:27 UTC)
+  montre une requête vers `openrouter::openai_chat_completions`, modèle `nvidia/nemotron-3-ultra-550b-a55b:free`, code 200, 18 539 jetons en entrée ;
+  la clé OpenRouter indique `usage = 0`, `usage_daily = 0`, `limit_remaining = 50` ($0,00). Le contrôle a été fait par l'API de la clé, pas sur la page
+  Activity du site (je n'ai pas accès à votre compte web) : à recouper si vous voulez la preuve visuelle.
+* Suite : chaque tâche mécanique avec IA part sous `sednal-free` par le wrapper ; chaque bascule (réussie ou échouée) est notée ici et dans `donnees/.journal_ccr.log`.

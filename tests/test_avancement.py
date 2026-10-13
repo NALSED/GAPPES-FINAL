@@ -39,3 +39,21 @@ def test_chaque_appel_reel_du_journal_est_signale_pas_les_refus(monkeypatch, tmp
     j.log("pages", "", "GET https://y.test", "erreur SearchError")
     ev = lire(f)
     assert [(e["prise"], e["statut"]) for e in ev] == [("tavily", "200"), ("pages", "erreur SearchError")]
+
+
+def test_chaque_resultat_est_rattache_a_la_source_qui_l_a_trouve(monkeypatch, tmp_path):
+    from grappes.search.base import SearchContext
+    from grappes.search.config import ProviderSpec, SearchConfig
+    from grappes.search.engine import run_search
+    from grappes.search.http import Response
+
+    f = tmp_path / "av.jsonl"
+    monkeypatch.setenv(avancement.VARIABLE, str(f))
+    corps = json.dumps({"results": [{"title": "Club Exemple", "url": "https://club-exemple.example/", "content": "x", "id": "1"}]}).encode()
+    cfg = SearchConfig(actifs=("fictive",), quota_total=5, delai_s=0.0, journal=tmp_path / "j.log",
+                       providers={"fictive": ProviderSpec("fictive", "http", {"url": "https://api.exemple.test/search", "method": "GET", "params": {"q": "{mots_cles}"},
+                                                                              "response": {"format": "json", "items": "results"}, "fields": {"title": "title", "url": "url", "description": "content", "id": "id"}})})
+    run_search(cfg, ["club"], execute=True, transport=lambda *a, **k: Response(200, {}, corps), sleep=lambda s: None)
+    ev = lire(f)
+    trouves = [e for e in ev if e["evenement"] == "trouve"]
+    assert trouves == [{"t": trouves[0]["t"], "evenement": "trouve", "prise": "fictive", "cle": "web:club-exemple.example"}]

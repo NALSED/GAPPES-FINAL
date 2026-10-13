@@ -101,7 +101,10 @@ def run_search(
         avant = len(found)
         for kw in keywords:
             try:
-                found.extend(provider.search(kw, cfg.limite_par_mot_cle))
+                trouves = list(provider.search(kw, cfg.limite_par_mot_cle))
+                found.extend(trouves)
+                for t in trouves:  # quelle source a trouvé quoi (rapport d'avancement)
+                    avancement.signaler("trouve", prise=pid, cle=f"{t.ecosystem}:{t.ident}")
             except ProviderUnavailable as exc:
                 report.status[pid] = f"inactif : {exc}"
                 ctx.journal.log(pid, kw, "-", f"inactif : {exc}")
