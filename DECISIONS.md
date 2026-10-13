@@ -125,3 +125,9 @@ sans chaîne de build, SQLAlchemy + SQLite, service systemd utilisateur. grappes
 intacte ; pilote l'utilise comme bibliothèque. Seule modification de grappes autorisée : dire où il en est pendant qu'il
 travaille (étape 3). Étape 1 (squelette) livrée ; suivi dans `/opt/pilote/ETAT.md`. `/opt/pilote` a été créé avec sudo
 (accord de Sednal, mot de passe non conservé).
+
+D70 (suite, 2026-10-13) : les cinq étapes de pilote sont livrées (`/opt/pilote/ETAT.md`). Modification de grappes : uniquement le
+rapport d'avancement (`grappes/avancement.py`, inactif par défaut, 4 tests ; crochets dans le journal des appels, le client de
+découverte, la recherche, le cycle et le classement). Ligne de commande et résultats inchangés, 589 tests verts. Pilote fait tourner
+grappes dans une COPIE de la configuration par recherche et n'active aucun levier de la vraie configuration (classement inactif).
+Questions ouvertes pour Sednal : `/opt/pilote/QUESTIONS.md` (P1 à P18).

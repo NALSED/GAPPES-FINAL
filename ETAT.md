@@ -90,3 +90,9 @@ Instructions de Sednal : `DECISION_AUTOCAL.md` (méthode) et `DECISION_FIABILITE
   data.gouv.fr mesurées sur la validation (+1 sur 281 : le gain de la mise au point ne se généralise pas).
 * En attente de Sednal : thésaurus de types, mesure des amorces par requêtes web (3 crédits Tavily par sujet), nouveau
   jeu test (nouvelle graine) pour toute certification. SearxNG, Overpass, expansion d'ensembles : toujours notés, non commencés.
+
+## Pilote (D70, 2026-10-13)
+
+Nouvelle application `/opt/pilote` (service systemd utilisateur, `https://127.0.0.1:8443`) : Réglages, Ajout, Lancement, Tri. Suivi et
+questions dans `/opt/pilote/ETAT.md` et `/opt/pilote/QUESTIONS.md`. grappes n'a gagné que le rapport d'avancement
+(`GRAPPES_AVANCEMENT`). Aucune phase de grappes n'est en cours.
