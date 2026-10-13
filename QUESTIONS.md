@@ -60,3 +60,16 @@ Aucun export n'est attendu de Sednal (`FINAL.md` § 3) : ces points se tranchent
 Sur dev et validation, au plus 17 % de la référence Wikidata existe comme candidat vérifié « juste » (12 sujets mesurés) ; R-précision stricte observée 0,020 / 0,007, identique pour tous les algorithmes. Le seuil 0,90 du critère 1 est inatteignable avec des entités = sources. Pistes à chiffrer avant tout gel (rien n'est appliqué) : (a) crawl plus grand, (b) extraction d'entités nommées dans les textes lus (hors liste des méthodes de la mission, donc à décider par Sednal), (c) nom lisible des domaines. Sans changement d'architecture, le verdict sera « non certifié ».
 
 Mesures complémentaires (2026-10-12) : (1) trois cycles de collecte successifs sur handball-pro et sur g-q56199177 (réseau réel) ne changent rien : 21 puis 37 candidats, plafond de rappel inchangé (5,9 % et 17,4 %) ; le crawl plus long ne relève pas le plafond. (2) `min_ecosystemes = 1` (autonomie, apprentissage des termes) rejoué sur les 12 sujets de dev et validation : mêmes candidats, mêmes « justes » ; aucun effet mesurable sur un cycle. Rapporté, non appliqué. (3) Un classement parfait plafonne la R-précision stricte à ≤ 0,17 ; atteindre 0,90 suppose que les ACTEURS (organisations nommées dans les textes) soient les candidats, pas les sources.
+
+## Q27 — D69 : trois décisions qui reviennent à Sednal (2026-10-13)
+
+Rien n'est appliqué. Détail et chiffres : `docs/conception/cibles.md` §§ 4, 5 et 7.
+
+* **Thésaurus de types** : le vérificateur de type compare des mots ; un type équivalent écrit autrement (« compagnie » pour
+  « troupe ») est jugé incompatible. Perte éventuelle invisible à la référence. Faut-il un thésaurus (ou un rattachement
+  code NAF ↔ classe) ? Je n'invente aucune liste de synonymes.
+* **Amorces par requêtes web** : le mécanisme mesuré (code NAF des exemples) ne donne rien (0 sur 60 tirages) ; le
+  mécanisme de TREC (requêtes de recherche à partir des noms des exemples) demande une collecte, environ 3 crédits Tavily
+  par sujet. Autorisation à donner avant mesure.
+* **Nouveau jeu test** : toute certification suppose un nouveau jeu test, une nouvelle graine, figé avant toute modification
+  (classification A/B comprise, `autocal/cibles.json`).
