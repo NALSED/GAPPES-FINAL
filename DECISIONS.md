@@ -117,3 +117,11 @@ Texte dans `DECISION_CIBLE.md` (Sednal la numérote « D69 »). Rapport complet 
   « requêtes web à partir des exemples » n'est pas mesuré (collecte interdite sans accord) : gain inconnu.
 * **Réponses D68 appliquées** : `registre_source` gardé à 0,19 ; aucun levier ouvert ; prises mesurées sur la validation :
   +1 sur 281 (contre +8 sur 344), le +2 points ne se généralise pas. Jeu test non touché.
+
+## D70 — Nouvelle application « pilote » (décision de Sednal, 2026-10-13)
+
+Application séparée dans `/opt/pilote` (dépôt git propre ; texte dans `/opt/pilote/DECISION_PILOTE.md`) : FastAPI + HTML/JS
+sans chaîne de build, SQLAlchemy + SQLite, service systemd utilisateur. grappes reste la multiprise, ligne de commande
+intacte ; pilote l'utilise comme bibliothèque. Seule modification de grappes autorisée : dire où il en est pendant qu'il
+travaille (étape 3). Étape 1 (squelette) livrée ; suivi dans `/opt/pilote/ETAT.md`. `/opt/pilote` a été créé avec sudo
+(accord de Sednal, mot de passe non conservé).
