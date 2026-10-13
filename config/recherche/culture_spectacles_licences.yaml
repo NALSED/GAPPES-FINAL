@@ -14,4 +14,6 @@ fields:
   nom: raison_sociale
   id: numero_recepisse
   siren: siren_siret
+  type: code_naf_ape  # activité principale du titulaire ; sert au vérificateur de type (D69)
+  nature: type_declarant  # « Personne physique... » écartée : la cible est une organisation (D69)
 relaxation: 2

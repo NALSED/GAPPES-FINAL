@@ -83,7 +83,7 @@ def main(jeu: str = "dev") -> int:
         if d.juge:
             d.juge.save()
         print(d.id, json.dumps({k: v for k, v in r.items() if k != "sources"}, ensure_ascii=False), flush=True)
-    Path("autocal/resultats/sources_dev.json").write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
+    Path(f"autocal/resultats/sources_{jeu}.json").write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
     return 0
 
 

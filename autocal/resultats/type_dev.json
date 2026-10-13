@@ -1,0 +1,572 @@
+{
+ "handball-pro": {
+  "phrase": "Les clubs de handball professionnels en France",
+  "R": 17,
+  "avant": {
+   "justes": 8,
+   "candidats": 500,
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.14532871972318337,
+   "ids_justes": [
+    "Q1263839",
+    "Q2838551",
+    "Q3155752",
+    "Q3373371",
+    "Q595394",
+    "Q901613",
+    "Q939580",
+    "Q986956"
+   ]
+  },
+  "apres": {
+   "justes": 8,
+   "candidats": 240,
+   "Rprec": 0.058823529411764705,
+   "bpref": 0.21107266435986158,
+   "ids_justes": [
+    "Q1263839",
+    "Q2838551",
+    "Q3155752",
+    "Q3373371",
+    "Q595394",
+    "Q901613",
+    "Q939580",
+    "Q986956"
+   ]
+  },
+  "candidats_base": 217,
+  "ajoutes": {
+   "avant": 283,
+   "apres": 23
+  },
+  "perdus": [],
+  "retires_verdicts": {
+   "non_verifiable": 239,
+   "faux": 21
+  },
+  "ajoutes_par_prise": {
+   "bnf_organisations": {
+    "avant": 19,
+    "apres": 19
+   },
+   "culture_festivals": {
+    "avant": 22,
+    "apres": 0
+   },
+   "culture_spectacles": {
+    "avant": 242,
+    "apres": 4
+   }
+  },
+  "par_prise": {
+   "bnf_organisations": {
+    "candidats": 21,
+    "ecartes": 0,
+    "inconnus": 21
+   },
+   "culture_festivals": {
+    "candidats": 22,
+    "ecartes": 22,
+    "inconnus": 0
+   },
+   "culture_spectacles": {
+    "candidats": 542,
+    "ecartes": 533,
+    "inconnus": 0
+   }
+  },
+  "motifs": [
+   [
+    "type « Arts du spectacle vivant »",
+    163
+   ],
+   [
+    "type « Autres organisations fonctionnant par adhésion volontaire »",
+    101
+   ],
+   [
+    "type « Débits de boissons »",
+    62
+   ],
+   [
+    "type « Hôtels et hébergement similaire »",
+    30
+   ],
+   [
+    "type « Restauration traditionnelle »",
+    28
+   ],
+   [
+    "type « Activités de soutien au spectacle vivant »",
+    26
+   ]
+  ],
+  "exemples_ecartes": [
+   "Salon du livre d'auteurs du Lions Clubs International [culture_festivals] : type « festival » sans mot de « club »",
+   "Festival des Premieres parties [culture_festivals] : type « festival » sans mot de « club »",
+   "Festiv'arles [culture_festivals] : type « festival » sans mot de « club »",
+   "Briv'en Jazz [culture_festivals] : type « festival » sans mot de « club »"
+  ]
+ },
+ "festivals-elec": {
+  "phrase": "Les festivals de musique électronique en France",
+  "R": 7,
+  "avant": {
+   "justes": 2,
+   "candidats": 1002,
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "ids_justes": [
+    "Q1655230",
+    "Q19544482"
+   ]
+  },
+  "apres": {
+   "justes": 2,
+   "candidats": 1001,
+   "Rprec": 0.0,
+   "bpref": 0.0,
+   "ids_justes": [
+    "Q1655230",
+    "Q19544482"
+   ]
+  },
+  "candidats_base": 171,
+  "ajoutes": {
+   "avant": 831,
+   "apres": 830
+  },
+  "perdus": [],
+  "retires_verdicts": {
+   "non_verifiable": 2
+  },
+  "ajoutes_par_prise": {
+   "bnf_organisations": {
+    "avant": 298,
+    "apres": 298
+   },
+   "culture_festivals": {
+    "avant": 532,
+    "apres": 532
+   },
+   "culture_spectacles": {
+    "avant": 1,
+    "apres": 0
+   },
+   "esr_etablissements": {
+    "avant": 1,
+    "apres": 0
+   }
+  },
+  "par_prise": {
+   "bnf_organisations": {
+    "candidats": 300,
+    "ecartes": 0,
+    "inconnus": 300
+   },
+   "culture_festivals": {
+    "candidats": 535,
+    "ecartes": 0,
+    "inconnus": 0
+   },
+   "culture_spectacles": {
+    "candidats": 1,
+    "ecartes": 1,
+    "inconnus": 0
+   },
+   "esr_etablissements": {
+    "candidats": 1,
+    "ecartes": 1,
+    "inconnus": 0
+   }
+  },
+  "motifs": [
+   [
+    "type « Arts du spectacle vivant »",
+    1
+   ],
+   [
+    "type « établissement d'enseignement supérieur »",
+    1
+   ]
+  ],
+  "exemples_ecartes": [
+   "SCENE DES MUSIQUES ELECTRONIQUES AMIENOISE [culture_spectacles] : type « Arts du spectacle vivant » sans mot de « festival »",
+   "Conservatoire national supérieur de musique et de danse de Paris [esr_etablissements] : type « établissement d'enseignement supérieur » sans mot de « festival »"
+  ]
+ },
+ "g-q212805": {
+  "phrase": "Bibliothèque numérique en France",
+  "R": 45,
+  "avant": {
+   "justes": 1,
+   "candidats": 932,
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.02123456790123457,
+   "ids_justes": [
+    "Q58442972"
+   ]
+  },
+  "apres": {
+   "justes": 1,
+   "candidats": 538,
+   "Rprec": 0.022222222222222223,
+   "bpref": 0.02123456790123457,
+   "ids_justes": [
+    "Q58442972"
+   ]
+  },
+  "candidats_base": 533,
+  "ajoutes": {
+   "avant": 399,
+   "apres": 5
+  },
+  "perdus": [],
+  "retires_verdicts": {
+   "non_verifiable": 326,
+   "faux": 68
+  },
+  "ajoutes_par_prise": {
+   "bnf_organisations": {
+    "avant": 5,
+    "apres": 5
+   },
+   "culture_festivals": {
+    "avant": 384,
+    "apres": 0
+   },
+   "culture_spectacles": {
+    "avant": 8,
+    "apres": 0
+   },
+   "esr_etablissements": {
+    "avant": 2,
+    "apres": 0
+   }
+  },
+  "par_prise": {
+   "bnf_organisations": {
+    "candidats": 5,
+    "ecartes": 0,
+    "inconnus": 5
+   },
+   "culture_festivals": {
+    "candidats": 389,
+    "ecartes": 389,
+    "inconnus": 0
+   },
+   "culture_spectacles": {
+    "candidats": 14,
+    "ecartes": 14,
+    "inconnus": 0
+   },
+   "esr_etablissements": {
+    "candidats": 2,
+    "ecartes": 2,
+    "inconnus": 0
+   }
+  },
+  "motifs": [
+   [
+    "type « festival »",
+    389
+   ],
+   [
+    "type « Arts du spectacle vivant »",
+    9
+   ],
+   [
+    "type « Gestion de salles de spectacles »",
+    3
+   ],
+   [
+    "type « Administration publique générale »",
+    2
+   ],
+   [
+    "type « établissement d'enseignement supérieur »",
+    2
+   ]
+  ],
+  "exemples_ecartes": [
+   "Les Ain'pertinentes [culture_festivals] : type « festival » sans mot de « bibliothequ »",
+   "Vraiment??? [culture_festivals] : type « festival » sans mot de « bibliothequ »",
+   "Bourk’en’spray [culture_festivals] : type « festival » sans mot de « bibliothequ »",
+   "Artfareins [culture_festivals] : type « festival » sans mot de « bibliothequ »"
+  ]
+ },
+ "g-q131186": {
+  "phrase": "Chorale en France",
+  "R": 33,
+  "avant": {
+   "justes": 1,
+   "candidats": 738,
+   "Rprec": 0.0,
+   "bpref": 0.020202020202020204,
+   "ids_justes": [
+    "Q89694968"
+   ]
+  },
+  "apres": {
+   "justes": 1,
+   "candidats": 715,
+   "Rprec": 0.0,
+   "bpref": 0.020202020202020204,
+   "ids_justes": [
+    "Q89694968"
+   ]
+  },
+  "candidats_base": 417,
+  "ajoutes": {
+   "avant": 321,
+   "apres": 298
+  },
+  "perdus": [],
+  "retires_verdicts": {
+   "non_verifiable": 23
+  },
+  "ajoutes_par_prise": {
+   "bnf_organisations": {
+    "avant": 298,
+    "apres": 298
+   },
+   "culture_festivals": {
+    "avant": 7,
+    "apres": 0
+   },
+   "culture_spectacles": {
+    "avant": 16,
+    "apres": 0
+   }
+  },
+  "par_prise": {
+   "bnf_organisations": {
+    "candidats": 300,
+    "ecartes": 0,
+    "inconnus": 300
+   },
+   "culture_festivals": {
+    "candidats": 7,
+    "ecartes": 7,
+    "inconnus": 0
+   },
+   "culture_spectacles": {
+    "candidats": 23,
+    "ecartes": 23,
+    "inconnus": 0
+   }
+  },
+  "motifs": [
+   [
+    "type « Arts du spectacle vivant »",
+    15
+   ],
+   [
+    "type « festival »",
+    7
+   ],
+   [
+    "type « Autres organisations fonctionnant par adhésion volontaire »",
+    5
+   ],
+   [
+    "type « Enseignement culturel »",
+    3
+   ]
+  ],
+  "exemples_ecartes": [
+   "Festival de musique chorale Saint-Jean-Cassien [culture_festivals] : type « festival » sans mot de « choral »",
+   "Saint-jean cassien [culture_festivals] : type « festival » sans mot de « choral »",
+   "Festival choral international en Aveyron [culture_festivals] : type « festival » sans mot de « choral »",
+   "Voix du Monde [culture_festivals] : type « festival » sans mot de « choral »"
+  ]
+ },
+ "g-q742421": {
+  "phrase": "Troupe théâtrale en France",
+  "R": 142,
+  "avant": {
+   "justes": 3,
+   "candidats": 500,
+   "Rprec": 0.007042253521126761,
+   "bpref": 0.017132646626024803,
+   "ids_justes": [
+    "Q3092022",
+    "Q3540980",
+    "Q61460498"
+   ]
+  },
+  "apres": {
+   "justes": 3,
+   "candidats": 360,
+   "Rprec": 0.014084507042253521,
+   "bpref": 0.017285531370038413,
+   "ids_justes": [
+    "Q3092022",
+    "Q3540980",
+    "Q61460498"
+   ]
+  },
+  "candidats_base": 275,
+  "ajoutes": {
+   "avant": 225,
+   "apres": 85
+  },
+  "perdus": [],
+  "retires_verdicts": {
+   "non_verifiable": 139,
+   "faux": 1
+  },
+  "ajoutes_par_prise": {
+   "bnf_organisations": {
+    "avant": 85,
+    "apres": 85
+   },
+   "culture_festivals": {
+    "avant": 13,
+    "apres": 0
+   },
+   "culture_spectacles": {
+    "avant": 128,
+    "apres": 0
+   }
+  },
+  "par_prise": {
+   "bnf_organisations": {
+    "candidats": 85,
+    "ecartes": 0,
+    "inconnus": 85
+   },
+   "culture_festivals": {
+    "candidats": 14,
+    "ecartes": 14,
+    "inconnus": 0
+   },
+   "culture_spectacles": {
+    "candidats": 259,
+    "ecartes": 259,
+    "inconnus": 0
+   }
+  },
+  "motifs": [
+   [
+    "type « Arts du spectacle vivant »",
+    230
+   ],
+   [
+    "type « festival »",
+    14
+   ],
+   [
+    "type « 90.04  - Gestion de salles de spectacles »",
+    13
+   ],
+   [
+    "type « Activités de soutien au spectacle vivant »",
+    7
+   ],
+   [
+    "type « Autres organisations fonctionnant par adhésion volontaire »",
+    4
+   ],
+   [
+    "type « Enseignement culturel »",
+    3
+   ]
+  ],
+  "exemples_ecartes": [
+   "Les Théâtrales en Couserans [culture_festivals] : type « festival » sans mot de « troup »",
+   "Les Théâtrales de Collonges La Rouge [culture_festivals] : type « festival » sans mot de « troup »",
+   "À Brass ouverts [culture_festivals] : type « festival » sans mot de « troup »",
+   "Festival d'Impro Théâtrale [culture_festivals] : type « festival » sans mot de « troup »"
+  ]
+ },
+ "g-q180958": {
+  "phrase": "Faculté en France",
+  "R": 100,
+  "avant": {
+   "justes": 4,
+   "candidats": 451,
+   "Rprec": 0.03,
+   "bpref": 0.0316,
+   "ids_justes": [
+    "Q124378863",
+    "Q16507898",
+    "Q3152769",
+    "Q96209609"
+   ]
+  },
+  "apres": {
+   "justes": 4,
+   "candidats": 448,
+   "Rprec": 0.03,
+   "bpref": 0.031799999999999995,
+   "ids_justes": [
+    "Q124378863",
+    "Q16507898",
+    "Q3152769",
+    "Q96209609"
+   ]
+  },
+  "candidats_base": 447,
+  "ajoutes": {
+   "avant": 4,
+   "apres": 1
+  },
+  "perdus": [],
+  "retires_verdicts": {
+   "faux": 1,
+   "non_verifiable": 2
+  },
+  "ajoutes_par_prise": {
+   "bnf_organisations": {
+    "avant": 1,
+    "apres": 1
+   },
+   "culture_spectacles": {
+    "avant": 1,
+    "apres": 0
+   },
+   "esr_etablissements": {
+    "avant": 2,
+    "apres": 0
+   }
+  },
+  "par_prise": {
+   "bnf_organisations": {
+    "candidats": 1,
+    "ecartes": 0,
+    "inconnus": 1
+   },
+   "culture_spectacles": {
+    "candidats": 6,
+    "ecartes": 6,
+    "inconnus": 0
+   },
+   "esr_etablissements": {
+    "candidats": 3,
+    "ecartes": 3,
+    "inconnus": 0
+   }
+  },
+  "motifs": [
+   [
+    "type « Enseignement supérieur »",
+    4
+   ],
+   [
+    "type « établissement d'enseignement supérieur »",
+    3
+   ],
+   [
+    "type « Arts du spectacle vivant »",
+    2
+   ]
+  ],
+  "exemples_ecartes": [
+   "UNIVERSITE DE PARIS [culture_spectacles] : type « Enseignement supérieur » sans mot de « facult »",
+   "UNIVERSITE DE PARIS [culture_spectacles] : type « Enseignement supérieur » sans mot de « facult »",
+   "UNIVERSITE DE PARIS [culture_spectacles] : type « Enseignement supérieur » sans mot de « facult »",
+   "UNIVERSITE DE PARIS [culture_spectacles] : type « Enseignement supérieur » sans mot de « facult »"
+  ]
+ }
+}

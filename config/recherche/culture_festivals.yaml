@@ -7,6 +7,7 @@ public: true
 description: "Liste des festivals en France (Ministère de la Culture)"
 url: https://static.data.gouv.fr/resources/liste-des-festivals-en-france/20250827-132958/festivals-global-festivals-pl.csv
 format: csv
+type_fixe: festival  # ce que recense le jeu de données ; sert au vérificateur de type (D69)
 delimiter: ";"
 fields:
   nom: "Nom du festival"

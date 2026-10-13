@@ -8,6 +8,7 @@ public: true
 description: "Principaux établissements d'enseignement supérieur (ESR)"
 url: https://data.enseignementsup-recherche.gouv.fr/api/explore/v2.1/catalog/datasets/fr-esr-principaux-etablissements-enseignement-superieur/records
 format: json
+type_fixe: établissement d'enseignement supérieur  # ce que recense le jeu ; sert au vérificateur de type (D69)
 params:
   where: 'search("{requete}")'
   limit: "100"

@@ -61,3 +61,14 @@ def test_prises_du_depot_sont_des_yaml_valides():
 def test_lectures_liste_sans_departager():
     lec = lectures("Brasserie en France", FauxHttp())
     assert [x.qid for x in lec] == ["Q1", "Q2"] and all(x.instances == 5 for x in lec)
+
+
+def test_type_et_nature_declares_par_la_source_sont_recopies():
+    csv_ = "nom;act;nat\nCLUB HAND;93.12Z;Personne morale\nCLUB DUPONT;90.01Z;Personne physique\n"
+    src = Source("c", "http://x", "csv", fields={"nom": "nom", "id": "nom", "type": "act", "nature": "nat"}, relaxation=0)
+    r = interroger(src, "Les clubs", FauxHttp(texte=csv_))
+    assert {x.nom: (x.type_candidat, x.nature) for x in r} == {
+        "CLUB HAND": ("93.12Z", "Personne morale"), "CLUB DUPONT": ("90.01Z", "Personne physique")}
+    src2 = Source("c", "http://x", "csv", fields={"nom": "nom", "id": "nom"}, relaxation=0, type_fixe="festival")
+    r2 = interroger(src2, "Festival", FauxHttp(texte="nom\nFestival du lac\n"))
+    assert [x.type_candidat for x in r2] == ["festival"]

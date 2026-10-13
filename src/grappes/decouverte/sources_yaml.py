@@ -12,6 +12,8 @@ Variables de requête, calculées de la seule phrase du sujet (jamais de la réf
   seul si la phrase n'a qu'un mot plein ; les mots sont ramenés au singulier ;
 * `{requete_et}` : les mêmes mots entre guillemets reliés par AND (plein texte Virtuoso/Lucene) ;
 * `{type}` : le premier mot plein.
+Type (D69) : `type_fixe` (ce que le jeu recense) ou `fields.type` (activité de la ligne), `fields.nature` (nature
+juridique) alimentent le vérificateur de type (`verification_type.py`).
 Relaxation : si la requête ne rend rien, les derniers mots sont retirés un à un (au plus `relaxation`), puis le type
 seul ; la requête utilisée est tracée dans `Decouvert.requete`.
 """
@@ -53,6 +55,7 @@ class Source:
     encoding: str = "utf-8-sig"
     colonnes_recherche: list[str] = field(default_factory=list)  # csv : colonnes où chercher (vide = toutes)
     description: str = ""
+    type_fixe: str = ""  # type de ce que la source recense, tel que son jeu de données le définit (« festival »)
 
 
 def charger_sources(dossier: str | Path = "config/recherche") -> list[Source]:
@@ -66,6 +69,7 @@ def charger_sources(dossier: str | Path = "config/recherche") -> list[Source]:
             (y.get("response") or {}).get("items", ""), y.get("fields") or {}, y.get("pagination") or {},
             int(y.get("relaxation", 2)), bool(y.get("actif", True)),
             str(y.get("delimiter", ";")), str(y.get("encoding", "utf-8-sig")), list(y.get("colonnes_recherche") or []), str(y.get("description", "")),
+            str(y.get("type_fixe", "")),
         ))  # fmt: skip
     return out
 
@@ -155,6 +159,8 @@ def interroger(src: Source, phrase: str, http: Http) -> list[Decouvert]:
                     nom, src.id, ident, resolve_field(it, src.fields.get("ville")).strip(),
                     resolve_field(it, src.fields.get("site")).strip(),
                     re.sub(r"\D", "", resolve_field(it, src.fields.get("siren")))[:9], trace,
+                    resolve_field(it, src.fields.get("type")).strip() or src.type_fixe,
+                    resolve_field(it, src.fields.get("nature")).strip(),
                 ))  # fmt: skip
             return sorted(out.values(), key=lambda d: d.identifiant)
     return []

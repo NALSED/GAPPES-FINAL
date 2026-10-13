@@ -19,3 +19,4 @@ fields:
   nom: nom.value
   id: o.value
 relaxation: 2
+# Pas de type déclaré (la BnF ne dit que foaf:Organization) : le vérificateur de type rend « inconnu » et garde (D69).

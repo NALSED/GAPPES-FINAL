@@ -42,6 +42,8 @@ class Decouvert:
     domaine: str = ""  # site officiel quand le registre le donne
     siren: str = ""
     requete: str = ""  # trace de la traduction (classe retenue, code NAF...)
+    type_candidat: str = ""  # type ou activité déclaré par la source elle-même (code NAF, discipline, type de jeu)
+    nature: str = ""  # nature juridique déclarée (« personne physique »...), vide si la source n'en dit rien
     liens: dict[str, str] = field(default_factory=dict)
 
 
@@ -60,6 +62,7 @@ class DecouverteConfig:
     naf: str = "config/naf_rev2.csv"
     dossier_sources: str = "config/recherche"  # prises YAML (`type: registre`), activées par « yaml » dans `sources`
     ids_yaml: tuple[str, ...] = ()  # vide = toutes les prises actives du dossier
+    verifier_type: bool = True  # D69 : écarter en amont les candidats des prises dont le type déclaré contredit le sujet
 
 
 def wikidata(cls: ClasseWikidata, http: Http, cfg: DecouverteConfig) -> list[Decouvert]:
@@ -218,7 +221,13 @@ def decouvrir(phrase: str, http: Http, cfg: DecouverteConfig | None = None) -> l
     if "yaml" in cfg.sources:  # prises décrites en YAML (data.gouv.fr, D68) : aucune ne dérive de Wikidata
         from grappes.decouverte.sources_yaml import charger_sources, interroger
 
+        from grappes.decouverte.verification_type import demande_type, filtrer
+
+        yaml_out: list[Decouvert] = []
         for s in charger_sources(cfg.dossier_sources):
             if s.actif and (not cfg.ids_yaml or s.id in cfg.ids_yaml):
-                out += interroger(s, phrase, http)
+                yaml_out += interroger(s, phrase, http)
+        if cfg.verifier_type:  # avant le classement, pas après coup : le type vérifié ici, jamais un filtre sur le score
+            yaml_out, _ = filtrer(yaml_out, demande_type(phrase), charger_naf(Path(cfg.naf)))
+        out += yaml_out
     return out
