@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar
 
+from grappes import avancement
 from grappes.search.models import Candidate
 
 
@@ -47,6 +48,8 @@ class Journal:
         return text
 
     def log(self, provider: str, keyword: str, request: str, status: str) -> None:
+        if request not in ("", "-"):  # une vraie requête (les refus et inactivités n'en sont pas) : compte exact d'appels
+            avancement.signaler("appel", prise=provider, statut=status)
         if self.path is None:
             return
         line = " | ".join(

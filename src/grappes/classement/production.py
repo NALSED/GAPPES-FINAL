@@ -11,6 +11,7 @@ from pathlib import Path
 
 import yaml
 
+from grappes import avancement
 from grappes import vraisemblance as vr
 from grappes.classement import fusion, indice
 from grappes.classement.candidats import Candidat, Contexte, charger
@@ -156,7 +157,10 @@ def appliquer(db: Database, cfg: Config, config_dir: str | Path, out_dir: str | 
         return []
     erreur = out / "classement_erreur.txt"
     try:
+        avancement.signaler("etape", etape="verification", detail="classement")
         ls = classer_production(db, cfg, config_dir, data_dir, pays)
+        avancement.signaler("noms", n=len(ls))
+        avancement.signaler("etape", etape="sortie", detail="profils")
         ignorer = frozenset() if cc.remplace_resultat else frozenset({"resultat", "tsites"})
         chemins = ecrire_profils(ls, charger_profils(config_dir), out, ignorer=ignorer)
         erreur.unlink(missing_ok=True)

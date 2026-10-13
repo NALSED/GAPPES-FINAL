@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from grappes import avancement
 from grappes.clustering.export import safe_cell
 from grappes.search import http as _http  # noqa: F401  (enregistre le type `http`)
 from grappes.search import mcpclient as _mcpclient  # noqa: F401  (enregistre le type `mcp`)
@@ -77,6 +78,7 @@ def run_search(
     )
     report = SearchReport(executed=real)
     found: list[Candidate] = []
+    avancement.signaler("plan", prises={p: len(keywords) for p in wanted if p in cfg.actifs and p in cfg.providers})
     for pid in wanted:
         if pid not in cfg.actifs or pid not in cfg.providers:
             report.status[pid] = "non autorisé (absent de la liste blanche `actifs`)"
@@ -95,6 +97,8 @@ def run_search(
             ctx.journal.log(pid, "", "-", f"inactif : {exc}")
             continue
         report.status[pid] = "ok" if real else "dry-run"
+        avancement.signaler("prise_debut", prise=pid)
+        avant = len(found)
         for kw in keywords:
             try:
                 found.extend(provider.search(kw, cfg.limite_par_mot_cle))
@@ -116,6 +120,7 @@ def run_search(
                 report.status[pid] = f"erreur : {type(exc).__name__}"
                 ctx.journal.log(pid, kw, "-", f"erreur plugin : {type(exc).__name__}")
                 log.warning("fournisseur %s : %s", pid, exc)
+        avancement.signaler("prise_fin", prise=pid, trouves=len(found) - avant, noms=len(found), statut=report.status[pid])
     report.raw = found
     report.candidates = merge(found + list(extra))
     report.requests = ctx.used_total

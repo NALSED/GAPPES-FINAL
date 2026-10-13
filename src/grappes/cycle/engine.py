@@ -18,6 +18,7 @@ from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path
 
+from grappes import avancement
 from grappes.amorcage import amorcer
 from grappes.autonomy import Autonomy, load_autonomy
 from grappes.clustering.assign import AMBIGU, CLASSE
@@ -271,6 +272,8 @@ def _execute(
                 raise StopRequested
 
         check_stop()
+        avancement.signaler("budget", requetes=auto.requetes_par_cycle, pages=auto.pages_par_cycle)
+        avancement.signaler("etape", etape="recherche")
         db = Database(paths.db)
         before = run_metrics(db, db.latest_run_id(), cfg)
         data.before = before
@@ -301,6 +304,7 @@ def _execute(
         data.collect.providers.update(seed_status)
         if data.collect.stopped:
             raise StopRequested
+        avancement.signaler("etape", etape="verification")
         data.fiabilite = _update_fiabilite(db, cfg, scfg, search_transport, now)
         run_id, res = run(db, cfg)
         # apprentissage (confirmées uniquement) et recalibrage (bornés)
@@ -366,10 +370,12 @@ def _execute(
             return _rollback(
                 paths, db, snap, data, "Indicateur de stabilité au-delà de son seuil.", CANCELLED
             )
+        avancement.signaler("etape", etape="sortie")
         export_csv(res, cfg, run_id, paths.out)
         write_resultat(res, cfg, paths.out, auto=auto, places=places_for(db, cfg))
         appliquer_classement(db, cfg, paths.config, paths.out, paths.data, auto.export_tsites_pays_defaut)
         prune_snapshots(paths.snapshots, auto.instantanes_conserves)
+        avancement.signaler("fin", statut=OK)
         return _finish(paths, auto, data, run_id, db)
     except StopRequested:
         return _rollback(

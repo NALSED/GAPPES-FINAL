@@ -13,6 +13,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from grappes import avancement
+
 UA = "grappes/0.1 (decouverte; landes_martin@yahoo.fr) python-urllib"
 
 
@@ -51,6 +53,7 @@ class Http:
                 time.sleep(attente)
             self._last = time.monotonic()
             self.appels_reseau += 1
+            avancement.signaler("appel", prise="découverte", hote=urllib.parse.urlsplit(url).netloc)
             req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
             try:
                 with urllib.request.urlopen(req, timeout=100) as r:
@@ -76,6 +79,7 @@ class Http:
             return p.read_text(encoding="utf-8")
         if self.offline:
             raise DecouverteError("hors ligne : fichier absent du cache")
+        avancement.signaler("appel", prise="découverte", hote=urllib.parse.urlsplit(url).netloc)
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=300) as r:
