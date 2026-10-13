@@ -109,3 +109,4 @@ questions dans `/opt/pilote/ETAT.md` et `/opt/pilote/QUESTIONS.md`. grappes n'a 
   la clé OpenRouter indique `usage = 0`, `usage_daily = 0`, `limit_remaining = 50` ($0,00). Le contrôle a été fait par l'API de la clé, pas sur la page
   Activity du site (je n'ai pas accès à votre compte web) : à recouper si vous voulez la preuve visuelle.
 * Suite : chaque tâche mécanique avec IA part sous `sednal-free` par le wrapper ; chaque bascule (réussie ou échouée) est notée ici et dans `donnees/.journal_ccr.log`.
+* Bascule §4.5, fiche 05 (18:11) : fixture synthétique « réponse Charity Commission » produite sous `sednal-free` : **réussie** (code 0).
