@@ -135,3 +135,10 @@ Questions ouvertes pour Sednal : `/opt/pilote/QUESTIONS.md` (P1 à P18).
 ## Option `delai_entre_appels_s` des prises http (2026-10-13)
 
 Ajout générique et facultatif (défaut : aucun délai) pour les services qui limitent le débit par appelant (GDELT : un appel toutes les 5 s). Test : `test_delai_entre_appels_du_fournisseur`. Demandé par la fiche 09 de pilote ; aucun comportement existant ne change.
+
+## Pilote, reprise du 2026-10-17 (fiches 07 à 10)
+
+* Fiche 07 rouverte pour deux décisions de Sednal : emoji acceptés (testé de bout en bout, rien à corriger) ; recherche par couleur/ambiance de photo **non faite** (aucune source connue ne l'expose ; question F07-4).
+* Fiches 08 et 09 closes **sous réserve** : Overpass et GDELT injoignables ou limités ce jour ; aucun contournement tenté. À rejouer (BLOCAGE.md de pilote).
+* Fiche 10 : un programme local n'est **jamais importé** depuis un fichier partagé (exécution de code étranger) ; l'import le signale. L'export est refusé si une valeur de clé s'y trouvait.
+* Seule la voie « programme local » de la page Ajout est livrée avec la fiche 10 (le point de recette 4 en dépend) ; le reste est la fiche 11.
