@@ -142,3 +142,10 @@ Ajout générique et facultatif (défaut : aucun délai) pour les services qui l
 * Fiches 08 et 09 closes **sous réserve** : Overpass et GDELT injoignables ou limités ce jour ; aucun contournement tenté. À rejouer (BLOCAGE.md de pilote).
 * Fiche 10 : un programme local n'est **jamais importé** depuis un fichier partagé (exécution de code étranger) ; l'import le signale. L'export est refusé si une valeur de clé s'y trouvait.
 * Seule la voie « programme local » de la page Ajout est livrée avec la fiche 10 (le point de recette 4 en dépend) ; le reste est la fiche 11.
+
+## Pilote, fiches 11 à 13 (2026-10-17)
+
+* **Navigateur de test** : j'ai tranché la question P4 de pilote. Chromium sans tête (Playwright) comme outil de test seulement, hors du dépôt et hors du système (bibliothèques extraites sans droits dans `~/.cache/pilote-libs`). Premier résultat : cinq défauts réels de la page Tri, invisibles aux tests Node, corrigés.
+* **Fiche 11** : un seul adaptateur générique `api_json` pour les API (clé en en-tête, Bearer, Basic ou dans l'adresse), CSV et fichiers locaux ; `base_sql` pour SQLite en lecture seule (SELECT imposé deux fois). Disjoncteur : 3 échecs de suite, reprise manuelle. Companies House ajouté par la page seule, prouvé sur simulateur (pas de clé).
+* **Fiche 12** : planification par APScheduler (dépendance ajoutée) au lieu de la boucle maison ; profondeur d'exploration = profondeur de liens de grappes, éteinte par défaut ; les presets cochés restreignent les sources allumées, ils ne les élargissent pas.
+* **Fiche 13** : Tabulator 6.3.1 (MIT) recopié dans `static/vendor/` ; points de confirmation avec règle prudente (une page de seconde main ne s'ajoute pas à une source de première main), non mesurée.
