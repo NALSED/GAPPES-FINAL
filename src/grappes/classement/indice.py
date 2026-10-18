@@ -37,14 +37,14 @@ def elements(ctx: Contexte, c: Candidat, cfg: vr.LrConfig) -> list[vr.Element]:
     return out
 
 
-def fusion_variantes(ctx: Contexte, cands: list[Candidat], seuil: float) -> list[Candidat]:
+def fusion_variantes(ctx: Contexte, cands: list[Candidat], seuil: float, lien: str = "simple") -> list[Candidat]:
     """Un candidat par acteur : les variantes de nom (nomenklatura) sont réunies sur le candidat le mieux documenté."""
     memo = ctx.memo_variantes
     noms = [c.nom for c in cands if c.nom]
     villes = [c.ville for c in cands if c.nom]
-    cle = (tuple(noms), tuple(villes), seuil)
+    cle = (tuple(noms), tuple(villes), seuil, lien)
     if cle not in memo:
-        memo[cle] = regrouper(noms, seuil, villes=villes)
+        memo[cle] = regrouper(noms, seuil, villes=villes, lien=lien)
     avec_nom = [c for c in cands if c.nom]
     sans_nom = [c for c in cands if not c.nom]
     out: list[Candidat] = []

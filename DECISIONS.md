@@ -158,3 +158,17 @@ Le défaut signalé par la fiche 15 §7 est réel : `regrouper` fusionne dès qu
 
 ## 2026-10-18 (soir) — Variantes : lien simple/complet mesuré sur dev puis validation
 Sur Sednal : comparaison descriptive des groupes de variantes, rejeux archivés en lecture seule. Dev : 13 groupes sur 1614 noms coupés par `complet` ; validation : 12 sur 1435 (0,8 %). Cas coupés surtout sans rapport ; un cas discutable (« Yahoo » / « Yahoo! Actualités »). Défaut inchangé (`simple`) : la bascule reste à décider par Sednal. Jeu test non touché. Détail : `/opt/pilote/QUESTIONS.md` F15-2.
+
+## D71 — Variantes : lien « complet » mesuré sur dev et validation, défaut de la config passé à « complet » (décision déléguée par Sednal, 2026-10-18)
+Sednal : « Autonomie et prise de décision ». Mesure faite par rejeu des archives, zéro requête, paramètres figés de l'étape 3, jeu test non touché (`python -m grappes.autocal.mesure_lien dev|validation 0.9 0.93`) :
+
+| jeu | configuration | candidats | justes | Rprec | bpref |
+|---|---|---|---|---|---|
+| dev (6 sujets) | sans fusion | 2060 | 11 | 0,0209 | 0,0205 |
+| | simple 0,9 | 1583 | 8 | 0,0192 | 0,0201 |
+| | complet 0,9 | 1843 | 9 | 0,0209 | 0,0212 |
+| validation (6 sujets) | sans fusion | 3155 | 56 | 0,0768 | 0,1036 |
+| | simple 0,9 | 2379 | 39 | 0,0679 | 0,0835 |
+| | complet 0,9 | 2779 | 42 | 0,0784 | 0,0875 |
+
+Le seuil 0,93 donne les mêmes conclusions. **Décisions** : (1) « complet » est meilleur que « simple » sur les deux jeux (R-précision conservée ou meilleure, moins de justes perdus) ; la valeur par défaut de `config/classement.yaml: variantes.lien` et de `ClassementConfig` devient `complet` ; `Params.lien` et `regrouper` gardent `simple` par défaut pour ne pas changer les rejeux historiques. (2) **La fusion reste désactivée** (D65 confirmé) : même en « complet », elle perd des justes (56 → 42 en validation) parce que le candidat gardé pour un groupe est le mieux documenté, pas celui que la référence reconnaît ; la piste « juger sur toutes les écritures du groupe » (calibration.md § 4) reste à faire avant de la réactiver. La chaîne certifiée est inchangée (variantes désactivées dans les paramètres figés). Tests : 595 verts.

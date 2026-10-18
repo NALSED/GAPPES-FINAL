@@ -11,6 +11,7 @@ fournisseurs:
 variantes:
   actif: false                    # D65 : désactivé, le regroupement enchaîne des noms sans rapport (calibration.md § 4)
   seuil: 0.9
+  lien: complet                   # « complet » : une fusion exige que toutes les paires atteignent le seuil (mesuré meilleur que « simple » sur dev ET validation, DECISIONS 2026-10-18) ; « simple » = historique, enchaîne des noms. Ne sert que si actif: true
 sortie:
   n_max: 200                      # nombre maximal de lignes rendues (les mieux classées)
   p_min: 0.0                      # probabilité calibrée minimale pour figurer ; 0 = pas de coupe

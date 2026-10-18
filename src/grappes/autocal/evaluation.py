@@ -37,6 +37,7 @@ class Params:
     registres: tuple[str, ...] = ()  # registres de découverte utilisés (wikidata, sirene) ; vide = système d'avant D63
     variantes: bool = True  # variantes de noms regroupées par nomenklatura avant la notation (méthode « lr »)
     seuil_variantes: float = 0.8
+    lien: str = "simple"  # regroupement des variantes : « simple » (historique, enchaîne) ou « complet » (toutes les paires au seuil)
     lr: tuple[tuple[str, float], ...] = ()  # surcharges des valeurs de config/lr.yaml (réglage Optuna)
     ner: bool = False  # entités nommées dans le texte (chantier 2, D63) ajoutées aux candidats et aux citations
     w_rw: float = 0.0  # poids de l'appartenance à Wikidata (classe du sujet) dans le score
@@ -97,7 +98,7 @@ def classer(ctx: Contexte, p: Params) -> list[Classe]:
 
         cfg_lr = vr.charger().avec(**dict(p.lr))
         if p.variantes:
-            cands = indice.fusion_variantes(ctx, cands, p.seuil_variantes)
+            cands = indice.fusion_variantes(ctx, cands, p.seuil_variantes, p.lien)
         rows = []
         for c in cands:
             lg = vr.total(indice.elements(ctx, c, cfg_lr), cfg_lr)

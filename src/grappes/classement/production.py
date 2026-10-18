@@ -36,6 +36,7 @@ class ClassementConfig:
     p_min: float = 0.0
     calibration: str = "config/calibration.json"
     cache_jours: int = 30
+    lien_variantes: str = "complet"  # en dernier : la configuration est construite par position
 
 
 def charger_config(config_dir: str | Path) -> ClassementConfig:
@@ -50,6 +51,7 @@ def charger_config(config_dir: str | Path) -> ClassementConfig:
         bool(va.get("actif", False)), float(va.get("seuil", 0.9)),
         int(so.get("n_max", 200)), float(so.get("p_min", 0.0)),
         str(y.get("calibration", "config/calibration.json")), int(y.get("cache_registres_jours", 30)),
+        str(va.get("lien", "complet")),
     )  # fmt: skip
 
 
@@ -96,7 +98,7 @@ def classer(ctx: Contexte, cfg: ClassementConfig, lr: vr.LrConfig, cal: Calibreu
         cands, _ = fusion.ajouter(ctx, cands, ctx.nommes)
     cands = [c for c in cands if c.nom]
     if cfg.variantes:
-        cands = indice.fusion_variantes(ctx, cands, cfg.seuil_variantes)
+        cands = indice.fusion_variantes(ctx, cands, cfg.seuil_variantes, cfg.lien_variantes)
     out = []
     for c in cands:
         lg = vr.total(indice.elements(ctx, c, lr), lr)
