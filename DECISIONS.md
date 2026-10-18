@@ -155,3 +155,6 @@ Consigne de Sednal : « Pas de priorité, mets juste de côté l'IA optionnelle 
 
 ## 2026-10-18 — Variantes : option `lien="complet"` (chaînage de nomenklatura)
 Le défaut signalé par la fiche 15 §7 est réel : `regrouper` fusionne dès qu'une paire atteint le seuil, donc A≈B et B≈C réunissent A et C même quand leur score est 0 (exemple inventé : « Zorbel Rivage » / « Zorbel Rivage Club Nautique Sud » / « Club Nautique Sud »). Ajout de `lien="complet"` (fusion seulement si toutes les paires entre les deux groupes atteignent le seuil, paires les plus sûres d'abord). **Le défaut reste `simple`** : changer le défaut changerait les résultats mesurés ; la bascule se décide après mesure sur le jeu de développement. Tests : `tests/test_variantes_lien.py` ; suite 595 verts.
+
+## 2026-10-18 (soir) — Variantes : lien simple/complet mesuré sur dev puis validation
+Sur Sednal : comparaison descriptive des groupes de variantes, rejeux archivés en lecture seule. Dev : 13 groupes sur 1614 noms coupés par `complet` ; validation : 12 sur 1435 (0,8 %). Cas coupés surtout sans rapport ; un cas discutable (« Yahoo » / « Yahoo! Actualités »). Défaut inchangé (`simple`) : la bascule reste à décider par Sednal. Jeu test non touché. Détail : `/opt/pilote/QUESTIONS.md` F15-2.
