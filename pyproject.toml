@@ -4,6 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "grappes"
+license = "MIT"
+license-files = ["LICENSE"]
 version = "0.1.0"
 description = "Intelligence de terrain : entités rangées en grappes"
 requires-python = ">=3.11"

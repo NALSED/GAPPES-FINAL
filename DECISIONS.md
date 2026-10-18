@@ -172,3 +172,6 @@ Sednal : « Autonomie et prise de décision ». Mesure faite par rejeu des archi
 | | complet 0,9 | 2779 | 42 | 0,0784 | 0,0875 |
 
 Le seuil 0,93 donne les mêmes conclusions. **Décisions** : (1) « complet » est meilleur que « simple » sur les deux jeux (R-précision conservée ou meilleure, moins de justes perdus) ; la valeur par défaut de `config/classement.yaml: variantes.lien` et de `ClassementConfig` devient `complet` ; `Params.lien` et `regrouper` gardent `simple` par défaut pour ne pas changer les rejeux historiques. (2) **La fusion reste désactivée** (D65 confirmé) : même en « complet », elle perd des justes (56 → 42 en validation) parce que le candidat gardé pour un groupe est le mieux documenté, pas celui que la référence reconnaît ; la piste « juger sur toutes les écritures du groupe » (calibration.md § 4) reste à faire avant de la réactiver. La chaîne certifiée est inchangée (variantes désactivées dans les paramètres figés). Tests : 595 verts.
+
+## D72 — Licence MIT pour grappes aussi (décision déléguée, 2026-10-18)
+Sednal a choisi MIT pour le projet (pilote) et a délégué les décisions : même licence pour grappes, cohérence des deux dépôts. Fichier `LICENSE` et champ `license` de `pyproject.toml`. Réversible avant toute publication. Titulaire écrit : « Sednal ».
