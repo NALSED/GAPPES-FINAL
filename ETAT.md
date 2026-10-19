@@ -117,3 +117,12 @@ questions dans `/opt/pilote/ETAT.md` et `/opt/pilote/QUESTIONS.md`. grappes n'a 
 ## Pilote — reprise du 2026-10-17
 
 Fiches 01 à 14 de `/opt/pilote/fiches/` traitées (suivi détaillé : `/opt/pilote/ETAT.md`, `RECETTE.md`, `QUESTIONS.md`, `BLOCAGE.md`). 08 (Lieux) et 09 (Presse) closes sous réserve (Overpass public injoignable, GDELT limité) ; 07 : emoji faits, couleur/ambiance de photo en attente d'une décision (F07-4). Pilote : 246 tests verts ; grappes non modifié ce jour (hors DECISIONS.md). Routage §4.5 : aucune fixture IA n'a été nécessaire (les scripts et jeux de test sont écrits dans les tests) ; la bascule `sednal-free` reste celle vérifiée le 13/10 (gateway actif, code 0).
+
+## Pilote — reprise du 2026-10-19 (aucune phase de grappes en cours)
+
+Grappes n'a pas été modifié ce jour (seulement des fichiers de suivi : rapports de cycle, journal des appels gratuits, `outils/comparer_tokens.sh`, commit `c033e6d`).
+Tout le travail du jour est dans `/opt/pilote` (dernier commit `2225a29`, 327 tests verts) : deux revues complètes corrigées, sources branchées et
+contrôlées en réel avec les clés de Sednal (Companies House, OpenSanctions, CourtListener, Intelligence X cadrée par le code, Apify),
+mécanisme de vérification des candidats (`verifie_sur`), Tri avec deux signaux séparés. **Le point de reprise détaillé est à la fin de
+`/opt/pilote/ETAT.md`** (commandes de redémarrage, décisions en attente F17-2 à F17-5, sources en attente de clé).
+Bloquant : aucun. Routage §4.5 : les fixtures synthétiques du jour sont passées par `sednal-free` (code 0, journal `donnees/.journal_ccr.log`).
