@@ -122,7 +122,7 @@ Fiches 01 à 14 de `/opt/pilote/fiches/` traitées (suivi détaillé : `/opt/pil
 
 Grappes n'a pas été modifié ce jour (seulement des fichiers de suivi : rapports de cycle, journal des appels gratuits, `outils/comparer_tokens.sh`, commit `c033e6d`).
 Tout le travail du jour est dans `/opt/pilote` (dernier commit `2225a29`, 327 tests verts) : deux revues complètes corrigées, sources branchées et
-contrôlées en réel avec les clés de Sednal (Companies House, OpenSanctions, CourtListener, Intelligence X cadrée par le code, Apify),
+contrôlées en réel avec les clés de Sednal (Companies House, OpenSanctions, CourtListener, Apify),
 mécanisme de vérification des candidats (`verifie_sur`), Tri avec deux signaux séparés. **Le point de reprise détaillé est à la fin de
 `/opt/pilote/ETAT.md`** (commandes de redémarrage, décisions en attente F17-2 à F17-5, sources en attente de clé).
 Bloquant : aucun. Routage §4.5 : les fixtures synthétiques du jour sont passées par `sednal-free` (code 0, journal `donnees/.journal_ccr.log`).
