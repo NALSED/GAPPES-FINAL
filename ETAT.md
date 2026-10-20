@@ -126,3 +126,9 @@ contrôlées en réel avec les clés de Sednal (Companies House, OpenSanctions, 
 mécanisme de vérification des candidats (`verifie_sur`), Tri avec deux signaux séparés. **Le point de reprise détaillé est à la fin de
 `/opt/pilote/ETAT.md`** (commandes de redémarrage, décisions en attente F17-2 à F17-5, sources en attente de clé).
 Bloquant : aucun. Routage §4.5 : les fixtures synthétiques du jour sont passées par `sednal-free` (code 0, journal `donnees/.journal_ccr.log`).
+
+## Pilote — 2026-10-20 (aucune phase de grappes en cours)
+
+Retrait complet d'Intelligence X (D74), retours de Sednal sur Réglages (D75) puis revue complète (D76, cinq défauts corrigés) : tout est dans
+`/opt/pilote` (dernier commit `a7c2fec`, 350 tests verts ; 2 tests Wayback en échec externe, archive.org répond 429). Mesure des économies
+réparée : `outils/economies.py` (ccr mesuré, rtk corrigé), rapport `docs/economies_2026-10-20.md`. Bloquant : aucun.
