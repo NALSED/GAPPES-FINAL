@@ -1,5 +1,8 @@
 # ETAT — grappes
 
+Phase en cours : aucune
+(Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
+
 Dernière mise à jour : 2026-10-11 (Q24 close ; cycles normaux). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
 
 ## En attente de Sednal

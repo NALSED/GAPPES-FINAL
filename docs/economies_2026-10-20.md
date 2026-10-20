@@ -62,3 +62,12 @@ Source : `~sednal-free/.claude-code-router/app-data/usage.sqlite`, lue en lectur
 2. **rtk fait son travail** (environ 48 % sur ce qu'il intercepte, zéro rappel). Mais le « 76,6 % » affiché ne doit pas servir de chiffre d'économie : il est faussé par 4 commandes. La remise à zéro (`rtk gain --reset`) n'est plus utile : le chiffre corrigé se calcule sans rien effacer (`outils/economies.py`).
 3. **ccr apporte peu tel qu'il est utilisé.** Environ 10,6 K jetons d'entrée par requête pour environ 230 jetons utiles (le routage est stable depuis le 17/10). Pour qu'il serve : grouper plusieurs fixtures dans un seul appel, et éviter `claude -p` pour une tâche qu'un script fait seul.
 4. **Mesure réparée (20/10)** : `outils/economies.py` donne les deux lignes (ccr mesuré, rtk corrigé), sur tout l'historique ou un jour (`--jour`), et `--csv` les garde dans `donnees/.economies_jetons.csv`. `outils/comparer_tokens.sh` lit maintenant la base de ccr au lieu d'OpenRouter. Les lignes de `donnees/.economies_tokens.csv` écrites avant le 20/10 ont un côté gratuit faux (0) ; je les laisse telles quelles, comme trace.
+
+## 6. Mesures prises le 20/10 (D77), sans rien retirer au programme
+
+* **Hook d'arrêt** : c'était la plus grosse fuite visible aujourd'hui. Il a relancé six fois cette session alors qu'aucune phase n'était en cours, et chaque relance fait relire tout le contexte. Il ne relance plus qu'une fois par arrêt, seulement dans grappes ou pilote, et seulement si une phase est en cours (`ETAT.md`). Le mode continu est conservé (vérifié).
+* **Tests filtrés par rtk** : `rtk pytest` avec le `.venv` du projet (réussite en une ligne, échecs détaillés). `rtk discover` estimait environ 9 K jetons manqués sur 69 lancements ; le gain est surtout là quand des tests échouent (les traces sont longues).
+* **Bruit des tests** : l'avertissement répété de la bibliothèque de test est masqué.
+* **Dossiers géants** : consigne de ne plus lister `donnees/autocal*` en entier (ce sont les 1,31 M « économisés » par rtk : sans lui, ils auraient été lus).
+* Le gain réel du hook n'est pas chiffrable proprement (la taille du contexte à chaque relance n'est pas enregistrée) ; `outils/economies.py` et `ccusage` permettront de comparer les prochains jours.
+

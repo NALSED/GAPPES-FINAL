@@ -9,3 +9,4 @@
   Une commande purement locale sans IA (ruff seul, mv, etc.) ne passe pas par le wrapper : elle s'exécute directement, elle ne consomme aucun compte. Tâches de **jugement** (architecture, scoring, recoupement, revue, décisions) sur le compte Pro. Sous pression de quota, déplacer plus de mécanique vers le gratuit et le noter dans `ETAT.md`.
 * rtk reste actif ; ne pas présenter `rtk gain` comme une économie totale. Si une troncature gêne, la consigner dans `QUESTIONS.md`.
 * Aucun lexique réel : thèmes neutres inventés uniquement.
+* Économie de jetons (2026-10-20) : tests par `PATH=<projet>/.venv/bin:$PATH rtk pytest -q …` (réussite en une ligne, échecs détaillés, sortie complète par `rtk recall <id>`) ; jamais de `ls`/`find` complet sur `donnees/autocal*` (milliers de fichiers : `| wc -l` ou `| head`) ; tenir la ligne « Phase en cours : … » en tête d'`ETAT.md` (le hook d'arrêt ne relance que si une phase est en cours).
