@@ -191,3 +191,6 @@ Détail des onze retours : `/opt/pilote/QUESTIONS.md` F19-1 et F19-2. Décisions
 * **Source qui demande un adaptateur** : type « Autre », enregistrée avec ce qu'on sait d'elle, voyant rouge, message en clair, activation refusée avec la même phrase (jamais un refus muet).
 * **Nommage** : « Sources » partout (Réglages, Ajout, légende et jauge de Recherches).
 * **F17-2** : le défaut du mode de vérification reste éteint (décision de Sednal) ; texte et liste corrigés.
+
+## D76 — Revue complète de pilote après les retours du 20/10 (2026-10-20, soir)
+Demandée par Sednal (« review complète et test en profondeur »). Cinq défauts corrigés, détail dans `/opt/pilote/QUESTIONS.md` F19-3. Décisions : (1) l'ajout d'une source ne remplace **jamais** une clé déjà rangée (nom libre choisi, ou refus si le nom est imposé) ; (2) une source qui demande un adaptateur attend un module préfixé `source_` ; (3) invariant « source retirée ⇒ éteinte pour ce rôle » tenu dans `reglages._appliquer` pour tous les chemins (une source rallumée revient à l'affichage) ; (4) une source à réglage obligatoire manquant est orange ; (5) lecture tolérante unique des réglages propres d'une source (`reglages.parametres_donnes`). Les deux échecs Wayback de la suite sont antérieurs et externes (archive.org répond 429).
