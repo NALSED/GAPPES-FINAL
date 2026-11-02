@@ -243,6 +243,21 @@ def test_ne_pas_traduire_protege_majuscules_urls_et_restaure_apres(monkeypatch):
     assert "FFSA" in sortie and "club-x.fr" in sortie  # mais ils sont bien de retour dans le résultat
 
 
+def test_ne_pas_traduire_presets_combines_ne_se_corrompent_pas_entre_eux():
+    """Un jeton posé par un preset ne doit jamais être re-matché par le preset suivant (ex. « majuscules » protège
+    FFSA en §protA§ ; si « nombres_dates » repère le chiffre qu'un ancien format de jeton contenait, il le casse)."""
+    from pilote import suite_traduction as st
+
+    textes = [
+        "Le FFSA contacte club-x.fr",
+        'Le club "Sports Association" existe, fondé le 12/04/2026',
+        " ".join(f"MOT{i} http://site{i}.fr" for i in range(30)),  # plus de 26 passages protégés
+    ]
+    for t in textes:
+        protege, correspondances = st.proteger(t, ["guillemets", "majuscules", "nombres_dates", "urls_emails"])
+        assert st.restaurer(protege, correspondances) == t
+
+
 def test_ne_pas_traduire_sans_preset_ne_protege_rien():
     from pilote import suite_traduction as st
 

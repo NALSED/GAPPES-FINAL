@@ -23,13 +23,25 @@ PRESETS = {
 }
 
 
+def _jeton(i: int) -> str:
+    """Sans chiffre ni majuscule : aucun des presets ne le re-matche quand un preset suivant relit le texte déjà
+    jeté (sinon `nombres_dates` ou `majuscules` repère le jeton précédent et le casse en le remplaçant à son tour)."""
+    lettres, out, n = "abcdefghijklmnopqrstuvwxyz", [], i
+    while True:
+        out.append(lettres[n % 26])
+        n = n // 26 - 1
+        if n < 0:
+            break
+    return f"§prot{''.join(reversed(out))}§"
+
+
 def proteger(texte: str, presets: list[str]) -> tuple[str, dict[str, str]]:
-    """Remplace les passages protégés par un jeton (`§0§`, `§1§`…) que le moteur de traduction laisse tel quel —
-    chiffres et symboles, jamais un mot qu'il chercherait à traduire. `restaurer()` les remet après coup."""
+    """Remplace les passages protégés par un jeton que le moteur de traduction laisse tel quel — jamais un mot
+    qu'il chercherait à traduire. `restaurer()` les remet après coup."""
     correspondances: dict[str, str] = {}
 
     def remplacer(m: re.Match) -> str:
-        jeton = f"§{len(correspondances)}§"
+        jeton = _jeton(len(correspondances))
         correspondances[jeton] = m.group(0)
         return jeton
 
