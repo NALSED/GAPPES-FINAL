@@ -46,6 +46,7 @@ h1, h2, h3, p { margin: 0; }
 .bouton[disabled], .bouton[aria-disabled="true"] { color: var(--encre-pale); background: var(--trait); border-color: var(--trait); cursor: not-allowed; }
 .bouton-icone { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0; background: none; border: none; border-radius: var(--rayon-controle); color: var(--encre-douce); }
 .bouton-icone.envoyer { background: var(--accent); color: var(--sur-accent); border: 1px solid var(--accent); }
+.bouton-icone.danger { color: var(--danger); }
 .bouton-icone[disabled] { color: var(--encre-pale); background: var(--trait); border-color: var(--trait); cursor: not-allowed; }
 
 /* ---------- puces et cases ---------- */

@@ -27,6 +27,9 @@ Une seule exception aux deux tailles : le `×` qui retire une tuile du plan de t
 
 Une cible tactile fait au moins 44 px : ajoute du remplissage autour du dessin plutôt que de l'agrandir.
 
+Tout picto d'action porte un `title` (infobulle native du navigateur), en plus de l'`aria-label` —
+règle du composant **Bouton** pour `boutonIcone`.
+
 ## Le code à reprendre
 
 ````html

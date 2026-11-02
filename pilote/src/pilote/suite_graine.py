@@ -65,12 +65,17 @@ def identifiant(nom: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", plat.lower()).strip("-") or "sans-nom"
 
 
+# Seuls ces deux modèles parlent à un service externe authentifié (T4) : Traduction via un service distant
+# (DeepL…), Assistant IA via un modèle distant (Claude, ChatGPT…). Les huit autres n'en ont jamais besoin.
+_CLE_REQUISE = {"traduction", "ia"}
+
+
 def _outil(t: tuple) -> dict[str, Any]:
     ident, nom, role, etat, fait, recoit, renvoie, effet, options, entree, sortie = t
     return {
         "id": ident, "nom": nom, "nature": "modele", "modele": ident, "role": role, "fait": fait, "recoit": recoit, "renvoie": renvoie,
         "effet": effet, "options": copy.deepcopy(options), "code": "", "test_entree": entree, "test_sortie": sortie, "etat": etat,
-        "test_reussi": True, "livre": True, "retire": False, "cle": False,
+        "test_reussi": True, "livre": True, "retire": False, "cle": False, "cle_requise": ident in _CLE_REQUISE,
     }  # fmt: skip
 
 

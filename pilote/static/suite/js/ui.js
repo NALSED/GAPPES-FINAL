@@ -8,7 +8,7 @@ export function bouton({ libelle, icon, variante = "", onclick, petit = false, d
 
 /** Un bouton de dessin seul : seulement pour le × de fermeture, le chevron de dépliage, les ports et l'envoi de l'Aide (aria-label obligatoire). */
 export function boutonIcone({ icon, etiquette, onclick, classe = "" }) {
-  return h("button", { type: "button", class: `bouton-icone ${classe}`.trim(), "aria-label": etiquette, onclick }, icone(icon));
+  return h("button", { type: "button", class: `bouton-icone ${classe}`.trim(), "aria-label": etiquette, title: etiquette, onclick }, icone(icon));
 }
 
 /** La puce : choisir UNE option parmi quelques-unes visibles d'un coup. */
@@ -98,10 +98,11 @@ const couches = () => document.getElementById("couches");
 export function ouvrirCouche({ cote = false, largeur = "", titre, sous, contenu, pied, surFermeture, role = "dialog" }) {
   const precedent = document.activeElement;
   const voile = h("div", { class: "voile" });
+  const h2Titre = h("h2", { id: "couche-titre" }, titre);
   const tete = h(
     "div",
     { class: "fenetre-tete" },
-    h("div", {}, h("h2", { id: "couche-titre" }, titre), sous && h("div", { class: "fenetre-sous" }, sous)),
+    h("div", {}, h2Titre, sous && h("div", { class: "fenetre-sous" }, sous)),
     boutonIcone({ icon: "fermer", etiquette: VERBES.fermer, onclick: () => fermer(true) }),
   );
   const corps = h("div", { class: "fenetre-corps" }, contenu);
@@ -139,7 +140,7 @@ export function ouvrirCouche({ cote = false, largeur = "", titre, sous, contenu,
   couches().append(voile, boite);
   const premiere = boite.querySelector("input, textarea, .puce, .bouton");
   (premiere || boite).focus?.();
-  return { fermer, corps, boite, remplacerContenu: (c) => { corps.replaceChildren(...[c].flat()); } };
+  return { fermer, corps, boite, remplacerContenu: (c) => { corps.replaceChildren(...[c].flat()); }, titre: (texte) => { h2Titre.textContent = texte; } };
 }
 
 /** L'avertissement (charte/composants/Avertissement) : 480 px, triangle en etat-attention, le verbe exact en bouton, Annuler à côté. */

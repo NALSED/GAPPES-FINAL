@@ -50,7 +50,7 @@ def run(resultats):
 | :-- | :-- |
 | Nom | — |
 | Rôle | OUTIL ou RAPPROCHER |
-| Ce qu'il fait | une phrase, affichée sur la carte |
+| Description | une phrase, affichée sur la carte |
 | Ce qu'il reçoit | décrit l'entrée — repris dans la fenêtre de tuile |
 | Ce qu'il renvoie | décrit la sortie — idem |
 | Effet dans le Tableau de bord | *journal*, *compteur*, *alerte*, *rien* |

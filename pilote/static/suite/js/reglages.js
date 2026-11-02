@@ -3,7 +3,7 @@ import { h, icone } from "./dom.js";
 import { agir, app, outilParId, recharger, sourceParId, sourcesDe } from "./etat.js";
 import { AVERTISSEMENT_IA, COUTS, EFFETS, ETATS_OUTIL, ETATS_SOURCE, FIABILITES, ROLES, ROLES_ORDRE, ROLES_OUTIL, VERBES, aPluriel, fiabiliteParDefaut } from "./mots.js";
 import { api, Refus } from "./api.js";
-import { annoncer, avertissement, bouton, champ, etiquetteRole, groupePuces, ouvrirCouche, pastilleEtat, quotaVue, carteRepliable } from "./ui.js";
+import { annoncer, avertissement, bouton, boutonIcone, champ, etiquetteRole, groupePuces, ouvrirCouche, pastilleEtat, quotaVue, carteRepliable } from "./ui.js";
 
 // ================================================================ Sources
 
@@ -53,8 +53,9 @@ function ligneSource(s) {
     h(
       "span",
       { class: "c-actions" },
-      bouton({ libelle: VERBES.modifier, icon: "modifier", petit: true, onclick: () => ficheSource(s.id), "aria-label": `${VERBES.modifier} ${s.nom}` }),
-      bouton({ libelle: VERBES.retirer, icon: "retirer", variante: "danger", petit: true, onclick: () => retirerSource(s), "aria-label": `${VERBES.retirer} ${s.nom}` }),
+      boutonIcone({ icon: "modifier", etiquette: `${VERBES.modifier} ${s.nom}`, onclick: () => ficheSource(s.id) }),
+      boutonIcone({ icon: "interrupteur", etiquette: `${s.etat === "off" ? VERBES.allumer : VERBES.eteindre} ${s.nom}`, onclick: () => basculerSource(s) }),
+      boutonIcone({ icon: "retirer", etiquette: `${VERBES.retirer} ${s.nom}`, classe: "danger", onclick: () => retirerSource(s) }),
     ),
   );
 }
@@ -64,13 +65,19 @@ function retireesVue(retirees) {
     "div",
     { class: "retirees" },
     h("span", { class: "legende" }, aPluriel(retirees.length, "source retirée", "sources retirées") + " :"),
-    retirees.map((s) => bouton({ libelle: `${VERBES.ajouter} ${s.nom}`, icon: "ajouter", petit: true, onclick: () => agir(() => api.post(`/sources/${s.id}/rajouter`), { succes: `« ${s.nom} » est de retour dans la liste.` }) })),
+    retirees.map((s) => boutonIcone({ icon: "ajouter", etiquette: `${VERBES.ajouter} ${s.nom}`, onclick: () => agir(() => api.post(`/sources/${s.id}/rajouter`), { succes: `« ${s.nom} » est de retour dans la liste.` }) })),
   );
 }
 
 /** RETIRER : réversible, sans fenêtre, sans toucher à aucun fichier. */
 function retirerSource(s) {
   return agir(() => api.post(`/sources/${s.id}/retirer`), { succes: `« ${s.nom} » est retirée de la liste. Rien n'est effacé : tu peux la remettre.` });
+}
+
+/** INTERRUPTEUR : éteindre n'avertit jamais ; allumer passe par allumerSource(s), qui gère déjà l'avertissement 409. */
+function basculerSource(s) {
+  if (s.etat !== "off") return agir(() => api.post(`/sources/${s.id}/eteindre`), { succes: `« ${s.nom} » est éteinte.` });
+  return allumerSource(s);
 }
 
 /** Allumer une source : l'avertissement de la source (prestataire payant, service à risque) se lit AVANT, puis la demande est refaite avec « confirme ». */
@@ -178,8 +185,7 @@ export function ficheSource(id) {
     } }));
   const interrupteur = edition && bouton({ libelle: s.etat === "off" ? VERBES.allumer : VERBES.eteindre, icon: "interrupteur", petit: true, onclick: async () => {
     couche.fermer();
-    if (s.etat === "off") await allumerSource(s);
-    else await agir(() => api.post(`/sources/${id}/eteindre`), { succes: `« ${s.nom} » est éteinte.` });
+    await basculerSource(s);
   } });
 
   const contenu = edition
@@ -233,7 +239,7 @@ export function pageOutils() {
     h("p", { class: "douce" }, "Les outils transforment ou relient les résultats. Chaque outil allumé devient une brique que tu poses dans la Recherche avancée."),
     h("div", { class: "grille-outils" }, visibles.map(carteOutil)),
     retires.length > 0 && h("div", { class: "retirees" }, h("span", { class: "legende" }, aPluriel(retires.length, "outil retiré", "outils retirés") + " :"),
-      retires.map((o) => bouton({ libelle: `${VERBES.ajouter} ${o.nom}`, icon: "ajouter", petit: true, onclick: () => agir(() => api.post(`/outils/${o.id}/rajouter`), { succes: `« ${o.nom} » est de retour dans la grille.` }) }))),
+      retires.map((o) => boutonIcone({ icon: "ajouter", etiquette: `${VERBES.ajouter} ${o.nom}`, onclick: () => agir(() => api.post(`/outils/${o.id}/rajouter`), { succes: `« ${o.nom} » est de retour dans la grille.` }) }))),
   );
 }
 
@@ -246,8 +252,8 @@ function carteOutil(o) {
     h("p", {}, o.fait),
     h("div", { class: "outil-pied" }, pastilleEtat(o.etat, ETATS_OUTIL),
       h("span", { class: "outil-actions" },
-        bouton({ libelle: VERBES.modifier, icon: "modifier", petit: true, onclick: () => ficheOutil(o.id), "aria-label": `${VERBES.modifier} ${o.nom}` }),
-        bouton({ libelle: eteint ? VERBES.allumer : VERBES.eteindre, icon: "interrupteur", petit: true, onclick: () => basculerOutil(o), "aria-label": `${eteint ? VERBES.allumer : VERBES.eteindre} ${o.nom}` }))),
+        boutonIcone({ icon: "modifier", etiquette: `${VERBES.modifier} ${o.nom}`, onclick: () => ficheOutil(o.id) }),
+        boutonIcone({ icon: "interrupteur", etiquette: `${eteint ? VERBES.allumer : VERBES.eteindre} ${o.nom}`, onclick: () => basculerOutil(o) }))),
   );
 }
 
@@ -272,7 +278,7 @@ export function ficheOutil(id) {
   const f = {
     nom: champ({ libelle: "Nom de l'outil", valeur: o.nom, placeholder: "ex. Garder la France" }),
     code: champ({ libelle: "Ton script (Python)", valeur: o.code || CODE_MODELE, lignes: 7, code: true, aide: "Le script reçoit la liste des résultats et renvoie une liste. Il tourne dans un processus isolé : pas de réseau, 10 secondes au maximum." }),
-    fait: champ({ libelle: "Ce qu'il fait", valeur: o.fait, placeholder: "Une phrase" }),
+    fait: champ({ libelle: "Description", valeur: o.fait, placeholder: "Une phrase" }),
     recoit: champ({ libelle: "Ce qu'il reçoit", valeur: o.recoit }),
     renvoie: champ({ libelle: "Ce qu'il renvoie", valeur: o.renvoie }),
     entree: champ({ libelle: "Exemple d'entrée", valeur: o.test_entree, lignes: 3, code: true }),
@@ -295,16 +301,25 @@ export function ficheOutil(id) {
       if (v === "script" && !f.entree.valeur().trim()) { f.entree.definir(ENTREE_SCRIPT); f.sortie.definir(SORTIE_SCRIPT); }
       dessiner();
     }));
-    zones.modele.replaceChildren(...(script ? [] : [h("span", { class: "titre-champ" }, "Modèle"), groupePuces(app.data.outils.filter((m) => m.livre).map((m) => [m.id, m.nom]), val.modele, (v) => {
+    const livres = app.data.outils.filter((m) => m.livre);
+    const presets = app.data.outils.filter((m) => !m.livre && m.id !== o.id && m.nature === "modele" && m.modele);
+    zones.modele.replaceChildren(...(script ? [] : [h("span", { class: "titre-champ" }, "Modèle"), groupePuces([...livres.map((m) => [m.id, m.nom]), ...presets.map((m) => [m.id, `${m.nom} (personnalisé)`])], val.modele, (v) => {
       const m = outilParId(v);
       val.modele = v; val.role = m.role; val.effet = m.effet; val.options = m.options.map((p) => [...p]); reconstruireOptions();
       f.fait.definir(m.fait); f.recoit.definir(m.recoit); f.renvoie.definir(m.renvoie); f.entree.definir(m.test_entree); f.sortie.definir(m.test_sortie);
+      couche.titre(m.nom);
       dessiner();
     })]));
     zones.options.replaceChildren(...(script || !champsOptions.length ? [] : [h("span", { class: "titre-champ" }, "Réglages du modèle"), h("div", { class: "options-grille" }, champsOptions.map((c) => c.el))]));
     zones.role.replaceChildren(h("span", { class: "titre-champ" }, "Rôle"), groupePuces(ROLES_OUTIL.map((r) => [r, ROLES[r].nom]), val.role, (v) => { val.role = v; dessiner(); }));
     zones.effet.replaceChildren(h("span", { class: "titre-champ" }, "Effet dans le Tableau de bord"), groupePuces(EFFETS.map(([k, l]) => [k, l]), val.effet, (v) => { val.effet = v; dessiner(); }), h("span", { class: "aide-champ" }, EFFETS.find((e) => e[0] === val.effet)[2]));
     f.code.el.classList.toggle("cache", !script);
+    const cleRequisePourBase = (idModele) => {
+      const m = outilParId(idModele);
+      const base = m?.livre ? m : outilParId(m?.modele);
+      return !!base?.cle_requise;
+    };
+    f.cle.el.classList.toggle("cache", !(script || (val.modele && cleRequisePourBase(val.modele))));
     const pret = script || !!val.modele;
     principal.disabled = !edition && !pret;
     manque.textContent = !edition && !pret ? "Choisis un modèle." : "";

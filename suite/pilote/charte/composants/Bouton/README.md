@@ -23,3 +23,8 @@ et contour `danger`, à 8,1:1.
 
 **Le focus se voit** : un anneau `accent` de 2 px, décollé de 2 px. Ne le retire jamais. Une cible
 tactile fait au moins 44 px, remplissage compris.
+
+**Tout bouton d'action dans une ligne ou une tuile de liste** (sources, outils) passe par le
+composant icône seule (`boutonIcone`), avec son nom en `aria-label` et en infobulle (`title` natif) :
+jamais un bouton icône + mot dans une liste. Le bouton principal d'un panneau ou d'une fenêtre
+(Enregistrer, Annuler…) n'est pas une action de liste et garde icône + mot.
