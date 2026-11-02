@@ -65,9 +65,10 @@ def identifiant(nom: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", plat.lower()).strip("-") or "sans-nom"
 
 
-# Seuls ces deux modèles parlent à un service externe authentifié (T4) : Traduction via un service distant
-# (DeepL…), Assistant IA via un modèle distant (Claude, ChatGPT…). Les huit autres n'en ont jamais besoin.
-_CLE_REQUISE = {"traduction", "ia"}
+# Décidé au cas par cas pour chaque modèle (3.8.0X), pas supposé par T4 : aujourd'hui aucun des dix ne demande
+# de clé. Traduction (3.8.02) ne parle qu'à un service LibreTranslate auto-hébergé, sans clé ; Assistant IA
+# (3.8.09) passe par l'agent Claude Code déjà connecté par abonnement, pas par une clé d'API.
+_CLE_REQUISE: set[str] = set()
 
 
 def _outil(t: tuple) -> dict[str, Any]:
