@@ -231,6 +231,25 @@ def test_la_traduction_pivote_par_l_anglais_en_deux_appels(monkeypatch):
     assert st.traduire("http://x", "Association", "fr", "en") == "Association>en" and appels == [("fr", "en")]
 
 
+def test_ne_pas_traduire_protege_majuscules_urls_et_restaure_apres(monkeypatch):
+    """3.8.02 : les presets protègent un passage avant l'appel au moteur, et le remettent après — sans que le moteur
+    (ici simulé) ait jamais vu le texte original de ce passage."""
+    from pilote import suite_traduction as st
+
+    vus = []
+    monkeypatch.setattr(st, "_appel", lambda url, texte, de, vers: vus.append(texte) or texte.lower())
+    sortie = st.traduire_protege("http://x", "Le FFSA contacte club-x.fr", "fr", "en", ["majuscules", "urls_emails"])
+    assert "FFSA" not in vus[0] and "club-x.fr" not in vus[0]  # le moteur ne voit jamais les passages protégés
+    assert "FFSA" in sortie and "club-x.fr" in sortie  # mais ils sont bien de retour dans le résultat
+
+
+def test_ne_pas_traduire_sans_preset_ne_protege_rien():
+    from pilote import suite_traduction as st
+
+    protege, correspondances = st.proteger("FFSA à Lyon", [])
+    assert protege == "FFSA à Lyon" and correspondances == {}
+
+
 def test_gdelt_garde_la_presse_francaise_et_les_organisations_seulement(monkeypatch):
     import io
     import zipfile

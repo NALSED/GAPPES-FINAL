@@ -6,10 +6,45 @@ le journal garde les deux."""
 from __future__ import annotations
 
 import json
+import re
 import urllib.error
 import urllib.request
 
 DELAI_S = 20
+
+# « Ne pas traduire » (3.8.02) : quatre presets faisables aujourd'hui sur du texte, sans reconnaissance d'entités.
+# « Noms propres » (le cinquième de la spécification) n'est pas dans ce registre : il demande une reconnaissance de
+# noms pas encore branchée — l'interface le montre grisé, avec « bientôt », plutôt que de le proposer ici.
+PRESETS = {
+    "guillemets": re.compile(r'"[^"]+"|«[^»]+»'),
+    "majuscules": re.compile(r"\b[A-Z]{2,}\b"),
+    "nombres_dates": re.compile(r"\b[\d](?:[\d\s.,:/ -]*[\d])?\s?[€$]?\b"),
+    "urls_emails": re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b|\bhttps?://\S+\b|\b(?:[\w-]+\.)+[a-zA-Z]{2,}\b"),
+}
+
+
+def proteger(texte: str, presets: list[str]) -> tuple[str, dict[str, str]]:
+    """Remplace les passages protégés par un jeton (`§0§`, `§1§`…) que le moteur de traduction laisse tel quel —
+    chiffres et symboles, jamais un mot qu'il chercherait à traduire. `restaurer()` les remet après coup."""
+    correspondances: dict[str, str] = {}
+
+    def remplacer(m: re.Match) -> str:
+        jeton = f"§{len(correspondances)}§"
+        correspondances[jeton] = m.group(0)
+        return jeton
+
+    out = texte
+    for p in presets:
+        motif = PRESETS.get(p)
+        if motif is not None:
+            out = motif.sub(remplacer, out)
+    return out, correspondances
+
+
+def restaurer(texte: str, correspondances: dict[str, str]) -> str:
+    for jeton, original in correspondances.items():
+        texte = texte.replace(jeton, original)
+    return texte
 
 
 def traduire(url: str, texte: str, de: str, vers: str) -> str:
@@ -30,6 +65,12 @@ def _un_appel(url: str, texte: str, de: str, vers: str) -> str:
         if r2.casefold() != texte.casefold():
             return r2[:1].upper() + r2[1:] if texte[:1].isupper() else r2
     return r
+
+
+def traduire_protege(url: str, texte: str, de: str, vers: str, presets: list[str] | None = None) -> str:
+    """`traduire()`, en protégeant d'abord les passages que les presets « Ne pas traduire » désignent (3.8.02)."""
+    protege, correspondances = proteger(texte, presets or [])
+    return restaurer(traduire(url, protege, de, vers), correspondances)
 
 
 def _appel(url: str, texte: str, de: str, vers: str) -> str:

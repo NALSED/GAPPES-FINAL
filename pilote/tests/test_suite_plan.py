@@ -246,7 +246,7 @@ def test_traduction_vers_la_langue_de_chaque_source():
     ok = [("Langue d'entrée", "détecter"), ("Traduire vers", "français, anglais"), ("Ne pas traduire", "rien")]
     c = comp(plan_traduction(ok), langue_saisie="fr", traduction_disponible=True)
     assert c["traductions"] == {
-        "c": {"tuile": "t", "de": "fr", "vers": "en"}
+        "c": {"tuile": "t", "de": "fr", "vers": "en", "presets": []}
     }  # la source « a » cherche déjà en français : rien à traduire
     # sans moteur de traduction, avec la protection des noms propres, ou sans langue de saisie : non appliquée, avec la raison
     assert "moteur de traduction" in comp(plan_traduction(ok), langue_saisie="fr")["non_appliques"][0]["raison"]
@@ -259,7 +259,14 @@ def test_traduction_vers_la_langue_de_chaque_source():
         "entités nommées"
         in comp(plan_traduction(propres), langue_saisie="fr", traduction_disponible=True)["non_appliques"][0]["raison"]
     )
-    assert "détectée" in comp(plan_traduction(ok), traduction_disponible=True)["non_appliques"][0]["raison"]
+    # 3.8.02 : la détection de la langue de la saisie a échoué (pas de langue_saisie) — la tuile ne refuse plus de
+    # fonctionner, elle laisse le moteur de traduction détecter lui-même (de="auto") au lieu d'exiger une langue en amont.
+    sans_detection = comp(plan_traduction(ok), traduction_disponible=True)
+    assert sans_detection["non_appliques"] == []
+    assert sans_detection["traductions"] == {
+        "a": {"tuile": "t", "de": "auto", "vers": "fr", "presets": []},
+        "c": {"tuile": "t", "de": "auto", "vers": "en", "presets": []},
+    }
     with pytest.raises(ConfigRefusee, match="langue"):
         comp(
             plan_traduction(
@@ -267,6 +274,18 @@ def test_traduction_vers_la_langue_de_chaque_source():
             ),
             traduction_disponible=True,
         )
+
+
+def test_traduction_ne_pas_traduire_presets_et_interrupteur_global():
+    avec_presets = [
+        ("Langue d'entrée", "détecter"), ("Traduire vers", "anglais"), ("Ne pas traduire", "majuscules, urls"), ("Protéger certains mots", "oui"),
+    ]  # fmt: skip
+    c = comp(plan_traduction(avec_presets), langue_saisie="fr", traduction_disponible=True)
+    assert c["traductions"]["c"]["presets"] == ["majuscules", "urls_emails"]
+    # l'interrupteur global coupé : plus aucun preset ne s'applique, même cochés dans « Ne pas traduire »
+    coupe = [*avec_presets[:3], ("Protéger certains mots", "non")]
+    c2 = comp(plan_traduction(coupe), langue_saisie="fr", traduction_disponible=True)
+    assert c2["traductions"]["c"]["presets"] == []
 
 
 def test_un_script_d_outil_est_joue_et_un_script_en_echec_ne_retire_rien_en_silence():

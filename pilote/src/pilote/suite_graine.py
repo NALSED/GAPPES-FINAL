@@ -32,9 +32,9 @@ AVERTISSEMENT_IA = [
 _OUTILS: list[tuple[Any, ...]] = [
     ("format", "Format de sortie", "OUTIL", "ok", "Choisit dans quel(s) fichier(s) la recherche s'exporte.", "Les résultats de la recherche", "Un fichier par format choisi", "journal",
      [["Format de sortie", "CSV"], ["Séparateur", ";"]], '{"nom": "Club A", "ville": "Lyon"}', "nom;ville\nClub A;Lyon"),
-    ("traduction", "Traduction", "OUTIL", "ok", "Traduit la requête ou les résultats, et garde toujours l'original à côté.", "Un texte, ou une liste de résultats",
-     "Le même contenu, avec la traduction ajoutée à côté de l'original", "journal",
-     [["Langue d'entrée", "détecter"], ["Traduire vers", "français, anglais, allemand"], ["Ne pas traduire", "les noms propres"]],
+    ("traduction", "Traduction", "OUTIL", "ok", "Traduit la requête ou les résultats, et garde toujours l'original à côté.", "Le texte de la recherche, ou les résultats trouvés",
+     "Le même contenu, avec sa traduction ajoutée à côté — l'original n'est jamais remplacé", "journal",
+     [["Langue d'entrée", "détecter"], ["Traduire vers", "français, anglais, allemand"], ["Ne pas traduire", ""], ["Protéger certains mots", "oui"]],
      "charpentier (français)", "charpentier (fr, original)\nZimmermann (de)\ncarpenter (en)"),
     ("si", "Condition « si »", "OUTIL", "ok", "Envoie les résultats vers une branche ou une autre selon un test.", "Une liste de résultats", "Deux listes : oui et non", "compteur",
      [["Si le champ", "catégorie"], ["est égal à", "association"]], "3 résultats : 2 associations, 1 entreprise", "oui : 2 résultats\nnon : 1 résultat"),

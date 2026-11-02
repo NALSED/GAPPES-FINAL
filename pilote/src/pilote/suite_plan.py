@@ -272,6 +272,30 @@ def _dans_un_cycle(i: str, succ: dict[str, list[dict[str, Any]]]) -> bool:
     return False
 
 
+# « Ne pas traduire » (3.8.02) : mots des presets (la liste fermée côté interface) vers les clés de `suite_traduction.PRESETS`.
+_PRESETS_MOTS = {
+    "guillemets": "guillemets", "majuscules": "majuscules", "nombres": "nombres_dates", "dates": "nombres_dates",
+    "urls": "urls_emails", "mail": "urls_emails", "adresses mail": "urls_emails",
+}  # fmt: skip
+
+
+def mots_vers_presets(mots: list[str]) -> list[str]:
+    """Les mots d'option « Ne pas traduire » (un ou plusieurs libellés de presets) vers les clés de `suite_traduction.PRESETS` —
+    réutilisé tel quel par la route de test en direct (3.8.02, point 6), pour que la même règle s'applique partout."""
+    brut = norme(" ".join(mots))
+    trouves: list[str] = []
+    for mot, cle in _PRESETS_MOTS.items():
+        if mot in brut and cle not in trouves:
+            trouves.append(cle)
+    return trouves
+
+
+def _presets_ne_pas_traduire(opts: list) -> list[str]:
+    if norme(_option(opts, 3, "proteger")) in ("non", "", "0"):
+        return []
+    return mots_vers_presets([_option(opts, 2, "ne pas traduire")])
+
+
 def _traduction(
     i,
     node,
@@ -321,15 +345,15 @@ def _traduction(
     cibles = codes_langues(_option(opts, 1, "traduire vers"))
     entree_txt = norme(_option(opts, 0, "entree"))
     entree = None if entree_txt in ("", "detecter", "auto") else (codes_langues(entree_txt) or [None])[0]
-    entree = entree or langue_saisie
-    if not entree:
-        dire_non(i, "la langue de la saisie n'a pas pu être détectée : donne-la dans l'option « Langue d'entrée »")
-        return
+    # « Détecter » (par défaut) : la langue déjà détectée sur la saisie si elle a réussi, sinon « auto » — le moteur de
+    # traduction sait lui-même détecter la langue à la volée (3.8.02), la tuile ne refuse plus de fonctionner.
+    entree = entree or langue_saisie or "auto"
+    presets = _presets_ne_pas_traduire(opts)
     faites = []
     for m in sources_apres:
         s = par_source[nodes[m]["ref"]]
         if s["langue"] in cibles and s["langue"] != entree:
-            traductions[s["id"]] = {"tuile": i, "de": entree, "vers": s["langue"]}
+            traductions[s["id"]] = {"tuile": i, "de": entree, "vers": s["langue"], "presets": presets}
             faites.append(s["nom"])
     appliques.append(
         {

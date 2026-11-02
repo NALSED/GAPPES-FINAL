@@ -3,13 +3,17 @@ spécification qu'il garde fermée."""
 
 from __future__ import annotations
 
+import http.server
 import json
+import threading
 
 import pytest
+from conftest import copier_config
 from fastapi.testclient import TestClient
 
 from pilote import cles, suite
 from pilote.app import creer_app
+from pilote.config import charger
 
 
 @pytest.fixture
@@ -345,6 +349,37 @@ def test_une_source_a_deux_cles_enregistre_chacune_separement(c, cfg):
     c.put("/api/suite/sources/reddit/cle", json={"valeurs": {"REDDIT_CLIENT_SECRET": "secret-de-test"}})
     assert cles.presente(cfg, "REDDIT_CLIENT_ID") and cles.presente(cfg, "REDDIT_CLIENT_SECRET")
     assert cles.valeur(cfg, "REDDIT_CLIENT_ID") == "id-de-test"  # la première n'a pas été écrasée
+
+
+# --- 3.8.02 : un vrai test de traduction sur un exemple, rien n'est enregistré
+def test_traduction_tester_appelle_le_moteur_et_protege_les_presets(tmp_path):
+    class H(http.server.BaseHTTPRequestHandler):
+        def do_POST(self):
+            q = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+            corps = json.dumps({"translatedText": "TRADUIT " + q["q"]}).encode()
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(corps)))
+            self.end_headers()
+            self.wfile.write(corps)
+
+        def log_message(self, *a):
+            pass
+
+    srv = http.server.HTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        cfg = charger(copier_config(tmp_path, suite={"traduction_url": f"http://127.0.0.1:{srv.server_port}"}))
+        with TestClient(creer_app(cfg)) as c:
+            r = c.post("/api/suite/traduction/tester", json={"texte": "club FFSA", "de": "fr", "vers": ["en"], "presets": ["majuscules"]})
+            assert r.status_code == 200
+            assert r.json()["traductions"]["en"] == "TRADUIT club FFSA"  # « FFSA » protégé : jamais envoyé au moteur, remis après
+    finally:
+        srv.shutdown()
+
+
+def test_traduction_tester_refuse_sans_moteur_regle(cfg):
+    with TestClient(creer_app(cfg)) as c:
+        assert c.post("/api/suite/traduction/tester", json={"texte": "x", "vers": ["en"]}).status_code == 422
 
 
 # --- un fichier d'état abîmé ne bloque pas la page (même tolérance que Réglages)

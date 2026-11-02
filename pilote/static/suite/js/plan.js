@@ -1,6 +1,6 @@
 // Plan de travail (spécification 08) : un canevas libre. On pose les tuiles d'abord, on tire les liens ensuite, jamais de lien automatique.
 // Le modèle de données tient en deux listes : nodes [{id, nom, role, x, y, removable, opts, cat?, ref?}] et edges [{id, from, to}].
-import { api } from "./api.js";
+import { api, Refus } from "./api.js";
 import { h, icone, svg } from "./dom.js";
 import { agir, app, outilParId, sourceParId } from "./etat.js";
 import { EFFET_DE_ROLE, ES_ROLE, ETATS_OUTIL, ETATS_SOURCE, MARQUE_IA, ROLES, TUILES_FIXES, VERBES } from "./mots.js";
@@ -172,7 +172,61 @@ function rendreOptionsFormat(n, refresh) {
     ...sections,
   );
 }
-const RENDUS_OPTIONS = { format: rendreOptionsFormat };
+// 3.8.02 : les 19 langues connues de suite_plan.LANGUES — le même mot, pour que le choix fermé de l'interface
+// matche exactement ce que le moteur sait reconnaître.
+const LANGUES = [
+  "français", "anglais", "allemand", "espagnol", "italien", "néerlandais", "portugais", "polonais", "russe",
+  "finnois", "suédois", "norvégien", "danois", "tchèque", "estonien", "arabe", "turc", "chinois", "japonais",
+];  // fmt: skip
+// Les quatre presets faisables aujourd'hui (suite_traduction.PRESETS) ; « noms propres » demande une reconnaissance
+// d'entités pas encore branchée — grisé, avec « bientôt », plutôt que proposé et cassé.
+const PRESETS_NE_PAS_TRADUIRE = [
+  ["Mots entre guillemets", false], ["MAJUSCULES", false], ["Nombres et dates", false], ["URLs et adresses mail", false],
+  ["Noms propres", true],
+];  // fmt: skip
+
+function rendreOptionsTraduction(n, refresh) {
+  const entree = optLabel(n, "Langue d'entrée") || "détecter";
+  const versListe = optLabel(n, "Traduire vers").split(",").map((s) => s.trim()).filter(Boolean);
+  const presetsListe = optLabel(n, "Ne pas traduire").split(",").map((s) => s.trim()).filter(Boolean);
+  const actif = optLabel(n, "Protéger certains mots") !== "non";
+  const majEntree = (v) => { optDefinir(n, "Langue d'entrée", v); sauvegarder(); refresh(); };
+  const majVers = (l) => { optDefinir(n, "Traduire vers", l.join(", ")); sauvegarder(); refresh(); };
+  const majPresets = (l) => { optDefinir(n, "Ne pas traduire", l.join(", ")); sauvegarder(); refresh(); };
+  const majActif = (v) => { optDefinir(n, "Protéger certains mots", v); sauvegarder(); refresh(); };
+  const basculeVers = (l) => majVers(versListe.includes(l) ? versListe.filter((x) => x !== l) : [...versListe, l]);
+  const basculePreset = (l) => majPresets(presetsListe.includes(l) ? presetsListe.filter((x) => x !== l) : [...presetsListe, l]);
+
+  const champTest = champ({ libelle: "Un texte à traduire", placeholder: "ex. club FFSA" });
+  const resultatTest = h("div", { class: "sortie-test", "aria-live": "polite" });
+  async function tester() {
+    const texte = champTest.valeur().trim();
+    if (!texte) return;
+    try {
+      const r = await api.traductionTester({ texte, de: entree, vers: versListe, presets: actif ? presetsListe : [] });
+      resultatTest.textContent = Object.entries(r.traductions).map(([v, t]) => `${v} : ${t}`).join("\n") || "Choisis au moins une langue « Traduire vers ».";
+    } catch (e) {
+      resultatTest.textContent = e instanceof Refus ? e.message : "Le test a échoué.";
+    }
+  }
+
+  return h(
+    "div", { class: "options-grille" },
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Langue d'entrée"),
+      groupePuces([["détecter", "Détecter"], ...LANGUES.map((l) => [l, l])], entree, majEntree)),
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Traduire vers"),
+      h("div", { class: "liste-liens" }, LANGUES.map((l) => caseSource({ nom: l, actif: versListe.includes(l), onclick: () => basculeVers(l) })))),
+    h("div", { class: "champ" },
+      h("span", { class: "titre-champ" }, "Ne pas traduire certains mots"),
+      groupePuces([["oui", "oui"], ["non", "non"]], actif ? "oui" : "non", majActif),
+      actif && h("div", { class: "liste-liens" }, PRESETS_NE_PAS_TRADUIRE.map(([l, bientot]) =>
+        bientot ? puce({ libelle: `${l} · bientôt`, disabled: true }) : puce({ libelle: l, actif: presetsListe.includes(l), onclick: () => basculePreset(l) })))),
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Tester sur un exemple"), champTest.el,
+      bouton({ libelle: `${VERBES.lancer} le test`, icon: "tester", petit: true, onclick: tester }), resultatTest),
+  );
+}
+
+const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction };
 
 function retirerLien(id) {
   plan().edges = plan().edges.filter((e) => e.id !== id);

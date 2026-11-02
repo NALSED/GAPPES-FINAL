@@ -219,12 +219,12 @@ def main(dossier: str) -> int:
             t = (plan.get("traductions") or {}).get(source)
             if not t:
                 return entree_base
-            cle = (t["de"], t["vers"])
+            cle = (t["de"], t["vers"], tuple(sorted(t.get("presets") or [])))  # les presets « ne pas traduire » entrent dans la clé : deux tuiles Traduction qui protègent des mots différents ne partagent pas leur résultat
             if cle not in traduits:
-                from pilote.suite_traduction import traduire
+                from pilote.suite_traduction import traduire_protege
 
                 try:
-                    traduits[cle] = {k: traduire(plan["traduction_url"], entree_base[k], t["de"], t["vers"]) for k in ("sujet", "quoi") if entree_base.get(k)}
+                    traduits[cle] = {k: traduire_protege(plan["traduction_url"], entree_base[k], t["de"], t["vers"], t.get("presets")) for k in ("sujet", "quoi") if entree_base.get(k)}
                     effets_traduction.append({"de": t["de"], "vers": t["vers"], "original": {k: entree_base[k] for k in traduits[cle]}, "traduit": traduits[cle]})
                 except (OSError, ValueError) as exc:  # le moteur de traduction a échoué : la source cherche avec la requête d'origine, et on le dit
                     traduits[cle] = {}

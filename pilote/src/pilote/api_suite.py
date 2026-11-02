@@ -9,7 +9,7 @@ from fastapi import APIRouter, Body, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from pilote import actions, budget, emoji_texte, rapprochements, suite, suite_modele, suite_plan, suite_reel, tri
+from pilote import actions, budget, emoji_texte, rapprochements, suite, suite_modele, suite_plan, suite_reel, suite_traduction, tri
 from pilote import reglages as rg
 from pilote.base import Candidat, Journal, Recherche
 from pilote.config import Config
@@ -445,5 +445,29 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
     @r.post("/langue")
     def langue(corps: dict[str, Any] = Corps) -> dict[str, Any]:
         return {"langue": suite.detecter_langue(str(corps.get("texte", "")))}
+
+    @r.post("/traduction/tester")
+    def traduction_tester(corps: dict[str, Any] = Corps) -> dict[str, Any]:
+        """3.8.02 : un vrai test sur un exemple — rien n'est enregistré, les réglages actuels de la fiche sont ceux reçus."""
+        texte = str(corps.get("texte", "")).strip()
+        if not texte:
+            raise HTTPException(422, "Écris un texte à traduire.")
+        if not cfg.suite_traduction_url:
+            raise HTTPException(422, "Aucun moteur de traduction n'est réglé (suite.traduction_url dans pilote.yaml).")
+        de_brut = str(corps.get("de") or "détecter")
+        de = "auto" if suite_plan.norme(de_brut) in ("", "detecter", "auto") else (suite_plan.codes_langues(de_brut) or ["auto"])[0]
+        cibles_brutes = [v for v in (corps.get("vers") or []) if isinstance(v, str)]
+        try:
+            cibles = suite_plan.codes_langues(", ".join(cibles_brutes)) if cibles_brutes else []
+        except ConfigRefusee as exc:
+            raise _refus(exc) from exc
+        presets = suite_plan.mots_vers_presets([p for p in (corps.get("presets") or []) if isinstance(p, str)])
+        resultats = {}
+        for vers in cibles:
+            try:
+                resultats[vers] = suite_traduction.traduire_protege(cfg.suite_traduction_url, texte, de, vers, presets)
+            except (OSError, ValueError) as exc:
+                raise HTTPException(422, str(exc)) from exc
+        return {"traductions": resultats}
 
     return r
