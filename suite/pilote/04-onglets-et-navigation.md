@@ -9,14 +9,17 @@ La coquille de l'application : une barre d'onglets en haut, un titre de page, et
 | Onglet | Pictogramme | État |
 | :-- | :-- | :-- |
 | Tableau de bord | `tableau-de-bord` | **pas conçu** — visible, grisé, inactif |
-| Recherche | `recherche` | conçu |
 | Réglages | `reglages` | conçu |
-| Tri | `tri` | **pas conçu** — visible, grisé, inactif |
+| Recherche | `recherche` | conçu |
+| Tri | `tri` | conçu le 26/10/2026 |
 
-L'ordre est fixe. Au singulier quand c'est possible, sans sous-titre dans la barre.
+L'ordre est fixe. Au singulier quand c'est possible, sans sous-titre dans la barre. Décidé par Sednal
+le 02/11/2026 : Réglages passe avant Recherche.
 
-Les deux onglets non conçus restent **visibles et grisés** (`encre-pale`), pas cachés : l'utilisateur
-doit voir que ça existe et que ça arrive. Ne devine aucun contenu pour eux.
+**L'application s'ouvre sur Réglages.**
+
+L'onglet non conçu reste **visible et grisé** (`encre-pale`), pas caché : l'utilisateur doit voir que
+ça existe et que ça arrive. Ne devine aucun contenu pour lui.
 
 ## Les sous-parties
 

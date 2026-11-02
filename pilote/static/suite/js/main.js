@@ -85,7 +85,7 @@ async function chargerTri() {
 
 function depuisHash() {
   const m = location.hash.match(/^#\/(recherche|reglages|tri)/);
-  app.onglet = m ? m[1] : "recherche"; // Tableau de bord et Tri ne sont pas conçus : on n'y va pas
+  app.onglet = m ? m[1] : "reglages"; // Tableau de bord n'est pas encore conçu : on n'y va pas
 }
 window.addEventListener("hashchange", () => { depuisHash(); if (app.onglet === "tri") chargerTri(); else dessiner(); });
 

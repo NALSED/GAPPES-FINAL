@@ -3,8 +3,8 @@
 
 export const ONGLETS = [
   { id: "tableau-de-bord", nom: "Tableau de bord", icone: "tableau-de-bord", concu: false },
-  { id: "recherche", nom: "Recherche", icone: "recherche", concu: true },
   { id: "reglages", nom: "Réglages", icone: "reglages", concu: true },
+  { id: "recherche", nom: "Recherche", icone: "recherche", concu: true },
   { id: "tri", nom: "Tri", icone: "tri", concu: true },
 ];
 
