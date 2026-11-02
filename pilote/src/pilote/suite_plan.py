@@ -29,7 +29,6 @@ LANGUES = {
     "finnois": "fi", "suedois": "sv", "norvegien": "no", "danois": "da", "tcheque": "cs", "estonien": "et", "arabe": "ar", "turc": "tr", "chinois": "zh", "japonais": "ja",
 }  # fmt: skip
 NON_APPLIQUES = {
-    "boucle": "répéter une recherche pour chaque élément d'une liste n'est pas encore branché dans le moteur",
     "attente": "faire patienter une recherche quand un quota est atteint n'est pas encore branché : le moteur s'arrête à la limite d'appels",
     "budget": "le plafond de dépense est celui de Réglages (en dollars) : un budget propre à la recherche n'est pas encore branché",
     "ia": "l'Assistant IA ne s'exécute pas encore : rien de ce qu'il produirait n'entre dans une grappe",
@@ -289,6 +288,8 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
                 langue_saisie,
                 traduction_disponible,
             )
+        elif genre == "boucle":
+            dire_non(i, _raison_boucle(node["nom"], opts))
         elif genre in NON_APPLIQUES:
             dire_non(i, NON_APPLIQUES[genre])
         else:
@@ -308,6 +309,25 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
         "chemins": chemins, "traductions": traductions, "format": formats, "appliques": appliques, "non_appliques": non_appliques,
         "pays_equiv": pays_equiv or {},
     }  # fmt: skip
+
+
+# Boucle (3.8.04) : seule la boucle « pour chaque » est spécifiée (pas de « tant que », décidé avec Sednal — forcer une
+# recherche à atteindre un chiffre irait contre la priorité de grappes, la fiabilité avant le volume). Le réglage se lit
+# et se valide ici (origine de la liste, élément à remplacer, maximum de tours) ; ce document le dit encore une fois :
+# la relance réelle de la recherche une fois par élément n'est PAS câblée dans l'exécuteur (exécuteur_grappes.py) —
+# plusieurs mécanismes du programme (ex. mentions.py::sources_de_la_recherche) supposent un seul dossier de travail par
+# recherche, pas un par tour, et le faire sans le revoir risquait une régression silencieuse ailleurs. Noté dans
+# QUESTIONS.md pour une session dédiée.
+def _raison_boucle(nom: str, opts: list) -> str:
+    opts_map = {lib: v for lib, v in opts}
+    origine = norme(opts_map.get("Origine de la liste", "Liste collée"))
+    base = "répéter une recherche pour chaque élément d'une liste n'est pas encore branché dans le moteur"
+    if "fichier" in origine:
+        return f"{base} (et la lecture d'un fichier importé ne l'est pas non plus)"
+    if "precedente" in origine or "resultat" in origine:
+        return f"{base} (et prendre la liste depuis une tuile précédente ne l'est pas non plus)"
+    elements = [v.strip() for v in (opts_map.get("Liste") or "").splitlines() if v.strip()]
+    return base + (f" ({len(elements)} élément(s) prêt(s) dès que ce sera fait)" if elements else "")
 
 
 def _dans_un_cycle(i: str, succ: dict[str, list[dict[str, Any]]]) -> bool:

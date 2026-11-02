@@ -274,6 +274,17 @@ def test_format_fusion_et_ce_qui_n_est_pas_applique():
     assert {x["nom"] for x in c["appliques"]} >= {"fo", "fu"}
 
 
+def test_boucle_non_appliquee_dit_pourquoi_selon_l_origine():
+    def non_applique(opts):
+        p = plan([("saisie",), ("grappes",), ("n1", "a"), ("bo", "boucle", None, opts)], [lien("saisie", "n1"), lien("n1", "bo"), lien("bo", "grappes")])
+        return comp(p)["non_appliques"][0]["raison"]
+
+    assert "liste" in non_applique([["Origine de la liste", "Liste collée"], ["Liste", "Lyon\nParis"]])
+    assert "2 élément" in non_applique([["Origine de la liste", "Liste collée"], ["Liste", "Lyon\nParis"]])
+    assert "fichier importé" in non_applique([["Origine de la liste", "Fichier importé"]])
+    assert "tuile précédente" in non_applique([["Origine de la liste", "Résultat d'une tuile précédente"]])
+
+
 def test_format_lit_le_vrai_registre_pas_seulement_csv_json():
     """3.8.01 : « xlsx » et « webhook » (ni dans l'ancienne liste figée) sont des formats réels du registre."""
     p = plan([("saisie",), ("grappes",), ("n1", "a"), ("fo", "format", None, [["Format de sortie", "XLSX WEBHOOK"]])],

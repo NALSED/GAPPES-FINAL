@@ -289,7 +289,30 @@ function rendreOptionsConditions(filtre) {
   };
 }
 
-const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true) };
+// 3.8.04 : seule l'origine « Liste collée » est prête à être branchée dans le moteur ; les deux autres restent
+// choisissables (le réglage se garde), avec une note honnête plutôt qu'un geste qui ne ferait rien en silence.
+const ORIGINES_BOUCLE = ["Liste collée", "Fichier importé", "Résultat d'une tuile précédente"];
+const REMPLACE_BOUCLE = ["le lieu cherché", "le nom cherché", "un mot-clé ajouté"];
+
+function rendreOptionsBoucle(n, refresh) {
+  const origine = optLabel(n, "Origine de la liste") || ORIGINES_BOUCLE[0];
+  const remplace = optLabel(n, "Répéter pour chaque") || REMPLACE_BOUCLE[0];
+  const liste = champ({ libelle: "Liste (un élément par ligne)", valeur: optLabel(n, "Liste"), lignes: 4 });
+  liste.saisie.addEventListener("change", () => { optDefinir(n, "Liste", liste.valeur()); sauvegarder(); });
+  const maximum = champ({ libelle: "Maximum de tours", valeur: optLabel(n, "Maximum de tours") || "50" });
+  maximum.saisie.addEventListener("change", () => { optDefinir(n, "Maximum de tours", maximum.valeur()); sauvegarder(); });
+  return h(
+    "div", { class: "options-grille" },
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Origine de la liste"),
+      groupePuces(ORIGINES_BOUCLE.map((o) => [o, o]), origine, (v) => { optDefinir(n, "Origine de la liste", v); sauvegarder(); refresh(); })),
+    origine === "Liste collée" ? liste.el : h("p", { class: "legende" }, "Pas encore branché dans le moteur : le réglage se garde, mais la recherche ne se relance pas encore pour chaque élément."),
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Répéter pour chaque"),
+      groupePuces(REMPLACE_BOUCLE.map((r) => [r, r]), remplace, (v) => { optDefinir(n, "Répéter pour chaque", v); sauvegarder(); refresh(); })),
+    maximum.el,
+  );
+}
+
+const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true), boucle: rendreOptionsBoucle };
 
 function retirerLien(id) {
   plan().edges = plan().edges.filter((e) => e.id !== id);
