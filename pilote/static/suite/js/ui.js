@@ -94,6 +94,19 @@ export function carteRepliable({ titre, compte, ouverte, onbascule, corps, icon 
 
 const couches = () => document.getElementById("couches");
 
+/** Tire le bord gauche d'un panneau pour l'élargir. Jamais mémorisé : le style inline posé ici part avec le panneau à sa fermeture. */
+function demarrerRedimension(e, panneauEl) {
+  const largeurMin = panneauEl.classList.contains("large") ? 520 : 480;
+  e.target.setPointerCapture(e.pointerId);
+  const bouger = (ev) => {
+    const largeur = Math.max(largeurMin, window.innerWidth - ev.clientX);
+    panneauEl.style.width = `${largeur}px`;
+  };
+  const relacher = () => { window.removeEventListener("pointermove", bouger); window.removeEventListener("pointerup", relacher); };
+  window.addEventListener("pointermove", bouger);
+  window.addEventListener("pointerup", relacher, { once: true });
+}
+
 /** Ouvre un panneau latéral (`cote`) ou une fenêtre centrée. Rend {fermer, corps}. Échap et le voile referment (= annuler). */
 export function ouvrirCouche({ cote = false, largeur = "", titre, sous, contenu, pied, surFermeture, role = "dialog" }) {
   const precedent = document.activeElement;
@@ -106,7 +119,8 @@ export function ouvrirCouche({ cote = false, largeur = "", titre, sous, contenu,
     boutonIcone({ icon: "fermer", etiquette: VERBES.fermer, onclick: () => fermer(true) }),
   );
   const corps = h("div", { class: "fenetre-corps" }, contenu);
-  const boite = h("div", { class: cote ? `panneau ${largeur}` : `fenetre ${largeur}`, role, "aria-modal": "true", "aria-labelledby": "couche-titre" }, tete, corps, pied && h("div", { class: "fenetre-pied" }, pied));
+  const poignee = cote && h("div", { class: "panneau-poignee", onpointerdown: (e) => demarrerRedimension(e, boite) });
+  const boite = h("div", { class: cote ? `panneau ${largeur}` : `fenetre ${largeur}`, role, "aria-modal": "true", "aria-labelledby": "couche-titre" }, poignee, tete, corps, pied && h("div", { class: "fenetre-pied" }, pied));
   let ferme = false;
   function fermer(annule = false) {
     if (ferme) return;

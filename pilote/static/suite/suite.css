@@ -143,6 +143,7 @@ h1, h2, h3, p { margin: 0; }
 .voile { position: fixed; inset: 0; z-index: 20; background: color-mix(in srgb, var(--encre) 34%, transparent); }
 .panneau { position: fixed; z-index: 21; top: 0; right: 0; bottom: 0; width: 480px; max-width: 100%; background: var(--surface); border-left: 3px solid var(--accent); box-shadow: var(--ombre-panneau); display: flex; flex-direction: column; }
 .panneau.large { width: 520px; }
+.panneau-poignee { position: absolute; top: 0; bottom: 0; left: -4px; width: 8px; cursor: col-resize; }
 .fenetre { position: fixed; z-index: 21; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; max-width: calc(100% - var(--espace-8)); max-height: calc(100% - var(--espace-8)); background: var(--surface); border-radius: var(--rayon-carte); box-shadow: var(--ombre-fenetre); display: flex; flex-direction: column; overflow: hidden; }
 .fenetre.w640 { width: 640px; }
 .fenetre.w480 { width: 480px; }
