@@ -231,6 +231,9 @@ function rendreOptionsTraduction(n, refresh) {
 const CHAMPS_CONDITION = ["nom", "ville", "pays", "genre", "origine", "site", "numéro", "fonction"];
 const CHAMPS_FILTRE_SEULEMENT = ["Nombre de sources", "Fiabilité minimale"];
 const COMPARATEURS = ["est égal à", "est différent de", "contient", "ne contient pas", "commence par", "finit par", "est vide", "n'est pas vide"];
+// Synonymes acceptés par le moteur (suite_plan.CHAMPS) mais pas affichés comme tels : les modèles livrés « si »/« filtre »
+// stockent encore « catégorie » (avant 3.8.03) — l'afficher comme « genre » évite une puce qui paraît vide à l'ouverture.
+const CHAMP_SYNONYMES = { "catégorie": "genre", type: "genre", "numero officiel": "numéro", "numéro officiel": "numéro" };
 
 function lignesConditions(n) {
   const out = [];
@@ -242,7 +245,7 @@ function lignesConditions(n) {
   if (out.length) return out;
   // ancien format à une seule ligne (si/filtre d'avant 3.8.03) : lu tel quel, migré au nouveau format dès la première modification
   const champLegacy = optLabel(n, "Si le champ") || optLabel(n, "Garder si le champ");
-  return [{ champ: champLegacy, comparateur: "est égal à", valeur: optLabel(n, "est égal à") }];
+  return [{ champ: CHAMP_SYNONYMES[champLegacy] || champLegacy, comparateur: "est égal à", valeur: optLabel(n, "est égal à") }];
 }
 
 function ecrireLignesConditions(n, lignes) {
