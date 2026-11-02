@@ -264,7 +264,7 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
             try:
                 plan = suite._plan_valide(corps["plan"])
                 comp = suite_plan.compiler(plan, e["sources"], e["outils"], pays_equiv=_equivalences_de_pays(cfg), langue_saisie=suite.detecter_langue(saisie),
-                                           traduction_disponible=bool(cfg.suite_traduction_url))  # fmt: skip
+                                           traduction_disponible=bool(cfg.suite_traduction_url), cfg=cfg)  # fmt: skip
             except ConfigRefusee as exc:
                 raise _refus(exc) from exc
             voulues = comp["sources"]

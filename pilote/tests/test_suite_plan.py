@@ -219,6 +219,22 @@ def test_format_fusion_et_ce_qui_n_est_pas_applique():
     assert {x["nom"] for x in c["appliques"]} >= {"fo", "fu"}
 
 
+def test_format_lit_le_vrai_registre_pas_seulement_csv_json():
+    """3.8.01 : « xlsx » et « webhook » (ni dans l'ancienne liste figée) sont des formats réels du registre."""
+    p = plan([("saisie",), ("grappes",), ("n1", "a"), ("fo", "format", None, [["Format de sortie", "XLSX WEBHOOK"]])],
+             [lien("saisie", "n1"), lien("n1", "fo"), lien("fo", "grappes")])  # fmt: skip
+    c = comp(p)
+    assert c["format"] == ["webhook", "xlsx"]  # ordre du registre (alphabétique par module), pas celui saisi dans l'option
+    assert any("Excel" in x["texte"] and "Webhook" in x["texte"] for x in c["appliques"] if x["nom"] == "fo")
+
+
+def test_format_inconnu_refuse_avec_la_liste_reelle():
+    p = plan([("saisie",), ("grappes",), ("n1", "a"), ("fo", "format", None, [["Format de sortie", "PDF"]])],
+             [lien("saisie", "n1"), lien("n1", "fo"), lien("fo", "grappes")])  # fmt: skip
+    with pytest.raises(ConfigRefusee, match="Excel"):
+        comp(p)
+
+
 def plan_traduction(opts):
     return plan(
         [("saisie",), ("grappes",), ("t", "traduction", None, opts), ("n1", "a"), ("n3", "c")],

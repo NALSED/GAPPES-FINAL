@@ -43,6 +43,7 @@ export const api = {
   supprimer: (chemin) => appel("DELETE", chemin),
   aide: (fonction, corps = {}) => appel("POST", `/aide/${fonction}`, corps),
   aideGet: (chemin) => appel("GET", `/aide/${chemin}`),
+  formats: () => requete("GET", "/api/formats"), // registre des formats de sortie (pilote.formats.vue, pas sous /api/suite)
 };
 
 /** Les routes de l'assistant de première installation : les mêmes que la page classique (`/`), sous `/api/` et non `/api/suite/`

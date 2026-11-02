@@ -4,7 +4,7 @@ import { api } from "./api.js";
 import { h, icone, svg } from "./dom.js";
 import { agir, app, outilParId, sourceParId } from "./etat.js";
 import { EFFET_DE_ROLE, ES_ROLE, ETATS_OUTIL, ETATS_SOURCE, MARQUE_IA, ROLES, TUILES_FIXES, VERBES } from "./mots.js";
-import { annoncer, bouton, boutonIcone, champ, etiquetteRole, ouvrirCouche, puce } from "./ui.js";
+import { annoncer, bouton, boutonIcone, caseSource, champ, etiquetteRole, groupePuces, ouvrirCouche, puce } from "./ui.js";
 
 const TUILE = 64;
 const PORT = 7; // demi-largeur d'un port : son centre est sur le bord de la tuile
@@ -106,6 +106,73 @@ const genreDe = (n) => {
   const o = n.ref && outilParId(n.ref);
   return o && o.nature !== "script" ? o.modele || o.id : null;
 };
+
+// --- Options spécifiques par genre de tuile (3.8.0X) : remplace le champ texte générique par un vrai composant
+// quand la tuile en a un. Un genre absent de ce registre garde le rendu générique (un champ texte par option).
+let FORMATS_CACHE = null;
+async function chargerFormats() {
+  if (!FORMATS_CACHE) FORMATS_CACHE = await api.formats();
+  return FORMATS_CACHE;
+}
+const optLabel = (n, lib) => (n.opts.find((p) => p[0] === lib) || [])[1] || "";
+function optDefinir(n, lib, valeur) {
+  const o = n.opts.find((p) => p[0] === lib);
+  if (o) o[1] = valeur;
+  else n.opts.push([lib, valeur]);
+}
+function optRetirer(n, lib) {
+  n.opts = n.opts.filter((p) => p[0] !== lib);
+}
+
+/** 3.8.01 : menu fermé dynamique (pilote.formats.vue, pas CSV/JSON en dur) + une section par format choisi,
+ *  construite depuis ce que CE format déclare de lui-même (contenus, séparateur pour CSV, champs « besoin »). */
+function rendreOptionsFormat(n, refresh) {
+  if (!FORMATS_CACHE) {
+    chargerFormats().then(refresh);
+    return h("p", { class: "legende" }, "Les formats arrivent…");
+  }
+  const choisis = optLabel(n, "Format de sortie").toLowerCase().split(/\s+/).filter(Boolean);
+  const bascule = (fid) => {
+    const s = new Set(choisis);
+    if (s.has(fid)) {
+      s.delete(fid);
+      const f = FORMATS_CACHE.find((x) => x.id === fid);
+      optRetirer(n, `${f.nom} : contenu`);
+      if (fid === "csv") optRetirer(n, "Séparateur");
+      (f.besoin || []).forEach((b) => optRetirer(n, `${f.nom} : ${b}`));
+    } else s.add(fid);
+    optDefinir(n, "Format de sortie", [...s].join(" ").toUpperCase());
+    sauvegarder();
+    refresh();
+  };
+  const sections = FORMATS_CACHE.filter((f) => choisis.includes(f.id)).map((f) => {
+    const champs = [];
+    if (f.contenus.length > 1) {
+      const lib = `${f.nom} : contenu`;
+      champs.push(h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Contenu"),
+        groupePuces(f.contenus.map((c) => [c, c]), optLabel(n, lib) || f.contenus_defaut[0], (v) => { optDefinir(n, lib, v); sauvegarder(); refresh(); })));
+    }
+    if (f.id === "csv") {
+      const lib = "Séparateur";
+      champs.push(h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Séparateur"),
+        groupePuces([[";", ";"], [",", ","]], optLabel(n, lib) || ";", (v) => { optDefinir(n, lib, v); sauvegarder(); refresh(); })));
+    }
+    (f.besoin || []).forEach((champBesoin) => {
+      const lib = `${f.nom} : ${champBesoin}`;
+      const c = champ({ libelle: `${f.nom} — ${champBesoin}`, valeur: optLabel(n, lib), placeholder: champBesoin === "url" ? "https://…" : "" });
+      c.saisie.addEventListener("change", () => { optDefinir(n, lib, c.valeur()); sauvegarder(); });
+      champs.push(c.el);
+    });
+    return champs.length > 0 && h("div", { class: "champ" }, h("span", { class: "titre-champ" }, f.nom), ...champs);
+  }).filter(Boolean);
+  return h(
+    "div", { class: "options-grille" },
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Format de sortie"),
+      h("div", { class: "liste-liens" }, FORMATS_CACHE.map((f) => caseSource({ nom: f.nom, actif: choisis.includes(f.id), onclick: () => bascule(f.id) })))),
+    ...sections,
+  );
+}
+const RENDUS_OPTIONS = { format: rendreOptionsFormat };
 
 function retirerLien(id) {
   plan().edges = plan().edges.filter((e) => e.id !== id);
@@ -363,9 +430,12 @@ export function ouvrirTuile(id) {
     couche.boite.querySelector("h2").textContent = n.nom;
     const sous = couche.boite.querySelector(".fenetre-sous") || couche.boite.querySelector(".fenetre-tete > div").appendChild(h("div", { class: "fenetre-sous" }));
     sous.replaceChildren(etiquetteRole(n.role, { auto: true }), ouIlEst(n));
-    const optsChamps = n.opts.map(([lib, v]) => champ({ libelle: lib, valeur: v }));
+    const genre = genreDe(n);
+    const renduOptions = RENDUS_OPTIONS[genre];
+    const optsChamps = renduOptions ? [] : n.opts.map(([lib, v]) => champ({ libelle: lib, valeur: v }));
     optsChamps.forEach((c, i) => c.saisie.addEventListener("change", () => { n.opts[i][1] = c.valeur(); sauvegarder(); }));
-    const estCondition = genreDe(n) === "si";
+    const zoneOptions = renduOptions ? renduOptions(n, refresh) : (optsChamps.length > 0 && h("div", { class: "options-grille" }, optsChamps.map((c) => c.el)));
+    const estCondition = genre === "si";
     const colLiens = (titre, liste, sens, candidats, vide) => [
       h("span", { class: "titre-champ" }, titre),
       liste.length ? h("div", { class: "liste-liens" }, liste.map((e) => {
@@ -385,7 +455,7 @@ export function ouvrirTuile(id) {
         a && h("p", { class: "douce" }, a.fait || a.description || ""),
         a && h("span", { class: "etat" }, h("span", { class: `pastille ${a.etat}`, "aria-hidden": "true" }), (estSource ? ETATS_SOURCE : ETATS_OUTIL)[a.etat]),
         n.ref === "ia" && h("span", { class: "marque-ia" }, icone("ia", 20), `Sortie marquée « ${MARQUE_IA} »`),
-        optsChamps.length > 0 && h("div", { class: "options-grille" }, optsChamps.map((c) => c.el)),
+        zoneOptions,
         h("p", { class: "legende" }, (a && !estSource && a.effet ? { rien: "Effet dans le Tableau de bord : rien.", compteur: "Effet dans le Tableau de bord : un compteur.", journal: "Effet dans le Tableau de bord : le journal.", alerte: "Effet dans le Tableau de bord : une alerte." }[a.effet] : EFFET_DE_ROLE[n.role]) || "Effet dans le Tableau de bord : défini dans Réglages › Outils.")),
       h("div", { class: "col" }, h("span", { class: "etiquette-col" }, "Sortie"),
         h("p", { class: "douce" }, renvoie ? `Envoie : ${renvoie}` : "Fin du parcours : rien ne sort. Les grappes se lisent dans le Tableau de bord."),

@@ -18,7 +18,7 @@ libellés distincte de celle des sources.
 
 | Outil | Rôle | Allumé d'origine |
 | :-- | :-- | :-- |
-| Format JSON / CSV | OUTIL | oui |
+| Format de sortie | OUTIL | oui |
 | Traduction | OUTIL | oui — voir `09` |
 | Condition « si » | OUTIL | oui |
 | Boucle | OUTIL | oui |

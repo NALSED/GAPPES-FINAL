@@ -17,6 +17,7 @@ import re
 import unicodedata
 from typing import Any
 
+from pilote import formats as _formats
 from pilote.refus import ConfigRefusee
 
 CHAMPS = {
@@ -86,7 +87,7 @@ def _genre_outil(o: dict[str, Any]) -> str:
 
 
 def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[dict[str, Any]], *, pays_equiv: dict[str, list[str]] | None = None,
-             langue_saisie: str | None = None, traduction_disponible: bool = False) -> dict[str, Any]:  # fmt: skip
+             langue_saisie: str | None = None, traduction_disponible: bool = False, cfg: Any = None) -> dict[str, Any]:  # fmt: skip
     nodes = {n["id"]: n for n in plan.get("nodes", [])}
     edges = [e for e in plan.get("edges", []) if e["from"] in nodes and e["to"] in nodes]
     par_source = {s["id"]: s for s in sources}
@@ -209,18 +210,17 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
                 }
             )
         elif genre == "format":
-            valeur = norme(_option(opts, 0, "format"))
-            choisis = [f for f in ("csv", "json") if f in valeur.split()]
+            formats_connus = {f["id"]: f for f in _formats.vue(cfg)}  # le registre réel (3.8.01), plus seulement CSV/JSON en dur
+            opts_map = {lib: v for lib, v in opts}
+            valeur = norme(opts_map.get("Format de sortie", ""))
+            choisis = [f for f in formats_connus if f in valeur.split()]
             if not choisis:
-                raise ConfigRefusee(f"« {node['nom']} » : le format de sortie est CSV ou JSON.")
+                raise ConfigRefusee(
+                    f"« {node['nom']} » : choisis au moins un format de sortie ({', '.join(sorted(f['nom'] for f in formats_connus.values()))})."
+                )
             formats = list(dict.fromkeys([*(formats or []), *choisis]))
-            appliques.append(
-                {
-                    "tuile": i,
-                    "nom": node["nom"],
-                    "texte": f"sortie {', '.join(x.upper() for x in choisis)} (le séparateur n'est pas réglable)",
-                }
-            )
+            noms = [formats_connus[f]["nom"] for f in choisis]
+            appliques.append({"tuile": i, "nom": node["nom"], "texte": f"sortie {', '.join(noms)}"})
         elif genre == "traduction":
             _traduction(
                 i,

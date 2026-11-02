@@ -30,7 +30,7 @@ AVERTISSEMENT_IA = [
 
 # (id, nom, rôle, état, fait, reçoit, renvoie, effet, options, entrée de test, sortie de test)
 _OUTILS: list[tuple[Any, ...]] = [
-    ("format", "Format JSON / CSV", "OUTIL", "ok", "Convertit une réponse brute en tableau propre.", "Une réponse brute (JSON)", "Un tableau (CSV)", "journal",
+    ("format", "Format de sortie", "OUTIL", "ok", "Choisit dans quel(s) fichier(s) la recherche s'exporte.", "Les résultats de la recherche", "Un fichier par format choisi", "journal",
      [["Format de sortie", "CSV"], ["Séparateur", ";"]], '{"nom": "Club A", "ville": "Lyon"}', "nom;ville\nClub A;Lyon"),
     ("traduction", "Traduction", "OUTIL", "ok", "Traduit la requête ou les résultats, et garde toujours l'original à côté.", "Un texte, ou une liste de résultats",
      "Le même contenu, avec la traduction ajoutée à côté de l'original", "journal",
