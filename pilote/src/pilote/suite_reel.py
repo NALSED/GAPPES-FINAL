@@ -131,7 +131,7 @@ def vue_source(
         "id": d.id, "nom": d.nom, "cat": sur.get("cat") if sur.get("cat") in CAT_VERS_USAGE else cats[0], "cats": cats, "role": role,
         "cout": "payant" if d.payant else "gratuit", "fiabilite": sur.get("fiabilite") if sur.get("fiabilite") in tuple(FIABILITES) else fiabilite_par_defaut(d), "fiabilite_choisie": sur.get("fiabilite") in tuple(FIABILITES), "pays": pays[0], "pays_codes": pays,
         "langue": sur.get("langue") or LANGUE_DU_PAYS.get(pays[0], ""), "etat": etat, "quota": _quota(d, e, unites), "description": d.description,
-        "retiree": bool(sur.get("retiree")), "test_reussi": teste, "tests": tests, "declaree": True, "cle_requise": bool(d.cles),
+        "retiree": bool(sur.get("retiree")), "test_reussi": teste, "tests": tests, "declaree": True, "cle_requise": bool(d.cles), "cles_noms": d.cles,
         "parametres_attendus": d.parametres, "parametres": rg.parametres_donnes(reg, d.id),
         "cle": bool(d.cles) and cles.toutes_presentes(cfg, d.cles), "voyant": mot, "domaine": domaine_source(d), "chercher": ch["chercher"], "verifier": ch["verifier"],
         "emoji": "emoji" in d.consomme, "acces": acces, "machine": machine, "copie": copie, "peut_chercher": "chercher" in d.roles, "verifie_sur": d.verifie_sur if "adaptateur" in d.moteur else "", "avertissement": d.avertissement, "adaptateur_manquant": manquant,
@@ -206,11 +206,18 @@ def tester(cfg: Config, ident: str) -> dict[str, Any]:
     return tests_source.tester(cfg, declaration(cfg, ident))
 
 
-def ecrire_cle(cfg: Config, ident: str, valeur: str) -> None:
+def ecrire_cle(cfg: Config, ident: str, valeurs: dict[str, str]) -> None:
+    """Une valeur par nom de variable (`Declaration.cles` — Reddit en déclare deux). Ignore une valeur vide :
+    on peut en remplir une seule sans effacer l'autre (03/11/2026, retour de Sednal : 3.6)."""
     d = declaration(cfg, ident)
-    if not d.cle:
+    if not d.cles:
         raise ConfigRefusee(f"« {d.nom} » n'a pas de clé d'API.")
-    cles.ecrire(cfg, d.cle, valeur)
+    inconnues = sorted(set(valeurs) - set(d.cles))
+    if inconnues:
+        raise ConfigRefusee(f"« {d.nom} » n'a pas de clé nommée « {inconnues[0]} ».")
+    for nom, valeur in valeurs.items():
+        if valeur:
+            cles.ecrire(cfg, nom, valeur)
 
 
 def definir_parametres(cfg: Config, ident: str, parametres: dict[str, Any]) -> None:

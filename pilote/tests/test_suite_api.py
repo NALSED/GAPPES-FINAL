@@ -322,7 +322,7 @@ def test_script_sans_reseau_et_borne_en_temps(c):
 def test_la_cle_ne_sort_jamais(c, cfg):
     secret = "sk-ultra-secret-12345"
     c.post("/api/suite/sources/exa/retirer")  # une écriture, pour que le fichier d'état existe
-    assert c.put("/api/suite/sources/tavily/cle", json={"valeur": secret}).json() == {"cle": True}
+    assert c.put("/api/suite/sources/tavily/cle", json={"valeurs": {"TAVILY_API_KEY": secret}}).json() == {"cle": True}
     assert src(c, "tavily")["cle"] is True and src(c, "linkup")["cle"] is False
     assert secret not in c.get("/api/suite/etat").text
     assert secret not in (cfg.donnees / "suite" / "etat.json").read_text(encoding="utf-8")
@@ -330,11 +330,21 @@ def test_la_cle_ne_sort_jamais(c, cfg):
     assert (
         cles.valeur(cfg, "TAVILY_API_KEY") == secret
     )  # sous le nom de variable de la déclaration : celui que le moteur lit
-    assert c.put("/api/suite/sources/tavily/cle", json={"valeur": "a\nb"}).status_code == 422
-    assert c.put("/api/suite/sources/inconnue/cle", json={"valeur": "x"}).status_code == 422
+    assert c.put("/api/suite/sources/tavily/cle", json={"valeurs": {"TAVILY_API_KEY": "a\nb"}}).status_code == 422
+    assert c.put("/api/suite/sources/inconnue/cle", json={"valeurs": {"X": "x"}}).status_code == 422
     assert (
-        c.put("/api/suite/sources/searxng/cle", json={"valeur": "x"}).status_code == 422
+        c.put("/api/suite/sources/searxng/cle", json={"valeurs": {"X": "x"}}).status_code == 422
     )  # une source sans clé n'en reçoit pas
+
+
+# --- 3.6 : une source à plusieurs clés (Reddit) enregistre chacune indépendamment
+def test_une_source_a_deux_cles_enregistre_chacune_separement(c, cfg):
+    assert src(c, "reddit")["cles_noms"] == ["REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"]
+    assert c.put("/api/suite/sources/reddit/cle", json={"valeurs": {"REDDIT_CLIENT_ID": "id-de-test"}}).json() == {"cle": True}
+    assert cles.presente(cfg, "REDDIT_CLIENT_ID") and not cles.presente(cfg, "REDDIT_CLIENT_SECRET")  # l'un rempli ne touche pas à l'autre
+    c.put("/api/suite/sources/reddit/cle", json={"valeurs": {"REDDIT_CLIENT_SECRET": "secret-de-test"}})
+    assert cles.presente(cfg, "REDDIT_CLIENT_ID") and cles.presente(cfg, "REDDIT_CLIENT_SECRET")
+    assert cles.valeur(cfg, "REDDIT_CLIENT_ID") == "id-de-test"  # la première n'a pas été écrasée
 
 
 # --- un fichier d'état abîmé ne bloque pas la page (même tolérance que Réglages)

@@ -252,14 +252,20 @@ def tester_source(cfg: Config, ident: str) -> dict[str, Any]:
 
 
 def enregistrer_cle(cfg: Config, kind: str, ident: str, valeur: str) -> None:
-    """La clé va dans le fichier de clés de pilote (droits 600), jamais dans l'état, jamais renvoyée. Pour une source : sous le NOM DE VARIABLE de sa
-    déclaration (celui que le moteur lit). Pour un outil : sous un nom propre à la suite."""
-    if kind == "source":
-        suite_reel.ecrire_cle(cfg, ident, valeur)
-        return
+    """La clé d'un outil va dans le fichier de clés de pilote (droits 600), jamais dans l'état, jamais renvoyée,
+    sous un nom propre à la suite. Pour une source, voir `enregistrer_cles_source` (une source peut en déclarer
+    plusieurs, ex. Reddit)."""
     e = charger(cfg)
     _trouver(e["outils"], ident, "L'outil")
     cles.ecrire(cfg, cle_nom(kind, ident), valeur)
+
+
+def enregistrer_cles_source(cfg: Config, ident: str, valeurs: dict[str, Any]) -> None:
+    """Une valeur par nom de variable de la déclaration (celui que le moteur lit) — jamais dans l'état, jamais
+    renvoyée."""
+    if not isinstance(valeurs, dict) or not all(isinstance(v, str) for v in valeurs.values()):
+        raise ConfigRefusee("Donne une valeur de clé par nom de variable.")
+    suite_reel.ecrire_cle(cfg, ident, valeurs)
 
 
 # ---------------------------------------------------------------- outils

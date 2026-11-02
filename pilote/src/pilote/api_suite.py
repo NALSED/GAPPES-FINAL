@@ -160,7 +160,7 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
 
     @r.put("/sources/{ident}/cle")
     def source_cle(ident: str, corps: dict[str, Any] = Corps) -> dict[str, Any]:
-        appeler(suite.enregistrer_cle, cfg, "source", ident, str(corps.get("valeur", "")))
+        appeler(suite.enregistrer_cles_source, cfg, ident, corps.get("valeurs") or {})
         noter(corps, "suite_cle_source_enregistree", ident)
         return {"cle": True}  # jamais la valeur
 

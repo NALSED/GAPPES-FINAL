@@ -126,6 +126,11 @@ export function ficheSource(id) {
     fParams[nom] = champ({ libelle: spec.libelle || nom, valeur: (s.parametres || {})[nom] || "", type: spec.type === "url" ? "url" : "text", obligatoire: !!spec.requis, placeholder: spec.exemple || "" });
   });
   const champsParametres = Object.keys(fParams).map((nom) => fParams[nom].el);
+  // Édition : un champ par nom de variable de la déclaration (3.6) — Reddit en déclare deux (REDDIT_CLIENT_ID,
+  // REDDIT_CLIENT_SECRET). Le libellé est le nom de variable lui-même, pas un mot inventé : c'est lui qu'on
+  // retrouve dans la documentation du service pour savoir quoi coller où.
+  const nomsCle = edition ? (s.cles_noms && s.cles_noms.length ? s.cles_noms : [s.cle]).filter(Boolean) : [];
+  const champsCle = nomsCle.map((nomVar) => champ({ libelle: nomVar, type: "password", autocomplete: "new-password", aide: "Elle ne s'affiche plus une fois enregistrée." }));
   const zones = { cat: h("div", { class: "champ" }), role: h("div", { class: "champ" }), cout: h("div", { class: "champ" }), fiab: h("div", { class: "champ" }), auth: h("div", { class: "champ" }) };
   const manque = h("div", { class: "mot-manque", role: "status" });
   const principal = bouton({ libelle: edition ? VERBES.enregistrer : `${VERBES.ajouter} la source`, variante: "principal", onclick: valider });
@@ -163,11 +168,12 @@ export function ficheSource(id) {
           cle_valeur: f.cle.valeur(), auth: val.auth };
     const res = await agir(() => (edition ? api.put(`/sources/${id}`, corps) : api.post("/sources", corps)), { rechargerApres: false });
     if (!res) return;
-    if (edition && f.cle.valeur()) {
-      const ok = await agir(() => api.put(`/sources/${id}/cle`, { valeur: f.cle.valeur() }), { rechargerApres: false });
+    if (edition && champsCle.some((c) => c.valeur())) {
+      const valeurs = Object.fromEntries(nomsCle.map((nom, i) => [nom, champsCle[i].valeur()]));
+      const ok = await agir(() => api.put(`/sources/${id}/cle`, { valeurs }), { rechargerApres: false });
       if (!ok) return;
     }
-    f.cle.definir(""); // la clé ne reste jamais dans le champ
+    champsCle.forEach((c) => c.definir("")); // la clé ne reste jamais dans le champ
     await recharger(); // les données sont à jour AVANT que la fiche se ferme : la rouvrir tout de suite montre « clé enregistrée »
     couche.fermer();
     if (!edition) app.reglages.ouverte = val.cat;
@@ -201,7 +207,7 @@ export function ficheSource(id) {
       s.acces === "base_exterieure" && h("span", { class: "legende" }, "identifiants enregistrés"),
       s.copie && lecture("Mise à jour", s.copie.installee ? s.copie.date : "copie non installée sur cette machine"),
       h("p", { class: "legende" }, "Le nom, le coût, le pays et le quota viennent de la déclaration de la source : ils ne se changent pas d'ici."),
-      !s.copie && s.acces !== "base_exterieure" && s.cle_requise && f.cle.el, !s.copie && s.acces !== "base_exterieure" && s.cle_requise && s.cle && h("span", { class: "legende" }, "clé enregistrée"),
+      !s.copie && s.acces !== "base_exterieure" && s.cle_requise && champsCle.map((c) => c.el), !s.copie && s.acces !== "base_exterieure" && s.cle_requise && s.cle && h("span", { class: "legende" }, "clé enregistrée"),
       champsParametres.length > 0 && champsParametres,
       h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "État"), h("div", { class: "pied-boutons" }, pastilleEtat(s.etat, ETATS_SOURCE), interrupteur)),
       tests,
