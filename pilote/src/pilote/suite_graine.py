@@ -42,7 +42,7 @@ _OUTILS: list[tuple[Any, ...]] = [
      [["Origine de la liste", "Liste collée"], ["Liste", ""], ["Répéter pour chaque", "le lieu cherché"], ["Maximum de tours", "50"]],
      "Liste de 3 villes", "3 recherches lancées\n3 réponses regroupées"),
     ("fusion", "Fusion / doublons", "RAPPROCHER", "ok", "Regroupe les résultats qui parlent de la même entité.", "Plusieurs listes de résultats", "Une seule liste sans doublons", "compteur",
-     [["Même entité si", "nom et ville identiques"], ["En cas de doublon, garder", "la source la plus fiable"]], "5 résultats dont 2 doublons", "3 résultats"),
+     [["Même entité si", "Normal"], ["En cas de doublon, garder", "la plus fiable"]], "5 résultats dont 2 doublons", "3 résultats"),
     ("filtre", "Filtre", "OUTIL", "ok", "Garde seulement les résultats qui répondent à un critère.", "Une liste de résultats", "La même liste, réduite", "compteur",
      [["Garder si le champ", "pays"], ["est égal à", "FR"]], "3 résultats : FR, FR, UK", "2 résultats : FR, FR"),
     ("attente", "Attente (quota)", "OUTIL", "off", "Fait patienter la recherche quand un quota est atteint.", "Une recherche en cours", "La même recherche, reprise après l'attente", "journal",

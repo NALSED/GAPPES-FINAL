@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from pilote import classements as cl
 from pilote import formats, mentions, tri
 from pilote import reglages as rg
-from pilote.base import Candidat, Decision, Journal
+from pilote.base import Candidat, Decision, Journal, Rapprochement
 from pilote.config import Config
 from pilote.formats._commun import suffixe
 
@@ -73,13 +73,63 @@ def dossier_de_sortie(cfg: Config, rid: str, choix: str = "") -> Path:
     return p if p.is_absolute() else cfg.donnees / p
 
 
-def jeu_de_donnees(cfg: Config, fabrique: sessionmaker[Session], rid: str, decisions: list[str]) -> dict[str, Any]:
-    """Les noms de la recherche (filtrés par décision) avec tout ce que la base sait d'eux, et la trace. Ne lit QUE la base de pilote."""
+def _meilleure_fiabilite(ids_sources: set[str], fiabilites: dict[str, str]) -> str:
+    lettres = [fiabilites.get(t, "F") for t in ids_sources]
+    return min(lettres) if lettres else "F"  # A est la meilleure, alphabétique (code Admiralty)
+
+
+def _fusionner_doublons(rows: list[dict[str, Any]], confirmes: list[tuple[int, int]], garder: str) -> list[dict[str, Any]]:
+    """Les lignes liées par un rapprochement CONFIRMÉ (onglet Tri) deviennent une seule ligne, au lieu de deux
+    avec un lien en commentaire (3.8.05). La fiche gagnante (selon `garder`) fournit les valeurs ; rien n'est
+    perdu : `sources_fusionnees` garde la trace des deux, pour toujours pouvoir vérifier ce qui a été tranché."""
+    par_id = {r["id"]: r for r in rows}
+    parent = {r["id"]: r["id"] for r in rows}
+
+    def find(x: int) -> int:
+        while parent[x] != x:
+            x = parent[x]
+        return x
+
+    for a, b in confirmes:
+        if a in par_id and b in par_id:
+            ra, rb = find(a), find(b)
+            if ra != rb:
+                parent[ra] = rb
+    groupes: dict[int, list[int]] = {}
+    for rid_ in par_id:
+        groupes.setdefault(find(rid_), []).append(rid_)
+    cles_gagnante = {
+        "recente": lambda ids: max(ids),
+        "premiere": lambda ids: min(ids),
+        "fiable": lambda ids: min(ids, key=lambda k: (par_id[k].get("fiabilite", "F"), k)),
+    }
+    choisir = cles_gagnante.get(garder, cles_gagnante["fiable"])
+    out = []
+    for ids in groupes.values():
+        if len(ids) == 1:
+            out.append(par_id[ids[0]])
+            continue
+        gagnant_id = choisir(ids)
+        gagnant = dict(par_id[gagnant_id])
+        autres = [par_id[k] for k in sorted(ids) if k != gagnant_id]
+        gagnant["sources_fusionnees"] = " ; ".join(f"{a['nom']} (id {a['id']}, {', '.join(a['sources']) or 'source inconnue'})" for a in autres)
+        gagnant["confirmations"] = min(3, gagnant["confirmations"] + sum(a["confirmations"] for a in autres))
+        out.append(gagnant)
+    return out
+
+
+def jeu_de_donnees(cfg: Config, fabrique: sessionmaker[Session], rid: str, decisions: list[str], garder: str = "fiable") -> dict[str, Any]:
+    """Les noms de la recherche (filtrés par décision) avec tout ce que la base sait d'eux, et la trace. Ne lit QUE la base de pilote.
+    `garder` (3.8.05, tuile Fusion / doublons) : quelle fiche l'emporte quand deux sont fusionnées à l'export après confirmation dans l'onglet Tri."""
+    from pilote import suite
+
     nom_source = tri.noms_de_sources(cfg)
+    fiabilites = {s["id"]: s["fiabilite"] for s in suite.charger(cfg)["sources"]}
     with fabrique() as s:
         r = tri._recherche(s, rid)
         lignes = tri.lignes_de(s, rid)
         cands = {c.id: c for c in s.scalars(select(Candidat).where(Candidat.recherche_id == rid))}
+        confirmes = [(x.a, x.b) for x in s.scalars(select(Rapprochement).where(Rapprochement.recherche_id == rid, Rapprochement.etat == "confirme"))]
         quoi = (r.sujet or {}).get("quoi", "")
         sujet = " ".join(x for x in (quoi, ", ".join(map(str, (r.sujet or {}).get("inclure") or [])), (r.sujet or {}).get("lieu", ""), (r.sujet or {}).get("pays", "")) if x).strip()
         cree = r.cree_le
@@ -90,15 +140,18 @@ def jeu_de_donnees(cfg: Config, fabrique: sessionmaker[Session], rid: str, decis
             continue
         c = cands[l.id]
         faits = c.faits or {}
+        ids_sources = sorted(set(l.trouve_par))
         rows.append({
             "id": l.id, "nom": l.nom, "ville": l.ville, "pays": l.pays, "origine": l.origine, "origine_phrase": cl.ORIGINE_LIBELLE.get(l.origine, l.origine),
             "confirmations": min(max(l.endroits, 1), 3), "endroits": l.endroits, "fonction": l.fonction, "genre": l.genre_de_chose, "site": l.site,
             "numero_officiel": l.numero_officiel, "decision": l.decision, "motif_rejet": l.motif if l.decision == "rejeter" else "",
-            "sources": [nom_source(t) for t in sorted(set(l.trouve_par))], "relations": [x for x in (c.relations or []) if isinstance(x, dict)],
+            "sources": [nom_source(t) for t in ids_sources], "relations": [x for x in (c.relations or []) if isinstance(x, dict)],
             "coordonnees": faits.get("coordonnees") if isinstance(faits.get("coordonnees"), dict) else None,
+            "fiabilite": _meilleure_fiabilite(set(ids_sources), fiabilites), "sources_fusionnees": "",
             # Règle 8 : le constat de la collecte et la levée éventuelle, pour les formats qui ont à les distinguer (voir `formats/ftm.py`)
             "regle8_personne": bool(faits.get("regle8_personne")), "regle8_leve": bool(faits.get("regle8_leve")),
         })  # fmt: skip
+    rows = _fusionner_doublons(rows, confirmes, garder)
     ids = mentions.sources_de_la_recherche(cfg.dossier_recherche(rid)) or sorted({t for l in lignes for t in l.trouve_par})
     trace = {
         "date": datetime.now().astimezone().isoformat(timespec="seconds"), "sujet": sujet or quoi, "recherche": rid, "recherche_lancee_le": cree.isoformat(timespec="seconds") if cree else "",
@@ -140,7 +193,8 @@ def exporter(cfg: Config, fabrique: sessionmaker[Session], rid: str, qui: str, d
         dest.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         raise SortieInvalide(f"Le dossier de sortie « {dest} » ne peut pas être créé ({exc.strerror or 'refusé'}).") from exc
-    jeu = jeu_de_donnees(cfg, fabrique, rid, decisions)
+    garder = ((parametres.get("plan") or {}).get("fusion") or {}).get("garder", "fiable")
+    jeu = jeu_de_donnees(cfg, fabrique, rid, decisions, garder)
     fichiers: list[str] = []
     envois: list[dict[str, Any]] = []
     erreurs: list[dict[str, str]] = []

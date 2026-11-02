@@ -16,7 +16,7 @@ from conftest import copier_config
 from fastapi.testclient import TestClient
 
 from pilote.app import creer_app
-from pilote.base import Candidat, Recherche, creer_fabrique
+from pilote.base import Candidat, Rapprochement, Recherche, creer_fabrique
 from pilote.config import RACINE
 from pilote.config import charger as charger_cfg
 
@@ -296,6 +296,38 @@ def test_chaque_fichier_porte_sa_trace(monde):
     assert any("Sujet cherché : clubs de handball" in x for x in trace) and any("Sources utilisées" in x for x in trace) and any("Exporté le 20" in x for x in trace)
 
 
+# --- 3.8.05 : deux fiches confirmées « même entité » dans l'onglet Tri ressortent fusionnées en une seule ligne
+def test_un_rapprochement_confirme_fusionne_les_deux_lignes_a_l_export(monde):
+    c, cfg = monde
+    fabrique = creer_fabrique(cfg.url_base)
+    ids = {x["nom"]: x["id"] for x in c.get("/api/recherches/r14/tri").json()["lignes"]}
+    a, b = ids["Fenix Toulouse Handball"], ids["Montpellier Handball"]
+    with fabrique.begin() as s:
+        s.add(Rapprochement(recherche_id="r14", a=a, b=b, confiance=0.9, etat="confirme"))
+        r = s.get(Recherche, "r14")
+        r.parametres = {**(r.parametres or {}), "plan": {"fusion": {"garder": "recente"}}}
+    res = exporter(c, [{"format": "csv", "contenus": ["detail"]}])
+    lignes = list(csv.reader(dossier(res).joinpath("resultat_detail.csv").read_text(encoding="utf-8").splitlines(), delimiter=";"))
+    noms = [l[0] for l in lignes[1:]]
+    assert noms.count("Fenix Toulouse Handball") + noms.count("Montpellier Handball") == 1  # une seule des deux reste
+    gagnante = next(l for l in lignes[1:] if l[0] in ("Fenix Toulouse Handball", "Montpellier Handball"))
+    assert gagnante[0] == "Montpellier Handball"  # id le plus grand = trouvée en dernier = « la plus récente »
+    assert "Fenix Toulouse Handball" in gagnante[-1]  # sources_fusionnees garde la trace de l'autre fiche
+
+
+def test_separer_un_rapprochement_ne_fusionne_jamais(monde):
+    c, cfg = monde
+    fabrique = creer_fabrique(cfg.url_base)
+    ids = {x["nom"]: x["id"] for x in c.get("/api/recherches/r14/tri").json()["lignes"]}
+    a, b = ids["Fenix Toulouse Handball"], ids["Montpellier Handball"]
+    with fabrique.begin() as s:
+        s.add(Rapprochement(recherche_id="r14", a=a, b=b, confiance=0.9, etat="separe"))
+    res = exporter(c, [{"format": "csv", "contenus": ["detail"]}])
+    lignes = list(csv.reader(dossier(res).joinpath("resultat_detail.csv").read_text(encoding="utf-8").splitlines(), delimiter=";"))
+    noms = [l[0] for l in lignes[1:]]
+    assert noms.count("Fenix Toulouse Handball") == 1 and noms.count("Montpellier Handball") == 1  # les deux restent
+
+
 # --- Règles validées : contenu au choix, chemin choisi, décisions, deux fichiers en même temps.
 def test_contenu_au_choix_et_deux_fichiers_en_meme_temps(monde):
     c, _ = monde
@@ -303,7 +335,7 @@ def test_contenu_au_choix_et_deux_fichiers_en_meme_temps(monde):
     d = dossier(res)
     assert next(csv.reader((d / "resultat.csv").read_text(encoding="utf-8").splitlines())) == ["NOM"]  # l'un pour l'outil d'après
     detail = list(csv.reader((d / "resultat_detail.csv").read_text(encoding="utf-8").splitlines(), delimiter=";"))  # l'autre pour l'utilisateur
-    assert detail[0] == ["nom", "ville", "pays", "origine", "confirmations", "fonction", "genre", "site", "numero_officiel", "decision", "motif_rejet", "sources", "relations"]
+    assert detail[0] == ["nom", "ville", "pays", "origine", "confirmations", "fonction", "genre", "site", "numero_officiel", "decision", "motif_rejet", "sources", "relations", "sources_fusionnees"]
     fenix = next(r for r in detail[1:] if r[0].startswith("Fenix"))
     assert fenix[3] == "dans un registre officiel" and fenix[5] == "siège" and fenix[9] == "gardé" and "Groupe Fenix" in fenix[12]
     assert c.post("/api/recherches/r14/export", json={"formats": [{"format": "csv", "contenus": ["inconnu"]}]}).status_code == 422

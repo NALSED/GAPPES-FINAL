@@ -265,6 +265,16 @@ def test_la_verification_agit_sur_les_resultats_des_sources_placees_avant_elle()
     assert any("vérifie les résultats des sources placées avant" in x["texte"] for x in c["appliques"])
 
 
+def test_fusion_sensibilite_et_regle_de_doublon_sont_reglables():
+    def fusion_de(opts):
+        p = plan([("saisie",), ("grappes",), ("n1", "a"), ("fu", "fusion", None, opts)], [lien("saisie", "n1"), lien("n1", "fu"), lien("fu", "grappes")])
+        return comp(p)["fusion"]
+
+    assert fusion_de([["Même entité si", "Normal"], ["En cas de doublon, garder", "la plus fiable"]]) == {"tuile": "fu", "seuil": 0.20, "garder": "fiable"}
+    assert fusion_de([["Même entité si", "Large"], ["En cas de doublon, garder", "la plus récente"]]) == {"tuile": "fu", "seuil": 0.10, "garder": "recente"}
+    assert fusion_de([["Même entité si", "Strict"], ["En cas de doublon, garder", "la première trouvée"]]) == {"tuile": "fu", "seuil": 0.40, "garder": "premiere"}
+
+
 def test_format_fusion_et_ce_qui_n_est_pas_applique():
     p = plan([("saisie",), ("grappes",), ("n1", "a"), ("fo", "format"), ("fu", "fusion"), ("bo", "boucle"), ("at", "attente")],
              [lien("saisie", "n1"), lien("n1", "fu"), lien("fu", "fo"), lien("fo", "bo"), lien("bo", "at"), lien("at", "grappes")])  # fmt: skip

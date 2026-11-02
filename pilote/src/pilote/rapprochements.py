@@ -75,8 +75,10 @@ def _deja_liees(cands: list[Candidat]) -> set[tuple[int, int]]:
     return out
 
 
-def proposer(cfg: Config, fabrique: sessionmaker[Session], rid: str) -> dict[str, Any]:
-    """Range en file les rapprochements d'une recherche. Rend {proposes, comparees}. Lève `Indisponible` si le moteur ne tourne pas."""
+def proposer(cfg: Config, fabrique: sessionmaker[Session], rid: str, seuil: float = SEUIL) -> dict[str, Any]:
+    """Range en file les rapprochements d'une recherche. `seuil` : réglage « Même entité si » de la tuile Fusion
+    posée sur le plan (3.8.05) — le réglage par défaut (SEUIL) si aucune tuile Fusion n'est posée. Rend
+    {proposes, comparees}. Lève `Indisponible` si le moteur ne tourne pas."""
     with fabrique() as s:
         # Règle 8 : une fiche de genre « personne » n'entre pas dans un rapprochement, SAUF si une personne a explicitement levé la règle sur
         # cette fiche-là (`tri.marquer_personne_morale`, trace dans `faits.regle8_leve`). Le genre n'est jamais réécrit : il dit ce que la
@@ -87,7 +89,7 @@ def proposer(cfg: Config, fabrique: sessionmaker[Session], rid: str) -> dict[str
         liees = _deja_liees(cands)
     if len(cands) < 2:
         return {"proposes": 0, "comparees": len(cands)}
-    paires = [p for p in _scorer([_fiche(c) for c in cands], SEUIL) if (p["a"], p["b"]) not in deja and (p["a"], p["b"]) not in liees and p["confiance"] >= SEUIL]
+    paires = [p for p in _scorer([_fiche(c) for c in cands], seuil) if (p["a"], p["b"]) not in deja and (p["a"], p["b"]) not in liees and p["confiance"] >= seuil]
     with fabrique.begin() as s:
         for p in paires:
             s.add(Rapprochement(recherche_id=rid, a=p["a"], b=p["b"], confiance=p["confiance"], pourquoi=p["pourquoi"]))

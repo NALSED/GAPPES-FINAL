@@ -244,12 +244,16 @@ class ExecuteurGrappes:
             raise Arret()
 
     def proposer_les_rapprochements(self, ctx: ContexteRecherche) -> None:
-        """Range en file (onglet Tri) les noms que Splink soupçonne d'être la même entité. Un échec du moteur de rapprochement est DIT au journal :
-        il ne fait jamais échouer la recherche, et l'absence de proposition ne se lit pas comme l'absence de rapprochement possible."""
+        """Range en file (onglet Tri) les noms que Splink soupçonne d'être la même entité, au seuil de la tuile
+        Fusion posée sur le plan (3.8.05 — le seuil par défaut sans tuile Fusion). Un échec du moteur de
+        rapprochement est DIT au journal : il ne fait jamais échouer la recherche, et l'absence de proposition
+        ne se lit pas comme l'absence de rapprochement possible."""
         from pilote import rapprochements
 
+        fusion = ((ctx.parametres.get("plan") or {}).get("fusion")) or {}
+        seuil = fusion.get("seuil", rapprochements.SEUIL)
         try:
-            rapprochements.proposer(self.cfg, ctx._fabrique, ctx.recherche_id)  # l'événement « rapprochements_proposes » est écrit par `proposer` lui-même
+            rapprochements.proposer(self.cfg, ctx._fabrique, ctx.recherche_id, seuil=seuil)  # l'événement « rapprochements_proposes » est écrit par `proposer` lui-même
         except Exception as exc:  # noqa: BLE001 - le tri est un confort de relecture, pas une condition de la recherche
             ctx.noter("rapprochements_indisponibles", raison=str(exc)[:300])
 

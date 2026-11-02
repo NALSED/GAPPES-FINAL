@@ -35,6 +35,9 @@ NON_APPLIQUES = {
     "rsshub": "transformer un site en flux RSS n'est pas encore branché",
 }  # fmt: skip
 MAX_CHEMINS = 300
+# Fusion / doublons (3.8.05) : trois crans de sensibilité, sur le modèle des crans de profondeur de recherche —
+# mêmes mots (Large/Normal/Strict), remplace le SEUIL fixé en dur dans rapprochements.py.
+SEUILS_FUSION = {"large": 0.10, "normal": 0.20, "strict": 0.40}
 
 
 def norme(t: Any) -> str:
@@ -241,6 +244,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     # --- la sortie, les outils sans effet réel, ceux qu'on ne branche pas
     formats: list[str] | None = None
     traductions: dict[str, dict[str, Any]] = {}
+    fusion: dict[str, Any] | None = None
     for i in chemin_outils:
         node, o = nodes[i], par_outil[ref(i)]
         genre = _genre_outil(o)
@@ -252,13 +256,17 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
                 {"tuile": i, "nom": node["nom"], "texte": "joué sur les résultats de chaque branche où il se trouve"}
             )
         elif genre == "fusion":
-            appliques.append(
-                {
-                    "tuile": i,
-                    "nom": node["nom"],
-                    "texte": "le moteur regroupe déjà les doublons ; la règle « même entité si » n'est pas réglable",
-                }
-            )
+            if fusion is not None:
+                dire_non(i, "une seule tuile Fusion / doublons est jouée par recherche ; les suivantes sont ignorées")
+            else:
+                opts_map = {lib: v for lib, v in opts}
+                niveau_txt = opts_map.get("Même entité si", "Normal")
+                seuil = SEUILS_FUSION.get(norme(niveau_txt), SEUILS_FUSION["normal"])
+                garder_txt = opts_map.get("En cas de doublon, garder", "la plus fiable")
+                garder_n = norme(garder_txt)
+                garder = "recente" if "recente" in garder_n else "premiere" if "premiere" in garder_n else "fiable"
+                fusion = {"tuile": i, "seuil": seuil, "garder": garder}
+                appliques.append({"tuile": i, "nom": node["nom"], "texte": f"« {niveau_txt} » (seuil {seuil}) ; en cas de doublon confirmé, garde {garder_txt} à l'export"})
         elif genre == "format":
             formats_connus = {f["id"]: f for f in _formats.vue(cfg)}  # le registre réel (3.8.01), plus seulement CSV/JSON en dur
             opts_map = {lib: v for lib, v in opts}
@@ -306,7 +314,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     ordre = {i: k for k, i in enumerate(nodes)}
     return {
         "sources": sorted(dict.fromkeys(cherchent), key=lambda s: min(ordre[i] for i in chemin_sources if ref(i) == s)), "verificateurs": [{"id": v["id"], "en_amont": v["en_amont"], "fonction": v["fonction"]} for v in verifient],
-        "chemins": chemins, "traductions": traductions, "format": formats, "appliques": appliques, "non_appliques": non_appliques,
+        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "appliques": appliques, "non_appliques": non_appliques,
         "pays_equiv": pays_equiv or {},
     }  # fmt: skip
 
