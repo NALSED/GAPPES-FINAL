@@ -67,16 +67,67 @@ def _option(opts: list, indice: int, mot: str = "") -> str:
     return str(opts[indice][1]) if len(opts) > indice else ""
 
 
-def _etape_champ(nom: str, opts: list, tuile: str, op: str) -> dict[str, Any]:
-    champ = norme(_option(opts, 0, "champ"))
+# --- Condition « si » (3.8.03) et Filtre (3.8.06) : le même moteur de lignes de condition pour les deux tuiles.
+_COMPARATEURS_MOTS = {
+    "est egal a": "egal", "est different de": "different", "ne contient pas": "ne_contient_pas", "contient": "contient",
+    "commence par": "commence_par", "finit par": "finit_par", "n est pas vide": "non_vide", "est vide": "vide",
+}  # fmt: skip  (l'ordre compte : « ne contient pas » doit matcher avant « contient »)
+_LETTRES_FIABILITE = "ABCDEF"  # code Admiralty : A est la meilleure
+
+
+def _comparateur_de(txt: str) -> str:
+    n = norme(txt)
+    for mot, cle in _COMPARATEURS_MOTS.items():
+        if mot in n:
+            return cle
+    return "egal"  # repli : le seul comparateur d'avant le 02/11/2026, jamais une erreur sur une donnée ancienne
+
+
+def _ligne_condition(nom: str, champ_txt: str, comp_txt: str, valeur_txt: str) -> dict[str, Any]:
+    champ = norme(champ_txt)
+    if champ == "nombre de sources":  # Filtre seulement (3.8.06) : corroboration, pas un champ de candidat
+        if not valeur_txt.strip().isdigit():
+            raise ConfigRefusee(f"« {nom} » : « Nombre de sources » doit être un nombre.")
+        return {"champ": "_corroboration", "comparateur": "min", "valeurs": [valeur_txt.strip()]}
+    if champ == "fiabilite minimale":  # Filtre seulement (3.8.06)
+        lettre = valeur_txt.strip().upper()[:1]
+        if lettre not in _LETTRES_FIABILITE:
+            raise ConfigRefusee(f"« {nom} » : « Fiabilité minimale » est une lettre de A à F.")
+        return {"champ": "_fiabilite", "comparateur": "min", "valeurs": [lettre]}
     if champ not in CHAMPS:
         raise ConfigRefusee(
             f"« {nom} » : le champ « {champ or '(vide)'} » n'existe pas. Champs : {', '.join(sorted({k for k in CHAMPS if k not in ('type', 'numero officiel', 'categorie')}))}."
         )
-    valeurs = [v.strip() for v in re.split(r"[,;]", _option(opts, 1, "egal")) if v.strip()]
-    if not valeurs:
-        raise ConfigRefusee(f"« {nom} » : dis à quoi le champ « {champ} » doit être égal.")
-    return {"op": op, "champ": CHAMPS[champ], "valeurs": valeurs, "tuile": tuile, "nom": nom}
+    comparateur = _comparateur_de(comp_txt)
+    valeurs = [v.strip() for v in re.split(r"[,;]", valeur_txt) if v.strip()]
+    if comparateur not in ("vide", "non_vide") and not valeurs:
+        raise ConfigRefusee(f"« {nom} » : dis à quoi le champ « {champ} » doit être comparé.")
+    return {"champ": CHAMPS[champ], "comparateur": comparateur, "valeurs": valeurs}
+
+
+def _lignes_conditions(nom: str, opts: list) -> tuple[list[dict[str, Any]], str]:
+    """Plusieurs lignes {champ, comparateur, valeurs}, combinées par et/ou (3.8.03). Reconnaît aussi l'ancien
+    format à une seule ligne (deux options, « (Si/Garder si) le champ » + « est égal à ») des tuiles déjà
+    enregistrées avant cette spécification."""
+    brutes = []
+    i = 1
+    while any(norme(lib) == norme(f"Champ {i}") for lib, _ in opts):
+        brutes.append((_option(opts, 0, f"champ {i}"), _option(opts, 0, f"comparateur {i}"), _option(opts, 0, f"valeur {i}")))
+        i += 1
+    if not brutes:
+        brutes = [(_option(opts, 0, "champ"), "est égal à", _option(opts, 1, "egal"))]
+    lignes = [_ligne_condition(nom, *b) for b in brutes]
+    mode = "ou" if norme(_option(opts, 0, "combinateur")) == "ou" else "et"
+    return lignes, mode
+
+
+def _etapes_conditions(nom: str, opts: list, tuile: str, op: str) -> list[dict[str, Any]]:
+    lignes, mode = _lignes_conditions(nom, opts)
+    etapes = [{"op": op, "lignes": lignes, "mode": mode, "tuile": tuile, "nom": nom}]
+    maximum = _option(opts, 0, "garder au maximum")
+    if op == "garder" and maximum.strip().isdigit():  # Filtre seulement (3.8.06) : une troncature, pas une ligne de condition
+        etapes.append({"op": "tronquer", "maximum": int(maximum), "tuile": tuile, "nom": nom})
+    return etapes
 
 
 def _genre_outil(o: dict[str, Any]) -> str:
@@ -162,13 +213,13 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
         genre = _genre_outil(o)
         opts = node.get("opts") or o.get("options") or []
         if genre == "filtre":
-            return [_etape_champ(node["nom"], opts, m, "garder")]
+            return _etapes_conditions(node["nom"], opts, m, "garder")
         if genre == "si":
             if sortie.get("label") not in ("oui", "non"):
                 raise ConfigRefusee(
                     f"« {node['nom']} » a deux sorties : dis laquelle est « oui » et laquelle est « non » (dans la fenêtre de la tuile)."
                 )
-            return [_etape_champ(node["nom"], opts, m, "garder" if sortie["label"] == "oui" else "ecarter")]
+            return _etapes_conditions(node["nom"], opts, m, "garder" if sortie["label"] == "oui" else "ecarter")
         if genre == "script":
             return [{"op": "script", "code": o.get("code", ""), "tuile": m, "nom": node["nom"]}]
         return []
@@ -383,15 +434,49 @@ def _egal(v: str, valeurs: list[str], equiv: dict[str, list[str]]) -> bool:
     return n in cibles or any(n in equiv.get(c, ()) for c in cibles)
 
 
+def _teste_ligne(ligne: dict[str, Any], lc: dict[str, Any], equiv: dict[str, list[str]], fiabilites_sources: dict[str, str] | None) -> bool:
+    champ, valeurs = lc["champ"], lc["valeurs"]
+    if champ == "_corroboration":  # Filtre (3.8.06) : « trouvé par N sources ou plus »
+        return len({s for s in (ligne.get("trouve_par") or [])}) >= int(valeurs[0])
+    if champ == "_fiabilite":  # Filtre (3.8.06) : la meilleure fiabilité parmi les sources qui ont trouvé ce nom
+        lettres = [(fiabilites_sources or {}).get(s, _LETTRES_FIABILITE[-1]) for s in (ligne.get("trouve_par") or [])]
+        meilleure = min(lettres) if lettres else _LETTRES_FIABILITE[-1]  # A est la meilleure, alphabétique
+        return meilleure <= valeurs[0]
+    v = valeur(ligne, champ)
+    nv = norme(v)
+    comp = lc["comparateur"]
+    if comp == "vide":
+        return nv == ""
+    if comp == "non_vide":
+        return nv != ""
+    if comp == "egal":
+        return _egal(v, valeurs, equiv)
+    if comp == "different":
+        return not _egal(v, valeurs, equiv)
+    if comp == "contient":
+        return any(norme(x) in nv for x in valeurs)
+    if comp == "ne_contient_pas":
+        return not any(norme(x) in nv for x in valeurs)
+    if comp == "commence_par":
+        return any(nv.startswith(norme(x)) for x in valeurs)
+    return any(nv.endswith(norme(x)) for x in valeurs)  # "finit_par"
+
+
+def _teste_lignes(ligne: dict[str, Any], lignes_cond: list[dict[str, Any]], mode: str, equiv: dict[str, list[str]], fiabilites_sources: dict[str, str] | None) -> bool:
+    resultats = [_teste_ligne(ligne, lc, equiv, fiabilites_sources) for lc in lignes_cond]
+    return all(resultats) if mode == "et" else any(resultats)
+
+
 def _entree_script(ligne: dict[str, Any]) -> dict[str, Any]:
     return {"nom": ligne["nom"], "ville": ligne.get("ville", ""), "pays": ligne.get("pays", ""), "genre": ligne.get("genre_de_chose", ""), "origine": ligne.get("genre_source", ""),
             "site": ligne.get("site", ""), "numero": ligne.get("numero_officiel", ""), "fonction": valeur(ligne, "fonction"), "sources": list(ligne.get("trouve_par") or [])}  # fmt: skip
 
 
 def appliquer(
-    lignes: list[dict[str, Any]], consignes: dict[str, Any], lancer_script=None
-) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    lignes: list[dict[str, Any]], consignes: dict[str, Any], lancer_script=None, fiabilites_sources: dict[str, str] | None = None
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:  # fmt: skip
     """Garde les noms que le plan laisse passer. `lancer_script(code, entree_json) -> {ok, sortie, erreur}` joue un script d'outil dans son bac à sable.
+    `fiabilites_sources` (identifiant de source -> lettre A-F) sert au comparateur « Fiabilité minimale » de Filtre (3.8.06).
     Rend (noms gardés, bilan) ; le bilan dit, par tuile, combien de noms elle a retirés (et lesquels, en partie), et ce qui n'a pas pu être jugé."""
     import json
 
@@ -408,8 +493,10 @@ def appliquer(
                 passe = [
                     k
                     for k in courant
-                    if _egal(valeur(lignes[k], etape["champ"]), etape["valeurs"], equiv) == (etape["op"] == "garder")
+                    if _teste_lignes(lignes[k], etape["lignes"], etape["mode"], equiv, fiabilites_sources) == (etape["op"] == "garder")
                 ]
+            elif etape["op"] == "tronquer":
+                passe = courant[: etape["maximum"]]
             else:
                 res = (
                     lancer_script(

@@ -173,7 +173,7 @@ def test_pays_nom_ou_code_c_est_pareil():
     "opts,mot",
     [
         ([("Garder si le champ", "couleur"), ("est égal à", "x")], "n'existe pas"),
-        ([("Garder si le champ", "ville"), ("est égal à", "")], "égal"),
+        ([("Garder si le champ", "ville"), ("est égal à", "")], "comparé"),
     ],
 )
 def test_un_filtre_incoherent_est_refuse_avant_tout_appel(opts, mot):
@@ -183,6 +183,61 @@ def test_un_filtre_incoherent_est_refuse_avant_tout_appel(opts, mot):
     )
     with pytest.raises(ConfigRefusee, match=mot):
         comp(p)
+
+
+def _plan_filtre(opts):
+    o = [outil("filtre", options=opts)]
+    p = plan([("saisie",), ("grappes",), ("n1", "a"), ("f", "filtre")], [lien("saisie", "n1"), lien("n1", "f"), lien("f", "grappes")])
+    return compiler(p, SOURCES, o, pays_equiv=PAYS)
+
+
+def test_plusieurs_conditions_combinees_par_et_ou_ou():
+    et = [("Champ 1", "ville"), ("Comparateur 1", "est égal à"), ("Valeur 1", "Lyon"),
+          ("Champ 2", "genre"), ("Comparateur 2", "est égal à"), ("Valeur 2", "association"), ("Combinateur", "et")]  # fmt: skip
+    noms = lambda c: {g["nom"] for g in appliquer([ligne("A", ["a"], ville="Lyon", genre="association"), ligne("B", ["a"], ville="Lyon", genre="entreprise")], c)[0]}
+    assert noms(_plan_filtre(et)) == {"A"}  # B : genre différent, tombe sur la deuxième condition
+    ou = [*et[:-1], ("Combinateur", "ou")]
+    assert noms(_plan_filtre(ou)) == {"A", "B"}  # B passe quand même : « ville = Lyon » suffit en OU
+
+
+@pytest.mark.parametrize(
+    "comparateur,valeur_opt,nom_passe,nom_tombe",
+    [
+        ("est différent de", "Lyon", "B", "A"),
+        ("contient", "yo", "A", "B"),
+        ("ne contient pas", "yo", "B", "A"),
+        ("commence par", "Ly", "A", "B"),
+        ("finit par", "on", "A", "B"),
+        ("est vide", "", "C", "A"),
+        ("n'est pas vide", "", "A", "C"),
+    ],
+)
+def test_les_huit_comparateurs(comparateur, valeur_opt, nom_passe, nom_tombe):
+    opts = [("Champ 1", "ville"), ("Comparateur 1", comparateur), ("Valeur 1", valeur_opt)]
+    c = _plan_filtre(opts)
+    lignes = [ligne("A", ["a"], ville="Lyon"), ligne("B", ["a"], ville="Paris"), ligne("C", ["a"], ville="")]
+    gardes = {g["nom"] for g in appliquer(lignes, c)[0]}
+    assert nom_passe in gardes and nom_tombe not in gardes
+
+
+def test_filtre_corroboration_et_fiabilite_minimale():
+    c_corr = _plan_filtre([("Champ 1", "Nombre de sources"), ("Valeur 1", "2")])
+    lignes = [ligne("Confirme", ["a", "b"]), ligne("Seul", ["a"])]
+    assert {g["nom"] for g in appliquer(lignes, c_corr)[0]} == {"Confirme"}
+
+    o_fiab = [outil("filtre", options=[("Champ 1", "Fiabilité minimale"), ("Valeur 1", "C")])]
+    p_fiab = plan([("saisie",), ("grappes",), ("na", "a"), ("nb", "b"), ("f", "filtre")],
+                  [lien("saisie", "na"), lien("saisie", "nb"), lien("na", "f"), lien("nb", "f"), lien("f", "grappes")])  # fmt: skip
+    c_fiab = compiler(p_fiab, SOURCES, o_fiab, pays_equiv=PAYS)
+    fiabilites = {"a": "B", "b": "E"}
+    assert {g["nom"] for g in appliquer([ligne("ParA", ["a"]), ligne("ParB", ["b"])], c_fiab, fiabilites_sources=fiabilites)[0]} == {"ParA"}
+
+
+def test_filtre_garder_au_maximum_tronque_apres_les_conditions():
+    c = _plan_filtre([("Champ 1", "pays"), ("Comparateur 1", "est égal à"), ("Valeur 1", "FR"), ("Garder au maximum", "2")])
+    lignes = [ligne(f"N{i}", ["a"]) for i in range(5)]
+    gardes = appliquer(lignes, c)[0]
+    assert [g["nom"] for g in gardes] == ["N0", "N1"]  # les deux premiers qui arrivent au filtre, dans l'ordre
 
 
 def test_un_plan_qui_tourne_en_rond_ou_un_outil_eteint_est_refuse():

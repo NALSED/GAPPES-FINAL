@@ -124,7 +124,7 @@ def preparer(cfg: Config, ctx: ContexteRecherche) -> dict[str, Any]:
         "phrase": phrase, "limites": {"appels": lim["appels"], "temps_s": lim["temps_s"]},
         "mots_a_inclure": list(sujet.get("inclure") or []), "mots_a_exclure": list(sujet.get("exclure") or []),
         "combien": int(sujet.get("combien") or 200), "pays_code": code_pays(cfg, sujet, rg.charger_tolerant(cfg)[0]), "sources": mat.ids, "adaptateurs": mat.adaptateurs, "verificateurs": mat.verificateurs, "scripts": mat.scripts, "jetons": mat.jetons,
-        "exclues_budget": mat.exclues_budget, "origines_sources": mat.origines, "mains_sources": mat.mains, "entree": entree,
+        "exclues_budget": mat.exclues_budget, "origines_sources": mat.origines, "mains_sources": mat.mains, "fiabilites_sources": mat.fiabilites, "entree": entree,
         "emoji": {"saisie": contient(" ".join([phrase, str(sujet.get("lieu", "")), *map(str, sujet.get("inclure") or [])])), "ok": mat.emoji_ok, "moteur_recoit": emoji_seul},
         "plafond_atteint": depense >= plafond, "limite_source_s": min(float(lim["temps_s"]), 180.0) if lim.get("temps_s") else 180.0, "en_pause": mat.en_pause, "reserve_sources": reserve, "reserve_verification": reserve_verif,
         # Lever 3 (27-leviers-regle8-a-faire-par-sednal.md), validé dans lancement.valider_options. Son défaut, quand cette recherche ne le

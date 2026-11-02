@@ -226,7 +226,67 @@ function rendreOptionsTraduction(n, refresh) {
   );
 }
 
-const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction };
+// 3.8.03 (Condition « si ») et 3.8.06 (Filtre, même moteur) : plusieurs lignes {champ, comparateur, valeur},
+// combinées par et/ou. Stocké dans les options comme « Champ 1 »/« Comparateur 1 »/« Valeur 1 », « Champ 2 »…
+const CHAMPS_CONDITION = ["nom", "ville", "pays", "genre", "origine", "site", "numéro", "fonction"];
+const CHAMPS_FILTRE_SEULEMENT = ["Nombre de sources", "Fiabilité minimale"];
+const COMPARATEURS = ["est égal à", "est différent de", "contient", "ne contient pas", "commence par", "finit par", "est vide", "n'est pas vide"];
+
+function lignesConditions(n) {
+  const out = [];
+  let i = 1;
+  while (n.opts.some(([lib]) => lib === `Champ ${i}`)) {
+    out.push({ champ: optLabel(n, `Champ ${i}`), comparateur: optLabel(n, `Comparateur ${i}`) || "est égal à", valeur: optLabel(n, `Valeur ${i}`) });
+    i += 1;
+  }
+  if (out.length) return out;
+  // ancien format à une seule ligne (si/filtre d'avant 3.8.03) : lu tel quel, migré au nouveau format dès la première modification
+  const champLegacy = optLabel(n, "Si le champ") || optLabel(n, "Garder si le champ");
+  return [{ champ: champLegacy, comparateur: "est égal à", valeur: optLabel(n, "est égal à") }];
+}
+
+function ecrireLignesConditions(n, lignes) {
+  n.opts = n.opts.filter(([lib]) => !/^(Champ|Comparateur|Valeur) \d+$/.test(lib) && lib !== "Si le champ" && lib !== "Garder si le champ" && lib !== "est égal à");
+  lignes.forEach((l, idx) => {
+    const i = idx + 1;
+    n.opts.push([`Champ ${i}`, l.champ], [`Comparateur ${i}`, l.comparateur], [`Valeur ${i}`, l.valeur]);
+  });
+}
+
+function rendreOptionsConditions(filtre) {
+  return (n, refresh) => {
+    const lignes = lignesConditions(n);
+    const champsChoix = filtre ? [...CHAMPS_CONDITION, ...CHAMPS_FILTRE_SEULEMENT] : CHAMPS_CONDITION;
+    const mode = optLabel(n, "Combinateur") || "et";
+    const maj = (l) => { ecrireLignesConditions(n, l); sauvegarder(); refresh(); };
+    const ligneVue = (l, i) => {
+      const special = l.champ === "Nombre de sources" || l.champ === "Fiabilité minimale";
+      const sansValeur = !special && (l.comparateur === "est vide" || l.comparateur === "n'est pas vide");
+      const champValeur = champ({ libelle: special ? (l.champ === "Nombre de sources" ? "Minimum" : "Lettre A à F") : "Valeur (ou plusieurs, séparées par une virgule)", valeur: l.valeur });
+      champValeur.saisie.addEventListener("change", () => { const copie = [...lignes]; copie[i] = { ...l, valeur: champValeur.valeur() }; maj(copie); });
+      return h(
+        "div", { class: "champ" },
+        h("div", { class: "deux-col" },
+          groupePuces(champsChoix.map((c) => [c, c]), l.champ, (v) => { const copie = [...lignes]; copie[i] = { ...l, champ: v }; maj(copie); }),
+          !special && groupePuces(COMPARATEURS.map((c) => [c, c]), l.comparateur, (v) => { const copie = [...lignes]; copie[i] = { ...l, comparateur: v }; maj(copie); })),
+        !sansValeur && champValeur.el,
+        lignes.length > 1 && boutonIcone({ icon: "retirer", etiquette: "Retirer cette condition", onclick: () => maj(lignes.filter((_, j) => j !== i)) }),
+      );
+    };
+    const maximum = filtre && champ({ libelle: "Garder au maximum", valeur: optLabel(n, "Garder au maximum"), placeholder: "sans plafond" });
+    if (maximum) maximum.saisie.addEventListener("change", () => { optDefinir(n, "Garder au maximum", maximum.valeur()); sauvegarder(); });
+    return h(
+      "div", { class: "options-grille" },
+      lignes.length > 1 && h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Combiner les conditions"),
+        groupePuces([["et", "Toutes les conditions (ET)"], ["ou", "Au moins une condition (OU)"]], mode, (v) => { optDefinir(n, "Combinateur", v); sauvegarder(); refresh(); })),
+      ...lignes.map(ligneVue),
+      bouton({ libelle: `${VERBES.ajouter} une condition`, icon: "ajouter", petit: true, onclick: () => maj([...lignes, { champ: champsChoix[0], comparateur: "est égal à", valeur: "" }]) }),
+      filtre && maximum.el,
+    );
+  };
+}
+
+const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true) };
 
 function retirerLien(id) {
   plan().edges = plan().edges.filter((e) => e.id !== id);

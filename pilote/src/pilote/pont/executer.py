@@ -336,7 +336,7 @@ def main(dossier: str) -> int:
         if plan.get("chemins") is not None:  # le plan de travail : on ne garde que les noms que ses branches laissent passer, AVANT de vérifier (inutile de vérifier ce qu'on retire)
             from pilote import suite_plan, suite_script
 
-            lignes, bilan_plan = suite_plan.appliquer(lignes, plan, suite_script.executer)
+            lignes, bilan_plan = suite_plan.appliquer(lignes, plan, suite_script.executer, fiabilites_sources=spec.get("fiabilites_sources"))
             resultat["plan"] = {**bilan_plan, "traductions": effets_traduction}
         from pilote.pont.verification import verifier_candidats
 

@@ -17,6 +17,7 @@ from typing import Any
 import yaml
 
 from pilote import budget, cles, disjoncteur, flux_rss
+from pilote.suite_reel import fiabilite_par_defaut
 from pilote import reglages as rg
 from pilote.config import Config
 from pilote.refus import ConfigRefusee, lire_yaml
@@ -101,6 +102,7 @@ class Materialise:
     jetons: dict[str, str] = field(default_factory=dict)  # étiquette de registre de grappes -> identifiant de source
     origines: dict[str, str] = field(default_factory=dict)  # identifiant de source -> classe d'origine
     mains: dict[str, str] = field(default_factory=dict)  # identifiant de source -> première / seconde main
+    fiabilites: dict[str, str] = field(default_factory=dict)  # identifiant de source -> lettre A-F (3.8.06, filtre « Fiabilité minimale »)
     exclues_budget: list[dict[str, str]] = field(default_factory=list)  # sources payantes écartées par le plafond de dépense
     couts: dict[str, dict[str, Any]] = field(default_factory=dict)  # source -> coût effectif (pour compter la dépense)
     verificateurs: list[dict[str, Any]] = field(default_factory=list)  # {source, module, parametres, cles_noms} : sources « vérifier » appelées sur chaque candidat qui a un site
@@ -137,6 +139,7 @@ def materialiser(cfg: Config, cible: Path, params: dict[str, Any]) -> Materialis
         utilisees = [d for d in utilisees if d.id in gardes]
         verif = [d for d in verif if d.id in gardes]
     res = Materialise(ids=[d.id for d in utilisees], origines={d.id: d.origine for d in utilisees}, mains={d.id: d.main for d in utilisees},
+                      fiabilites={d.id: fiabilite_par_defaut(d) for d in utilisees},
                       exclues_budget=exclues, couts={d.id: rg.choix_source(reg, d)["cout"] for d in utilisees}, en_pause=en_pause,
                       emoji_ok=sorted(d.id for d in utilisees if "emoji" in d.consomme))
     dossier = cible / "recherche"
@@ -220,6 +223,7 @@ def materialiser(cfg: Config, cible: Path, params: dict[str, Any]) -> Materialis
                                 **_delai(donnes)})  # `parametres.delai_s` : la pause minimale entre deux appels, quand le service limite son débit
         res.jetons[d.id] = d.id
         res.origines[d.id], res.mains[d.id] = d.origine, d.main
+        res.fiabilites[d.id] = fiabilite_par_defaut(d)
         res.couts[d.id] = rg.choix_source(reg, d)["cout"]
     # clés : seulement celles des sources utilisées, dans un fichier à droits restreints
     lignes = sorted({f"{n}={(d.cle_prefixe if n == d.cle else '')}{cles.valeur(cfg, n)}" for d in [*utilisees, *verif] for n in d.cles if cles.presente(cfg, n)})
