@@ -18,3 +18,12 @@ dit ce qui manque — jamais un bouton qui refuse sans expliquer.
 Remplissage `espace-5`, `rayon-carte`, `espace-6` entre deux sections.
 
 Le consommateur fournit le titre, les champs et les deux fonctions.
+
+**Le panneau s'élargit** : une poignée invisible de 8 px sur son bord gauche (`panneau-poignee`,
+curseur `col-resize`) permet de le tirer, sans borne haute, jamais sous sa largeur de base. Jamais
+mémorisé : il revient à sa largeur de base à chaque ouverture.
+
+**Un panneau à plusieurs sections** (ex. la fiche d'un outil) les sépare par un titre `titre-bloc`
+(`t-titre-s`, souligné d'un trait `trait`, plus marqué qu'un `titre-champ` de section) — un seul
+panneau continu à faire défiler, pas des onglets cliquables : rien n'est caché, aucun clic n'est
+nécessaire pour voir un champ.

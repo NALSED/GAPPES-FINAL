@@ -359,9 +359,14 @@ export function ficheOutil(id) {
     annoncer(r.ok ? "Test réussi : l'outil est opérationnel." : "Test échoué.", !r.ok);
   }
 
+  // Trois blocs (3.7, décidé avec Sednal) : un seul panneau continu, pas d'onglets cliquables — juste des
+  // titres de bloc nettement plus marqués que les titres de section habituels (titre-bloc, pas titre-champ).
   const contenu = [
-    f.nom.el, zones.nature, zones.modele, zones.options, f.code.el, f.fait.el,
-    h("div", { class: "deux-col" }, f.recoit.el, f.renvoie.el), zones.role, zones.effet,
+    h("span", { class: "titre-bloc" }, "Général"),
+    f.nom.el, zones.nature, zones.modele, f.fait.el,
+    h("span", { class: "titre-bloc" }, "Réglages"),
+    zones.options, f.code.el, h("div", { class: "deux-col" }, f.recoit.el, f.renvoie.el), zones.role, zones.effet,
+    h("span", { class: "titre-bloc" }, "Vérifier"),
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Test sur un exemple"), h("div", { class: "deux-col" }, f.entree.el, f.sortie.el), bouton({ libelle: `${VERBES.lancer} le test`, icon: "tester", petit: true, onclick: tester }), resultatTest,
       h("span", { class: "aide-champ" }, "L'outil passe « opérationnel » après un test réussi.")),
     f.cle.el,

@@ -64,6 +64,8 @@ h1, h2, h3, p { margin: 0; }
 /* ---------- champs ---------- */
 .champ { display: flex; flex-direction: column; gap: var(--espace-1); min-width: 0; }
 .champ > label, .titre-champ { font-size: var(--corps-taille); font-weight: var(--corps-fort-graisse); }
+.titre-bloc { font-size: var(--titre-s-taille); font-weight: var(--titre-s-graisse); line-height: var(--titre-s-interligne); border-bottom: 1px solid var(--trait); padding-bottom: var(--espace-2); margin-top: var(--espace-6); display: block; }
+.titre-bloc:first-child { margin-top: 0; }
 .champ input, .champ textarea, .champ select, .saisie { width: 100%; min-height: 36px; padding: 0 var(--espace-3); font-size: var(--controle-taille); line-height: var(--controle-interligne); background: var(--surface); border: 1px solid var(--trait-fort); border-radius: var(--rayon-controle); }
 .champ textarea { padding: var(--espace-2) var(--espace-3); resize: vertical; }
 .champ textarea.code, .code { font-family: var(--police-mono); font-size: var(--code-taille); line-height: var(--code-interligne); font-weight: var(--code-graisse); background: var(--surface-creuse); }
