@@ -1,8 +1,10 @@
 """Assistant IA (3.8.09) : le registre d'opérations (sur le modèle des formats de sortie) et l'appel à l'agent,
-en silence (claude -p) — rien de ce qui est testé ici n'appelle le vrai agent."""
+en silence (claude -p --output-format json) — rien de ce qui est testé ici n'appelle le vrai agent. Le compteur
+de consommation est en tokens réels (Q33/904), jamais un nombre d'appels."""
 
 from __future__ import annotations
 
+import json
 import subprocess
 
 import pytest
@@ -11,6 +13,21 @@ from fastapi.testclient import TestClient
 
 from pilote import operations_ia, suite_ia
 from pilote.app import creer_app
+
+USAGE = {"input_tokens": 10, "cache_creation_input_tokens": 5, "cache_read_input_tokens": 3, "output_tokens": 20}  # = 38
+
+
+def _faux(stdout: str = "", returncode: int = 0, stderr: str = ""):
+    class Faux:
+        pass
+
+    f = Faux()
+    f.stdout, f.returncode, f.stderr = stdout, returncode, stderr
+    return f
+
+
+def _reponse(texte: str, is_error: bool = False, usage: dict | None = None) -> str:
+    return json.dumps({"result": texte, "is_error": is_error, "usage": usage if usage is not None else USAGE})
 
 
 def test_les_trois_operations_se_declarent_et_savent_construire_leur_invite():
@@ -30,10 +47,10 @@ def test_route_api_operations_ia(cfg):
     assert {"resumer", "classer", "extraire_mots_cles"} <= ids
 
 
-def test_commande_silencieuse_passe_le_modele_et_l_effort(monkeypatch):
+def test_commande_silencieuse_demande_du_json_passe_le_modele_et_l_effort(monkeypatch):
     monkeypatch.setattr(suite_ia, "chemin_agent", lambda: "/x/claude")
-    assert suite_ia.commande("", "fais ceci") == ["/x/claude", "-p", "fais ceci"]
-    assert suite_ia.commande("haiku", "fais ceci") == ["/x/claude", "-p", "fais ceci", "--model", "haiku"]
+    assert suite_ia.commande("", "fais ceci") == ["/x/claude", "-p", "fais ceci", "--output-format", "json"]
+    assert suite_ia.commande("haiku", "fais ceci") == ["/x/claude", "-p", "fais ceci", "--output-format", "json", "--model", "haiku"]
     assert suite_ia.commande("", "fais ceci", "low")[-2:] == ["--effort", "low"]
 
 
@@ -47,6 +64,12 @@ def test_l_agent_est_trouve_hors_du_path_a_son_emplacement_par_defaut(monkeypatc
     assert suite_ia.chemin_agent() == str(tmp_path / ".local" / "bin" / "claude") and suite_ia.disponible()
 
 
+def test_total_tokens_additionne_les_quatre_compteurs_reels():
+    assert suite_ia.total_tokens(USAGE) == 38
+    assert suite_ia.total_tokens({}) == 0
+    assert suite_ia.total_tokens({"input_tokens": 1, "total_cost_usd": 0.5}) == 1  # jamais le coût en dollars
+
+
 def test_demander_leve_une_erreur_claire_sans_agent_installe(monkeypatch):
     def leve(*a, **k):
         raise FileNotFoundError
@@ -56,48 +79,57 @@ def test_demander_leve_une_erreur_claire_sans_agent_installe(monkeypatch):
         suite_ia.demander("", "x")
 
 
-def test_demander_leve_une_erreur_claire_sur_sortie_vide(monkeypatch):
-    class Faux:
-        returncode = 0
-        stdout = "   "
-        stderr = ""
+def test_demander_leve_une_erreur_claire_sur_sortie_non_json(monkeypatch):
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _faux(stdout="pas du json", returncode=0))
+    with pytest.raises(ValueError, match="JSON lisible"):
+        suite_ia.demander("", "x")
 
-    monkeypatch.setattr(subprocess, "run", lambda *a, **k: Faux())
+
+def test_demander_leve_une_erreur_claire_sur_code_de_sortie_non_nul(monkeypatch):
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _faux(stdout="rien", returncode=1, stderr="panne réseau"))
+    with pytest.raises(OSError, match="panne réseau"):
+        suite_ia.demander("", "x")
+
+
+def test_demander_leve_une_erreur_claire_si_l_agent_signale_une_erreur(monkeypatch):
+    """Code de sortie 0 mais `is_error: true` (vérifié sur .250 le 03/11/2026, ex. modèle inconnu) : pas un succès muet."""
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _faux(stdout=_reponse("il y a un problème avec le modèle", is_error=True)))
+    with pytest.raises(OSError, match="problème avec le modèle"):
+        suite_ia.demander("", "x")
+
+
+def test_demander_leve_une_erreur_claire_sur_sortie_vide(monkeypatch):
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _faux(stdout=_reponse("   ")))
     with pytest.raises(ValueError, match="rien rendu"):
         suite_ia.demander("", "x")
 
 
-def test_demander_rend_la_sortie_de_l_agent(monkeypatch):
-    class Faux:
-        returncode = 0
-        stdout = "voici le résumé"
-        stderr = ""
-
-    monkeypatch.setattr(subprocess, "run", lambda *a, **k: Faux())
-    assert suite_ia.demander("", "x") == "voici le résumé"
+def test_demander_rend_le_texte_et_les_tokens_reels(monkeypatch):
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _faux(stdout=_reponse("voici le résumé")))
+    assert suite_ia.demander("", "x") == ("voici le résumé", 38)
 
 
 def test_appliquer_construit_l_invite_de_l_operation_choisie(monkeypatch):
     vus = []
-    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": vus.append((modele, prompt)) or "ok")
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": vus.append((modele, prompt)) or ("ok", 7))
     decl = operations_ia.decouvrir()["resumer"]
-    assert suite_ia.appliquer(decl, {"nom": "FFSA"}, {}, modele="sonnet") == "ok"
+    assert suite_ia.appliquer(decl, {"nom": "FFSA"}, {}, modele="sonnet") == ("ok", 7)
     assert vus[0][0] == "sonnet" and "FFSA" in vus[0][1]
 
 
-def test_appliquer_lignes_pose_le_champ_et_la_marque(monkeypatch):
-    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": "un résumé")
+def test_appliquer_lignes_pose_le_champ_la_marque_et_compte_les_tokens(monkeypatch):
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": ("un résumé", 10))
     decl = operations_ia.decouvrir()["resumer"]
     lignes = [{"nom": "FFSA"}, {"nom": "FFBB"}]
     bilan = suite_ia.appliquer_lignes(lignes, decl, {"modele": "", "marquer": True})
-    assert bilan == {"ia_appels": 2}
+    assert bilan == {"ia_appels": 2, "ia_tokens": 20}
     # dans les faits, jamais en colonne : une colonne inconnue faisait échouer la recherche (revue 902, test réel)
     assert all(x["faits"]["ia"] == {"resume_ia": "un résumé"} and x["faits"]["ia_marque"] == ["resume_ia"] for x in lignes)
     assert all(set(x) == {"nom", "faits"} for x in lignes)
 
 
 def test_appliquer_lignes_sans_marquer_pose_le_champ_sans_la_marque(monkeypatch):
-    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": "un résumé")
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": ("un résumé", 5))
     decl = operations_ia.decouvrir()["resumer"]
     lignes = [{"nom": "FFSA"}]
     suite_ia.appliquer_lignes(lignes, decl, {"modele": "", "marquer": False})
@@ -113,27 +145,46 @@ def test_appliquer_lignes_garde_le_resultat_sans_le_champ_ia_si_l_agent_echoue(m
     lignes = [{"nom": "FFSA"}]
     signales = []
     bilan = suite_ia.appliquer_lignes(lignes, decl, {"modele": "", "marquer": True}, signaler=lambda *a, **k: signales.append((a, k)))
-    assert bilan == {"ia_appels": 0, "ia_echecs": 1}
+    assert bilan == {"ia_appels": 0, "ia_tokens": 0, "ia_echecs": 1}
     assert "ia" not in lignes[0].get("faits", {})
     assert signales and signales[0][0] == ("ia_echec",)
 
 
 def test_appliquer_lignes_s_arrete_quand_on_le_demande(monkeypatch):
     """Arrêt demandé ou temps écoulé : les lignes restantes ne passent pas par l'agent, et c'est compté."""
-    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": "r")
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": ("r", 4))
     decl = operations_ia.decouvrir()["resumer"]
     lignes = [{"nom": "A"}, {"nom": "B"}, {"nom": "C"}]
     vus = []
     bilan = suite_ia.appliquer_lignes(lignes, decl, {"marquer": True}, arreter=lambda: vus.append(1) or len(vus) > 1)
-    assert bilan == {"ia_appels": 1, "ia_non_traitees": 2}
+    assert bilan == {"ia_appels": 1, "ia_tokens": 4, "ia_non_traitees": 2}
     assert "ia" in lignes[0]["faits"] and "faits" not in lignes[1]
+
+
+def test_appliquer_lignes_respecte_le_plafond_de_fiches_traitees(monkeypatch):
+    """Q33/904 : un nouveau réglage limite le nombre de noms traités par recherche, au-delà de l'arrêt et du temps."""
+    vus = []
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": vus.append(prompt) or ("r", 1))
+    decl = operations_ia.decouvrir()["resumer"]
+    lignes = [{"nom": f"N{i}"} for i in range(5)]
+    bilan = suite_ia.appliquer_lignes(lignes, decl, {"marquer": True, "plafond": 2})
+    assert bilan == {"ia_appels": 2, "ia_tokens": 2, "ia_plafonnees": 3}
+    assert len(vus) == 2  # l'agent n'est jamais appelé pour les 3 au-delà du plafond
+    assert "faits" not in lignes[2]
+
+
+def test_appliquer_lignes_plafond_absent_traite_tout(monkeypatch):
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": ("r", 1))
+    lignes = [{"nom": "A"}, {"nom": "B"}]
+    bilan = suite_ia.appliquer_lignes(lignes, operations_ia.decouvrir()["resumer"], {"marquer": True, "plafond": None})
+    assert bilan == {"ia_appels": 2, "ia_tokens": 2}
 
 
 def test_le_candidat_accepte_une_ligne_traitee_par_l_ia(monkeypatch):
     """La fiche rangée en base (Candidat) accepte la ligne telle que le pont l'écrit après l'IA."""
     from pilote.base import Candidat
 
-    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": "r")
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": ("r", 2))
     ligne = {"nom": "FFSA", "trouve_par": ["a"], "faits": {"ref": "x"}}
     suite_ia.appliquer_lignes([ligne], operations_ia.decouvrir()["resumer"], {"marquer": True})
     c = Candidat(recherche_id="r", **ligne)

@@ -180,3 +180,37 @@ def test_regle8_afficher_comptes_se_valide_comme_une_case_oui_non():
     assert valider_options(Config(), {})  == {}  # absente par défaut : la règle s'applique comme partout ailleurs
     with pytest.raises(LancementInvalide):
         valider_options(Config(), {"regle8_afficher_comptes": "oui"})  # pas un booléen : refusé, comme « page entière ou extrait »
+
+
+def test_lever_automatiquement_troisieme_levier_au_dessus_du_seuil():
+    """Lever 3 (904/Q31) : un compte masqué par la règle 8 mais qui matche directement la recherche (probabilité
+    au-dessus du seuil de rétention) voit son affichage levé sans intervention — le constat ne bouge pas."""
+    from grappes.decouverte.registres import Decouvert
+
+    from pilote.regle8 import lever_automatiquement
+
+    d = Decouvert("Jean Dupont", "x", "jean_dupont", type_candidat="personne", liens={"regle8": "true", "regle8_genre_brut": '"compte"'})
+    leves, leve = lever_automatiquement([d], seuil_probabilite=0.5, probabilite=0.8)
+    assert leve is True and leves[0].type_candidat == "compte"
+    assert leves[0].liens["regle8"] == "true"  # le constat suit toujours la fiche, inchangé
+
+
+def test_lever_automatiquement_sous_le_seuil_ne_change_rien():
+    from grappes.decouverte.registres import Decouvert
+
+    from pilote.regle8 import lever_automatiquement
+
+    d = Decouvert("Jean Dupont", "x", "jean_dupont", type_candidat="personne", liens={"regle8": "true", "regle8_genre_brut": '"compte"'})
+    leves, leve = lever_automatiquement([d], seuil_probabilite=0.5, probabilite=0.3)
+    assert leve is False and leves == [d] and leves[0].type_candidat == "personne"
+
+
+def test_lever_automatiquement_sans_constat_ne_change_rien():
+    """Un compte avec un indice institutionnel (pas marqué par la règle 8) : rien à lever, même au-dessus du seuil."""
+    from grappes.decouverte.registres import Decouvert
+
+    from pilote.regle8 import lever_automatiquement
+
+    d = Decouvert("Mairie de Lyon", "x", "mairie_lyon", type_candidat="compte", liens={})
+    leves, leve = lever_automatiquement([d], seuil_probabilite=0.5, probabilite=0.9)
+    assert leve is False and leves == [d]

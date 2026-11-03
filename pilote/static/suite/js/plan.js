@@ -367,6 +367,8 @@ function rendreOptionsIa(n, refresh) {
   modele.saisie.addEventListener("change", () => { optDefinir(n, "Modèle", modele.valeur()); sauvegarder(); });
   const marquer = optLabel(n, "Marquer les résultats") !== "non";
   const effort = optLabel(n, "Effort") || EFFORTS_IA[0];
+  const plafond = champ({ libelle: "Traiter au maximum", valeur: optLabel(n, "Traiter au maximum"), placeholder: "laisse vide pour tout traiter", type: "number" });
+  plafond.saisie.addEventListener("change", () => { optDefinir(n, "Traiter au maximum", plafond.valeur()); sauvegarder(); });
   return h(
     "div", { class: "options-grille" },
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Opération"),
@@ -376,6 +378,7 @@ function rendreOptionsIa(n, refresh) {
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Effort"),
       groupePuces(EFFORTS_IA.map((e) => [e, e]), effort, (v) => { optDefinir(n, "Effort", v); sauvegarder(); refresh(); }),
       h("span", { class: "aide-champ" }, "Plus d'effort : une réponse plus réfléchie, mais plus lente.")),
+    plafond.el,
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Marquer les résultats"),
       groupePuces([["oui", "oui"], ["non", "non"]], marquer ? "oui" : "non", (v) => { optDefinir(n, "Marquer les résultats", v); sauvegarder(); refresh(); }),
       h("span", { class: "aide-champ" }, "Par défaut activé : ce que l'IA produit reste marqué « IA » dans la grappe.")),

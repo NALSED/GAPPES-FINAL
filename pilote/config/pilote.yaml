@@ -13,7 +13,8 @@ service:
   hotes_autorises: []      # noms d'hôte acceptés en plus de 127.0.0.1 et localhost quand le service est local : sans cela, un
                            # nom de domaine extérieur pointant sur 127.0.0.1 permettrait à une page web d'atteindre cette API
 grappes:
-  racine: ../grappes     # la racine de grappes (dossier voisin dans ce dépôt) ; sa bibliothèque et sa config/ en sont tirées
+  racine: ..     # la racine de grappes : le dossier PARENT de pilote (GAPPES-FINAL a le moteur à la racine du dépôt, pas dans un
+                     # sous-dossier voisin — décision 904/Q34) ; sa bibliothèque et sa config/ en sont tirées
   config: config           # dossier de configuration de grappes, relatif à sa racine
   python: .venv/bin/python # interpréteur de grappes (ses dépendances, dont les modèles de lecture de noms), relatif à sa racine
   secrets: config/secrets.env   # clés déjà présentes côté grappes : LUES seulement (jamais copiées ni affichées) ; vide = ne pas les lire

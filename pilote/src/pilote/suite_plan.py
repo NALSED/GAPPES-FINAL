@@ -335,10 +335,13 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
                 if effort is None:
                     raise ConfigRefusee(f"« {node['nom']} » : l'effort est l'un de : {', '.join(EFFORTS)}.")
                 marquer = norme(opts_map.get("Marquer les résultats", "oui")) != "non"
-                ia = {"tuile": i, "operation": op_id, "modele": str(opts_map.get("Modèle", "") or "").strip(), "effort": effort, "marquer": marquer}
+                plafond_txt = str(opts_map.get("Traiter au maximum", "") or "").strip()
+                plafond = int(plafond_txt) if plafond_txt.isdigit() else None
+                ia = {"tuile": i, "operation": op_id, "modele": str(opts_map.get("Modèle", "") or "").strip(), "effort": effort, "marquer": marquer, "plafond": plafond}
                 appliques.append({
                     "tuile": i, "nom": node["nom"],
                     "texte": f"applique « {ops_connues[op_id]['nom']} » aux résultats qui atteignent la tuile"
+                    + (f", {plafond} au maximum" if plafond is not None else "")
                     + (" (résultats marqués « IA »)" if marquer else ""),
                 })  # fmt: skip
         elif genre == "rsshub":

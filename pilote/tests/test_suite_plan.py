@@ -461,7 +461,7 @@ def test_ia_choisit_l_operation_et_le_modele():
         [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
     )  # fmt: skip
     c = comp_ia(p)
-    assert c["ia"] == {"tuile": "ia", "operation": "resumer", "modele": "haiku", "effort": "", "marquer": True}
+    assert c["ia"] == {"tuile": "ia", "operation": "resumer", "modele": "haiku", "effort": "", "marquer": True, "plafond": None}
     assert any("Résumer" in x["texte"] for x in c["appliques"] if x["nom"] == "ia")
     assert "ia" not in {x["nom"] for x in c["non_appliques"]}
 
@@ -480,7 +480,7 @@ def test_ia_marquer_non_desactive_le_marquage():
         [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Classer / catégoriser"], ["Marquer les résultats", "non"]])],
         [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
     )  # fmt: skip
-    assert comp_ia(p)["ia"] == {"tuile": "ia", "operation": "classer", "modele": "", "effort": "", "marquer": False}
+    assert comp_ia(p)["ia"] == {"tuile": "ia", "operation": "classer", "modele": "", "effort": "", "marquer": False, "plafond": None}
 
 
 def test_ia_une_seule_tuile_jouee():
@@ -564,3 +564,14 @@ def test_rsshub_sans_adresse_de_site_est_refusee():
     )  # fmt: skip
     with pytest.raises(ConfigRefusee, match="adresse du site à transformer"):
         comp(p, rsshub_disponible=True)
+
+
+def test_ia_plafond_traiter_au_maximum():
+    def ia_de(valeur):
+        p = plan(
+            [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Résumer"], ["Traiter au maximum", valeur]])],
+            [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
+        )  # fmt: skip
+        return comp_ia(p)["ia"]["plafond"]
+
+    assert ia_de("5") == 5 and ia_de("") is None and ia_de("beaucoup") is None

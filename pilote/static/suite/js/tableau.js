@@ -227,9 +227,11 @@ const PHRASE_EVENEMENT = {
 function phraseJournal(e) {
   if (e.evenement === "tuile_passee") return `${e.detail.nom} : ${fmtNombre(e.detail.traversees)} fiches traversées, ${fmtNombre(e.detail.modifiees)} modifiées`;
   if (e.evenement === "plan_ia_appels") {
-    const n = e.detail.n || 0;
-    const base = `Assistant IA : ${aPluriel(n, "appel", "appels")}`;
-    return e.detail.echecs ? `${base}, ${aPluriel(e.detail.echecs, "échec", "échecs")}` : base;
+    const d = e.detail;
+    let base = `Assistant IA : ${aPluriel(d.n || 0, "appel", "appels")}, ${fmtNombre(d.tokens || 0)} jetons`;
+    if (d.echecs) base += `, ${aPluriel(d.echecs, "échec", "échecs")}`;
+    if (d.plafonnees) base += `, ${fmtNombre(d.plafonnees)} non traitée(s) (plafond)`;
+    return base;
   }
   return PHRASE_EVENEMENT[e.evenement] || e.evenement;
 }

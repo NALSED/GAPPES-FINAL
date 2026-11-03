@@ -162,7 +162,7 @@ def main(dossier: str) -> int:
         from pilote import adaptateurs
         from pilote.adaptateurs import programmes
         from pilote.emoji_texte import requete_pour
-        from pilote.regle8 import est_personne
+        from pilote.regle8 import est_personne, lever_automatiquement
 
         entree_base = {"sujet": spec.get("phrase") or phrase, "pays": spec.get("pays_code", ""), "limite": int(spec.get("combien", 200)), **spec.get("entree", {})}
 
@@ -184,6 +184,7 @@ def main(dossier: str) -> int:
             liens = {k: json.dumps(n[k], ensure_ascii=False) for k in ("relations", "coordonnees", "fonction", "alias") if n.get(k)}
             if personne:
                 liens["regle8"] = json.dumps(True)  # le constat suit la fiche, quel que soit le genre écrit
+                liens["regle8_genre_brut"] = json.dumps(genre_brut)  # pour une levée automatique éventuelle (904/Q31) : jamais pour réécrire le constat
             return Decouvert(
                 str(n["nom"]).strip(), source, num or str(n["nom"]).strip(), str(n.get("ville", "") or ""), str(n.get("site", "") or ""),
                 num if num.isdigit() and len(num) in (9, 14) else "", str(n.get("origine", "")), genre, "", liens,
@@ -336,12 +337,19 @@ def main(dossier: str) -> int:
         prov = Provenance(spec.get("jetons", {}), spec.get("origines_sources", {}), spec.get("mains_sources", {}), eco_par_site, fournisseurs_par_site)
         exclus = [fusion.norm_name(m) for m in spec.get("mots_a_exclure", []) if m.strip()]
         lignes, vus = [], set()
-        for c, _lg, _p in classes:
+        for c, _lg, p in classes:
             nn = fusion.norm_name(c.nom or "")
             if not nn or nn in vus or any(m in nn.split() or m in nn for m in exclus):
                 continue
             vus.add(nn)
-            lignes.append(faits_candidat(c, par_nom.get(nn, []), site_key, spec.get("pays_code", ""), prov))
+            # Règle 8 (904/Q31) : un compte marqué « personne » mais qui matche directement la recherche (probabilité
+            # calibrée au-dessus du seuil de rétention, le même qui décide « retenu » dans classement/production.py)
+            # voit son AFFICHAGE levé automatiquement, en plus de la levée manuelle (Tri) et du levier global.
+            trouves, leve_auto = lever_automatiquement(par_nom.get(nn, []), cc.p_min, p)
+            ligne = faits_candidat(c, trouves, site_key, spec.get("pays_code", ""), prov)
+            if leve_auto:
+                ligne["faits"]["regle8_leve"] = {"qui": "automatique", "quand": __import__("datetime").datetime.now(__import__("datetime").UTC).isoformat(timespec="seconds")}
+            lignes.append(ligne)
             if len(lignes) >= int(spec.get("combien", 200)):
                 break
         if plan.get("chemins") is not None:  # le plan de travail : on ne garde que les noms que ses branches laissent passer, AVANT de vérifier (inutile de vérifier ce qu'on retire)

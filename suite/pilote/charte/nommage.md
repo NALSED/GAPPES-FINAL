@@ -53,6 +53,10 @@ L'**Effort** de l'Assistant IA (3.8.09) est un menu fermé de six mots : *par d�
 *élevé*, *très élevé*, *maximal* — rien d'autre, et jamais les valeurs techniques de l'agent (`low`, `max`…).
 À l'export, un champ produit par l'IA est précédé de **[IA]** quand la tuile marque ses résultats.
 
+La consommation de l'Assistant IA se compte en **jetons** (décision 904/Q33), jamais en nombre d'appels ni en
+crédits — un mot à part, informatif seulement : il ne dit rien du forfait Pro/Max de Sednal. Le réglage qui limite
+le nombre de fiches traitées s'appelle **Traiter au maximum**, sur le modèle de « Garder au maximum » (Filtre).
+
 ## Les trois états
 
 | Mot | Couleur | Ce qu'il dit |

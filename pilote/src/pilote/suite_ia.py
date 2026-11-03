@@ -9,17 +9,28 @@ d'inexploitable, une erreur claire est levée — l'appelant garde le résultat 
 
 Ce que l'IA produit est rangé dans `faits["ia"]` (champ de sortie de l'opération -> texte), jamais dans une
 colonne de la fiche : la donnée IA ne se mêle pas aux faits trouvés, et la marque (`faits["ia_marque"]`) la suit
-jusqu'à l'export (spécification 10, règle 1)."""
+jusqu'à l'export (spécification 10, règle 1).
+
+Décision 904/Q33 : le coût affiché n'est pas un nombre d'appels, mais les TOKENS RÉELS consommés — lus directement
+dans `usage` de `claude -p … --output-format json`, rien à estimer. Ce chiffre est informatif seulement (le
+forfait Pro/Max de Sednal n'est pas un quota en tokens, c'est une fenêtre glissante de 5 heures sans solde publié) :
+jamais mêlé au compteur crédits (3.8.08, facturé différemment), jamais plafonné lui-même — seul le NOMBRE DE NOMS
+traités par recherche l'est (option « Traiter au maximum » de la tuile)."""
 
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Any
 
 DELAI_S = 60
 # Effort de raisonnement (`claude -p … --effort <niveau>`, vérifié sur .250 le 03/11/2026) : mot affiché -> valeur.
 EFFORTS = {"par défaut": "", "faible": "low", "moyen": "medium", "élevé": "high", "très élevé": "xhigh", "maximal": "max"}
+# Les quatre compteurs de `usage` qui représentent des tokens réellement consommés (Q33) : la lecture, l'écriture et
+# les deux sens du cache — jamais un cumul d'affichage inventé, seulement ce que le CLI rend déjà.
+_CHAMPS_USAGE = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "output_tokens")
 
 
 def chemin_agent() -> str | None:
@@ -37,9 +48,10 @@ def disponible() -> bool:
 
 
 def commande(modele: str, prompt: str, effort: str = "") -> list[str]:
-    """La ligne de commande silencieuse (`claude -p "…" --model <modèle> --effort <niveau>`), isolée pour être
-    testée sans lancer de processus réel."""
-    cmd = [chemin_agent() or "claude", "-p", prompt]
+    """La ligne de commande silencieuse (`claude -p "…" --model <modèle> --effort <niveau> --output-format json`),
+    isolée pour être testée sans lancer de processus réel. Le JSON porte `result` (le texte) et `usage` (les
+    tokens, Q33) — sans lui il n'y aurait qu'un texte brut, sans aucun moyen de compter la consommation réelle."""
+    cmd = [chemin_agent() or "claude", "-p", prompt, "--output-format", "json"]
     if modele:
         cmd += ["--model", modele]
     if effort:
@@ -47,42 +59,61 @@ def commande(modele: str, prompt: str, effort: str = "") -> list[str]:
     return cmd
 
 
-def demander(modele: str, prompt: str, effort: str = "") -> str:
-    """Le texte renvoyé par l'agent. Lève OSError si l'agent n'est pas installé ou ne répond pas, ValueError s'il
-    rend une sortie vide — jamais un fait inventé en silence."""
+def total_tokens(usage: dict[str, Any]) -> int:
+    """Les tokens réellement consommés par un appel, tels que `usage` les donne (Q33) : rien d'estimé."""
+    return sum(int(usage.get(c) or 0) for c in _CHAMPS_USAGE)
+
+
+def demander(modele: str, prompt: str, effort: str = "") -> tuple[str, int]:
+    """(le texte renvoyé par l'agent, les tokens consommés par cet appel). Lève OSError si l'agent n'est pas
+    installé, ne répond pas ou signale lui-même une erreur (`is_error`) ; ValueError si sa réponse n'est pas le
+    JSON attendu ou que le texte est vide — jamais un fait inventé en silence."""
     try:
         p = subprocess.run(commande(modele, prompt, effort), capture_output=True, text=True, timeout=DELAI_S, check=False)
     except FileNotFoundError as exc:
         raise OSError("l'agent Claude Code n'est pas installé sur cette machine (introuvable sur le PATH)") from exc
     except subprocess.TimeoutExpired as exc:
         raise OSError(f"l'agent Claude Code a dépassé {DELAI_S} secondes") from exc
-    if p.returncode != 0:
-        derniere = (p.stderr.strip().splitlines() or ["il s'est arrêté sans message"])[-1][:200]
-        raise OSError(f"l'agent Claude Code n'a pas pu répondre : {derniere}")
-    sortie = p.stdout.strip()
+    try:
+        d = json.loads(p.stdout)
+    except ValueError as exc:
+        if p.returncode != 0:
+            derniere = (p.stderr.strip().splitlines() or ["il s'est arrêté sans message"])[-1][:200]
+            raise OSError(f"l'agent Claude Code n'a pas pu répondre : {derniere}") from exc
+        raise ValueError("l'agent Claude Code n'a pas rendu une réponse JSON lisible") from exc
+    if p.returncode != 0 or d.get("is_error"):
+        raise OSError(f"l'agent Claude Code a signalé une erreur : {str(d.get('result') or '').strip()[:200] or 'sans message'}")
+    sortie = str(d.get("result") or "").strip()
     if not sortie:
         raise ValueError("l'agent Claude Code n'a rien rendu")
-    return sortie
+    return sortie, total_tokens(d.get("usage") or {})
 
 
-def appliquer(operation: dict, resultat: dict, options: dict, modele: str = "", effort: str = "") -> str:
-    """Le texte de `operation['champ_sortie']` pour ce résultat. Ne modifie resultat nulle part."""
+def appliquer(operation: dict, resultat: dict, options: dict, modele: str = "", effort: str = "") -> tuple[str, int]:
+    """(le texte de `operation['champ_sortie']` pour ce résultat, les tokens consommés). Ne modifie resultat nulle part."""
     return demander(modele, operation["module"].prompt(resultat, options), effort)
 
 
 def appliquer_lignes(lignes: list[dict], operation: dict, ia_spec: dict, signaler=None, arreter=None) -> dict:
-    """Applique `operation` à chaque ligne de `lignes`, EN PLACE : `faits["ia"][champ_sortie]`, et le champ ajouté à
-    `faits["ia_marque"]` si `ia_spec['marquer']`. Une ligne dont l'agent échoue garde son résultat sans le champ IA
-    (jamais un fait inventé en silence) : comptée à part, signalée si `signaler` est donné. `arreter()` vrai (arrêt
-    demandé, limite de temps) : les lignes restantes ne sont pas traitées, et c'est compté.
-    Rend `{"ia_appels", "ia_echecs"?, "ia_non_traitees"?}` pour le journal (3.8.09)."""
-    appels = echecs = 0
+    """Applique `operation` à chaque ligne de `lignes` (au plus `ia_spec['plafond']`, Q33), EN PLACE :
+    `faits["ia"][champ_sortie]`, et le champ ajouté à `faits["ia_marque"]` si `ia_spec['marquer']`. Une ligne dont
+    l'agent échoue garde son résultat sans le champ IA (jamais un fait inventé en silence) : comptée à part,
+    signalée si `signaler` est donné. `arreter()` vrai (arrêt demandé, limite de temps) : les lignes restantes ne
+    sont pas traitées, et c'est compté. Rend `{"ia_appels", "ia_tokens", "ia_echecs"?, "ia_non_traitees"?,
+    "ia_plafonnees"?}` pour le journal (3.8.09/Q33)."""
+    plafond = ia_spec.get("plafond")
+    a_traiter = lignes if plafond is None else lignes[:plafond]
+    plafonnees = len(lignes) - len(a_traiter)
+    appels = echecs = tokens = 0
     champ = operation["champ_sortie"]
-    for n, ligne in enumerate(lignes):
+    for n, ligne in enumerate(a_traiter):
         if arreter and arreter():
-            return {"ia_appels": appels, **({"ia_echecs": echecs} if echecs else {}), "ia_non_traitees": len(lignes) - n}
+            return {
+                "ia_appels": appels, "ia_tokens": tokens, **({"ia_echecs": echecs} if echecs else {}),
+                "ia_non_traitees": len(a_traiter) - n, **({"ia_plafonnees": plafonnees} if plafonnees else {}),
+            }  # fmt: skip
         try:
-            texte = appliquer(operation, ligne, {}, ia_spec.get("modele", ""), ia_spec.get("effort", ""))
+            texte, cout = appliquer(operation, ligne, {}, ia_spec.get("modele", ""), ia_spec.get("effort", ""))
         except (OSError, ValueError) as exc:
             echecs += 1
             if signaler:
@@ -93,4 +124,8 @@ def appliquer_lignes(lignes: list[dict], operation: dict, ia_spec: dict, signale
         if ia_spec.get("marquer"):
             faits["ia_marque"] = sorted({*faits.get("ia_marque", []), champ})
         appels += 1
-    return {"ia_appels": appels, **({"ia_echecs": echecs} if echecs else {})}
+        tokens += cout
+    return {
+        "ia_appels": appels, "ia_tokens": tokens, **({"ia_echecs": echecs} if echecs else {}),
+        **({"ia_plafonnees": plafonnees} if plafonnees else {}),
+    }  # fmt: skip

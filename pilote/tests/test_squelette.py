@@ -44,11 +44,12 @@ def test_configuration_aucun_chemin_en_dur(cfg, tmp_path):
 def test_configuration_livree_est_lisible():
     c = charger()
     assert c.service.port == 8443 and c.service.https and c.service.hote == "127.0.0.1"
-    # La racine de grappes est le dossier VOISIN de pilote dans le dépôt (`racine: ../grappes`). On vérifie qu'elle se résout là, et
-    # qu'elle porte bien la configuration du moteur — jamais qu'elle vaut un chemin de déploiement précis : le dépôt doit pouvoir être
+    # La racine de grappes est le dossier PARENT de pilote (`racine: ..`) : GAPPES-FINAL a le moteur à la racine du
+    # dépôt, pas dans un sous-dossier voisin (décision 904/Q34). On vérifie qu'elle s'y résout, et qu'elle porte bien
+    # la configuration du moteur — jamais qu'elle vaut un chemin de déploiement précis : le dépôt doit pouvoir être
     # posé ailleurs que sur la machine de l'agent, et ce test échouait partout ailleurs alors que la configuration était juste.
     racine_pilote = Path(c.racine)
-    assert c.grappes_racine.resolve() == (racine_pilote.parent / "grappes").resolve()
+    assert c.grappes_racine.resolve() == racine_pilote.parent.resolve()
     assert (c.grappes_racine / c.grappes_config).is_dir(), f"la configuration du moteur manque dans {c.grappes_racine / c.grappes_config}"
     assert c.fils >= 1
 
