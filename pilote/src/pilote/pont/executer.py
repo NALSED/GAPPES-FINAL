@@ -265,8 +265,15 @@ def main(dossier: str) -> int:
             return sortie["noms"], ""
 
         locales = {a["source"] for a in spec.get("adaptateurs", []) if a.get("local")}
+        # Attente (3.8.07) : « sauter cette source, continuer les autres » est déjà le comportement de ce code (chaque
+        # source est isolée, son échec n'arrête jamais les autres) — rien à faire pour ce choix. Seul « arrêter toute la
+        # recherche » demande un geste : le dire ici, au moment où une source épuise son quota externe (429/503 encore
+        # présent après les essais de adaptateurs.Client._envoyer), puis arrêter le tour des sources comme pour la
+        # limite d'appels (ce qui est déjà collecté est gardé).
+        attente_action = ((spec.get("plan") or {}).get("attente") or {}).get("action", "sauter")
+        arret_quota = [False]
         for n, (source, executer_) in enumerate(executions):
-            if (arret_local() if source in locales else doit_s_arreter()):
+            if arret_quota[0] or (arret_local() if source in locales else doit_s_arreter()):
                 # une source choisie qui n'est PAS appelée doit être dite : sans cela, « n sources sur n ont répondu » comptait
                 # des sources jamais interrogées, et leur silence ressemblait à une absence de résultat.
                 for reste, _ in executions[n:]:
@@ -289,6 +296,10 @@ def main(dossier: str) -> int:
                 avancement.signaler("source_echec", prise=source, raison="arrêtée : la part d'appels de la recherche (hors vérification) est épuisée")  # dit, jamais en silence
             except adaptateurs.ErreurSource as exc:
                 noms, statut, raison = [], f"erreur : {exc}", str(exc)
+                if attente_action == "arreter" and getattr(exc, "code", None) in (429, 503):
+                    arret_quota[0] = True
+                    resultat["arret"] = resultat["arret"] or "quota"
+                    raison += " La tuile Attente est réglée sur « Arrêter toute la recherche » : les sources suivantes ne sont pas appelées."
             except Exception as exc:  # noqa: BLE001 - un défaut d'une source ne doit jamais faire échouer la recherche
                 noms, statut, raison = [], f"erreur : {type(exc).__name__}", f"la source a rencontré un défaut inattendu ({type(exc).__name__})"
             if statut.startswith("erreur"):

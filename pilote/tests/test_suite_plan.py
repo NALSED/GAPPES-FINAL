@@ -280,8 +280,17 @@ def test_format_fusion_et_ce_qui_n_est_pas_applique():
              [lien("saisie", "n1"), lien("n1", "fu"), lien("fu", "fo"), lien("fo", "bo"), lien("bo", "at"), lien("at", "grappes")])  # fmt: skip
     c = comp(p)
     assert c["format"] == ["csv"]
-    assert {x["nom"] for x in c["non_appliques"]} == {"bo", "at"} and all(x["raison"] for x in c["non_appliques"])
-    assert {x["nom"] for x in c["appliques"]} >= {"fo", "fu"}
+    assert {x["nom"] for x in c["non_appliques"]} == {"bo"} and all(x["raison"] for x in c["non_appliques"])
+    assert {x["nom"] for x in c["appliques"]} >= {"fo", "fu", "at"}  # attente (3.8.07) est désormais appliquée : « sauter » est déjà le comportement par défaut
+    assert c["attente"] == {"tuile": "at", "action": "sauter"}
+
+
+def test_attente_choix_arreter_toute_la_recherche():
+    p = plan([("saisie",), ("grappes",), ("n1", "a"), ("at", "attente", None, [["Quand le quota est atteint", "Arrêter toute la recherche"]])],
+             [lien("saisie", "n1"), lien("n1", "at"), lien("at", "grappes")])  # fmt: skip
+    c = comp(p)
+    assert c["attente"] == {"tuile": "at", "action": "arreter"}
+    assert any("arrête toute la recherche" in x["texte"] for x in c["appliques"] if x["nom"] == "at")
 
 
 def test_boucle_non_appliquee_dit_pourquoi_selon_l_origine():

@@ -312,7 +312,21 @@ function rendreOptionsBoucle(n, refresh) {
   );
 }
 
-const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true), boucle: rendreOptionsBoucle };
+// 3.8.07 : « Attendre » a disparu (un quota qui se renouvelle vite est déjà réessayé automatiquement par le
+// programme ; un quota lent ne se rattrape pas par une attente de quelques minutes) — deux choix seulement.
+const CHOIX_ATTENTE = ["Sauter cette source, continuer les autres", "Arrêter toute la recherche"];
+
+function rendreOptionsAttente(n, refresh) {
+  const choix = optLabel(n, "Quand le quota est atteint") || CHOIX_ATTENTE[0];
+  return h(
+    "div", { class: "options-grille" },
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Quand le quota d'une source est atteint"),
+      groupePuces(CHOIX_ATTENTE.map((c) => [c, c]), choix, (v) => { optDefinir(n, "Quand le quota est atteint", v); sauvegarder(); refresh(); }),
+      h("span", { class: "aide-champ" }, "Un quota qui se renouvelle vite (par minute) est déjà réessayé automatiquement : ce réglage ne concerne que les quotas qui ne se rattraperaient pas pendant la recherche.")),
+  );
+}
+
+const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true), boucle: rendreOptionsBoucle, attente: rendreOptionsAttente };
 
 function retirerLien(id) {
   plan().edges = plan().edges.filter((e) => e.id !== id);

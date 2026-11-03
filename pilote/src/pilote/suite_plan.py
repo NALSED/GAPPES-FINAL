@@ -29,7 +29,6 @@ LANGUES = {
     "finnois": "fi", "suedois": "sv", "norvegien": "no", "danois": "da", "tcheque": "cs", "estonien": "et", "arabe": "ar", "turc": "tr", "chinois": "zh", "japonais": "ja",
 }  # fmt: skip
 NON_APPLIQUES = {
-    "attente": "faire patienter une recherche quand un quota est atteint n'est pas encore branché : le moteur s'arrête à la limite d'appels",
     "budget": "le plafond de dépense est celui de Réglages (en dollars) : un budget propre à la recherche n'est pas encore branché",
     "ia": "l'Assistant IA ne s'exécute pas encore : rien de ce qu'il produirait n'entre dans une grappe",
     "rsshub": "transformer un site en flux RSS n'est pas encore branché",
@@ -245,6 +244,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     formats: list[str] | None = None
     traductions: dict[str, dict[str, Any]] = {}
     fusion: dict[str, Any] | None = None
+    attente: dict[str, Any] | None = None
     for i in chemin_outils:
         node, o = nodes[i], par_outil[ref(i)]
         genre = _genre_outil(o)
@@ -267,6 +267,16 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
                 garder = "recente" if "recente" in garder_n else "premiere" if "premiere" in garder_n else "fiable"
                 fusion = {"tuile": i, "seuil": seuil, "garder": garder}
                 appliques.append({"tuile": i, "nom": node["nom"], "texte": f"« {niveau_txt} » (seuil {seuil}) ; en cas de doublon confirmé, garde {garder_txt} à l'export"})
+        elif genre == "attente":
+            if attente is not None:
+                dire_non(i, "une seule tuile « Quand une source est à court » est jouée par recherche ; les suivantes sont ignorées")
+            else:
+                opts_map = {lib: v for lib, v in opts}
+                choix = norme(opts_map.get("Quand le quota est atteint", "Sauter cette source, continuer les autres"))
+                action = "arreter" if "arreter" in choix else "sauter"
+                attente = {"tuile": i, "action": action}
+                texte = "arrête toute la recherche" if action == "arreter" else "saute la source à court et continue les autres (comportement déjà par défaut)"
+                appliques.append({"tuile": i, "nom": node["nom"], "texte": f"quand une source épuise son quota externe : {texte}"})
         elif genre == "format":
             formats_connus = {f["id"]: f for f in _formats.vue(cfg)}  # le registre réel (3.8.01), plus seulement CSV/JSON en dur
             opts_map = {lib: v for lib, v in opts}
@@ -314,7 +324,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     ordre = {i: k for k, i in enumerate(nodes)}
     return {
         "sources": sorted(dict.fromkeys(cherchent), key=lambda s: min(ordre[i] for i in chemin_sources if ref(i) == s)), "verificateurs": [{"id": v["id"], "en_amont": v["en_amont"], "fonction": v["fonction"]} for v in verifient],
-        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "appliques": appliques, "non_appliques": non_appliques,
+        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "attente": attente, "appliques": appliques, "non_appliques": non_appliques,
         "pays_equiv": pays_equiv or {},
     }  # fmt: skip
 
