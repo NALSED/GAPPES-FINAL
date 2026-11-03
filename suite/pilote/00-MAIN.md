@@ -52,7 +52,7 @@ le problème plutôt que de contourner.
 
 | Onglet | État | Document |
 | :-- | :-- | :-- |
-| Tableau de bord | pas encore conçu | — |
+| Tableau de bord | conçu le 02/11/2026 | `18` |
 | Recherche | conçu | `07`, `08`, `12` |
 | Réglages | conçu | `05`, `06` |
 | Tri | conçu le 26/10/2026 | `16` |

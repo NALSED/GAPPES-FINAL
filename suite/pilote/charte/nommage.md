@@ -21,8 +21,10 @@ a besoin d'un mot qui n'est pas ici, c'est cette page qu'on modifie d'abord, pas
 | **Ranger** | Replace les tuiles en colonnes | Plan de travail | — |
 | **Filtrer** | Réduit une liste affichée | En-tête de Réglages | — |
 | **Replier** / **Déplier** | Range la fenêtre Aide sur sa barre de titre, ou la rouvre | Fenêtre Aide | « Réduire », qui dit la même chose que *Filtrer* |
-| **Confirmer** | Accepte un rapprochement proposé : les fiches fusionnent dans la grappe | Onglet Tri | — |
-| **Séparer** | Refuse un rapprochement proposé : les fiches restent distinctes | Onglet Tri | « Rejeter », plus dur que ce que fait réellement l'action |
+| **Confirmer** | Accepte un rapprochement proposé : les deux fiches restent deux lignes, liées comme « même entité » (la fusion réelle n'a lieu qu'à l'export, 3.8.05) | Onglet Tri | — |
+| **Séparer** | Refuse un rapprochement proposé : les fiches restent distinctes, jamais fusionnées à l'export | Onglet Tri | « Rejeter », plus dur que ce que fait réellement l'action |
+| **Arrêter** | Interrompt une recherche en cours, avec confirmation ; ce qui est déjà collecté est gardé | Tableau de bord | — |
+| **Reprendre** | Remet au travail une source que le disjoncteur avait mise en pause | Tableau de bord | — |
 
 **Confirmer** et **Séparer** ne sont pas non plus un seul et même geste : *Confirmer* avance la grappe,
 *Séparer* n'efface rien — la fiche écartée reste une fiche normale, cherchable, juste pas fondue avec

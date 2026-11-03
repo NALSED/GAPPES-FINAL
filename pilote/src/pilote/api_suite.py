@@ -158,6 +158,16 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
         noter(corps, "suite_source_testee", f"{ident} {'ok' if res['ok'] else 'echec'}")
         return {"ok": res["ok"], "raisons": res["raisons"], "etat": res["source"]["etat"]}
 
+    @r.post("/sources/{ident}/reprendre")
+    def source_reprendre(ident: str, corps: dict[str, Any] = Corps) -> dict[str, Any]:
+        """Tableau de bord (1.1 §7, verbe Reprendre, nommage.md) : remet au travail une source que le disjoncteur
+        avait mise en pause — sans attendre le délai de reprise automatique."""
+        from pilote import disjoncteur
+
+        appeler(disjoncteur.reprendre, cfg, ident)
+        noter(corps, "suite_source_reprise", ident)
+        return {"reprise": True}
+
     @r.put("/sources/{ident}/cle")
     def source_cle(ident: str, corps: dict[str, Any] = Corps) -> dict[str, Any]:
         appeler(suite.enregistrer_cles_source, cfg, ident, corps.get("valeurs") or {})

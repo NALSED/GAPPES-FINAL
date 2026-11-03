@@ -51,11 +51,6 @@ C'est exactement ce que grappes fait par construction.
 **À vérifier dans les CGU avant d'en faire une source du projet.** L'interdiction visant les
 applications d'agrégation de flux live et de podcasts, elle, est confirmée et ne nous concerne pas.
 
-## 7. Le Tableau de bord et le Tri
-
-Aucune spécification. Reportés volontairement par Sednal. Les onglets restent visibles et grisés.
-**N'improvise rien.**
-
 ## 8. Le périmètre légal : personnes morales seulement ?
 
 **Tranché le 26/10/2026.** grappes a pour objet les **personnes morales** — entreprises, associations,

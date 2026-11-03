@@ -382,6 +382,19 @@ def test_traduction_tester_refuse_sans_moteur_regle(cfg):
         assert c.post("/api/suite/traduction/tester", json={"texte": "x", "vers": ["en"]}).status_code == 422
 
 
+# --- 1.1 §7 (verbe Reprendre) : remettre une source en pause au travail sans attendre le délai automatique
+def test_reprendre_une_source_en_pause(cfg):
+    from datetime import UTC, datetime
+
+    from pilote import disjoncteur, etat_sources
+
+    etat_sources.noter(cfg, "tavily", disjoncteur={"depuis": datetime.now(UTC).isoformat(), "raison": "3 erreurs de suite"})
+    assert "tavily" in disjoncteur.en_pause(cfg, ["tavily"])
+    with TestClient(creer_app(cfg)) as c:
+        assert c.post("/api/suite/sources/tavily/reprendre").json() == {"reprise": True}
+    assert disjoncteur.en_pause(cfg, ["tavily"]) == {}
+
+
 # --- un fichier d'état abîmé ne bloque pas la page (même tolérance que Réglages)
 def test_etat_abime_est_mis_de_cote(c, cfg):
     c.post("/api/suite/sources/tavily/retirer")
