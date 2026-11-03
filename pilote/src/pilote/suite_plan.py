@@ -245,10 +245,12 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     traductions: dict[str, dict[str, Any]] = {}
     fusion: dict[str, Any] | None = None
     attente: dict[str, Any] | None = None
+    effets: dict[str, str] = {}  # tuile -> effet dans le Tableau de bord (1.1 §5) : lu par ExecuteurGrappes pour « tuile_passee »
     for i in chemin_outils:
         node, o = nodes[i], par_outil[ref(i)]
         genre = _genre_outil(o)
         opts = node.get("opts") or o.get("options") or []
+        effets[i] = o.get("effet", "rien")
         if o["etat"] == "off":
             raise ConfigRefusee(f"L'outil « {node['nom']} » est éteint dans Réglages : allume-le, ou retire sa tuile.")
         if genre in ("filtre", "si", "script"):
@@ -324,7 +326,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     ordre = {i: k for k, i in enumerate(nodes)}
     return {
         "sources": sorted(dict.fromkeys(cherchent), key=lambda s: min(ordre[i] for i in chemin_sources if ref(i) == s)), "verificateurs": [{"id": v["id"], "en_amont": v["en_amont"], "fonction": v["fonction"]} for v in verifient],
-        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "attente": attente, "appliques": appliques, "non_appliques": non_appliques,
+        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "attente": attente, "effets": effets, "appliques": appliques, "non_appliques": non_appliques,
         "pays_equiv": pays_equiv or {},
     }  # fmt: skip
 
@@ -524,9 +526,14 @@ def appliquer(
     retires_par_tuile: dict[str, dict[str, Any]] = {}
     tombes: dict[int, list[tuple[str, str]]] = {}  # nom -> les étapes où il est tombé SUR UNE BRANCHE ; il n'est « retiré » que si aucune branche ne l'a gardé
     erreurs: list[str] = []
+    # Compteur par tuile (1.1, §8) : un nom qui traverse la même tuile par plusieurs branches ne compte qu'une fois
+    # (ensembles d'index, pas de somme) — « entrées » et « sorties » depuis le début de la recherche.
+    par_tuile: dict[str, dict[str, Any]] = {}
     for ch in consignes.get("chemins", []):
         courant = [k for k, ligne in enumerate(lignes) if ch["source"] in (ligne.get("trouve_par") or [])]
         for etape in ch["etapes"]:
+            pt = par_tuile.setdefault(etape["tuile"], {"nom": etape["nom"], "entrees": set(), "sorties": set()})
+            pt["entrees"] |= set(courant)
             if etape["op"] in ("garder", "ecarter"):
                 passe = [
                     k
@@ -551,6 +558,7 @@ def appliquer(
                 else:
                     gardes_noms = {norme(x.get("nom")) for x in json.loads(res["sortie"]) if isinstance(x, dict)}
                     passe = [k for k in courant if norme(lignes[k]["nom"]) in gardes_noms]
+            pt["sorties"] |= set(passe)
             for k in set(courant) - set(passe):
                 tombes.setdefault(k, []).append((etape["tuile"], etape["nom"]))
             courant = passe
@@ -572,5 +580,6 @@ def appliquer(
         "non_attribues": len(non_attribues),
         "par_tuile": retires_par_tuile,
         "erreurs": erreurs,
+        "tuiles": {tuile: {"nom": v["nom"], "entrees": len(v["entrees"]), "sorties": len(v["sorties"])} for tuile, v in par_tuile.items()},
     }
     return gardees, bilan

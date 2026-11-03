@@ -101,6 +101,8 @@ def test_un_filtre_ne_juge_que_la_branche_ou_il_se_trouve():
         "Autre Paris",
         "Les deux",
     ]  # « Club Paris » (source a seule) est retiré ; « Les deux » passe par la branche b
+    # 1.1 (§8) : le compteur par tuile — « Les deux » entre dans la tuile (trouvé aussi par « a ») mais n'en sort pas (ville ≠ Lyon)
+    assert bilan["tuiles"]["f"] == {"nom": "f", "entrees": 3, "sorties": 1}
     assert (
         bilan["par_tuile"]["f"]["n"] == 1 and "Club Paris" in bilan["par_tuile"]["f"]["noms"] and bilan["retires"] == 1
     )

@@ -266,14 +266,22 @@ class ExecuteurGrappes:
             return
         jeu = jeu or {}
         par_tuile = jeu.get("par_tuile") or {}
+        tuiles = jeu.get("tuiles") or {}  # compteur entrées/sorties par tuile (1.1 §8) : la raison d'être de l'effet « compteur »
+        effets = plan.get("effets") or {}
         ctx.avancer(plan={
             "appliques": plan.get("appliques", []), "non_appliques": plan.get("non_appliques", []), "retires": jeu.get("retires", 0), "non_attribues": jeu.get("non_attribues", 0),
-            "par_tuile": {k: {"nom": v["nom"], "n": v["n"]} for k, v in par_tuile.items()}, "erreurs": jeu.get("erreurs", []),
+            "par_tuile": {k: {"nom": v["nom"], "n": v["n"]} for k, v in par_tuile.items()}, "tuiles": tuiles, "erreurs": jeu.get("erreurs", []),
             "traductions": jeu.get("traductions", []), "traduction_non_appliquee": plan.get("traduction_non_appliquee", []),
         })  # fmt: skip
         for tuile, v in par_tuile.items():
             if v["n"]:
                 ctx.noter("plan_noms_retires", tuile=tuile, outil=v["nom"], retires=v["n"], noms=v["noms"])
+        # Effet « journal » (1.1 §5) : une ligne de bilan par tuile et par recherche, à la fin de son passage — pas une
+        # ligne par fiche (des milliers pour une grosse recherche, illisible). Traduction garde son propre événement
+        # (plan_requete_traduite) : elle ne filtre rien, entrées = sorties toujours, l'effet journal ne s'y applique pas.
+        for tuile, t in tuiles.items():
+            if effets.get(tuile) == "journal" and t["entrees"]:
+                ctx.noter("tuile_passee", tuile=tuile, nom=t["nom"], traversees=t["entrees"], modifiees=t["entrees"] - t["sorties"])
         for e in jeu.get("erreurs", []):
             ctx.noter("plan_script_en_echec", raison=e)
         for tr in jeu.get("traductions", []):
