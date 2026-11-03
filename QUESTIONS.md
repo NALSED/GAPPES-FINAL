@@ -4,12 +4,12 @@ Statut au 2026-10-06. Référence unique : `FINAL.md`. Aucune réponse inventée
 
 ## Ouvertes (valeur par défaut en attendant)
 
-* **Q3** Langues des corpus ? Défaut : normalisation multilingue (accents latins retirés, autres écritures intactes).
-* **Q10** Clients MCP visés et lieu d'exécution ? Défaut : serveur MCP stdio en lecture seule.
-* **Q11** Scoring par embeddings plus tard, oui ou non ? Défaut : non (lexique et recoupement).
+* **Q3** Réglée (D82) : normalisation multilingue reste le défaut ; pas de changement tant qu'aucun cas réel multilingue ne le justifie.
+* **Q10** Réglée (D82) : client visé = l'agent Claude (abonnement Pro/Max) tournant sur la même machine que grappes — .115 en production, .250 possible pour test. Client et serveur locaux : stdio/lecture seule confirmés, pas d'exposition réseau nécessaire.
+* **Q11** Réglée (D82) : défaut gardé (non, lexique et recoupement) — un score par embeddings serait moins vérifiable à l'œil qu'une correspondance de mots, contre la priorité fiabilité du projet. À revoir seulement si un cas réel montre un recoupement manqué faute d'embeddings.
 
-* **Q20** Garde-fou de la boucle d'apprentissage (D41) : une entité confirmée n'enseigne des mots que si elle descend d'une ancre ou d'une source trouvée par la recherche. Sans ancre et avant la première recherche réelle, rien n'est appris. Faut-il relâcher cette exigence (`apprentissage.exiger_racine_de_confiance: false`) ? Défaut : non, par prudence.
-* **Q21** Personnes physiques (D32) : exclues de `resultat.csv` par défaut ; un compte X ou Instagram sans indice institutionnel explicite dans son nom est traité comme une personne (« en cas de doute, une personne »). La liste d'indices est intégrée (`resultat.indices_institution` pour la remplacer). Défaut : à garder.
+* **Q20** Réglée (D82) : garde-fou gardé actif par défaut (`exiger_racine_de_confiance: true`), mais la clé doit rester un réglage réel, configurable — jamais figée en dur dans le code.
+* **Q21** Réglée et affinée (D84) : la règle n'est plus « personne physique = exclue », mais « le compte doit répondre au critère de recherche ». Trois cas : (1) compte qui matche directement la recherche → gardé dans `resultat.csv`, personne physique ou pas (profil public, pas de ciblage par leak) ; (2) compte hors sujet / bruit → exclu, comme avant ; (3) cas où le programme n'est pas sûr → fichier séparé (`resultat_a_trancher.csv`, nom à confirmer par momo) où Sednal décide au cas par cas ; sa décision devient une ancre de confiance pour l'apprentissage (Q20). Détail : `docs/conception/personnes_physiques_et_mode_recherche.md`.
 
 * **Q22** Réglée (D46) : écosystèmes `rss` et `wikipedia` ajoutés comme fournisseurs. Voir Q24 pour ce qui reste.
 * **Q23** Réglée (D47) : nouveau sujet, `seuil_ingestion` auto-ajustable dans [5 ; 40].
@@ -61,15 +61,12 @@ Sur dev et validation, au plus 17 % de la référence Wikidata existe comme cand
 
 Mesures complémentaires (2026-10-12) : (1) trois cycles de collecte successifs sur handball-pro et sur g-q56199177 (réseau réel) ne changent rien : 21 puis 37 candidats, plafond de rappel inchangé (5,9 % et 17,4 %) ; le crawl plus long ne relève pas le plafond. (2) `min_ecosystemes = 1` (autonomie, apprentissage des termes) rejoué sur les 12 sujets de dev et validation : mêmes candidats, mêmes « justes » ; aucun effet mesurable sur un cycle. Rapporté, non appliqué. (3) Un classement parfait plafonne la R-précision stricte à ≤ 0,17 ; atteindre 0,90 suppose que les ACTEURS (organisations nommées dans les textes) soient les candidats, pas les sources.
 
+**Close (D83, 2026-11-03)** : Sednal autorise l'extraction d'entités nommées (piste b), mais seulement conditionnée à un nouveau réglage **mode de recherche**, fermé à deux valeurs : « Trouver des sites/comptes » (défaut, comportement actuel, aucune extraction) et « Lire le contenu pour en extraire les acteurs » (nouveau — active l'extraction de noms dans les textes lus). La fonctionnalité ne tourne jamais pour le premier mode : elle serait hors-sujet (ex. une recherche qui cible directement des sites/comptes n'a rien à extraire). Détail et consignes pour momo : `docs/conception/personnes_physiques_et_mode_recherche.md`.
+
 ## Q27 — D69 : trois décisions qui reviennent à Sednal (2026-10-13)
 
-Rien n'est appliqué. Détail et chiffres : `docs/conception/cibles.md` §§ 4, 5 et 7.
+Détail et chiffres : `docs/conception/cibles.md` §§ 4, 5 et 7. **Closes (D82, 2026-11-03)** :
 
-* **Thésaurus de types** : le vérificateur de type compare des mots ; un type équivalent écrit autrement (« compagnie » pour
-  « troupe ») est jugé incompatible. Perte éventuelle invisible à la référence. Faut-il un thésaurus (ou un rattachement
-  code NAF ↔ classe) ? Je n'invente aucune liste de synonymes.
-* **Amorces par requêtes web** : le mécanisme mesuré (code NAF des exemples) ne donne rien (0 sur 60 tirages) ; le
-  mécanisme de TREC (requêtes de recherche à partir des noms des exemples) demande une collecte, environ 3 crédits Tavily
-  par sujet. Autorisation à donner avant mesure.
-* **Nouveau jeu test** : toute certification suppose un nouveau jeu test, une nouvelle graine, figé avant toute modification
-  (classification A/B comprise, `autocal/cibles.json`).
+* **Thésaurus de types** : pas de liste de synonymes inventée — rattachement au code NAF officiel (INSEE) ↔ classe, nomenclature déjà existante et autoritaire, cohérent avec « ne rien réinventer ».
+* **Amorces par requêtes web** : mesure du mécanisme TREC autorisée (~3 crédits Tavily/sujet) — décision d'implémentation seulement après ce chiffrage, pas avant.
+* **Nouveau jeu test** : confirmé nécessaire avant toute certification (sinon on certifierait sur le jeu qui a servi à ajuster) ; à geler juste avant la prochaine tentative de certification, pas avant si aucune n'est encore visée.
