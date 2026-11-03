@@ -326,7 +326,31 @@ function rendreOptionsAttente(n, refresh) {
   );
 }
 
-const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true), boucle: rendreOptionsBoucle, attente: rendreOptionsAttente };
+// 3.8.08 : le dollar disparaît, l'unité du programme est le crédit. « Budget maximum » : un montant fixe, ou
+// une part du plafond mensuel déjà réglé dans Réglages. Le seuil d'alerte devient réglable (pas figé à 80).
+const CHOIX_BUDGET_MAXIMUM = ["Montant fixe", "Pourcentage du plafond mensuel"];
+const CHOIX_ACTION_SEUIL = ["Prévenir", "Ne rien faire"];
+
+function rendreOptionsBudget(n, refresh) {
+  const type = optLabel(n, "Budget maximum") || CHOIX_BUDGET_MAXIMUM[0];
+  const montant = champ({ libelle: "Montant (crédits)", valeur: optLabel(n, "Montant (crédits)") || "5" });
+  montant.saisie.addEventListener("change", () => { optDefinir(n, "Montant (crédits)", montant.valeur()); sauvegarder(); });
+  const pourcentage = champ({ libelle: "Pourcentage du plafond mensuel", valeur: optLabel(n, "Pourcentage du plafond mensuel") || "20" });
+  pourcentage.saisie.addEventListener("change", () => { optDefinir(n, "Pourcentage du plafond mensuel", pourcentage.valeur()); sauvegarder(); });
+  const seuil = champ({ libelle: "À partir de (%)", valeur: optLabel(n, "À partir de") || "80" });
+  seuil.saisie.addEventListener("change", () => { optDefinir(n, "À partir de", seuil.valeur()); sauvegarder(); });
+  return h(
+    "div", { class: "options-grille" },
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Budget maximum"),
+      groupePuces(CHOIX_BUDGET_MAXIMUM.map((c) => [c, c]), type, (v) => { optDefinir(n, "Budget maximum", v); sauvegarder(); refresh(); })),
+    type === CHOIX_BUDGET_MAXIMUM[0] ? montant.el : pourcentage.el,
+    seuil.el,
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Une fois le seuil atteint"),
+      groupePuces(CHOIX_ACTION_SEUIL.map((c) => [c, c]), optLabel(n, "Action") || CHOIX_ACTION_SEUIL[0], (v) => { optDefinir(n, "Action", v); sauvegarder(); refresh(); })),
+  );
+}
+
+const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true), boucle: rendreOptionsBoucle, attente: rendreOptionsAttente, budget: rendreOptionsBudget };
 
 function retirerLien(id) {
   plan().edges = plan().edges.filter((e) => e.id !== id);

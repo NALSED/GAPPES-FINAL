@@ -273,7 +273,7 @@ function blocReglages() {
 function champPlafond() {
   const payant = [...S.e1.chercher].map(parId).some((s) => s && s.payant);
   if (!payant) return null;
-  const f = champ({ libelle: "Plafond de dépense par mois (en dollars) — tu as activé du payant", valeur: String(S.e1.plafond ?? ""), type: "number" });
+  const f = champ({ libelle: "Plafond de dépense par mois (en crédits) — tu as activé du payant", valeur: String(S.e1.plafond ?? ""), type: "number" });
   f.saisie.addEventListener("input", () => { S.e1.plafond = parseFloat(f.valeur()); });
   return f.el;
 }

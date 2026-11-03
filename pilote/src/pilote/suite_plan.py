@@ -29,7 +29,7 @@ LANGUES = {
     "finnois": "fi", "suedois": "sv", "norvegien": "no", "danois": "da", "tcheque": "cs", "estonien": "et", "arabe": "ar", "turc": "tr", "chinois": "zh", "japonais": "ja",
 }  # fmt: skip
 NON_APPLIQUES = {
-    "budget": "le plafond de dépense est celui de Réglages (en dollars) : un budget propre à la recherche n'est pas encore branché",
+    "budget": "le plafond de dépense est celui de Réglages (en crédits) : un budget propre à la recherche n'est pas encore branché",
     "ia": "l'Assistant IA ne s'exécute pas encore : rien de ce qu'il produirait n'entre dans une grappe",
     "rsshub": "transformer un site en flux RSS n'est pas encore branché",
 }  # fmt: skip

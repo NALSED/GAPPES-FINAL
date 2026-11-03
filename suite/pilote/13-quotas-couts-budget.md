@@ -20,17 +20,23 @@ il est trop tard pour réagir.
 
 Une source **éteinte** affiche *éteinte*, pas une jauge à zéro : ce n'est pas la même information.
 
-## L'outil Attente (quota)
+## L'outil « Quand une source est à court » (ex-Attente)
 
-Fait patienter la recherche quand un quota est atteint, au lieu de la faire échouer. Options : ce qu'on
-fait quand le quota tombe (*attendre*), et une attente maximale (`10 minutes` par défaut).
+« Attendre » a disparu (02/11/2026, retour de Sednal, document 3.8.07) : un quota qui se renouvelle vite
+(par minute) est déjà réessayé automatiquement par le programme, et un quota qui se renouvelle lentement
+(quotidien, mensuel) ne se rattraperait pas par une attente de quelques minutes. Un seul choix fermé reste :
+sauter la source à court et continuer les autres (déjà le comportement par défaut), ou arrêter toute la
+recherche — ce qui est déjà collecté est gardé, comme pour la limite d'appels.
 
 Éteint d'origine : à allumer par celui qui en a besoin.
 
 ## L'outil Compteur budget
 
-Arrête la recherche avant de dépasser un budget. Options : budget maximum (`5 € par mois`), et un
-avertissement à partir de **80 %** — le même seuil que les quotas, volontairement.
+Arrête la recherche avant de dépasser un budget, en **crédits** — l'unité propre au programme (02/11/2026,
+retour de Sednal, document 3.8.08 : le mot « dollar » disparaît partout où ce système l'employait, le
+mécanisme ne change pas). « Budget maximum » est un montant fixe en crédits, ou un pourcentage du plafond
+mensuel déjà réglé dans Réglages. Le seuil d'alerte (80 % par défaut) est réglable, avec une action fermée :
+prévenir, ou ne rien faire.
 
 Effet dans le Tableau de bord : `alerte`.
 

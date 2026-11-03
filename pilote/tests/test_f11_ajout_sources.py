@@ -307,7 +307,7 @@ def test_le_test_reel_affiche_son_prix_avant_le_clic_et_compte_la_depense(cfg, s
         c.put("/api/cles/SERVICE_PAYANT_KEY", json={"valeur": "cle-payante-123"})
         avant = len(FauxService.recus)
         p = c.get("/api/sources/service-payant/test-reel").json()
-        assert p["gratuit"] is False and p["dollars"] == 0.0015 and p["phrase"].startswith("1 requête, environ 0,0015 $")
+        assert p["gratuit"] is False and p["dollars"] == 0.0015 and p["phrase"].startswith("1 requête, environ 0,0015 crédit")
         assert len(FauxService.recus) == avant  # afficher le prix n'appelle rien
         refus = c.post("/api/sources/service-payant/test-reel", json={"mot": "club"})
         assert refus.status_code == 422 and "prix" in refus.json()["detail"] and len(FauxService.recus) == avant  # sans confirmation, rien ne part

@@ -304,7 +304,7 @@ def prix_du_test(d: Declaration, cout: dict[str, Any], unites_deja: float = 0.0)
         return {"gratuit": True, "dollars": 0.0, "unites": par, "phrase": "1 requête, gratuite : rien à payer."}
     unite = str(cout.get("unite", "appel"))
     detail = f" ({par:g} {unite}{'s' if par > 1 and not unite.endswith('s') else ''})" if par != 1 else ""
-    return {"gratuit": False, "dollars": dollars, "unites": par, "phrase": f"1 requête{detail}, environ {dollars:.4f} $".replace(".", ",") + ", comptés dans votre plafond mensuel."}
+    return {"gratuit": False, "dollars": dollars, "unites": par, "phrase": f"1 requête{detail}, environ {dollars:.4f} crédit{'s' if dollars >= 2 else ''}".replace(".", ",") + ", comptés dans votre plafond mensuel."}
 
 
 def test_reel(cfg: Config, d: Declaration, mot: str, cout: dict[str, Any]) -> dict[str, Any]:

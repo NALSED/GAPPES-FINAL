@@ -292,13 +292,13 @@ def test_le_plafond_ecarte_un_prestataire_trop_cher_et_garde_les_gratuites(cfg):
     assert bg.dollars_pour(cout, 20) == pytest.approx(1.15)
     sources = [(d, cout), (decls["telegram-annuaires"], decls["telegram-annuaires"].cout)]
     ok, refusees = bg.autoriser(sources, 20, plafond=1.0, depense=0.0, unites={})
-    assert [x.id for x in ok] == ["telegram-annuaires"] and "1,15 $" in refusees[0]["raison"] and "il ne reste que 1,00 $" in refusees[0]["raison"]
+    assert [x.id for x in ok] == ["telegram-annuaires"] and "1,15 crédits" in refusees[0]["raison"] and "il ne reste que 1,00 crédits" in refusees[0]["raison"]
     ok, refusees = bg.autoriser(sources, 20, plafond=5.0, depense=0.0, unites={})
     assert {x.id for x in ok} == {"apify-instagram", "telegram-annuaires"} and refusees == []
     ok, refusees = bg.autoriser(sources, 20, plafond=5.0, depense=4.5, unites={})  # 0,50 $ restent : le prestataire pourrait dépasser
     assert [x.id for x in ok] == ["telegram-annuaires"]
     ok, refusees = bg.autoriser(sources, 1, plafond=5.0, depense=5.0, unites={})  # plafond atteint : seules les gratuites
-    assert [x.id for x in ok] == ["telegram-annuaires"] and "plafond de 5 $" in refusees[0]["raison"] and "seules les sources gratuites" in refusees[0]["raison"]
+    assert [x.id for x in ok] == ["telegram-annuaires"] and "plafond de 5 crédits" in refusees[0]["raison"] and "seules les sources gratuites" in refusees[0]["raison"]
 
 
 def test_le_cout_reel_est_compte_par_appel_et_entre_dans_la_depense_du_mois(cfg):

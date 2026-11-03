@@ -41,13 +41,13 @@ def vue(cfg: Config, fabrique: sessionmaker[Session]) -> dict[str, Any]:
 
 
 def cout_phrase(d: Declaration, cout: dict[str, Any]) -> str:
-    """Le coût d'une source en français courant : « gratuit », ou « 1 crédit par appel, soit 0,008 $ ; 1 000 gratuits par mois »."""
+    """Le coût d'une source en français courant : « gratuit », ou « 1 jeton par appel, soit environ 0,008 crédit ; 1 000 gratuits par mois »."""
     unite, taux, par = cout.get("unite", "appel"), float(cout.get("vers_dollar", 0) or 0), float(cout.get("par_appel", 1) or 0)
     gratuit = float(cout.get("gratuit_par_mois", 0) or 0)
     if taux <= 0 or par <= 0:
         return "gratuit"
-    dollars = par * taux
-    base = f"{par:g} {unite} par appel, soit environ {dollars:.4f} $".replace(".", ",")
+    credits_ = par * taux
+    base = f"{par:g} {unite} par appel, soit environ {credits_:.4f} crédit{'s' if credits_ >= 2 else ''}".replace(".", ",")
     return base + (f" ; {gratuit:,.0f} gratuits par mois".replace(",", " ") if gratuit else "")
 
 
@@ -88,9 +88,9 @@ def autoriser(sources: list[tuple[Declaration, dict[str, Any]]], appels_max: int
         if pire <= 0:
             ok.append(d)
         elif depense >= plafond:  # le nom lisible, jamais l'identifiant technique : c'est ce que la page affiche
-            refusees.append({"source": d.id, "nom": d.nom, "raison": f"le plafond de {plafond:g} $ par mois est atteint : seules les sources gratuites sont utilisées"})
+            refusees.append({"source": d.id, "nom": d.nom, "raison": f"le plafond de {plafond:g} crédits par mois est atteint : seules les sources gratuites sont utilisées"})
         elif pire > reste:
-            refusees.append({"source": d.id, "nom": d.nom, "raison": f"elle pourrait coûter jusqu'à {pire:.2f} $ et il ne reste que {reste:.2f} $ sur le plafond du mois".replace(".", ",")})
+            refusees.append({"source": d.id, "nom": d.nom, "raison": f"elle pourrait coûter jusqu'à {pire:.2f} crédits et il ne reste que {reste:.2f} crédits sur le plafond du mois".replace(".", ",")})
         else:
             ok.append(d)
     return ok, refusees

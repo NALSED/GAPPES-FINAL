@@ -115,7 +115,7 @@ export function ficheSource(id) {
     champNom: champ({ libelle: "Champ du nom", placeholder: "title", aide: "Où se trouve le NOM dans chaque résultat de la réponse." }),
     liste: champ({ libelle: "Liste des résultats", placeholder: "items", aide: "Le chemin de la liste dans la réponse. Vide si la réponse est elle-même la liste." }),
     exemple: champ({ libelle: "Exemple de réponse", lignes: 5, code: true, obligatoire: true, aide: "Une vraie réponse du service. Le test la lit ; il n'appelle jamais la source." }),
-    tarif: champ({ libelle: "Prix par appel (dollars)", placeholder: "0.005" }),
+    tarif: champ({ libelle: "Prix par appel (crédits)", placeholder: "0.005" }),
   };
   // réglages non-secrets propres à la source (ex. adresse du portail CKAN) : ni une clé ni un coût, mais sans eux la
   // source reste « à vérifier » ; absents des deux interfaces jusqu'au 02/11/2026 (retour de Sednal : « je mets ça où ? »)
