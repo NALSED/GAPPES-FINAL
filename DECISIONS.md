@@ -227,3 +227,21 @@ Suite complète : 600 tests verts (aucune régression). Détail reporté dans `Q
 
 ## D83 — Q28 : mécanisme d'ancrage des décisions sur `resultat_a_trancher.csv` (spec 901, mise à jour du 03/11/2026)
 Réponse de Sednal à la question que j'avais soulevée en implémentant Q21 (D82) : réutiliser le mécanisme d'ancre déjà existant (`anchors:` du YAML de chaque grappe, lu par `config.py::load_grappe`, jamais réécrit par l'apprentissage), rien de nouveau à construire. **Fait** : `resultat_a_trancher.csv` passe de une à quatre colonnes (NOM, GRAPPE, REF, DECISION — la dernière vide, à remplir « garder »/« exclure » à la main, une ligne par (référence, grappe), sans fusion de variantes pour rester identifiable par référence). Nouveau module `ancrage.py` et sous-commande `grappes ancrer --fichier ...` : lit les lignes « garder », ajoute chaque REF à `anchors:` du YAML de sa grappe. **L'édition se fait par le texte, jamais par un aller-retour `yaml.safe_load`/`safe_dump`** — leçon déjà tirée côté pilote (`900-demenagement-du-code.md`, le bug de la Norvège « NO » devenue `False`) : un round-trip PyYAML efface les commentaires et fait passer des valeurs par son résolveur. Après chaque ajout, le fichier modifié est relu avec `yaml.safe_load` pour vérifier que la référence y figure bien ; sinon rien n'est écrit sur disque (`ConfigError`, jamais un fichier à moitié corrompu). Idempotent (une ancre déjà présente n'est jamais dupliquée). Tests : `tests/test_ancrage.py` (9 tests, dont un qui vérifie caractère pour caractère que le reste du YAML — label, lexicon, oppositions — ne bouge pas). Suite complète : 609 tests verts.
+
+## D84 — Revue complète et test en profondeur (spec 902, 03/11/2026)
+Demandée par Sednal avant 1.3. Détail, classé par gravité, et questions Q29 à Q34 : `QUESTIONS.md` § « Revue
+complète du 03/11/2026 ». **Tests** : grappes 612 verts ; pilote avec la configuration livrée = 27 échecs + 5 erreurs,
+tous dus à `grappes.racine: ../grappes` (§3 de `900`, non touché) — avec cette ligne corrigée localement, jamais
+commitée : tous verts sauf le test qui vérifie justement cette ligne. **Corrigé** (routinier ou déjà spécifié) :
+(1) bloquant — toute recherche avec une tuile Assistant IA finissait en échec (champ IA posé en colonne de la
+fiche) ; (2) 3.8.09 remis conforme à sa spec (avant la vérification, seulement les noms qui atteignent la tuile,
+refus sans agent, Effort, arrêt et limite de temps respectés, agent trouvé hors PATH sous systemd, colonne d'export
+« [IA] ») ; (3) Q26 : le mode `extraction` activait aussi les registres, contrairement à Q26 et à ce que disait D82
+— corrigé, extraction seule (en réel, onze organisations sans rapport venaient d'un registre) ; (4) préexistant :
+pages perdues sur adresse accentuée (`UnicodeEncodeError`) ; (5) préexistant : tuile Fusion/Attente/IA « jouée »
+choisie au hasard (ordre d'un ensemble) ; (6) message explicite de `grappes ancrer` sur une grappe-sujet ; (7) garde
+des sauts : `test_mesurer_classement.py` marqué `reseau`. **Écarts non routiniers, à reprendre** : 3.8.10 (déployer
+RSSHub et réutiliser `flux_rss`), 3.8.04 (Boucle multi-tours), 3.8.08 (budget par recherche). **Test réel** : moteur
+sur le sujet réel en copie isolée (mode extraction : UNEF, CGT, FAGE, Union étudiante, USL, Interfac retrouvés) ;
+pilote, vraie source + Filtre + Assistant IA (3 résumés réels, marqués, exportés). Rien de la spec validée n'a été
+réinterprété : chaque contradiction trouvée est devenue une question (Q29-Q34).

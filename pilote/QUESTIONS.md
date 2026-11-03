@@ -48,17 +48,17 @@ une tâche de Sednal, séparée, pas un blocage. Coût : un simple compteur (« 
 sans plafond, jamais mêlé au compteur crédits (facturé par l'abonnement, pas par appel) — tranché, rien à
 inventer.
 
-**Fait** : `suite_plan.compiler()` compile désormais une tuile Assistant IA (`ia = {tuile, operation,
-modele, marquer}`, une seule jouée par recherche, les suivantes dites non appliquées) ; `NON_APPLIQUES`
-ne cite plus `"ia"`. `suite_ia.appliquer_lignes()` (nouveau) applique l'opération à chaque ligne
-collectée et vérifiée, posant `operation['champ_sortie']` et `ligne['ia_marque']` si l'option
-« Marquer les résultats » est à oui ; une ligne dont l'agent échoue garde son résultat sans le champ IA,
-comptée à part (jamais un fait inventé en silence). Câblé dans `pont/executer.py` juste après la
-vérification des candidats. `executeur_grappes.py::dire_le_plan()` lit `ia_appels`/`ia_echecs` du bilan et
-note `plan_ia_appels` au journal (compteur simple, sans plafond, séparé des crédits). L'effet de la tuile
-dans `suite_graine.py` passe de « alerte » (faux : rien n'arrête ni ne dévie la recherche) à « compteur ».
-Tests : `tests/test_suite_plan.py` (4), `tests/test_suite_ia.py` (3 nouveaux). Suite complète en cours de
-vérification.
+**Fait (puis corrigé par la revue 902, D84)** : `suite_plan.compiler()` compile la tuile (une seule jouée par
+recherche ; refusée et dite si l'agent est absent de la machine ; options Opération, Modèle, Effort — menu fermé de
+six mots, `claude --effort` existe —, Marquer les résultats). Elle devient une étape de passage sur les branches qui
+la traversent : seuls les noms qui ATTEIGNENT la tuile sont traités, après les chemins et avant la vérification
+(comme le demande la spec). `suite_ia.appliquer_lignes()` range le texte dans `faits["ia"]` et la marque dans
+`faits["ia_marque"]` — jamais en colonne de la fiche : la première version y écrivait `resume_ia` et **toute recherche
+avec une tuile IA finissait en échec** (trouvé par le test réel de la revue). Une ligne dont l'agent échoue garde son
+résultat sans le champ IA, comptée à part ; l'arrêt demandé et la limite de temps sont respectés (les lignes non
+traitées sont comptées). L'agent est cherché sur le PATH puis à `~/.local/bin/claude` (un service systemd n'a pas ce
+dossier dans son PATH). Journal : `plan_ia_appels` (appels, échecs, non traités), séparé des crédits. Export :
+colonne `ia`, « [IA] … » si marqué. Vérifié en réel sur .250 (registre des associations + Filtre + Résumer).
 
 **Laissé de côté, sciemment, hors du périmètre demandé** : les options propres à chaque opération
 (`classer` attend `categories`, `extraire_mots_cles` attend `maximum`) ne sont pas exposées dans la
@@ -68,6 +68,11 @@ configurable depuis l'écran — à reprendre si Sednal le demande (ajouter un c
 modèle de `RENDUS_OPTIONS`).
 
 ## 3.8.10 — RSSHub : code prêt, instance pas déployée
+
+**Correction (revue 902)** : la spec 3.8.10 confie bien le déploiement à momo (« Déployer une instance RSSHub
+auto-hébergée, image Docker officielle ») — l'hébergement avait été décidé avec Sednal, pas le geste. Écart à
+reprendre, avec la réutilisation de `flux_rss.telecharger`/`lire_flux` au lieu de l'appel HTTP propre à
+`suite_rsshub.py` (duplication relevée par la revue).
 
 `suite_rsshub.py` résout l'adresse d'un flux produit par une instance RSSHub pour un site donné, et
 `config.suite_rsshub_url` existe. Pas câblé dans `pont/executer.py` (vers `flux_rss.py`) :
