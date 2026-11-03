@@ -2,7 +2,7 @@
 // a besoin d'un mot absent, c'est charte/nommage.md puis cette table qu'on modifie d'abord, jamais l'écran.
 
 export const ONGLETS = [
-  { id: "tableau-de-bord", nom: "Tableau de bord", icone: "tableau-de-bord", concu: false },
+  { id: "tableau-de-bord", nom: "Tableau de bord", icone: "tableau-de-bord", concu: true },
   { id: "reglages", nom: "Réglages", icone: "reglages", concu: true },
   { id: "recherche", nom: "Recherche", icone: "recherche", concu: true },
   { id: "tri", nom: "Tri", icone: "tri", concu: true },
@@ -34,6 +34,7 @@ export const VERBES = {
   ajouter: "Ajouter", modifier: "Modifier", enregistrer: "Enregistrer", annuler: "Annuler", fermer: "Fermer", allumer: "Allumer",
   eteindre: "Éteindre", retirer: "Retirer", supprimer: "Supprimer", lancer: "Lancer", reutiliser: "Réutiliser", confirmer: "Confirmer", separer: "Séparer",
   remettre: "Remettre par défaut", ranger: "Ranger", filtrer: "Filtrer", replier: "Replier", deplier: "Déplier",
+  arreter: "Arrêter", reprendre: "Reprendre",
 };
 
 export const COUTS = ["gratuit", "payant"];
@@ -47,14 +48,27 @@ export const FIABILITES = [
   ["F", "F — Fiabilité indéterminée : pas assez d'historique pour juger."],
 ];
 export const fiabiliteParDefaut = (cat) => (cat === "web" || cat === "presse" ? "D" : "B");
+// 1.1 §5 : les quatre effets, enfin définis. Le compteur entrées/sorties de la tuile est universel (tous les
+// outils l'ont) ; « Compteur » ajoute en plus un chiffre à lui, nommé par l'outil.
 export const EFFETS = [
-  ["rien", "Rien", "L'outil travaille en silence."],
-  ["compteur", "Compteur", "Le Tableau de bord affiche un chiffre : combien de résultats entrent et combien sortent."],
-  ["journal", "Journal", "Chaque passage ajoute une ligne dans le journal du Tableau de bord."],
-  ["alerte", "Alerte", "Le Tableau de bord affiche une alerte quand l'outil le décide (budget, quota…)."],
+  ["rien", "Rien", "L'outil travaille sans rien afficher de plus que le compteur de sa tuile."],
+  ["compteur", "Compteur", "L'outil publie en plus un chiffre à lui, nommé (ex. « 118 traduites »)."],
+  ["journal", "Journal", "À la fin de son passage, cet outil écrit une ligne de bilan dans le journal du Tableau de bord."],
+  ["alerte", "Alerte", "L'outil peut lever une alerte dans le Tableau de bord (réservé à ce qui arrête ou dévie la recherche : budget, quota, attente)."],
 ];
 export const PAYS = ["Tous", "FR", "UK", "US", "UE"];
 export const SEUIL_QUOTA = 80;
+// Tableau de bord (1.1 §2.2) : les six états d'une recherche, et la pastille qui les porte — trois couleurs
+// seulement (la charte n'en tient pas une quatrième) : « en échec » et « interrompue » prennent etat-attention,
+// pas une couleur à elles.
+export const ETATS_RECHERCHE = {
+  en_attente: { classe: "warn", mot: "en attente" },
+  en_cours: { classe: "accent", mot: "en cours" },
+  terminee: { classe: "ok", mot: "terminée" },
+  arretee: { classe: "off", mot: "arrêtée" },
+  echec: { classe: "warn", mot: "en échec" },
+  interrompue: { classe: "warn", mot: "interrompue" },
+};
 
 // Ce que la Recherche simple dit de chaque préréglage (maquette Recherche.dc.html) : [phrase, ce qu'on saisit].
 export const PRESETS_INFO = {
@@ -118,7 +132,7 @@ export function fmtDate(iso) {
 export const aPluriel = (n, un, plusieurs) => `${n} ${n > 1 ? plusieurs : un}`;
 
 // Ce que le moteur actuel fait de la recherche (QUESTIONS suite-2) : dit en clair plutôt que laissé à deviner.
-export const AVIS_MOTEUR = "Le moteur obéit au plan : seules les sources reliées de « Ta saisie » à « Grappes » partent, une vérification ne juge que les sources placées avant elle, et Filtre, Condition « si », Traduction, Format et les scripts sont joués. Boucle, Attente, Compteur budget, Assistant IA et RSSHub ne le sont pas encore : un lancement le dit.";
+export const AVIS_MOTEUR = "Le moteur obéit au plan : seules les sources reliées de « Ta saisie » à « Grappes » partent, une vérification ne juge que les sources placées avant elle, et Filtre, Condition « si », Traduction, Format, Fusion / doublons, Attente et les scripts sont joués. Boucle, Compteur budget, Assistant IA et RSSHub ne le sont pas encore : un lancement le dit.";
 
 // Onglet Tri (spécification 16).
 export const TRI = {

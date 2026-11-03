@@ -45,6 +45,12 @@ export const api = {
   aideGet: (chemin) => appel("GET", `/aide/${chemin}`),
   formats: () => requete("GET", "/api/formats"), // registre des formats de sortie (pilote.formats.vue, pas sous /api/suite)
   operationsIa: () => requete("GET", "/api/operations_ia"), // registre des opérations de l'Assistant IA, même principe
+  // Tableau de bord (1.1) : routes partagées avec l'ancienne interface, sous /api/ et non /api/suite/.
+  recherches: () => requete("GET", "/api/recherches"),
+  recherche: (rid) => requete("GET", `/api/recherches/${rid}`),
+  arreterRecherche: (rid) => requete("POST", `/api/recherches/${rid}/arret`),
+  programmes: () => requete("GET", "/api/programmes"),
+  journal: (rid) => requete("GET", rid ? `/api/journal?recherche=${rid}` : "/api/journal"),
   traductionTester: (corps) => appel("POST", "/traduction/tester", corps),
 };
 

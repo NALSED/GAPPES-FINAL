@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pilote import cles
+from pilote import cles, disjoncteur
 from pilote import reglages as rg
 from pilote.adaptateurs import base_exterieure
 from pilote.api_reglages import adaptateur_manquant, voyant
@@ -98,6 +98,7 @@ def vue_source(
     e: dict[str, Any],
     sur: dict[str, Any],
     unites: dict[str, float] | None,
+    pause: dict[str, Any] | None = None,  # 1.1 §3.2 : la raison, pour le Tableau de bord — None si la source n'est pas en pause
 ) -> dict[str, Any]:
     ch = rg.choix_source(reg, d)
     allumee = bool(ch["chercher"] or ch["verifier"])
@@ -135,6 +136,7 @@ def vue_source(
         "parametres_attendus": d.parametres, "parametres": rg.parametres_donnes(reg, d.id),
         "cle": bool(d.cles) and cles.toutes_presentes(cfg, d.cles), "voyant": mot, "domaine": domaine_source(d), "chercher": ch["chercher"], "verifier": ch["verifier"],
         "emoji": "emoji" in d.consomme, "acces": acces, "machine": machine, "copie": copie, "peut_chercher": "chercher" in d.roles, "verifie_sur": d.verifie_sur if "adaptateur" in d.moteur else "", "avertissement": d.avertissement, "adaptateur_manquant": manquant,
+        "en_pause": {"raison": pause["raison"], "reprise_dans_s": disjoncteur.reprise_dans_s(pause)} if pause else None,
     }  # fmt: skip
 
 
@@ -142,6 +144,7 @@ def sources(cfg: Config, surcouche: dict[str, Any], unites: dict[str, float] | N
     decls, _ = charger_sources(cfg)
     reg, _ = rg.charger_tolerant(cfg)
     etats = lire_etat(cfg)
+    pauses = disjoncteur.en_pause(cfg, list(decls))  # un seul calcul pour toutes les sources (1.1 §3.2)
     ordre = {c: i for i, c in enumerate(CAT_VERS_USAGE)}
     vues = [
         vue_source(
@@ -151,6 +154,7 @@ def sources(cfg: Config, surcouche: dict[str, Any], unites: dict[str, float] | N
             etats.get(d.id) or {},
             surcouche.get(d.id) if isinstance(surcouche.get(d.id), dict) else {},
             unites,
+            pauses.get(d.id),
         )
         for d in decls.values()
     ]

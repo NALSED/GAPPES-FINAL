@@ -82,6 +82,11 @@ h1, h2, h3, p { margin: 0; }
 .pastille.ok { background: var(--etat-ok); }
 .pastille.warn { background: var(--etat-attention); }
 .pastille.off { background: var(--etat-eteint); }
+.pastille.accent { background: var(--accent); }
+.alerte-ligne { display: flex; align-items: center; gap: var(--espace-2); background: var(--etat-attention-fond); color: var(--etat-attention); border-radius: var(--rayon-controle); padding: var(--espace-2) var(--espace-3); }
+.tuile-compteur { display: flex; align-items: center; justify-content: space-between; gap: var(--espace-2); border-radius: var(--rayon-controle); padding: var(--espace-2) var(--espace-3); background: var(--surface-page); }
+.tuile-compteur.active { border-left: 3px solid var(--accent); }
+.tableau-moitie { display: flex; flex-direction: column; gap: var(--espace-4); }
 .role { display: inline-flex; align-items: center; justify-content: center; gap: var(--espace-1); width: 104px; padding: var(--espace-1) var(--espace-2); border-radius: var(--rayon-pilule); font-size: var(--etiquette-taille); line-height: var(--etiquette-interligne); font-weight: var(--etiquette-graisse); letter-spacing: var(--etiquette-crenage); white-space: nowrap; }
 .role.auto { width: auto; }
 .role.CHERCHER { background: var(--role-chercher-fond); color: var(--role-chercher); }

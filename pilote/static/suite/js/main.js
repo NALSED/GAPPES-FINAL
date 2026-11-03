@@ -7,6 +7,7 @@ import { demarrerInstallation } from "./installation.js";
 import { ONGLETS, PLUS_TARD, VERBES, aPluriel } from "./mots.js";
 import { pageRecherche } from "./recherche.js";
 import { pageTri } from "./tri.js";
+import { chargerTableau, pageTableau, quitterTableau } from "./tableau.js";
 import { ficheOutil, ficheSource, pageOutils, pageSources } from "./reglages.js";
 import { annoncer, bouton, champ } from "./ui.js";
 
@@ -16,6 +17,7 @@ const ECRANS = {
   "recherche/avancee": () => { app.onglet = "recherche"; app.recherche.ouvert.adv = true; },
   "recherche/sauvegardees": () => { app.onglet = "recherche"; app.recherche.ouvert.sauvees = true; },
   tri: () => { app.onglet = "tri"; },
+  "tableau-de-bord": () => { app.onglet = "tableau-de-bord"; },
   reglages: () => { app.onglet = "reglages"; },
   "reglages/sources": () => { app.onglet = "reglages"; app.reglages.sous = "sources"; },
   "reglages/outils": () => { app.onglet = "reglages"; app.reglages.sous = "outils"; },
@@ -26,11 +28,20 @@ app.naviguer = (ecran) => {
   app.rendre();
 };
 
+/** Charge ce qu'un onglet a besoin de charger avant de se dessiner ; quitte le Tableau de bord proprement
+ * (arrête son sondage, §4) si on le laissait. */
+async function entrerDans(onglet) {
+  if (onglet !== "tableau-de-bord") quitterTableau();
+  if (onglet === "tri") await chargerTri();
+  else if (onglet === "tableau-de-bord") await chargerTableau();
+  else app.rendre();
+}
+
 function barre() {
   return h("header", { class: "barre" }, h("nav", { class: "barre-in", "aria-label": "Onglets" }, h("span", { class: "marque" }, "Grappes"),
     ONGLETS.map((o) => h("button", {
       type: "button", class: "onglet", "aria-current": o.id === app.onglet ? "page" : null, "aria-disabled": o.concu ? null : "true", disabled: false,
-      onclick: () => { if (!o.concu) return; app.onglet = o.id; location.hash = `#/${o.id}`; if (o.id === "tri") chargerTri(); else app.rendre(); },
+      onclick: () => { if (!o.concu) return; app.onglet = o.id; location.hash = `#/${o.id}`; entrerDans(o.id); },
     }, icone(o.icone), o.nom, !o.concu && h("span", { class: "pastille-plus-tard" }, PLUS_TARD)))));
 }
 
@@ -64,7 +75,7 @@ function pageRechercheTete() {
 function dessiner() {
   const racine = document.getElementById("app");
   const haut = window.scrollY;
-  racine.replaceChildren(barre(), h("main", { class: "page" }, h("div", { class: "page-in" }, app.onglet === "reglages" ? pageReglages() : app.onglet === "tri" ? pageTri() : pageRechercheTete())),
+  racine.replaceChildren(barre(), h("main", { class: "page" }, h("div", { class: "page-in" }, app.onglet === "reglages" ? pageReglages() : app.onglet === "tri" ? pageTri() : app.onglet === "tableau-de-bord" ? pageTableau() : pageRechercheTete())),
     h("footer", { class: "pied" }, h("a", { href: "/" }, "Ancienne interface (Lancement, Tri)")));
   window.scrollTo(0, haut);
   redessinerAide();
@@ -84,10 +95,10 @@ async function chargerTri() {
 }
 
 function depuisHash() {
-  const m = location.hash.match(/^#\/(recherche|reglages|tri)/);
-  app.onglet = m ? m[1] : "reglages"; // Tableau de bord n'est pas encore conçu : on n'y va pas
+  const m = location.hash.match(/^#\/(recherche|reglages|tri|tableau-de-bord)/);
+  app.onglet = m ? m[1] : "reglages";
 }
-window.addEventListener("hashchange", () => { depuisHash(); if (app.onglet === "tri") chargerTri(); else dessiner(); });
+window.addEventListener("hashchange", () => { depuisHash(); entrerDans(app.onglet); });
 
 (async function demarrer() {
   depuisHash();
@@ -102,6 +113,7 @@ window.addEventListener("hashchange", () => { depuisHash(); if (app.onglet === "
     return;
   }
   if (app.onglet === "tri") await chargerTri();
+  else if (app.onglet === "tableau-de-bord") await chargerTableau();
   else dessiner();
   monterAide();
 })();

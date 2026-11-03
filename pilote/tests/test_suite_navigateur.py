@@ -98,36 +98,56 @@ def aller(page, hash_):
     page.wait_for_selector(".carte")
 
 
-def test_coquille_quatre_onglets_dont_deux_inactifs(page):
+def test_coquille_quatre_onglets_tous_concus_reglages_avant_recherche(page):
     onglets = page.locator(".onglet")
-    assert onglets.all_inner_texts() == ["Tableau de bord\nplus tard", "Recherche", "Réglages", "Tri"]
-    assert page.locator(".onglet[aria-disabled=true]").count() == 1  # le Tableau de bord reste visible, grisé, inactif
-    page.click(".onglet:has-text('Tableau de bord')", force=True)  # Playwright refuse un clic normal sur un bouton aria-disabled
-    assert page.locator(".onglet[aria-current=page]").inner_text() == "Recherche"  # rien ne se passe : onglet non conçu
-    assert page.locator("h1").count() == 1
+    assert onglets.all_inner_texts() == ["Tableau de bord", "Réglages", "Recherche", "Tri"]  # 1.1 (conçu) + 1.2 (ordre)
+    assert page.locator(".onglet[aria-disabled=true]").count() == 0  # les quatre sont conçus désormais
+    page.click(".onglet:has-text('Tableau de bord')")
+    assert page.locator(".onglet[aria-current=page]").inner_text() == "Tableau de bord"
+    assert page.locator("h1").inner_text() == "Tableau de bord"
+
+
+def test_tableau_de_bord_montre_l_etat_du_systeme(page):
+    aller(page, "#/tableau-de-bord")
+    page.wait_for_selector(".carte-tete:has-text('Sources')")  # la coquille (Journal seul) s'affiche avant les données : attendre une carte qui en dépend
+    titres = page.locator(".carte-tete .titre").all_inner_texts()
+    assert "Sources" in titres  # la carte Sources (§3.2) est toujours présente, il y a toujours des sources déclarées
+    # les cartes démarrent dépliées (rien n'est mémorisé replié au premier passage) : pas besoin de cliquer
+    carte_sources = page.locator(".carte", has=page.locator(".carte-tete:has-text('Sources')"))
+    assert "opérationnelle" in carte_sources.inner_text() or "à vérifier" in carte_sources.inner_text()
+
+
+def test_suite_nu_atterrit_sur_reglages(tmp_path, chromium, serveur_vivant):
+    cfg = _installee(charger(copier_config(tmp_path)))
+    url = serveur_vivant(creer_app(cfg))
+    p = chromium.new_page()
+    p.goto(f"{url}/suite")  # sans ancre : 1.2, l'application s'ouvre sur Réglages
+    p.wait_for_selector(".carte")
+    assert p.locator(".onglet[aria-current=page]").inner_text() == "Réglages"
+    p.close()
 
 
 def test_retirer_une_source_se_defait_sans_fenetre(page):
     aller(page, "#/reglages")
     page.click(".carte-tete:has-text('Web')")
-    page.click("[data-source=tavily] button:has-text('Retirer')")
+    page.click("[data-source=tavily] button[aria-label*=Retirer]")  # 3.3 : icône seule, repéré par aria-label
     assert page.locator(".fenetre, .panneau").count() == 0  # retirer ne demande rien
     page.wait_for_selector("[data-source=tavily]", state="detached")
-    page.click("button:has-text('Ajouter Tavily')")
+    page.click("button[aria-label*='Ajouter Tavily']")
     page.wait_for_selector("[data-source=tavily]")
 
 
 def test_assistant_ia_passe_par_l_avertissement(page):
     aller(page, "#/reglages")
     page.click(".sous button:has-text('Outils')")
-    page.click("[data-outil=ia] button:has-text('Allumer')")
+    page.click("[data-outil=ia] button[aria-label*=Allumer]")  # 3.3 : icône seule, repéré par aria-label
     assert page.locator(".avert-points li").count() == 4
     page.click(".fenetre button:has-text('Annuler')")
     assert "éteint" in page.locator("[data-outil=ia] .etat").inner_text()
-    page.click("[data-outil=ia] button:has-text('Allumer')")
+    page.click("[data-outil=ia] button[aria-label*=Allumer]")
     page.click(".fenetre button:has-text('Allumer')")
     page.wait_for_function("document.querySelector('[data-outil=ia] .etat').innerText.includes('opérationnel')")
-    page.click("[data-outil=ia] button:has-text('Éteindre')")  # éteindre ne redemande rien
+    page.click("[data-outil=ia] button[aria-label*='Éteindre']")  # éteindre ne redemande rien
     page.wait_for_function("document.querySelector('[data-outil=ia] .etat').innerText.includes('éteint')")
     assert page.locator(".fenetre").count() == 0
     assert (
@@ -138,13 +158,13 @@ def test_assistant_ia_passe_par_l_avertissement(page):
 def test_la_cle_est_masquee_et_jamais_relue(page):
     aller(page, "#/reglages")
     page.click(".carte-tete:has-text('Web')")
-    page.click("[data-source=tavily] button:has-text('Modifier')")
+    page.click("[data-source=tavily] button[aria-label*=Modifier]")  # 3.3 : icône seule, repéré par aria-label
     champ = page.locator(".panneau input[type=password]")
     assert champ.count() == 1
     champ.fill("sk-secret-visible-jamais")
     page.click(".panneau button:has-text('Enregistrer')")
     page.wait_for_selector(".panneau", state="detached")
-    page.click("[data-source=tavily] button:has-text('Modifier')")
+    page.click("[data-source=tavily] button[aria-label*=Modifier]")
     assert "clé enregistrée" in page.locator(".panneau").inner_text()
     assert (
         "sk-secret-visible-jamais" not in page.content()
@@ -253,10 +273,42 @@ def test_les_sorties_d_une_condition_se_nomment_oui_ou_non(page):
     page.click("[data-tuile^='si:'] .tuile")
     page.wait_for_selector(".fenetre.w1040")
     page.click(".fenetre .puce:text-is('oui')")
-    assert page.locator(".fenetre .puce[aria-pressed=true]").inner_text() == "oui"
+    # scopé au groupe de puces « Sortie vers … » : 3.8.03 a ajouté d'autres puces (champ, comparateur) dans la même fenêtre
+    assert page.locator(".fenetre [aria-label^='Sortie vers'] .puce[aria-pressed=true]").inner_text() == "oui"
     page.click(".fenetre button:has-text('Fermer')")
     assert "oui" in page.locator(".lien-etiquette").text_content()
     assert cond.count() == 1 and fus.count() == 1
+
+
+def test_les_dix_fiches_outils_s_ouvrent_sans_erreur(page):
+    """3.8.0X : chaque modèle livré pose sa tuile et ouvre sa fenêtre sans planter — la revue la plus large
+    possible des dix éditeurs d'options, faute de mieux (aucun test dédié par tuile côté navigateur).
+    Quatre outils (Attente, Compteur budget, Assistant IA, RSSHub) sont éteints d'origine : on les allume
+    d'abord dans Réglages, sinon la palette refuse de poser leur tuile (muette)."""
+    page.click("button[aria-label=Replier]")  # l'Aide est posée par-dessus le coin de chaque page
+    page.click(".onglet:has-text('Réglages')")
+    page.click(".sous button:has-text('Outils')")
+    for outil in ("attente", "budget", "ia", "rsshub"):
+        page.click(f"[data-outil={outil}] button[aria-label*=Allumer]")
+        if page.locator(".fenetre").count():  # l'Assistant IA seul redemande une confirmation
+            page.click(".fenetre button:has-text('Allumer')")
+        page.wait_for_function(f"!document.querySelector('[data-outil={outil}] .etat').innerText.includes('éteint')")
+    page.click(".onglet:has-text('Recherche')")
+    page.wait_for_selector(".carte")
+    # « Outils » est le groupe de palette ouvert par défaut (app.recherche.palette) : pas besoin de cliquer son en-tête
+    noms = [
+        "Format de sortie", "Traduction", "Condition « si »", "Boucle", "Fusion / doublons", "Filtre",
+        "Quand une source est à court", "Compteur budget", "Assistant IA", "RSSHub",
+    ]
+    for nom in noms:
+        page.click(f".palette-entree:has-text('{nom}')")
+    tuiles = page.locator("[data-tuile]:not([data-tuile=saisie]):not([data-tuile=grappes])")
+    assert tuiles.count() == len(noms)
+    for i in range(len(noms)):
+        tuiles.nth(i).click()
+        page.wait_for_selector(".fenetre.w1040")
+        page.click(".fenetre button:has-text('Fermer')")
+        page.wait_for_selector(".fenetre", state="detached")
 
 
 def test_onglet_tri_confirmer_et_separer(tmp_path, chromium, serveur_vivant):

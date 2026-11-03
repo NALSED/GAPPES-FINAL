@@ -113,7 +113,7 @@ def _iso(d):
 def _recherche_vue(r: Recherche) -> dict[str, Any]:
     return {
         "id": r.id, "cree_le": _iso(r.cree_le), "qui": r.qui, "sujet": r.sujet, "parametres": r.parametres,
-        "etat": r.etat, "avancement": r.avancement, "message": r.message,
+        "etat": r.etat, "avancement": r.avancement, "message": r.message, "couts": r.couts,
         "debut": _iso(r.debut), "fin": _iso(r.fin),
     }  # fmt: skip
 
