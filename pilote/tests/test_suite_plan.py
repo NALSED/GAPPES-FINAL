@@ -450,8 +450,8 @@ def test_le_journal_ne_dit_retire_que_ce_qui_l_est_vraiment():
 OUTILS_IA_ON = [outil("ia") if o["id"] == "ia" else o for o in OUTILS]
 
 
-def comp_ia(p):
-    return compiler(p, SOURCES, OUTILS_IA_ON, pays_equiv=PAYS)
+def comp_ia(p, disponible=True):
+    return compiler(p, SOURCES, OUTILS_IA_ON, pays_equiv=PAYS, ia_disponible=disponible)
 
 
 def test_ia_choisit_l_operation_et_le_modele():
@@ -461,7 +461,7 @@ def test_ia_choisit_l_operation_et_le_modele():
         [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
     )  # fmt: skip
     c = comp_ia(p)
-    assert c["ia"] == {"tuile": "ia", "operation": "resumer", "modele": "haiku", "marquer": True}
+    assert c["ia"] == {"tuile": "ia", "operation": "resumer", "modele": "haiku", "effort": "", "marquer": True}
     assert any("Résumer" in x["texte"] for x in c["appliques"] if x["nom"] == "ia")
     assert "ia" not in {x["nom"] for x in c["non_appliques"]}
 
@@ -480,7 +480,7 @@ def test_ia_marquer_non_desactive_le_marquage():
         [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Classer / catégoriser"], ["Marquer les résultats", "non"]])],
         [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
     )  # fmt: skip
-    assert comp_ia(p)["ia"] == {"tuile": "ia", "operation": "classer", "modele": "", "marquer": False}
+    assert comp_ia(p)["ia"] == {"tuile": "ia", "operation": "classer", "modele": "", "effort": "", "marquer": False}
 
 
 def test_ia_une_seule_tuile_jouee():
@@ -491,3 +491,55 @@ def test_ia_une_seule_tuile_jouee():
     c = comp_ia(p)
     assert c["ia"]["tuile"] == "ia1"
     assert any(x["nom"] == "ia2" for x in c["non_appliques"])
+
+
+def test_ia_sans_agent_installe_n_est_pas_appliquee_et_le_dit():
+    """3.8.09, « Comment momo vérifie » : agent absent -> la tuile refuse de s'appliquer et le dit, comme Traduction sans adresse."""
+    p = plan(
+        [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Résumer"]])],
+        [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
+    )  # fmt: skip
+    c = comp_ia(p, disponible=False)
+    assert c["ia"] is None and "n'est pas installé" in c["non_appliques"][0]["raison"]
+
+
+def test_ia_effort_menu_ferme():
+    def ia_de(effort):
+        p = plan(
+            [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Résumer"], ["Effort", effort]])],
+            [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
+        )  # fmt: skip
+        return comp_ia(p)["ia"]
+
+    assert ia_de("élevé")["effort"] == "high" and ia_de("très élevé")["effort"] == "xhigh" and ia_de("par défaut")["effort"] == ""
+    with pytest.raises(ConfigRefusee, match="effort"):
+        ia_de("énorme")
+
+
+def test_ia_ne_traite_que_les_noms_qui_atteignent_sa_tuile():
+    """3.8.09 : « applique l'opération aux résultats qui atteignent cette tuile » — la branche de B ne passe pas par elle."""
+    p = plan(
+        [("saisie",), ("grappes",), ("n1", "a"), ("n2", "b"), ("ia", "ia", None, [["Opération", "Résumer"]])],
+        [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes"), lien("saisie", "n2"), lien("n2", "grappes")],
+    )  # fmt: skip
+    lignes = [ligne("De A", ["a"]), ligne("De B", ["b"]), ligne("Des deux", ["a", "b"])]
+    gardees, bilan = appliquer(lignes, comp_ia(p))
+    assert [gardees[k]["nom"] for k in bilan["ia"]] == ["De A", "Des deux"]
+    assert bilan["tuiles"]["ia"] == {"nom": "ia", "entrees": 2, "sorties": 2}  # le compteur de tuile (1.1 §8) la voit passer
+
+
+def test_la_tuile_jouee_ne_depend_pas_du_hasard_du_processus():
+    """Revue 902 : l'ordre des outils venait d'un ensemble (hachage aléatoire par processus) : la tuile Fusion / Attente /
+    Assistant IA « jouée » changeait d'un lancement à l'autre. Elle suit maintenant l'ordre du plan."""
+    import subprocess
+    import sys
+
+    code = (
+        "import sys; sys.path.insert(0, 'tests');"
+        "from test_suite_plan import comp_ia, plan, lien;"
+        "p = plan([('saisie',), ('grappes',), ('n1', 'a'), ('ia1', 'ia', None, [['Opération', 'Résumer']]), ('ia2', 'ia', None, [['Opération', 'Résumer']])],"
+        "[lien('saisie', 'n1'), lien('n1', 'ia1'), lien('ia1', 'ia2'), lien('ia2', 'grappes')]);"
+        "print(comp_ia(p)['ia']['tuile'])"
+    )
+    vus = {subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={"PYTHONHASHSEED": str(g), "PATH": ""}, check=True).stdout.strip() for g in range(6)}
+    assert vus == {"ia1"}

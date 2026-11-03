@@ -290,8 +290,8 @@ class ExecuteurGrappes:
             ctx.noter("plan_traduction_non_appliquee", sources=plan["traduction_non_appliquee"], raison="la source passe par le moteur de collecte de grappes, qui n'a qu'une langue de requête")
         # Assistant IA (3.8.09) : un simple compteur, jamais mêlé au compteur crédits (facturé par l'abonnement, pas par
         # appel) — décision 901, précisée le 03/11/2026.
-        if jeu.get("ia_appels"):
-            ctx.noter("plan_ia_appels", n=jeu["ia_appels"], echecs=jeu.get("ia_echecs", 0))
+        if jeu.get("ia_appels") or jeu.get("ia_echecs") or jeu.get("ia_non_traitees"):
+            ctx.noter("plan_ia_appels", n=jeu.get("ia_appels", 0), echecs=jeu.get("ia_echecs", 0), non_traitees=jeu.get("ia_non_traitees", 0))
 
     def dire_l_emoji(self, ctx: ContexteRecherche, spec: dict[str, Any]) -> None:
         """Règle 1 appliquée à la requête : un emoji que la source ne cherche pas n'est pas transmis, et la recherche DIT à combien de sources. Sans cela, elles rendaient zéro

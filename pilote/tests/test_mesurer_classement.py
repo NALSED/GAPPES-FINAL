@@ -13,6 +13,9 @@ from pathlib import Path
 
 import pytest
 
+# Ces tests peuvent se sauter (extra « autocal » absent) : ils portent donc la marque `reseau` (test_verrou_des_sauts).
+pytestmark = pytest.mark.reseau
+
 RACINE = Path(__file__).resolve().parents[1]
 OUTIL = RACINE / "outils" / "mesurer_classement.py"
 

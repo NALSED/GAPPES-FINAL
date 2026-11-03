@@ -3,7 +3,7 @@
 import { api, Refus } from "./api.js";
 import { h, icone, svg } from "./dom.js";
 import { agir, app, outilParId, sourceParId } from "./etat.js";
-import { EFFET_DE_ROLE, ES_ROLE, ETATS_OUTIL, ETATS_SOURCE, MARQUE_IA, ROLES, TUILES_FIXES, VERBES } from "./mots.js";
+import { EFFET_DE_ROLE, ES_ROLE, ETATS_OUTIL, ETATS_SOURCE, EFFORTS_IA, MARQUE_IA, ROLES, TUILES_FIXES, VERBES } from "./mots.js";
 import { annoncer, bouton, boutonIcone, caseSource, champ, etiquetteRole, groupePuces, ouvrirCouche, puce } from "./ui.js";
 
 const TUILE = 64;
@@ -366,12 +366,16 @@ function rendreOptionsIa(n, refresh) {
   const modele = champ({ libelle: "Modèle", valeur: optLabel(n, "Modèle"), placeholder: "laisse vide pour le modèle par défaut de l'agent" });
   modele.saisie.addEventListener("change", () => { optDefinir(n, "Modèle", modele.valeur()); sauvegarder(); });
   const marquer = optLabel(n, "Marquer les résultats") !== "non";
+  const effort = optLabel(n, "Effort") || EFFORTS_IA[0];
   return h(
     "div", { class: "options-grille" },
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Opération"),
       groupePuces(OPERATIONS_IA_CACHE.map((o) => [o.nom, o.nom]), operation, (v) => { optDefinir(n, "Opération", v); sauvegarder(); refresh(); }),
       h("span", { class: "aide-champ" }, OPERATIONS_IA_CACHE.find((o) => o.nom === operation)?.description || "")),
     modele.el,
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Effort"),
+      groupePuces(EFFORTS_IA.map((e) => [e, e]), effort, (v) => { optDefinir(n, "Effort", v); sauvegarder(); refresh(); }),
+      h("span", { class: "aide-champ" }, "Plus d'effort : une réponse plus réfléchie, mais plus lente.")),
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Marquer les résultats"),
       groupePuces([["oui", "oui"], ["non", "non"]], marquer ? "oui" : "non", (v) => { optDefinir(n, "Marquer les résultats", v); sauvegarder(); refresh(); }),
       h("span", { class: "aide-champ" }, "Par défaut activé : ce que l'IA produit reste marqué « IA » dans la grappe.")),

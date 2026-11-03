@@ -312,7 +312,7 @@ def test_un_rapprochement_confirme_fusionne_les_deux_lignes_a_l_export(monde):
     assert noms.count("Fenix Toulouse Handball") + noms.count("Montpellier Handball") == 1  # une seule des deux reste
     gagnante = next(l for l in lignes[1:] if l[0] in ("Fenix Toulouse Handball", "Montpellier Handball"))
     assert gagnante[0] == "Montpellier Handball"  # id le plus grand = trouvée en dernier = « la plus récente »
-    assert "Fenix Toulouse Handball" in gagnante[-1]  # sources_fusionnees garde la trace de l'autre fiche
+    assert "Fenix Toulouse Handball" in gagnante[lignes[0].index("sources_fusionnees")]  # garde la trace de l'autre fiche
 
 
 def test_separer_un_rapprochement_ne_fusionne_jamais(monde):
@@ -335,7 +335,7 @@ def test_contenu_au_choix_et_deux_fichiers_en_meme_temps(monde):
     d = dossier(res)
     assert next(csv.reader((d / "resultat.csv").read_text(encoding="utf-8").splitlines())) == ["NOM"]  # l'un pour l'outil d'après
     detail = list(csv.reader((d / "resultat_detail.csv").read_text(encoding="utf-8").splitlines(), delimiter=";"))  # l'autre pour l'utilisateur
-    assert detail[0] == ["nom", "ville", "pays", "origine", "confirmations", "fonction", "genre", "site", "numero_officiel", "decision", "motif_rejet", "sources", "relations", "sources_fusionnees"]
+    assert detail[0] == ["nom", "ville", "pays", "origine", "confirmations", "fonction", "genre", "site", "numero_officiel", "decision", "motif_rejet", "sources", "relations", "sources_fusionnees", "ia"]
     fenix = next(r for r in detail[1:] if r[0].startswith("Fenix"))
     assert fenix[3] == "dans un registre officiel" and fenix[5] == "siège" and fenix[9] == "gardé" and "Groupe Fenix" in fenix[12]
     assert c.post("/api/recherches/r14/export", json={"formats": [{"format": "csv", "contenus": ["inconnu"]}]}).status_code == 422

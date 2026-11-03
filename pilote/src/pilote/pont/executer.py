@@ -349,18 +349,20 @@ def main(dossier: str) -> int:
 
             lignes, bilan_plan = suite_plan.appliquer(lignes, plan, suite_script.executer, fiabilites_sources=spec.get("fiabilites_sources"))
             resultat["plan"] = {**bilan_plan, "traductions": effets_traduction}
+            ia_spec = plan.get("ia")
+            if ia_spec:  # Assistant IA (3.8.09) : après les chemins, avant la vérification, sur les noms qui atteignent la tuile
+                from pilote import operations_ia, suite_ia
+
+                operation = operations_ia.decouvrir().get(ia_spec["operation"])
+                if operation is None:
+                    resultat["plan"]["ia_echecs"] = len(bilan_plan.get("ia", []))  # registre changé depuis le lancement : dit, jamais un plantage
+                else:  # arret_local : arrêt demandé ou temps écoulé ; la limite d'appels ne compte pas (l'agent n'est pas une source)
+                    resultat["plan"].update(suite_ia.appliquer_lignes([lignes[k] for k in bilan_plan.get("ia", [])], operation, ia_spec,
+                                                                     signaler=avancement.signaler, arreter=arret_local))  # fmt: skip
         from pilote.pont.verification import verifier_candidats
 
         # la vérification des candidats appartient à l'étape « vérification » : la jauge doit couvrir le travail qu'elle annonce.
         bilans = verifier_candidats(lignes, spec, secrets, doit_s_arreter, limite_source, avancement.signaler, arret_local)
-        ia_spec = plan.get("ia")
-        if ia_spec:  # Assistant IA (3.8.09) : sur ce qui a déjà été collecté et vérifié, jamais un fait inventé en silence
-            from pilote import operations_ia, suite_ia
-
-            operation = operations_ia.decouvrir().get(ia_spec["operation"])
-            resultat.setdefault("plan", {}).update(
-                suite_ia.appliquer_lignes(lignes, operation, ia_spec, signaler=avancement.signaler)
-            )
         avancement.signaler("etape", etape="sortie")
         Path("candidats.json").write_text(json.dumps(lignes, ensure_ascii=False, indent=1), encoding="utf-8")
         resultat["verifications"] = bilans

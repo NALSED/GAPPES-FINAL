@@ -9,7 +9,7 @@ from fastapi import APIRouter, Body, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from pilote import actions, budget, emoji_texte, rapprochements, suite, suite_modele, suite_plan, suite_reel, suite_traduction, tri
+from pilote import actions, budget, emoji_texte, rapprochements, suite, suite_ia, suite_modele, suite_plan, suite_reel, suite_traduction, tri
 from pilote import reglages as rg
 from pilote.base import Candidat, Journal, Recherche
 from pilote.config import Config
@@ -274,7 +274,7 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
             try:
                 plan = suite._plan_valide(corps["plan"])
                 comp = suite_plan.compiler(plan, e["sources"], e["outils"], pays_equiv=_equivalences_de_pays(cfg), langue_saisie=suite.detecter_langue(saisie),
-                                           traduction_disponible=bool(cfg.suite_traduction_url), cfg=cfg)  # fmt: skip
+                                           traduction_disponible=bool(cfg.suite_traduction_url), ia_disponible=suite_ia.disponible(), cfg=cfg)  # fmt: skip
             except ConfigRefusee as exc:
                 raise _refus(exc) from exc
             voulues = comp["sources"]

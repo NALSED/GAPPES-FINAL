@@ -138,7 +138,7 @@ def _genre_outil(o: dict[str, Any]) -> str:
 
 
 def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[dict[str, Any]], *, pays_equiv: dict[str, list[str]] | None = None,
-             langue_saisie: str | None = None, traduction_disponible: bool = False, cfg: Any = None) -> dict[str, Any]:  # fmt: skip
+             langue_saisie: str | None = None, traduction_disponible: bool = False, ia_disponible: bool = False, cfg: Any = None) -> dict[str, Any]:  # fmt: skip
     nodes = {n["id"]: n for n in plan.get("nodes", [])}
     edges = [e for e in plan.get("edges", []) if e["from"] in nodes and e["to"] in nodes]
     par_source = {s["id"]: s for s in sources}
@@ -174,8 +174,10 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
         i for i in nodes if (i in avant or i in departs) and (i in apres or i in arrivees)
     }  # sur un chemin de la saisie aux grappes
     ref = lambda i: nodes[i].get("ref")
-    chemin_sources = [i for i in utiles if ref(i) in par_source]
-    chemin_outils = [i for i in utiles if ref(i) in par_outil]
+    # dans l'ordre du plan, jamais dans celui d'un ensemble (aléatoire d'un processus à l'autre) : « une seule tuile jouée,
+    # les suivantes ignorées » (Fusion, Attente, Assistant IA) désignait sinon une tuile au hasard (revue 902)
+    chemin_sources = [i for i in nodes if i in utiles and ref(i) in par_source]
+    chemin_outils = [i for i in nodes if i in utiles and ref(i) in par_outil]
     appliques: list[dict[str, Any]] = []
     non_appliques: list[dict[str, Any]] = []
 
@@ -222,6 +224,8 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
             return _etapes_conditions(node["nom"], opts, m, "garder" if sortie["label"] == "oui" else "ecarter")
         if genre == "script":
             return [{"op": "script", "code": o.get("code", ""), "tuile": m, "nom": node["nom"]}]
+        if genre == "ia":  # passage sans filtre : marque les noms qui ATTEIGNENT la tuile, les seuls que l'IA traitera (3.8.09)
+            return [{"op": "ia", "tuile": m, "nom": node["nom"]}]
         return []
 
     def visiter(m: str, etapes: list[dict[str, Any]], vu: tuple[str, ...], source: str) -> None:
@@ -313,8 +317,11 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
         elif genre == "ia":
             if ia is not None:
                 dire_non(i, "une seule tuile Assistant IA est jouée par recherche ; les suivantes sont ignorées")
+            elif not ia_disponible:
+                dire_non(i, "l'agent Claude Code n'est pas installé sur cette machine : rien de ce qu'elle produirait n'entre dans une grappe")
             else:
                 from pilote import operations_ia as _operations_ia
+                from pilote.suite_ia import EFFORTS
 
                 ops_connues = _operations_ia.decouvrir()
                 opts_map = {lib: v for lib, v in opts}
@@ -323,11 +330,15 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
                     raise ConfigRefusee(
                         f"« {node['nom']} » : choisis une opération connue ({', '.join(sorted(d['nom'] for d in ops_connues.values()))})."
                     )
+                effort_txt = norme(opts_map.get("Effort", "") or "par défaut")
+                effort = next((v for mot, v in EFFORTS.items() if norme(mot) == effort_txt), None)
+                if effort is None:
+                    raise ConfigRefusee(f"« {node['nom']} » : l'effort est l'un de : {', '.join(EFFORTS)}.")
                 marquer = norme(opts_map.get("Marquer les résultats", "oui")) != "non"
-                ia = {"tuile": i, "operation": op_id, "modele": str(opts_map.get("Modèle", "") or "").strip(), "marquer": marquer}
+                ia = {"tuile": i, "operation": op_id, "modele": str(opts_map.get("Modèle", "") or "").strip(), "effort": effort, "marquer": marquer}
                 appliques.append({
                     "tuile": i, "nom": node["nom"],
-                    "texte": f"applique « {ops_connues[op_id]['nom']} » à ce qui a déjà été collecté"
+                    "texte": f"applique « {ops_connues[op_id]['nom']} » aux résultats qui atteignent la tuile"
                     + (" (résultats marqués « IA »)" if marquer else ""),
                 })  # fmt: skip
         elif genre in NON_APPLIQUES:
@@ -549,6 +560,8 @@ def appliquer(
     # Compteur par tuile (1.1, §8) : un nom qui traverse la même tuile par plusieurs branches ne compte qu'une fois
     # (ensembles d'index, pas de somme) — « entrées » et « sorties » depuis le début de la recherche.
     par_tuile: dict[str, dict[str, Any]] = {}
+    tuile_ia = (consignes.get("ia") or {}).get("tuile")
+    atteint_ia: set[int] = set()  # noms qui atteignent la tuile Assistant IA jouée (3.8.09)
     for ch in consignes.get("chemins", []):
         courant = [k for k, ligne in enumerate(lignes) if ch["source"] in (ligne.get("trouve_par") or [])]
         for etape in ch["etapes"]:
@@ -562,6 +575,10 @@ def appliquer(
                 ]
             elif etape["op"] == "tronquer":
                 passe = courant[: etape["maximum"]]
+            elif etape["op"] == "ia":
+                passe = courant
+                if etape["tuile"] == tuile_ia:
+                    atteint_ia |= set(courant)
             else:
                 res = (
                     lancer_script(
@@ -594,7 +611,9 @@ def appliquer(
             if lignes[k]["nom"] not in t["noms"] and len(t["noms"]) < 30:
                 t["noms"].append(lignes[k]["nom"])
     gardees = [ligne for k, ligne in enumerate(lignes) if k in gardes]
+    rang_garde = [k for k in range(len(lignes)) if k in gardes]
     bilan = {
+        "ia": [pos for pos, k in enumerate(rang_garde) if k in atteint_ia],  # positions dans les noms gardés
         "gardes": len(gardees),
         "retires": len(lignes) - len(gardees),
         "non_attribues": len(non_attribues),

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 
-COLONNES_DETAIL = ["nom", "ville", "pays", "origine", "confirmations", "fonction", "genre", "site", "numero_officiel", "decision", "motif_rejet", "sources", "relations", "sources_fusionnees"]
+COLONNES_DETAIL = ["nom", "ville", "pays", "origine", "confirmations", "fonction", "genre", "site", "numero_officiel", "decision", "motif_rejet", "sources", "relations", "sources_fusionnees", "ia"]
 DECISIONS_MOTS = {"garder": "gardé", "rejeter": "rejeté", "plus_tard": "mis de côté", None: ""}
 ILLEGAUX_XML = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f￾￿]")
 
@@ -23,7 +23,7 @@ def propre_xml(t: object) -> str:
 def ligne_detail(r: dict) -> list[str]:
     return [r["nom"], r["ville"], r["pays"], r["origine_phrase"], str(r["confirmations"]) if r["confirmations"] is not None else "", r["fonction"], r["genre"], r["site"], r["numero_officiel"],
             DECISIONS_MOTS.get(r["decision"], ""), r["motif_rejet"], " | ".join(r["sources"]), " | ".join(f"{x['type'].replace('_', ' ')} : {x['vers']}" for x in r["relations"]),
-            r.get("sources_fusionnees", "")]  # fmt: skip
+            r.get("sources_fusionnees", ""), r.get("ia", "")]  # fmt: skip
 
 
 def phrase_trace(t: dict) -> list[str]:

@@ -110,6 +110,8 @@ export const AVERTISSEMENT_IA = [
 ];
 
 export const MARQUE_IA = "IA";
+// Effort de raisonnement de l'agent (3.8.09, `claude -p … --effort`) : menu fermé, mêmes mots que pilote/suite_ia.py EFFORTS.
+export const EFFORTS_IA = ["par défaut", "faible", "moyen", "élevé", "très élevé", "maximal"];
 export const NIVEAUX = { bloquant: "bloquant", remarque: "remarque" };
 
 export function fmtNombre(n) {

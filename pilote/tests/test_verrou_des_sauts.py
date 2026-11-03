@@ -7,7 +7,7 @@ import ast
 from pathlib import Path
 
 TESTS = Path(__file__).resolve().parent
-ASSISTANTS_QUI_SAUTENT = {"overpass_reel", "_serveur"}  # un test qui appelle l'un d'eux saute lui aussi : même exigence
+ASSISTANTS_QUI_SAUTENT = {"overpass_reel", "_serveur", "_exige_pytrec_eval"}  # un test qui appelle l'un d'eux saute lui aussi : même exigence
 
 
 def _saute(noeud: ast.AST) -> bool:

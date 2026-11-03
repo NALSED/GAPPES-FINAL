@@ -73,6 +73,14 @@ def dossier_de_sortie(cfg: Config, rid: str, choix: str = "") -> Path:
     return p if p.is_absolute() else cfg.donnees / p
 
 
+def _texte_ia(faits: dict[str, Any]) -> str:
+    """Ce que l'Assistant IA a produit pour cette fiche (3.8.09), préfixé « [IA] » si la tuile marquait ses résultats.
+    Jamais mêlé à une colonne de faits trouvés (spécification 10, règle 1)."""
+    ia = faits.get("ia") if isinstance(faits.get("ia"), dict) else {}
+    marques = set(faits.get("ia_marque") or [])
+    return " | ".join(f"[IA] {t}" if champ in marques else str(t) for champ, t in sorted(ia.items()))
+
+
 def _meilleure_fiabilite(ids_sources: set[str], fiabilites: dict[str, str]) -> str:
     lettres = [fiabilites.get(t, "F") for t in ids_sources]
     return min(lettres) if lettres else "F"  # A est la meilleure, alphabétique (code Admiralty)
@@ -150,6 +158,7 @@ def jeu_de_donnees(cfg: Config, fabrique: sessionmaker[Session], rid: str, decis
             "fiabilite": _meilleure_fiabilite(set(ids_sources), fiabilites), "sources_fusionnees": "",
             # Règle 8 : le constat de la collecte et la levée éventuelle, pour les formats qui ont à les distinguer (voir `formats/ftm.py`)
             "regle8_personne": bool(faits.get("regle8_personne")), "regle8_leve": bool(faits.get("regle8_leve")),
+            "ia": _texte_ia(faits),
         })  # fmt: skip
     rows = _fusionner_doublons(rows, confirmes, garder)
     ids = mentions.sources_de_la_recherche(cfg.dossier_recherche(rid)) or sorted({t for l in lignes for t in l.trouve_par})

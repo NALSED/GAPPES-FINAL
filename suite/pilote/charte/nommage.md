@@ -49,6 +49,10 @@ L'outil s'appelle **Assistant IA** et il est **éteint** à la livraison. L'allu
 avertissement que l'utilisateur doit lire — voir le composant *Avertissement*. La fenêtre d'aide, elle,
 s'appelle **Aide** et jamais « assistant » : deux objets différents, deux noms différents.
 
+L'**Effort** de l'Assistant IA (3.8.09) est un menu fermé de six mots : *par défaut*, *faible*, *moyen*,
+*élevé*, *très élevé*, *maximal* — rien d'autre, et jamais les valeurs techniques de l'agent (`low`, `max`…).
+À l'export, un champ produit par l'IA est précédé de **[IA]** quand la tuile marque ses résultats.
+
 ## Les trois états
 
 | Mot | Couleur | Ce qu'il dit |
