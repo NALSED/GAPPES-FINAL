@@ -40,11 +40,13 @@ class ClassementConfig:
 
 
 def cc_pour_mode(cc: ClassementConfig, cfg: Config) -> ClassementConfig:
-    """Décision 901/Q26 : `scoring.mode_recherche == "extraction"` active ce classement (déjà mesuré, D63-D65) et le
-    rend autoritaire sur resultat.csv, sans changer les fournisseurs de registres déjà choisis dans classement.yaml."""
+    """Décision 901/Q26 : `scoring.mode_recherche == "extraction"` active ce classement (déjà mesuré, D63-D65) pour les
+    noms lus dans les textes, et le rend autoritaire sur resultat.csv. Les registres en sont retirés : Q26 ne demande que
+    l'extraction ; les garder ajoutait des appels réseau et, en conditions réelles (revue 902), onze organisations sans
+    rapport venues d'un registre qui avait pris « acteurs » au pied de la lettre."""
     if cfg.scoring.mode_recherche != "extraction":
         return cc
-    return replace(cc, actif=True, noms=True, remplace_resultat=True)
+    return replace(cc, actif=True, noms=True, remplace_resultat=True, registres=())
 
 
 def charger_config(config_dir: str | Path) -> ClassementConfig:

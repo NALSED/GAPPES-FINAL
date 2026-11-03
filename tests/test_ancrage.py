@@ -94,6 +94,14 @@ def test_promouvoir_grappe_introuvable_leve_et_n_ecrit_rien(depot, tmp_path):
     assert (depot / "grappes" / "a.yaml").read_text(encoding="utf-8") == avant
 
 
+def test_promouvoir_grappe_issue_d_un_sujet_le_dit_clairement(depot, tmp_path):
+    """La configuration réelle n'a qu'un sujet (sujets.yaml), sans liste anchors: : refus explicite, rien d'écrit."""
+    (depot / "sujets.yaml").write_text("sujets:\n  - nom: cuisine_demo\n    phrase: \"La cuisine de démonstration\"\n", encoding="utf-8")
+    csv_path = _a_trancher(tmp_path / "t.csv", [["Qui", "cuisine_demo", "x:qui", "garder"]])
+    with pytest.raises(ConfigError, match="vient d'un sujet"):
+        promouvoir(depot, csv_path)
+
+
 def test_cli_ancrer(depot, tmp_path, capsys):
     csv_path = _a_trancher(tmp_path / "t.csv", [["Marie Martin", "G-A", "x:marie_m", "garder"]])
     assert main(["--config", str(depot), "ancrer", "--fichier", str(csv_path)]) == 0

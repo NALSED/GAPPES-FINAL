@@ -35,14 +35,14 @@ def test_mode_recherche_sites_ne_change_rien(tmp_path):
     assert pr.cc_pour_mode(cc, cfg) is cc
 
 
-def test_mode_recherche_extraction_active_le_classement_sans_changer_les_registres(tmp_path):
-    """Décision 901/Q26 : le mode « lire le contenu » force actif/noms/remplace_resultat, pas les registres déjà
-    choisis par classement.yaml (pas d'appel réseau supplémentaire non demandé)."""
+def test_mode_recherche_extraction_active_l_extraction_seule(tmp_path):
+    """Décision 901/Q26 : le mode « lire le contenu » force actif/noms/remplace_resultat et RETIRE les registres
+    (Q26 ne demande que l'extraction ; revue 902 : un registre ramenait onze organisations sans rapport)."""
     cfg = make_cfg(tmp_path, mode_recherche="extraction")
-    cc = pr.ClassementConfig(actif=False, noms=False, remplace_resultat=False, registres=())
+    cc = pr.ClassementConfig(actif=False, noms=False, remplace_resultat=False, registres=("wikidata", "sirene", "yaml"))
     nouveau = pr.cc_pour_mode(cc, cfg)
     assert nouveau.actif is True and nouveau.noms is True and nouveau.remplace_resultat is True
-    assert nouveau.registres == ()  # inchangé : pas de registres ajoutés sans qu'on les ait demandés
+    assert nouveau.registres == ()
 
 
 def test_lignes_disent_si_le_chiffre_est_une_mesure():

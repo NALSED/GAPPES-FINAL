@@ -57,6 +57,25 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None  # une redirection n'est jamais suivie : elle est rendue comme réponse 3xx
 
 
+_SURS = "/%:@!$&'()*+,;=~"  # réservés et déjà encodés (%xx) : laissés tels quels
+
+
+def adresse_transmissible(url: str) -> str:
+    """Une adresse lisible (« …/perturbations-routières… ») en adresse que http.client accepte (ASCII seulement) :
+    caractères non ASCII encodés en %xx, nom de domaine en IDNA. Sans cela la page était perdue sur
+    `UnicodeEncodeError` (revue 902, cycle réel). L'adresse gardée en base et au journal ne change pas."""
+    if url.isascii():
+        return url
+    p = urllib.parse.urlsplit(url)
+    netloc = p.netloc
+    if not netloc.isascii():
+        netloc = (p.hostname or "").encode("idna").decode("ascii") + (f":{p.port}" if p.port else "")
+    return urllib.parse.urlunsplit((
+        p.scheme, netloc, urllib.parse.quote(p.path, safe=_SURS),
+        urllib.parse.quote(p.query, safe=_SURS + "?"), urllib.parse.quote(p.fragment, safe=_SURS + "?"),
+    ))  # fmt: skip
+
+
 def urllib_transport(
     method: str,
     url: str,
@@ -68,7 +87,7 @@ def urllib_transport(
     """Transport par défaut (bibliothèque standard). Seuls http et https sont admis."""
     if urllib.parse.urlsplit(url).scheme not in ("http", "https"):
         raise SearchError("schéma d'URL non autorisé (http ou https uniquement)")
-    request = urllib.request.Request(url, data=body, headers=dict(headers), method=method)
+    request = urllib.request.Request(adresse_transmissible(url), data=body, headers=dict(headers), method=method)
     opener = urllib.request.build_opener(_NoRedirect)
     try:
         with opener.open(request, timeout=timeout) as resp:

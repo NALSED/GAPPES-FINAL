@@ -107,6 +107,13 @@ def promouvoir(racine: str | Path, decisions_csv: str | Path) -> list[str]:
     for grappe_id, ref in lire_decisions(Path(decisions_csv)):
         fichier = _fichier_de_grappe(racine, grappe_id)
         if fichier is None:
+            from grappes.autonomy import load_subjects
+
+            if any(s.id == grappe_id for s in load_subjects(racine).subjects):
+                raise ConfigError(
+                    f"ancrage : la grappe {grappe_id!r} vient d'un sujet (sujets.yaml), qui n'a pas de liste anchors: — "
+                    "rien n'est écrit (question ouverte, QUESTIONS.md Q29)"
+                )
             raise ConfigError(f"ancrage : grappe {grappe_id!r} introuvable sous {racine / 'grappes'}")
         texte = par_fichier.get(fichier, fichier.read_text(encoding="utf-8"))
         avant = ancres_existantes(texte)
