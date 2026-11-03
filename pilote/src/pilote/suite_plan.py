@@ -30,7 +30,6 @@ LANGUES = {
 }  # fmt: skip
 NON_APPLIQUES = {
     "budget": "le plafond de dépense est celui de Réglages (en crédits) : un budget propre à la recherche n'est pas encore branché",
-    "ia": "l'Assistant IA ne s'exécute pas encore : rien de ce qu'il produirait n'entre dans une grappe",
     "rsshub": "transformer un site en flux RSS n'est pas encore branché",
 }  # fmt: skip
 MAX_CHEMINS = 300
@@ -245,6 +244,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     traductions: dict[str, dict[str, Any]] = {}
     fusion: dict[str, Any] | None = None
     attente: dict[str, Any] | None = None
+    ia: dict[str, Any] | None = None
     effets: dict[str, str] = {}  # tuile -> effet dans le Tableau de bord (1.1 §5) : lu par ExecuteurGrappes pour « tuile_passee »
     for i in chemin_outils:
         node, o = nodes[i], par_outil[ref(i)]
@@ -310,6 +310,26 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
             )
         elif genre == "boucle":
             dire_non(i, _raison_boucle(node["nom"], opts))
+        elif genre == "ia":
+            if ia is not None:
+                dire_non(i, "une seule tuile Assistant IA est jouée par recherche ; les suivantes sont ignorées")
+            else:
+                from pilote import operations_ia as _operations_ia
+
+                ops_connues = _operations_ia.decouvrir()
+                opts_map = {lib: v for lib, v in opts}
+                op_id = next((oid for oid, d in ops_connues.items() if norme(d["nom"]) == norme(opts_map.get("Opération", ""))), None)
+                if op_id is None:
+                    raise ConfigRefusee(
+                        f"« {node['nom']} » : choisis une opération connue ({', '.join(sorted(d['nom'] for d in ops_connues.values()))})."
+                    )
+                marquer = norme(opts_map.get("Marquer les résultats", "oui")) != "non"
+                ia = {"tuile": i, "operation": op_id, "modele": str(opts_map.get("Modèle", "") or "").strip(), "marquer": marquer}
+                appliques.append({
+                    "tuile": i, "nom": node["nom"],
+                    "texte": f"applique « {ops_connues[op_id]['nom']} » à ce qui a déjà été collecté"
+                    + (" (résultats marqués « IA »)" if marquer else ""),
+                })  # fmt: skip
         elif genre in NON_APPLIQUES:
             dire_non(i, NON_APPLIQUES[genre])
         else:
@@ -326,7 +346,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     ordre = {i: k for k, i in enumerate(nodes)}
     return {
         "sources": sorted(dict.fromkeys(cherchent), key=lambda s: min(ordre[i] for i in chemin_sources if ref(i) == s)), "verificateurs": [{"id": v["id"], "en_amont": v["en_amont"], "fonction": v["fonction"]} for v in verifient],
-        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "attente": attente, "effets": effets, "appliques": appliques, "non_appliques": non_appliques,
+        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "attente": attente, "ia": ia, "effets": effets, "appliques": appliques, "non_appliques": non_appliques,
         "pays_equiv": pays_equiv or {},
     }  # fmt: skip
 

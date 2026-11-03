@@ -71,3 +71,34 @@ def test_appliquer_construit_l_invite_de_l_operation_choisie(monkeypatch):
     decl = operations_ia.decouvrir()["resumer"]
     assert suite_ia.appliquer(decl, {"nom": "FFSA"}, {}, modele="sonnet") == "ok"
     assert vus[0][0] == "sonnet" and "FFSA" in vus[0][1]
+
+
+def test_appliquer_lignes_pose_le_champ_et_la_marque(monkeypatch):
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt: "un résumé")
+    decl = operations_ia.decouvrir()["resumer"]
+    lignes = [{"nom": "FFSA"}, {"nom": "FFBB"}]
+    bilan = suite_ia.appliquer_lignes(lignes, decl, {"modele": "", "marquer": True})
+    assert bilan == {"ia_appels": 2}
+    assert all(l["resume_ia"] == "un résumé" and l["ia_marque"] == ["resume_ia"] for l in lignes)
+
+
+def test_appliquer_lignes_sans_marquer_pose_le_champ_sans_la_marque(monkeypatch):
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt: "un résumé")
+    decl = operations_ia.decouvrir()["resumer"]
+    lignes = [{"nom": "FFSA"}]
+    suite_ia.appliquer_lignes(lignes, decl, {"modele": "", "marquer": False})
+    assert lignes[0]["resume_ia"] == "un résumé" and "ia_marque" not in lignes[0]
+
+
+def test_appliquer_lignes_garde_le_resultat_sans_le_champ_ia_si_l_agent_echoue(monkeypatch):
+    def demande(modele, prompt):
+        raise OSError("l'agent Claude Code n'a pas pu répondre : panne")
+
+    monkeypatch.setattr(suite_ia, "demander", demande)
+    decl = operations_ia.decouvrir()["resumer"]
+    lignes = [{"nom": "FFSA"}]
+    signales = []
+    bilan = suite_ia.appliquer_lignes(lignes, decl, {"modele": "", "marquer": True}, signaler=lambda *a, **k: signales.append((a, k)))
+    assert bilan == {"ia_appels": 0, "ia_echecs": 1}
+    assert "resume_ia" not in lignes[0] and "ia_marque" not in lignes[0]
+    assert signales and signales[0][0] == ("ia_echec",)

@@ -52,7 +52,7 @@ _OUTILS: list[tuple[Any, ...]] = [
      [["Budget maximum", "Montant fixe"], ["Montant (crédits)", "5"], ["Pourcentage du plafond mensuel", "20"], ["À partir de", "80"], ["Action", "Prévenir"]],
      "Dépensé ce mois : 4,10 crédits", "Alerte : 82 % du budget"),
     ("ia", "Assistant IA", "OUTIL", "off", "Applique une opération d'IA à ce qui a déjà été collecté. N'ajoute aucune information nouvelle.", "Une liste de résultats",
-     "Les mêmes résultats, avec un champ ajouté et marqué « IA »", "alerte",
+     "Les mêmes résultats, avec un champ ajouté et marqué « IA »", "compteur",
      [["Opération", "Résumer"], ["Modèle", ""], ["Marquer les résultats", "oui"]], "3 articles de presse",
      "3 articles + un résumé marqué « IA »\nAucun fait ajouté"),
     ("rsshub", "RSSHub", "OUTIL", "off", "Transforme un site sans flux en flux RSS lisible.", "L'adresse d'un site", "Un flux RSS", "rien",

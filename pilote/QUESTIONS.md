@@ -30,31 +30,42 @@ tests qui ne dépendent d'aucun service extérieur)** : repérer tous les endroi
 recherche unique, décider où isoler les tours (un sous-dossier chacun, candidats accumulés dans la même
 `Recherche`), puis trancher le calcul du garde-fou budget avec Sednal.
 
-## 3.8.09 — Assistant IA : code prêt, agent pas installé sur .115
+## 3.8.09 — Assistant IA : câblé pour de vrai, testé sur .250 (clos le 03/11/2026)
 
 `suite_ia.py` (appel silencieux à l'agent Claude Code, `claude -p … --model …`) et le registre
 `operations_ia/` (résumer, classer, extraire des mots-clés — extensible comme `formats/`) sont écrits et
-testés avec l'agent **simulé** (aucun agent réel n'est accessible dans ce bac à sable). Pas câblés dans
-`pont/executer.py` : `NON_APPLIQUES["ia"]` reste tel quel.
+testés depuis le début de session. **Vérifié depuis .250 (03/11/2026)**, où l'agent est déjà installé et
+connecté : `claude -p "…"` répond bien (silencieux, code 0, texte en stdout), exactement la commande que
+construit `suite_ia.commande()`. `--model <nom>` et `--effort <niveau>` sont tous les deux acceptés par
+`claude -p …`, mais `claude --model` sans argument n'affiche pas une liste exploitable (sélecteur
+interactif) : pas de façon simple d'interroger la liste des modèles disponibles pour en faire un menu
+fermé — **le champ texte libre déjà choisi pour « Modèle » était donc le bon choix**, pas une solution
+provisoire à corriger.
 
-**Vérifié depuis .250 (03/11/2026)**, où l'agent est déjà installé et connecté : `claude -p "…"` répond bien
-(silencieux, code 0, texte en stdout), exactement la commande que construit `suite_ia.commande()`. Les deux
-options existent réellement en ligne de commande : `--model <nom>` et `--effort <niveau>` sont tous les deux
-acceptés par `claude -p …`. En revanche `claude --model` sans argument n'affiche pas une liste exploitable : il
-ouvre un sélecteur interactif (ou refuse faute d'argument hors TTY) — il n'y a donc pas de façon simple
-d'interroger la liste des modèles disponibles en ligne de commande pour en faire un menu fermé. **Le champ
-texte libre déjà choisi pour « Modèle » était donc le bon choix**, pas une solution provisoire à corriger.
-L'« Effort » pourrait en théorie s'ajouter (la commande l'accepte), mais ça reste un champ en plus à only
-ajouter à `_OUTILS["ia"]["options"]` une fois le reste tranché.
+**Précisé par Sednal (03/11/2026, spec 901 mise à jour)** : pas la peine d'attendre .115, momo code et
+teste sur .250, où l'agent est déjà installé — l'installation sur .115 (la machine de production) reste
+une tâche de Sednal, séparée, pas un blocage. Coût : un simple compteur (« n appels IA ») dans le journal,
+sans plafond, jamais mêlé au compteur crédits (facturé par l'abonnement, pas par appel) — tranché, rien à
+inventer.
 
-Reste à faire avant de câbler pour de vrai (rien de ce qui suit n'est vérifiable depuis .250) :
+**Fait** : `suite_plan.compiler()` compile désormais une tuile Assistant IA (`ia = {tuile, operation,
+modele, marquer}`, une seule jouée par recherche, les suivantes dites non appliquées) ; `NON_APPLIQUES`
+ne cite plus `"ia"`. `suite_ia.appliquer_lignes()` (nouveau) applique l'opération à chaque ligne
+collectée et vérifiée, posant `operation['champ_sortie']` et `ligne['ia_marque']` si l'option
+« Marquer les résultats » est à oui ; une ligne dont l'agent échoue garde son résultat sans le champ IA,
+comptée à part (jamais un fait inventé en silence). Câblé dans `pont/executer.py` juste après la
+vérification des candidats. `executeur_grappes.py::dire_le_plan()` lit `ia_appels`/`ia_echecs` du bilan et
+note `plan_ia_appels` au journal (compteur simple, sans plafond, séparé des crédits). L'effet de la tuile
+dans `suite_graine.py` passe de « alerte » (faux : rien n'arrête ni ne dévie la recherche) à « compteur ».
+Tests : `tests/test_suite_plan.py` (4), `tests/test_suite_ia.py` (3 nouveaux). Suite complète en cours de
+vérification.
 
-* Installer l'agent Claude Code sur **.115** lui-même (la machine qui exécutera réellement les recherches), et
-  le connecter avec l'abonnement Pro/Max de Sednal — ce qui est vérifié ci-dessus porte sur .250, pas sur la
-  machine d'exécution réelle.
-* Décider comment séparer, dans le journal, le coût de l'appel à l'agent (facturé par l'abonnement, pas par
-  appel) du compteur budget en crédits (3.8.08) — la spec le demande explicitement, je n'ai rien inventé, et
-  ça reste une décision de Sednal, pas un fait technique à vérifier.
+**Laissé de côté, sciemment, hors du périmètre demandé** : les options propres à chaque opération
+(`classer` attend `categories`, `extraire_mots_cles` attend `maximum`) ne sont pas exposées dans la
+fenêtre de la tuile — `_OUTILS["ia"]["options"]` n'a que Opération/Modèle/Marquer. `appliquer_lignes()`
+passe `{}` : `classer` retombe sur `["autre"]`, `extraire_mots_cles` sur 5 mots. Fonctionnel, mais pas
+configurable depuis l'écran — à reprendre si Sednal le demande (ajouter un champ par opération, sur le
+modèle de `RENDUS_OPTIONS`).
 
 ## 3.8.10 — RSSHub : code prêt, instance pas déployée
 

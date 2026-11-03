@@ -45,3 +45,24 @@ def appliquer(operation: dict, resultat: dict, options: dict, modele: str = "") 
     """Le texte à mettre dans `operation['champ_sortie']` pour ce résultat. Ne modifie resultat nulle part : à
     l'appelant de poser le champ et la marque « IA »."""
     return demander(modele, operation["module"].prompt(resultat, options))
+
+
+def appliquer_lignes(lignes: list[dict], operation: dict, ia_spec: dict, signaler=None) -> dict:
+    """Applique `operation` à chaque ligne de `lignes`, EN PLACE (pose `operation['champ_sortie']`, et
+    `ligne['ia_marque']` si `ia_spec['marquer']`). Une ligne dont l'agent échoue garde son résultat sans le
+    champ IA (jamais un fait inventé en silence) : comptée à part, signalée si `signaler` est donné.
+    Rend `{"ia_appels": n, "ia_echecs": n}` (la seconde clé absente si aucun échec), pour le journal (3.8.09)."""
+    appels, echecs = 0, 0
+    for ligne in lignes:
+        try:
+            texte = appliquer(operation, ligne, {}, ia_spec.get("modele", ""))
+        except (OSError, ValueError) as exc:
+            echecs += 1
+            if signaler:
+                signaler("ia_echec", nom=ligne.get("nom", ""), raison=str(exc)[:200])
+            continue
+        ligne[operation["champ_sortie"]] = texte
+        if ia_spec.get("marquer"):
+            ligne.setdefault("ia_marque", []).append(operation["champ_sortie"])
+        appels += 1
+    return {"ia_appels": appels, **({"ia_echecs": echecs} if echecs else {})}

@@ -1,5 +1,14 @@
 # 10 — Tuile Assistant IA
 
+**Mise à jour (3.8.09, 901, 03/11/2026) : câblée pour de vrai.** Le reste de ce document date d'avant la
+spec 3.8.09 et décrit un choix de modèle (Ollama/Groq/Mistral/Gemini/Claude/ChatGPT, tous avec clé d'API)
+qui n'est **pas** ce qui a été construit : l'agent appelé est l'agent Claude Code déjà installé et connecté
+par l'abonnement Pro/Max de Sednal (même principe que `/areas/agent-ia.md`), PAS une clé d'API, PAS de
+facturation séparée — vérifié auprès de la documentation officielle. « Modèle » est un champ texte libre
+(aucune liste de modèles n'est interrogeable en ligne de commande, vérifié depuis .250), pas le menu fermé
+décrit plus bas. Les trois règles ci-dessous (marque IA, transforme sans ajouter, opérations nommées)
+restent exactes et sont ce qui est implémenté.
+
 ## Lis ceci avant d'implémenter
 
 C'est la tuile la plus dangereuse du programme. La priorité de grappes est **la fiabilité : un résultat

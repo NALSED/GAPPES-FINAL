@@ -445,3 +445,49 @@ def test_le_journal_ne_dit_retire_que_ce_qui_l_est_vraiment():
     seul_oui = [lien("saisie", "n1"), lien("n1", "s"), lien("s", "x", "oui"), lien("x", "grappes")]
     gardes, bilan = appliquer([ligne("Asso", ["a"], genre="association"), ligne("Boîte", ["a"], genre="entreprise")], comp(plan(base[:5], seul_oui)))
     assert [g["nom"] for g in gardes] == ["Asso"] and bilan["par_tuile"]["s"]["noms"] == ["Boîte"] and bilan["par_tuile"]["s"]["n"] == 1  # la condition dit « association » : la boîte tombe, et c'est dit
+
+
+OUTILS_IA_ON = [outil("ia") if o["id"] == "ia" else o for o in OUTILS]
+
+
+def comp_ia(p):
+    return compiler(p, SOURCES, OUTILS_IA_ON, pays_equiv=PAYS)
+
+
+def test_ia_choisit_l_operation_et_le_modele():
+    """Décision 901/3.8.09 : l'Assistant IA est enfin câblé dans le plan compilé (NON_APPLIQUES ne le cite plus)."""
+    p = plan(
+        [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Résumer"], ["Modèle", "haiku"], ["Marquer les résultats", "oui"]])],
+        [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
+    )  # fmt: skip
+    c = comp_ia(p)
+    assert c["ia"] == {"tuile": "ia", "operation": "resumer", "modele": "haiku", "marquer": True}
+    assert any("Résumer" in x["texte"] for x in c["appliques"] if x["nom"] == "ia")
+    assert "ia" not in {x["nom"] for x in c["non_appliques"]}
+
+
+def test_ia_operation_inconnue_refuse():
+    p = plan(
+        [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Autre chose"]])],
+        [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
+    )  # fmt: skip
+    with pytest.raises(ConfigRefusee, match="opération connue"):
+        comp_ia(p)
+
+
+def test_ia_marquer_non_desactive_le_marquage():
+    p = plan(
+        [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Classer / catégoriser"], ["Marquer les résultats", "non"]])],
+        [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
+    )  # fmt: skip
+    assert comp_ia(p)["ia"] == {"tuile": "ia", "operation": "classer", "modele": "", "marquer": False}
+
+
+def test_ia_une_seule_tuile_jouee():
+    p = plan(
+        [("saisie",), ("grappes",), ("n1", "a"), ("ia1", "ia", None, [["Opération", "Résumer"]]), ("ia2", "ia", None, [["Opération", "Résumer"]])],
+        [lien("saisie", "n1"), lien("n1", "ia1"), lien("ia1", "ia2"), lien("ia2", "grappes")],
+    )  # fmt: skip
+    c = comp_ia(p)
+    assert c["ia"]["tuile"] == "ia1"
+    assert any(x["nom"] == "ia2" for x in c["non_appliques"])

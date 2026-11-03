@@ -353,6 +353,14 @@ def main(dossier: str) -> int:
 
         # la vérification des candidats appartient à l'étape « vérification » : la jauge doit couvrir le travail qu'elle annonce.
         bilans = verifier_candidats(lignes, spec, secrets, doit_s_arreter, limite_source, avancement.signaler, arret_local)
+        ia_spec = plan.get("ia")
+        if ia_spec:  # Assistant IA (3.8.09) : sur ce qui a déjà été collecté et vérifié, jamais un fait inventé en silence
+            from pilote import operations_ia, suite_ia
+
+            operation = operations_ia.decouvrir().get(ia_spec["operation"])
+            resultat.setdefault("plan", {}).update(
+                suite_ia.appliquer_lignes(lignes, operation, ia_spec, signaler=avancement.signaler)
+            )
         avancement.signaler("etape", etape="sortie")
         Path("candidats.json").write_text(json.dumps(lignes, ensure_ascii=False, indent=1), encoding="utf-8")
         resultat["verifications"] = bilans
