@@ -260,3 +260,44 @@ la main s'affichait « rss-… » dans Tri et à l'export ; il s'affiche sous so
 `pilote.yaml` : section `suite:` ajoutée (adresses vides par défaut, réglées par machine). **Vérifié en réel** : Le Monde
 international → 20 articles, recherche terminée, 9 noms ; Libération → « RSSHub ne connaît pas de route », dit. Suite
 pilote (racine de `900` §3 corrigée localement, non commitée) : 570 réussis, seul échec le test de cette ligne.
+
+## D86 — Réponses Q29-Q34 de la revue 902 (spec 904, 03/11/2026)
+Sednal répond aux six questions soulevées en D84. **Q34** (priorité) : `grappes.racine: ..` corrigé pour de vrai
+dans `pilote/config/pilote.yaml` (le test qui le vérifie mis à jour) — commité, pas seulement testé en local
+cette fois. Le reste de `900` (déménagement de l'outillage d'installation, pour que .115 tourne depuis
+GAPPES-FINAL) reste un chantier séparé, « à valider », non commencé.
+
+**Q29 — ancrage d'un sujet** : une grappe-sujet (`sujets.yaml`) n'a pas de `anchors:` propre. Fichier séparé par
+sujet, `config/ancres/<grappe>.yaml` (jamais dans `config/apprentissage/` : l'apprentissage ne doit jamais
+pouvoir le réécrire). `config.py::load_config()` le lit dans `Grappe.anchors` pour une grappe-sujet, exactement
+comme `anchors:` dans le YAML d'une grappe à la main ; inclus dans `config_hash` (une ancre promue change le
+scoring). `grappes ancrer` (`ancrage.py::promouvoir`) l'écrit désormais pour de vrai au lieu de refuser.
+
+**Q33 — plafond et compteur de l'Assistant IA** : nouveau réglage réel « Traiter au maximum » (tuile IA,
+`suite_plan.py`), au-delà de l'arrêt demandé et de la limite de temps déjà respectés (revue 902). Le compteur
+n'est plus un nombre d'appels mais les **tokens réels** consommés, lus dans `usage` de `claude -p … --output-
+format json` (rien à estimer) : informatif seulement, le forfait Pro/Max de Sednal n'étant pas un quota en
+tokens (fenêtre glissante de 5 h, sans solde publié) — jamais mêlé aux crédits, jamais plafonné lui-même. `claude
+-p` sans `--output-format json` rendait du texte brut ; avec, un JSON dont `is_error` peut être vrai même à code
+de sortie 0 (vérifié sur .250 : modèle inconnu) — `suite_ia.demander()` le détecte, ne confond plus un succès
+muet avec une vraie réponse.
+
+**Q31 — règle 8 (pilote) et Q21** : décision « ajouter, pas remplacer ». Le cas 1 de Q21 (match direct) devient
+un troisième levier de la règle 8, automatique, en plus du levier global et de la levée manuelle dans Tri. Signal
+retenu — sans inventer de nouveau scoring — la probabilité calibrée déjà utilisée par `classement/production.py`
+pour décider « retenu » : au-dessus du même seuil, `pilote.regle8.lever_automatiquement()` restaure l'affichage
+déclaré par la source (jamais le constat `faits.regle8_personne`, jamais le garde-fou FollowTheMoney, qui lisent
+tous les deux le constat, pas l'affichage). Câblé dans `pont/executer.py`, juste après `classer()`.
+
+**Q30, Q32 (mode de recherche)** : sans objet, remplacés par la 903 (« Cible de recherche »), pas commencée —
+chantier séparé, le prochain de taille.
+
+**Q32 (fichier « à trancher »), nouvelle question Q35** : en construisant l'écran demandé dans Tri, découverte
+que `resultat_a_trancher.csv` n'est produit QUE par `grappes export` (mission d'autocalibration) — le pont de
+pilote n'appelle que `grappes.pipeline.run()` (le clustering), jamais `export()`. Aucune recherche de `/suite`
+ne peut donc alimenter cet écran : je n'ai rien construit sur cette prémisse fausse, question posée dans
+`QUESTIONS.md` (Q35) plutôt qu'un pont inventé entre les deux modèles sans décision de Sednal.
+
+Tests : `tests/test_ancrage.py` (+4), `pilote/tests/test_suite_ia.py` (réécrit, contrat `--output-format json`),
+`pilote/tests/test_suite_plan.py` (+1, plafond), `pilote/tests/test_regle8_personnes_morales.py` (+3). Suite
+complète : grappes 615 verts ; pilote (racine corrigée pour de vrai) en cours de vérification finale.

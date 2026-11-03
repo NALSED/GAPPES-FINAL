@@ -44,9 +44,16 @@ provisoire à corriger.
 
 **Précisé par Sednal (03/11/2026, spec 901 mise à jour)** : pas la peine d'attendre .115, momo code et
 teste sur .250, où l'agent est déjà installé — l'installation sur .115 (la machine de production) reste
-une tâche de Sednal, séparée, pas un blocage. Coût : un simple compteur (« n appels IA ») dans le journal,
-sans plafond, jamais mêlé au compteur crédits (facturé par l'abonnement, pas par appel) — tranché, rien à
-inventer.
+une tâche de Sednal, séparée, pas un blocage.
+
+**Précisé une seconde fois (904/Q33, même jour)** : le coût affiché n'est pas un nombre d'appels, mais les
+**tokens réels** consommés — lus dans `usage` de `claude -p … --output-format json`, rien à estimer. Plus
+un **plafond réel** (« Traiter au maximum », en plus de l'arrêt et du temps) sur le nombre de fiches
+traitées. Informatif seulement : le forfait Pro/Max de Sednal n'est pas un quota en tokens (fenêtre
+glissante de 5 h, sans solde publié) — jamais mêlé aux crédits, jamais plafonné lui-même. Au passage,
+`--output-format json` a aussi révélé que l'agent peut rendre `is_error: true` à code de sortie 0 (modèle
+inconnu, vérifié sur .250) : `suite_ia.demander()` le détecte désormais, sans quoi un échec aurait pu
+passer pour un vrai résumé.
 
 **Fait (puis corrigé par la revue 902, D84)** : `suite_plan.compiler()` compile la tuile (une seule jouée par
 recherche ; refusée et dite si l'agent est absent de la machine ; options Opération, Modèle, Effort — menu fermé de

@@ -161,29 +161,51 @@ déplacés, `dernier_cycle.md` remis comme avant). À garder en tête pour tout 
 
 ### Questions pour Sednal
 
-* **Q29** — Ancrage (Q28) et configuration réelle : la seule grappe vient de `sujets.yaml`, qui n'a **pas** de liste
-  `anchors:` (seules les grappes `config/grappes/*.yaml` en ont). `grappes ancrer` ne peut donc rien écrire en
-  production. Où ranger les ancres d'un sujet : (a) une liste `ancres:` par sujet dans `sujets.yaml`, (b) un fichier
-  d'ancres à part par grappe, (c) autre ? Défaut en attendant : refus explicite, rien d'écrit.
-* **Q30** — Q26 côté pilote : le pont de pilote **extrait les noms à chaque recherche depuis toujours**
-  (`classement.yaml: noms: true`, modèle installé). La prémisse de 901 (« comportement actuel = aucune
-  extraction ») est donc fausse pour pilote. Appliquer « jamais en dehors du second mode » à pilote retirerait les
-  noms lus de toutes ses recherches par défaut. Et le mode n'a aucun écran : c'est un réglage global du moteur
-  (`scoring.yaml`). Faut-il : un choix par recherche dans pilote (simple/avancée) ? Quel défaut pour pilote ?
-* **Q31** — Q21 côté pilote : la règle à trois cas ne vaut que pour `resultat.csv` du moteur. pilote a son propre
-  mécanisme (règle n° 8 : fiche « personne », hors rapprochements et FollowTheMoney, levée fiche par fiche dans
-  Tri) où les personnes restent visibles. Aligner les deux ? Par ailleurs Q21 **n'est pas observable en réel** : le
-  moteur ne lit jamais un compte de réseau social (« citation seulement, jamais lu »), aucune personne n'atteint
-  `resultat.csv` par les sources réelles.
-* **Q32** — Interface : 901 (« Consigne d'interface ») et 902 (§2) parlent d'éléments d'écran pour le mode de
-  recherche et le fichier « à trancher ». Ils **n'existent pas** : j'ai livré réglage + mécanisme, sans écran. À
-  construire ? Où (Réglages, Recherche, Tri) ?
-* **Q33** — `/api/suite/lancer` n'a pas de « combien » : une tuile IA peut traiter jusqu'à 200 noms (≈ 5-10 s
-  chacun avec l'agent). L'arrêt et la limite de temps sont maintenant respectés ; faut-il en plus un plafond de
-  noms traités par l'IA ?
-* **Q34** — `900` §3 (une ligne : `grappes.racine: ..`) : c'est la seule raison des 27 échecs + 5 erreurs de pilote
-  dans ce dépôt, et sans elle pilote ne peut lancer aucune recherche réelle depuis GAPPES-FINAL. La faire
-  maintenant, avant le reste de `900` ?
+* **Q29** Close (904, D86) : option (b), un fichier d'ancres séparé par sujet (`config/ancres/<grappe>.yaml`,
+  JAMAIS dans `config/apprentissage/` : rien ici n'est réécrit par l'apprentissage). Lu par `config.py` dans
+  `Grappe.anchors`, exactement comme une ancre à la main ; écrit par `grappes ancrer` (`ancrage.py`). Détail et
+  code : D86.
+* **Q30** Close (904) : remplacé par la 903 (« Cible de recherche »), pas un réglage « mode de recherche » séparé
+  à construire côté pilote. Q26/901 reste la justification (pourquoi l'extraction est nécessaire côté moteur) ;
+  903 est le mécanisme qui pilote désormais l'extraction selon la cible choisie. **903 non commencée** (chantier
+  séparé, cf. § ci-dessous).
+* **Q31** Close (904, D86) : décision « ajouter, pas remplacer » — le cas 1 de Q21 (match direct) devient un
+  TROISIÈME levier de la règle 8 (`pilote.regle8.lever_automatiquement`), automatique, en plus du levier global
+  et de la levée manuelle (Tri). Le constat (`est_personne`, `faits.regle8_personne`) et le garde-fou FollowTheMoney
+  ne bougent pas. Signal retenu pour « matche directement » : la probabilité calibrée du candidat (déjà utilisée
+  pour décider « retenu » dans `classement/production.py`) au-dessus du même seuil — aucun nouveau mécanisme de
+  scoring inventé. Point 2 (observabilité) : pris en compte, rien à trancher.
+* **Q32** Close (904) pour la partie mode de recherche (sans objet, remplacé par 903). Pour le fichier « à
+  trancher » : **écran confirmé nécessaire, dans Tri, mais non construit** — voir **Q35** ci-dessous, qui change
+  la question posée.
+* **Q33** Close (904, D86) : plafond réel (« Traiter au maximum », tuile Assistant IA) + compteur en **tokens
+  réels** (lu dans `usage` de `claude -p … --output-format json`), pas un nombre d'appels — informatif seulement,
+  jamais un solde du forfait Pro/Max de Sednal, jamais mêlé aux crédits. Détail et code : D86.
+* **Q34** Close (904, D86) : `grappes.racine: ..` corrigé pour de vrai dans `pilote/config/pilote.yaml` (plus un
+  test local temporaire) — commité. Suite pilote complète : 571 → vérifiée à nouveau après ce pavé, voir ETAT.md.
+  Le reste de `900` (déménagement de l'outillage d'installation) reste un chantier séparé, non commencé.
+
+### Q35 — Fichier « à trancher » dans Tri : la prémisse ne tient pas (nouvelle, 2026-11-03)
+
+En construisant l'écran demandé par Q32/904, constat : `resultat_a_trancher.csv` (Q21, D82) est écrit par
+`grappes.clustering.resultat.write_resultat()`, appelé seulement par `grappes.pipeline.export()` — la chaîne de
+la **mission d'autocalibration** (`grappes export` en ligne de commande). Le pont de pilote (`pont/executer.py`)
+appelle `grappes.pipeline.run()` (le clustering seul), **jamais** `export()` : aucune recherche lancée depuis
+`/suite` ne produit ni ne peut produire ce fichier. Tri (pilote) travaille sur son propre modèle (`Candidat`,
+`Rapprochement`), sans aucun lien avec `resultat_a_trancher.csv`.
+
+Construire l'écran dans Tri, tel que demandé, afficherait donc un mécanisme qui ne s'alimente jamais depuis
+`/suite` — un écran pour un fichier qu'aucune recherche de pilote n'écrit. Je n'ai rien construit sur cette
+prémisse plutôt que d'inventer un pont entre les deux modèles sans décision explicite. Deux pistes, sans
+trancher :
+
+* Le fichier « à trancher » (Q21) reste un outil de la mission d'autocalibration (console, `grappes export` /
+  `grappes ancrer`) : Tri n'a pas à le montrer, Q32 se referme sans écran.
+  Q31 (règle 8, trois leviers) couvre déjà le cas pilote pour les personnes physiques.
+* Ou bien pilote doit avoir son propre mécanisme de doute, analogue à Q21 mais sur SON modèle (`Candidat`),
+  avec son propre écran dans Tri — un nouveau mécanisme, pas la réutilisation de celui du moteur.
+
+Défaut en attendant : rien construit côté Tri.
 
 ### Test en conditions réelles
 

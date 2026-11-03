@@ -1,9 +1,9 @@
 # ETAT — grappes
 
-Phase en cours : aucune
+Phase en cours : 903 — cible de recherche (« Ce que je recherche »), chantier non commencé
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-03 (D85 : RSSHub déployé et câblé ; D84 : revue complète 902 — un bloquant et cinq majeurs corrigés, écarts 3.8.04/3.8.08/3.8.10 et questions Q29-Q34 pour Sednal dans `QUESTIONS.md` ; grappes 612 verts, pilote vert avec la racine de `900` §3). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
+Dernière mise à jour : 2026-11-03 (D86 : réponses Q29-Q34 de la revue 902 — 900 §3 corrigé pour de vrai, ancrage par sujet, Assistant IA en tokens réels + plafond, règle 8 alignée sur Q21, Q35 ouverte (fichier « à trancher » sans producteur côté pilote) ; grappes 615 verts, pilote 581 verts avec la racine corrigée). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
 
 ## En attente de Sednal
 
