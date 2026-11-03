@@ -51,6 +51,7 @@ class Config:
     secrets_grappes: str = ""  # fichier de clés de grappes (lecture seule, relatif à sa racine) ; vide = aucun
     suite_traduction_url: str = ""  # service de traduction compatible LibreTranslate pour la tuile Traduction ; vide = la tuile n'est pas appliquée (et le plan le dit)
     suite_modele_url: str = ""  # serveur de modèle local de l'Aide (type Ollama) ; vide = aucun modèle, l'Aide marche par ses puces
+    suite_rsshub_url: str = ""  # instance RSSHub auto-hébergée pour la tuile RSSHub (3.8.10) ; vide = la tuile n'est pas appliquée (et le plan le dit)
 
     def _rel(self, cle: str, defaut: str) -> Path:
         return _chemin(str(self.chemins.get(cle, defaut)), self.dossier_config)
@@ -168,4 +169,5 @@ def charger(fichier: str | Path | None = None) -> Config:
         pays_proposes=dict(y.get("pays_proposes") or {}),
         suite_modele_url=str((y.get("suite") or {}).get("modele_url", "")),
         suite_traduction_url=str((y.get("suite") or {}).get("traduction_url", "")),
+        suite_rsshub_url=str((y.get("suite") or {}).get("rsshub_url", "")),
     )

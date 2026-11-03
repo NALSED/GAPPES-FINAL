@@ -30,6 +30,37 @@ tests qui ne dépendent d'aucun service extérieur)** : repérer tous les endroi
 recherche unique, décider où isoler les tours (un sous-dossier chacun, candidats accumulés dans la même
 `Recherche`), puis trancher le calcul du garde-fou budget avec Sednal.
 
+## 3.8.09 — Assistant IA : code prêt, agent pas installé sur .115
+
+`suite_ia.py` (appel silencieux à l'agent Claude Code, `claude -p … --model …`) et le registre
+`operations_ia/` (résumer, classer, extraire des mots-clés — extensible comme `formats/`) sont écrits et
+testés avec l'agent **simulé** (aucun agent réel n'est accessible dans ce bac à sable). Pas câblés dans
+`pont/executer.py` : `NON_APPLIQUES["ia"]` reste tel quel.
+
+Reste à faire, sur .115, avant de câbler pour de vrai :
+
+* Installer l'agent Claude Code, le connecter une fois avec l'abonnement Pro/Max de Sednal (même principe
+  que `/areas/agent-ia.md` sur .250).
+* Vérifier que `claude --model <nom>` liste bien les modèles disponibles comme la spec le suppose (pour le
+  menu fermé « Modèle » de la tuile) — pour l'instant « Modèle » est un champ texte libre, faute de pouvoir
+  l'interroger ici.
+* Confirmer si l'agent installé expose un réglage d'effort de raisonnement en ligne de commande ; sinon le
+  champ « Effort » de la spec ne s'ajoute pas (elle le permettait).
+* Décider comment séparer, dans le journal, le coût de l'appel à l'agent (facturé par l'abonnement, pas par
+  appel) du compteur budget en crédits (3.8.08) — la spec le demande explicitement, je n'ai rien inventé.
+
+## 3.8.10 — RSSHub : code prêt, instance pas déployée
+
+`suite_rsshub.py` résout l'adresse d'un flux produit par une instance RSSHub pour un site donné, et
+`config.suite_rsshub_url` existe. Pas câblé dans `pont/executer.py` (vers `flux_rss.py`) :
+`NON_APPLIQUES["rsshub"]` reste tel quel.
+
+**Le contrat exact de l'API RSSHub n'est pas vérifié** : aucune instance n'est accessible ici. J'ai supposé
+une route `{rsshub_url}/site/<domaine>`, mais RSSHub expose en réalité des routes PROPRES à chaque site
+(`/twitter/user/x`, pas un point d'entrée générique « transforme cette adresse ») — la bonne route dépend du
+type de site, pas seulement de son domaine. À revoir avec une vraie instance déployée (image Docker
+officielle, décidée avec Sednal) avant de câbler le reste.
+
 ## Trou d'infra pré-existant, hors de ce pavé
 
 `grappes.racine` dans la configuration livrée de `pilote/` pointe vers un dossier `grappes/` voisin

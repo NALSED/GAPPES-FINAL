@@ -368,6 +368,12 @@ def creer_app(cfg: Config | None = None, executeur: Executeur | None = None, url
     def liste_formats() -> list[dict[str, Any]]:
         return formats.vue(cfg)
 
+    @app.get("/api/operations_ia")
+    def liste_operations_ia() -> list[dict[str, Any]]:
+        from pilote import operations_ia
+
+        return operations_ia.vue()
+
     @app.get("/api/classements")
     def classements() -> list[dict[str, Any]]:
         return [c.vue() for c in cls.lister(cfg)]

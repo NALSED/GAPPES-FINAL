@@ -350,7 +350,35 @@ function rendreOptionsBudget(n, refresh) {
   );
 }
 
-const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true), boucle: rendreOptionsBoucle, attente: rendreOptionsAttente, budget: rendreOptionsBudget };
+// 3.8.09 : liste fermée mais extensible (pilote.operations_ia.vue, même principe que les formats de sortie, 3.8.01).
+let OPERATIONS_IA_CACHE = null;
+async function chargerOperationsIa() {
+  if (!OPERATIONS_IA_CACHE) OPERATIONS_IA_CACHE = await api.operationsIa();
+  return OPERATIONS_IA_CACHE;
+}
+
+function rendreOptionsIa(n, refresh) {
+  if (!OPERATIONS_IA_CACHE) {
+    chargerOperationsIa().then(refresh);
+    return h("p", { class: "legende" }, "Les opérations arrivent…");
+  }
+  const operation = optLabel(n, "Opération") || OPERATIONS_IA_CACHE[0]?.nom || "";
+  const modele = champ({ libelle: "Modèle", valeur: optLabel(n, "Modèle"), placeholder: "laisse vide pour le modèle par défaut de l'agent" });
+  modele.saisie.addEventListener("change", () => { optDefinir(n, "Modèle", modele.valeur()); sauvegarder(); });
+  const marquer = optLabel(n, "Marquer les résultats") !== "non";
+  return h(
+    "div", { class: "options-grille" },
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Opération"),
+      groupePuces(OPERATIONS_IA_CACHE.map((o) => [o.nom, o.nom]), operation, (v) => { optDefinir(n, "Opération", v); sauvegarder(); refresh(); }),
+      h("span", { class: "aide-champ" }, OPERATIONS_IA_CACHE.find((o) => o.nom === operation)?.description || "")),
+    modele.el,
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Marquer les résultats"),
+      groupePuces([["oui", "oui"], ["non", "non"]], marquer ? "oui" : "non", (v) => { optDefinir(n, "Marquer les résultats", v); sauvegarder(); refresh(); }),
+      h("span", { class: "aide-champ" }, "Par défaut activé : ce que l'IA produit reste marqué « IA » dans la grappe.")),
+  );
+}
+
+const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true), boucle: rendreOptionsBoucle, attente: rendreOptionsAttente, budget: rendreOptionsBudget, ia: rendreOptionsIa };
 
 function retirerLien(id) {
   plan().edges = plan().edges.filter((e) => e.id !== id);
