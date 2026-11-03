@@ -30,7 +30,6 @@ LANGUES = {
 }  # fmt: skip
 NON_APPLIQUES = {
     "budget": "le plafond de dépense est celui de Réglages (en crédits) : un budget propre à la recherche n'est pas encore branché",
-    "rsshub": "transformer un site en flux RSS n'est pas encore branché",
 }  # fmt: skip
 MAX_CHEMINS = 300
 # Fusion / doublons (3.8.05) : trois crans de sensibilité, sur le modèle des crans de profondeur de recherche —
@@ -138,7 +137,7 @@ def _genre_outil(o: dict[str, Any]) -> str:
 
 
 def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[dict[str, Any]], *, pays_equiv: dict[str, list[str]] | None = None,
-             langue_saisie: str | None = None, traduction_disponible: bool = False, ia_disponible: bool = False, cfg: Any = None) -> dict[str, Any]:  # fmt: skip
+             langue_saisie: str | None = None, traduction_disponible: bool = False, ia_disponible: bool = False, rsshub_disponible: bool = False, cfg: Any = None) -> dict[str, Any]:  # fmt: skip
     nodes = {n["id"]: n for n in plan.get("nodes", [])}
     edges = [e for e in plan.get("edges", []) if e["from"] in nodes and e["to"] in nodes]
     par_source = {s["id"]: s for s in sources}
@@ -249,6 +248,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     fusion: dict[str, Any] | None = None
     attente: dict[str, Any] | None = None
     ia: dict[str, Any] | None = None
+    rsshub: list[dict[str, Any]] = []  # 3.8.10 : un site par tuile ; son flux est trouvé au lancement (réseau), pas ici
     effets: dict[str, str] = {}  # tuile -> effet dans le Tableau de bord (1.1 §5) : lu par ExecuteurGrappes pour « tuile_passee »
     for i in chemin_outils:
         node, o = nodes[i], par_outil[ref(i)]
@@ -341,6 +341,14 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
                     "texte": f"applique « {ops_connues[op_id]['nom']} » aux résultats qui atteignent la tuile"
                     + (" (résultats marqués « IA »)" if marquer else ""),
                 })  # fmt: skip
+        elif genre == "rsshub":
+            site = str({lib: v for lib, v in opts}.get("Site à transformer", "") or "").strip()
+            if not rsshub_disponible:
+                dire_non(i, "aucune instance RSSHub n'est réglée (suite.rsshub_url dans pilote.yaml)")
+            elif not re.fullmatch(r"(https?://)?[\w.-]+\.[a-z]{2,}(/\S*)?", site, re.IGNORECASE):
+                raise ConfigRefusee(f"« {node['nom']} » : donne l'adresse du site à transformer (par exemple https://www.exemple.fr/rubrique).")
+            else:
+                rsshub.append({"tuile": i, "nom": node["nom"], "site": site})
         elif genre in NON_APPLIQUES:
             dire_non(i, NON_APPLIQUES[genre])
         else:
@@ -357,7 +365,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     ordre = {i: k for k, i in enumerate(nodes)}
     return {
         "sources": sorted(dict.fromkeys(cherchent), key=lambda s: min(ordre[i] for i in chemin_sources if ref(i) == s)), "verificateurs": [{"id": v["id"], "en_amont": v["en_amont"], "fonction": v["fonction"]} for v in verifient],
-        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "attente": attente, "ia": ia, "effets": effets, "appliques": appliques, "non_appliques": non_appliques,
+        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "attente": attente, "ia": ia, "rsshub": rsshub, "effets": effets, "appliques": appliques, "non_appliques": non_appliques,
         "pays_equiv": pays_equiv or {},
     }  # fmt: skip
 

@@ -134,7 +134,7 @@ export function fmtDate(iso) {
 export const aPluriel = (n, un, plusieurs) => `${n} ${n > 1 ? plusieurs : un}`;
 
 // Ce que le moteur actuel fait de la recherche (QUESTIONS suite-2) : dit en clair plutôt que laissé à deviner.
-export const AVIS_MOTEUR = "Le moteur obéit au plan : seules les sources reliées de « Ta saisie » à « Grappes » partent, une vérification ne juge que les sources placées avant elle, et Filtre, Condition « si », Traduction, Format, Fusion / doublons, Attente, Assistant IA et les scripts sont joués. Boucle, Compteur budget et RSSHub ne le sont pas encore : un lancement le dit.";
+export const AVIS_MOTEUR = "Le moteur obéit au plan : seules les sources reliées de « Ta saisie » à « Grappes » partent, une vérification ne juge que les sources placées avant elle, et Filtre, Condition « si », Traduction, Format, Fusion / doublons, Attente, Assistant IA, RSSHub et les scripts sont joués. Boucle et Compteur budget ne le sont pas encore : un lancement le dit.";
 
 // Onglet Tri (spécification 16).
 export const TRI = {

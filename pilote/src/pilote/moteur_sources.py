@@ -203,6 +203,15 @@ def materialiser(cfg: Config, cible: Path, params: dict[str, Any]) -> Materialis
         else:
             actifs.append(pid)
             res.jetons[pid] = d.id
+    # RSSHub (3.8.10) : le flux qu'une tuile a obtenu au lancement est suivi EXACTEMENT comme un flux ajouté à la main
+    for r in (params.get("plan") or {}).get("rsshub") or []:
+        if r.get("flux"):
+            from pilote.suite_rsshub import identifiant as id_rsshub
+
+            flux = {"id": id_rsshub(r["site"]), "nom": f"RSSHub — {r['site']}", "url": r["flux"], "format": r.get("format", "rss")}
+            _ecrire_yaml(dossier / f"{flux['id']}.yaml", definition_flux(flux))
+            actifs.append(flux["id"])
+            res.jetons[flux["id"]] = "rsshub"
     for pid, f in par_id.items():  # les prises de découverte (type registre) non choisies sont éteintes dans la copie
         definition = lire_yaml(f)
         if definition.get("type") == "registre":

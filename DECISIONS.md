@@ -245,3 +245,18 @@ RSSHub et réutiliser `flux_rss`), 3.8.04 (Boucle multi-tours), 3.8.08 (budget p
 sur le sujet réel en copie isolée (mode extraction : UNEF, CGT, FAGE, Union étudiante, USL, Interfac retrouvés) ;
 pilote, vraie source + Filtre + Assistant IA (3 résumés réels, marqués, exportés). Rien de la spec validée n'a été
 réinterprété : chaque contradiction trouvée est devenue une question (Q29-Q34).
+
+## D85 — 3.8.10 RSSHub déployé, câblé et vérifié en réel (écart relevé par la revue 902, 03/11/2026)
+La spec 3.8.10 confiait à momo le déploiement de l'instance ; je l'avais cru suspendu à Sednal (D84 l'a relevé).
+**Instance** : image Docker officielle `diygod/rsshub:latest` sur .250, à l'écoute de 127.0.0.1:1200 seulement,
+redémarrage automatique (commande pour .115 dans `pilote/QUESTIONS.md` § 3.8.10). **Contrat réel** : RSSHub n'a pas de
+point d'entrée « transforme cette adresse » (la route `/site/<domaine>` supposée n'existait pas) ; il publie ses règles
+Radar (`/api/radar/rules`), appliquées côté client comme le fait l'extension RSSHub Radar, puis le flux est lu une fois
+par `flux_rss.telecharger`/`lire_flux` (plus d'appel HTTP propre, duplication retirée). **Câblage** : compilation sans
+réseau (refus dit sans `suite.rsshub_url`) ; flux trouvé au lancement (sinon la raison est dite) ; prise du moteur par
+`definition_flux`, exactement comme un flux ajouté à la main — dans `moteur_sources` et non `pont/executer.py`, où les
+flux ne passent pas. Une recherche dont RSSHub est la seule entrée part. **Au passage (préexistant)** : un flux ajouté à
+la main s'affichait « rss-… » dans Tri et à l'export ; il s'affiche sous son nom, et une prise RSSHub « RSSHub (site) ».
+`pilote.yaml` : section `suite:` ajoutée (adresses vides par défaut, réglées par machine). **Vérifié en réel** : Le Monde
+international → 20 articles, recherche terminée, 9 noms ; Libération → « RSSHub ne connaît pas de route », dit. Suite
+pilote (racine de `900` §3 corrigée localement, non commitée) : 570 réussis, seul échec le test de cette ligne.

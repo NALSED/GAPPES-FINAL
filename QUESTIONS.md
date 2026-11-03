@@ -147,10 +147,9 @@ déplacés, `dernier_cycle.md` remis comme avant). À garder en tête pour tout 
 
 **Écarts à la spec non corrigés (pas routiniers) — à reprendre**
 
-* **3.8.10 RSSHub** : la spec demandait aussi de **déployer** l'instance (image Docker officielle) et de câbler
-  le flux dans `flux_rss.py`. Je l'avais cru suspendu à Sednal ; la spec dit l'inverse. Et `suite_rsshub.py` refait
-  son propre appel HTTP au lieu de réutiliser `flux_rss.telecharger`/`lire_flux` (duplication). Docker est présent
-  sur .250 : prêt à être fait comme tâche suivante.
+* ~~**3.8.10 RSSHub**~~ — **fait juste après la revue (D85)** : instance déployée sur .250 (Docker, boucle locale
+  seulement), contrat réel vérifié (règles Radar), flux suivi comme un flux ajouté à la main, plus de duplication
+  avec `flux_rss`. Détail : `pilote/QUESTIONS.md` § 3.8.10.
 * **3.8.04 Boucle** : la spec demandait le mécanisme multi-tours dans `ExecuteurGrappes` ; non fait (raisons dans
   `pilote/QUESTIONS.md`). Maintenant que la suite pilote tourne contre le vrai moteur ici, la vérification devient
   possible ; reste l'ambiguïté du garde-fou « tours × appels > budget » (quel budget ?).

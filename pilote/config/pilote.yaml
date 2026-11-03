@@ -90,3 +90,8 @@ genres: [club, entreprise, association, administration, lieu, evenement, page, c
 
 # Pays proposés à l'assistant (données, pas du code). Un autre pays se saisit par son code à deux lettres.
 pays_proposes: {FR: France, GB: Royaume-Uni, NZ: Nouvelle-Zélande, NO: Norvège, EE: Estonie, CZ: Tchéquie, PL: Pologne, US: États-Unis, CA: Canada, DE: Allemagne, BE: Belgique, CH: Suisse, ES: Espagne, IT: Italie}
+
+# Services auto-hébergés des tuiles de /suite, réglés PAR MACHINE (vide = la tuile le dit et ne s'applique pas).
+suite:
+  traduction_url: ""       # moteur de traduction (ex. LibreTranslate : http://127.0.0.1:5000)
+  rsshub_url: ""           # instance RSSHub (image Docker officielle diygod/rsshub, ex. http://127.0.0.1:1200) — 3.8.10

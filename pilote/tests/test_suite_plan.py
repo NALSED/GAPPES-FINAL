@@ -34,7 +34,7 @@ OUTILS = [
     outil("si", options=[("Si le champ", "catégorie"), ("est égal à", "association")]),
     outil("fusion"), outil("format", options=[("Format de sortie", "CSV"), ("Séparateur", ";")]),
     outil("traduction", options=[("Langue d'entrée", "détecter"), ("Traduire vers", "français, anglais"), ("Ne pas traduire", "rien")]),
-    outil("boucle"), outil("ia", etat="off"), outil("attente"),
+    outil("boucle"), outil("ia", etat="off"), outil("attente"), outil("rsshub"),
 ]  # fmt: skip
 
 
@@ -543,3 +543,24 @@ def test_la_tuile_jouee_ne_depend_pas_du_hasard_du_processus():
     )
     vus = {subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={"PYTHONHASHSEED": str(g), "PATH": ""}, check=True).stdout.strip() for g in range(6)}
     assert vus == {"ia1"}
+
+
+def test_rsshub_sans_instance_reglee_n_est_pas_appliquee_et_le_dit():
+    """3.8.10 : « Sans suite.rsshub_url réglée : la tuile refuse de s'appliquer et le dit »."""
+    p = plan(
+        [("saisie",), ("grappes",), ("n1", "a"), ("r", "rsshub", None, [["Site à transformer", "https://www.exemple.fr/politique"]])],
+        [lien("saisie", "n1"), lien("n1", "grappes"), lien("saisie", "r"), lien("r", "grappes")],
+    )  # fmt: skip
+    c = comp(p)
+    assert c["rsshub"] == [] and "aucune instance RSSHub" in c["non_appliques"][0]["raison"]
+    c = comp(p, rsshub_disponible=True)
+    assert c["rsshub"] == [{"tuile": "r", "nom": "r", "site": "https://www.exemple.fr/politique"}] and c["non_appliques"] == []
+
+
+def test_rsshub_sans_adresse_de_site_est_refusee():
+    p = plan(
+        [("saisie",), ("grappes",), ("r", "rsshub", None, [["Site à transformer", "adresse du site"]])],
+        [lien("saisie", "r"), lien("r", "grappes")],
+    )  # fmt: skip
+    with pytest.raises(ConfigRefusee, match="adresse du site à transformer"):
+        comp(p, rsshub_disponible=True)

@@ -9,7 +9,7 @@ from fastapi import APIRouter, Body, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from pilote import actions, budget, emoji_texte, rapprochements, suite, suite_ia, suite_modele, suite_plan, suite_reel, suite_traduction, tri
+from pilote import actions, budget, emoji_texte, rapprochements, suite, suite_ia, suite_modele, suite_plan, suite_reel, suite_rsshub, suite_traduction, tri
 from pilote import reglages as rg
 from pilote.base import Candidat, Journal, Recherche
 from pilote.config import Config
@@ -274,14 +274,24 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
             try:
                 plan = suite._plan_valide(corps["plan"])
                 comp = suite_plan.compiler(plan, e["sources"], e["outils"], pays_equiv=_equivalences_de_pays(cfg), langue_saisie=suite.detecter_langue(saisie),
-                                           traduction_disponible=bool(cfg.suite_traduction_url), ia_disponible=suite_ia.disponible(), cfg=cfg)  # fmt: skip
+                                           traduction_disponible=bool(cfg.suite_traduction_url), ia_disponible=suite_ia.disponible(), rsshub_disponible=bool(cfg.suite_rsshub_url), cfg=cfg)  # fmt: skip
             except ConfigRefusee as exc:
                 raise _refus(exc) from exc
+            for r in list(comp["rsshub"]):  # 3.8.10 : le flux de chaque site est trouvé ICI, une fois ; l'échec est dit, jamais muet
+                try:
+                    lu = suite_rsshub.resoudre(cfg.suite_rsshub_url, r["site"])
+                except (OSError, ValueError) as exc:
+                    comp["rsshub"].remove(r)
+                    comp["non_appliques"].append({"tuile": r["tuile"], "nom": r["nom"], "raison": str(exc)})
+                    continue
+                r.update(flux=lu["url"], format=lu["format"])
+                comp["appliques"].append({"tuile": r["tuile"], "nom": r["nom"], "texte": f"suit le flux RSSHub de {r['site']} ({lu['articles']} articles à la première lecture)"})
             voulues = comp["sources"]
         else:
             voulues = [x for x in dict.fromkeys(corps.get("sources") or []) if isinstance(x, str)]
-        if not voulues:
-            raise HTTPException(422, "Choisis au moins une source.")
+        if not voulues and not (comp and comp["rsshub"]):
+            dites = [f"{x['nom']} : {x['raison']}" for x in (comp or {}).get("non_appliques", []) if x.get("raison")]
+            raise HTTPException(422, "Choisis au moins une source." + (f" ({' ; '.join(dites)})" if dites else ""))
         retenues, ecartees = [], []
         for ident in voulues:
             s = par_id.get(ident)
@@ -308,7 +318,7 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
                 else ""
             )  # fmt: skip
             (ecartees.append({"id": v["id"], "nom": s["nom"], "raison": raison}) if raison else verifs.append(v["id"]))
-        if not retenues:
+        if not retenues and not (comp and comp["rsshub"]):  # un flux RSSHub trouvé suffit : il est suivi comme une source
             raise HTTPException(
                 422,
                 "Aucune des sources choisies ne peut chercher : "

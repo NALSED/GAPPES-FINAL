@@ -103,14 +103,17 @@ def lignes_de(s: Session, rid: str) -> list[cl.Ligne]:
 
 def noms_de_sources(cfg: Config):
     """token de source -> nom lisible (jamais un identifiant technique), d'après les déclarations des sources."""
+    from pilote import flux_rss
     from pilote.sources import charger_sources
+    from pilote.suite_rsshub import nom_prise
 
     decls, _ = charger_sources(cfg)
     par_id = {d.id: d.nom for d in decls.values()}
+    par_id.update({f["id"]: f["nom"] for f in flux_rss.charger(cfg)})  # un flux ajouté à la main : son nom, pas « rss-… » (revue 902)
     fixes = {**SOURCES_ECOSYSTEMES, "sirene_naf": "Annuaire des entreprises", "sirene_nom": "Annuaire des entreprises", "wikidata": "Wikidata (encyclopédie)"}
 
     def nom(token: str) -> str:
-        return fixes.get(token) or par_id.get(token) or token.replace("_", " ")
+        return fixes.get(token) or par_id.get(token) or nom_prise(token) or token.replace("_", " ")
 
     return nom
 

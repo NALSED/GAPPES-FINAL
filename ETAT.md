@@ -3,7 +3,7 @@
 Phase en cours : aucune
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-03 (D84 : revue complète 902 — un bloquant et cinq majeurs corrigés, écarts 3.8.04/3.8.08/3.8.10 et questions Q29-Q34 pour Sednal dans `QUESTIONS.md` ; grappes 612 verts, pilote vert avec la racine de `900` §3). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
+Dernière mise à jour : 2026-11-03 (D85 : RSSHub déployé et câblé ; D84 : revue complète 902 — un bloquant et cinq majeurs corrigés, écarts 3.8.04/3.8.08/3.8.10 et questions Q29-Q34 pour Sednal dans `QUESTIONS.md` ; grappes 612 verts, pilote vert avec la racine de `900` §3). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
 
 ## En attente de Sednal
 

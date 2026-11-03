@@ -67,22 +67,40 @@ passe `{}` : `classer` retombe sur `["autre"]`, `extraire_mots_cles` sur 5 mots.
 configurable depuis l'écran — à reprendre si Sednal le demande (ajouter un champ par opération, sur le
 modèle de `RENDUS_OPTIONS`).
 
-## 3.8.10 — RSSHub : code prêt, instance pas déployée
+## 3.8.10 — RSSHub : déployé sur .250, câblé, vérifié en réel (clos le 03/11/2026, D85)
 
-**Correction (revue 902)** : la spec 3.8.10 confie bien le déploiement à momo (« Déployer une instance RSSHub
-auto-hébergée, image Docker officielle ») — l'hébergement avait été décidé avec Sednal, pas le geste. Écart à
-reprendre, avec la réutilisation de `flux_rss.telecharger`/`lire_flux` au lieu de l'appel HTTP propre à
-`suite_rsshub.py` (duplication relevée par la revue).
+**Instance** : image Docker officielle `diygod/rsshub:latest` (empreinte `sha256:1726b309…`), conteneur `rsshub`,
+redémarrage automatique, à l'écoute de **127.0.0.1:1200 seulement** (rien d'exposé au réseau). Sur .115, même
+commande ; puis `suite.rsshub_url: http://127.0.0.1:1200` dans `pilote.yaml` (section `suite:` ajoutée, vide par
+défaut, comme `traduction_url`).
 
-`suite_rsshub.py` résout l'adresse d'un flux produit par une instance RSSHub pour un site donné, et
-`config.suite_rsshub_url` existe. Pas câblé dans `pont/executer.py` (vers `flux_rss.py`) :
-`NON_APPLIQUES["rsshub"]` reste tel quel.
+````
+docker run -d --name rsshub --restart unless-stopped -p 127.0.0.1:1200:1200 diygod/rsshub:latest
+````
 
-**Le contrat exact de l'API RSSHub n'est pas vérifié** : aucune instance n'est accessible ici. J'ai supposé
-une route `{rsshub_url}/site/<domaine>`, mais RSSHub expose en réalité des routes PROPRES à chaque site
-(`/twitter/user/x`, pas un point d'entrée générique « transforme cette adresse ») — la bonne route dépend du
-type de site, pas seulement de son domaine. À revoir avec une vraie instance déployée (image Docker
-officielle, décidée avec Sednal) avant de câbler le reste.
+**Contrat réel** (vérifié contre l'instance) : RSSHub n'a **pas** de point d'entrée « transforme cette adresse » ;
+la route supposée avant (`/site/<domaine>`) n'existait pas. Il publie ses règles « Radar »
+(`/api/radar/rules` : domaine → sous-domaine → motifs de chemin → route), celles qu'utilise l'extension RSSHub
+Radar : `suite_rsshub.routes()` y cherche la route de l'adresse donnée, puis `resoudre()` lit le flux une fois
+(par `flux_rss.telecharger`/`lire_flux` — plus d'appel HTTP propre, la duplication relevée par la revue est
+retirée) pour vérifier qu'il rend des articles.
+
+**Câblage** : la tuile est compilée sans réseau (`suite_plan`, refus dit sans `suite.rsshub_url`, refus si
+l'adresse du site manque) ; au lancement, `api_suite` trouve le flux une fois (sinon la raison est dite dans les
+outils non appliqués, et reprise dans le refus si RSSHub était la seule entrée) ; puis `materialiser` en fait une
+prise du moteur par `definition_flux` — **exactement comme un flux ajouté à la main**. La spec plaçait le câblage
+dans `pont/executer.py` ; les flux RSS n'y passent pas (ce sont des prises du moteur, écrites avant le pont) : le
+mécanisme réellement réutilisé est celui de `moteur_sources`. Une recherche dont RSSHub est la seule entrée part.
+La provenance s'affiche « RSSHub (site) », jamais l'identifiant de la prise ; au passage, un flux ajouté à la main
+s'affichait « rss-… » dans Tri et à l'export (préexistant) : il s'affiche maintenant sous son nom.
+
+**Vérifié en réel** : `https://www.lemonde.fr/international/` → route `/lemonde/international`, 20 articles,
+recherche terminée en 12 s, 9 noms trouvés dans les articles. `https://www.liberation.fr/` → « RSSHub ne connaît
+pas de route pour ce site », dit clairement.
+
+**Pas utilisé** : « Rafraîchir toutes les » — RSSHub garde lui-même ses flux en cache, et pilote lit le flux une fois
+par recherche ; l'option reste affichée, sans effet. Les motifs Radar avec requête (`/cherche?q=:q`) ne sont pas
+pris en charge (ignorés, jamais une fausse correspondance).
 
 ## Trou d'infra pré-existant, hors de ce pavé
 
