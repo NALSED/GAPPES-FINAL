@@ -65,9 +65,9 @@ def sort_key(name: str) -> tuple[str, str]:
 
 def select_rows(
     result: AssignResult, cfg: Config
-) -> tuple[dict[str, list[tuple[str, float, str]]], list[tuple[str, float, str]]]:
-    """(grappe -> [(nom, confiance, clé de source)] des entités retenues, [(nom, confiance, clé)] des personnes
-    physiques en doute — décision 901/Q21), avant fusion des variantes."""
+) -> tuple[dict[str, list[tuple[str, float, str]]], list[tuple[str, float, str, str]]]:
+    """(grappe -> [(nom, confiance, clé de source)] des entités retenues, [(nom, confiance, clé, grappe)] des
+    personnes physiques en doute — décision 901/Q21), avant fusion des variantes."""
     sc = cfg.scoring
     threshold = (
         sc.niveau_probable if sc.resultat_confiance_min is None else sc.resultat_confiance_min
@@ -75,7 +75,7 @@ def select_rows(
     kept = {CLASSE, AMBIGU} if sc.resultat_inclure_ambigus else {CLASSE}
     ents = {e.entity_id: e for e in result.entities}
     out: dict[str, list[tuple[str, float, str]]] = {g.grappe_id: [] for g in cfg.grappes}
-    doute: list[tuple[str, float, str]] = []
+    doute: list[tuple[str, float, str, str]] = []
     for m in result.memberships:
         e = ents[m["entity_id"]]
         if m["confidence"] < threshold:
@@ -84,7 +84,7 @@ def select_rows(
         if est_personne and m["status"] == AMBIGU:
             name = readable_name(result.names.get(e.primary_ref), e.primary_ref.split(":", 1)[-1])
             if name:
-                doute.append((name, m["confidence"], e.primary_ref))
+                doute.append((name, m["confidence"], e.primary_ref, m["grappe_id"]))
             continue  # doute : ni un match direct ni du bruit, jamais silencieusement exclu ni inclus
         if m["status"] not in kept:
             continue  # hors sujet : exclu, comme pour n'importe quelle entité
@@ -126,6 +126,24 @@ def _write(path: Path, names: list[str]) -> Path:
         w.writerow(["NOM"])
         for n in names:
             w.writerow([safe_cell(n)])
+    return path
+
+
+A_TRANCHER_HEADER = ["NOM", "GRAPPE", "REF", "DECISION"]
+
+
+def _write_a_trancher(path: Path, rows: list[tuple[str, float, str, str]]) -> Path:
+    """`resultat_a_trancher.csv` (décision 901/Q21) : une ligne par (référence, grappe) en doute, triée par nom.
+    Pas de fusion de variantes ici (chaque ligne doit rester identifiable par référence pour `ancrage.py`,
+    décision 901/Q28) ; `DECISION` vide, à remplir « garder » ou « exclure » à la main."""
+    vues: dict[tuple[str, str], tuple[str, str, str]] = {}
+    for name, _conf, ref, grappe in rows:
+        vues[(ref, grappe)] = (name, grappe, ref)
+    with path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(A_TRANCHER_HEADER)
+        for name, grappe, ref in sorted(vues.values(), key=lambda v: sort_key(v[0])):
+            w.writerow([safe_cell(name), grappe, ref, ""])
     return path
 
 
@@ -173,7 +191,7 @@ def write_resultat(
     a_trancher = out / "resultat_a_trancher.csv"
     a_trancher_paths = []
     if doute:
-        a_trancher_paths.append(_write(a_trancher, [n for n, _ in merge_rows(doute, sfx)]))
+        a_trancher_paths.append(_write_a_trancher(a_trancher, doute))
     else:
         a_trancher.unlink(missing_ok=True)  # pas de doute cette fois : pas de fichier périmé
     from grappes.sortie import LigneSortie, charger_profils

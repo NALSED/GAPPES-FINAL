@@ -11,7 +11,7 @@ Statut au 2026-10-06. Référence unique : `FINAL.md`. Aucune réponse inventée
 * **Q20** Close (D82) : le garde-fou reste actif par défaut, mais c'était déjà un réglage réel (`autonomie.yaml: apprentissage.exiger_racine_de_confiance`, chargé par `autonomy.py`) — confirmé, rien à coder.
 * **Q21** Close (D82) : remplacé par un critère de correspondance en trois cas (matche directement / hors sujet / doute → `resultat_a_trancher.csv`), pas une exclusion de principe. Détail et code : D82, `clustering/resultat.py`.
 
-* **Q28** (nouvelle, 2026-11-03) Boucle d'apprentissage et `resultat_a_trancher.csv` (901/Q21) : la décision de Sednal sur un cas « à trancher » (garder/exclure) doit compter comme ancre de confiance (garde-fou Q20), mais le mécanisme par lequel cette décision est enregistrée et relue (quel fichier, quelle colonne) n'est pas spécifié. Défaut en attendant : aucune boucle de retour, le fichier reste un export à relire à la main.
+* **Q28** Close (D83, 2026-11-03) : réutilise le mécanisme d'ancre déjà existant (`anchors:` du YAML de la grappe). `resultat_a_trancher.csv` (NOM, GRAPPE, REF, DECISION) + `grappes ancrer` promeut chaque ligne « garder » en ancre. Détail et code : D83, `ancrage.py`.
 
 * **Q22** Réglée (D46) : écosystèmes `rss` et `wikipedia` ajoutés comme fournisseurs. Voir Q24 pour ce qui reste.
 * **Q23** Réglée (D47) : nouveau sujet, `seuil_ingestion` auto-ajustable dans [5 ; 40].

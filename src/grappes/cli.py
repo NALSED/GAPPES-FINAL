@@ -161,6 +161,10 @@ def main(argv: list[str] | None = None) -> int:
     rb = sub.add_parser("rollback", help="annule le dernier cycle terminé")
     rb.add_argument("--out", default="sorties")
     rb.add_argument("--data", default="donnees")
+    an = sub.add_parser(
+        "ancrer", help="promeut les décisions « garder » de resultat_a_trancher.csv en ancres (901/Q28)"
+    )
+    an.add_argument("--fichier", default="sorties/resultat_a_trancher.csv")
     args = p.parse_args(argv)
     try:
         cfg = load_config(args.config)
@@ -186,6 +190,23 @@ def main(argv: list[str] | None = None) -> int:
         except FileNotFoundError as exc:
             print(exc, file=sys.stderr)
             return 2
+        return 0
+    if args.cmd == "ancrer":
+        from grappes.ancrage import promouvoir
+
+        fichier = Path(args.fichier)
+        if not fichier.exists():
+            print(f"fichier introuvable : {fichier}", file=sys.stderr)
+            return 2
+        try:
+            ajoutees = promouvoir(args.config, fichier)
+        except ConfigError as exc:
+            print(exc, file=sys.stderr)
+            return 2
+        if ajoutees:
+            print(f"{len(ajoutees)} ancre(s) ajoutée(s) : {', '.join(sorted(ajoutees))}")
+        else:
+            print("aucune décision « garder » à promouvoir")
         return 0
     db = Database(args.db)
     try:

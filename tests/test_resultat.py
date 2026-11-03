@@ -128,7 +128,9 @@ def test_personne_en_doute_part_dans_resultat_a_trancher(cfgdir):
     rows = lire(paths[0])
     assert rows == [["NOM"], ["Le Site"]]  # Marie Martin n'est pas dans resultat.csv
     trancher = next(p for p in paths if p.name == "resultat_a_trancher.csv")
-    assert lire(trancher) == [["NOM"], ["Marie Martin"]]
+    rows = lire(trancher)
+    assert rows[0] == ["NOM", "GRAPPE", "REF", "DECISION"]
+    assert rows[1][:3] == ["Marie Martin", "G-A", "x:marie_m"] and rows[1][3] == ""
 
 
 def test_inclure_personnes_les_met_en_clair_sans_fichier_a_trancher(tmp_path):

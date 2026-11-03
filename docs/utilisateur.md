@@ -103,6 +103,16 @@ resultat:
 
 **Avertissement.** Avec `inclure_personnes: true`, les noms de personnes physiques figurent **en clair** dans `resultat.csv`, sans tri en trois cas (pas de `resultat_a_trancher.csv`) : le masquage (`redact_persons`) ne s'applique plus à ce fichier. `entites.csv`, le serveur MCP et le rapport continuent de masquer les personnes. Le fichier est alors un traitement de données personnelles : à votre charge.
 
+### Trancher un doute, et l'ancrer (décision 901/Q28)
+
+`sorties/resultat_a_trancher.csv` a quatre colonnes : `NOM`, `GRAPPE`, `REF`, `DECISION`. La dernière est vide : remplissez-la à la main, par ligne, avec `garder` ou `exclure`. Puis :
+
+````
+grappes ancrer --fichier sorties/resultat_a_trancher.csv
+````
+
+Chaque ligne `garder` ajoute sa `REF` à `anchors:` dans le YAML de sa grappe (`config/grappes/*.yaml`) — exactement comme une ancre posée à la main : la décision devient une racine de confiance pour l'apprentissage (`apprentissage.exiger_racine_de_confiance`). Une ligne `exclure` ou vide n'écrit rien. L'édition ne touche que la liste `anchors:` : rien d'autre dans le fichier ne change (ni les commentaires, ni le reste des réglages). Commande idempotente : la relancer deux fois ne duplique rien.
+
 ## Mode de recherche : `scoring.mode_recherche`
 
 Décision 901/Q26. Deux valeurs fermées dans `config/scoring.yaml` :

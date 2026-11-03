@@ -105,8 +105,10 @@ Une ligne par entité retenue, rien d'autre dans le fichier. UTF-8 sans BOM, tri
   dans une recherche sur le sport). (1) Matche directement la grappe (statut « classé », au-dessus
   du seuil) : gardée dans `resultat.csv` comme n'importe quelle entité. (2) Hors sujet (sous le
   seuil ou « non classé ») : exclue, comme avant. (3) Doute (statut « ambigu », le programme ne
-  peut pas trancher) : `sorties/resultat_a_trancher.csv`, jamais mêlée à `resultat.csv` ni
-  silencieusement exclue. Option `inclure_personnes` en configuration, à false ; si Sednal la passe
+  peut pas trancher) : `sorties/resultat_a_trancher.csv` (colonnes NOM, GRAPPE, REF, DECISION ;
+  cette dernière vide, à remplir « garder »/« exclure » puis `grappes ancrer`, décision 901/Q28 —
+  garder ajoute REF aux ancres de sa grappe), jamais mêlée à `resultat.csv` ni silencieusement
+  exclue. Option `inclure_personnes` en configuration, à false ; si Sednal la passe
   à true, les personnes suivent la même règle que les autres entités, sans fichier « à trancher »
   séparé, et le masquage ne s'applique plus à ce fichier : écris cet avertissement dans
   docs/utilisateur.md et dans le rapport de cycle. Dans tous les cas, `entites.csv` et la base
