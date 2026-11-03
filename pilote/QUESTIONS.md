@@ -37,17 +37,24 @@ recherche unique, décider où isoler les tours (un sous-dossier chacun, candida
 testés avec l'agent **simulé** (aucun agent réel n'est accessible dans ce bac à sable). Pas câblés dans
 `pont/executer.py` : `NON_APPLIQUES["ia"]` reste tel quel.
 
-Reste à faire, sur .115, avant de câbler pour de vrai :
+**Vérifié depuis .250 (03/11/2026)**, où l'agent est déjà installé et connecté : `claude -p "…"` répond bien
+(silencieux, code 0, texte en stdout), exactement la commande que construit `suite_ia.commande()`. Les deux
+options existent réellement en ligne de commande : `--model <nom>` et `--effort <niveau>` sont tous les deux
+acceptés par `claude -p …`. En revanche `claude --model` sans argument n'affiche pas une liste exploitable : il
+ouvre un sélecteur interactif (ou refuse faute d'argument hors TTY) — il n'y a donc pas de façon simple
+d'interroger la liste des modèles disponibles en ligne de commande pour en faire un menu fermé. **Le champ
+texte libre déjà choisi pour « Modèle » était donc le bon choix**, pas une solution provisoire à corriger.
+L'« Effort » pourrait en théorie s'ajouter (la commande l'accepte), mais ça reste un champ en plus à only
+ajouter à `_OUTILS["ia"]["options"]` une fois le reste tranché.
 
-* Installer l'agent Claude Code, le connecter une fois avec l'abonnement Pro/Max de Sednal (même principe
-  que `/areas/agent-ia.md` sur .250).
-* Vérifier que `claude --model <nom>` liste bien les modèles disponibles comme la spec le suppose (pour le
-  menu fermé « Modèle » de la tuile) — pour l'instant « Modèle » est un champ texte libre, faute de pouvoir
-  l'interroger ici.
-* Confirmer si l'agent installé expose un réglage d'effort de raisonnement en ligne de commande ; sinon le
-  champ « Effort » de la spec ne s'ajoute pas (elle le permettait).
+Reste à faire avant de câbler pour de vrai (rien de ce qui suit n'est vérifiable depuis .250) :
+
+* Installer l'agent Claude Code sur **.115** lui-même (la machine qui exécutera réellement les recherches), et
+  le connecter avec l'abonnement Pro/Max de Sednal — ce qui est vérifié ci-dessus porte sur .250, pas sur la
+  machine d'exécution réelle.
 * Décider comment séparer, dans le journal, le coût de l'appel à l'agent (facturé par l'abonnement, pas par
-  appel) du compteur budget en crédits (3.8.08) — la spec le demande explicitement, je n'ai rien inventé.
+  appel) du compteur budget en crédits (3.8.08) — la spec le demande explicitement, je n'ai rien inventé, et
+  ça reste une décision de Sednal, pas un fait technique à vérifier.
 
 ## 3.8.10 — RSSHub : code prêt, instance pas déployée
 
