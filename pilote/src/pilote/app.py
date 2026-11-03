@@ -289,6 +289,17 @@ def creer_app(cfg: Config | None = None, executeur: Executeur | None = None, url
         rows = s.scalars(select(Journal).where(Journal.recherche_id == rid).order_by(Journal.id))
         return [{"le": _iso(j.le), "qui": j.qui, "evenement": j.evenement, "detail": j.detail} for j in rows]
 
+    @app.get("/api/journal")
+    def journal_global(recherche: str | None = None, s: Session = Depends(session)) -> list[dict[str, Any]]:
+        """Tableau de bord (1.1 §3.4) : les 30 derniers événements, du plus récent au plus ancien, toutes
+        recherches confondues (ou d'une seule, avec `?recherche=`) — pas de recherche plein texte, un filtre
+        par recherche et c'est tout."""
+        q = select(Journal).order_by(Journal.id.desc()).limit(30)
+        if recherche:
+            q = q.where(Journal.recherche_id == recherche)
+        rows = s.scalars(q)
+        return [{"le": _iso(j.le), "qui": j.qui, "evenement": j.evenement, "detail": j.detail, "recherche_id": j.recherche_id} for j in rows]
+
     # ---- Tri ----
     def _tri(f, *a, **k):
         try:

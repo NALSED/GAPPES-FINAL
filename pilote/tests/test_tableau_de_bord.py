@@ -5,6 +5,10 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+from fastapi.testclient import TestClient
+
+from pilote.app import creer_app
+from pilote.base import Journal, Recherche, creer_fabrique
 from pilote.executeur_grappes import ExecuteurGrappes
 
 
@@ -44,3 +48,18 @@ def test_filtre_qui_retire_la_moitie_ecrit_le_bon_bilan(cfg):
     jeu = {"tuiles": {"f2": {"nom": "Filtre", "entrees": 30, "sorties": 18}}}
     ExecuteurGrappes(cfg).dire_le_plan(c, spec, jeu)
     assert evenements == [("tuile_passee", {"tuile": "f2", "nom": "Filtre", "traversees": 30, "modifiees": 12})]
+
+
+def test_journal_global_toutes_recherches_le_plus_recent_d_abord(cfg):
+    fabrique = creer_fabrique(cfg.url_base)
+    with fabrique.begin() as s:
+        s.add(Recherche(id="r1", qui="sednal", sujet={"quoi": "x"}, parametres={}, etat="terminee"))
+        s.add(Recherche(id="r2", qui="sednal", sujet={"quoi": "y"}, parametres={}, etat="terminee"))
+        s.add(Journal(recherche_id="r1", qui="sednal", evenement="creation", detail={}))
+        s.add(Journal(recherche_id="r2", qui="sednal", evenement="creation", detail={}))
+        s.add(Journal(recherche_id="r1", qui="sednal", evenement="fin", detail={}))
+    with TestClient(creer_app(cfg)) as c:
+        tout = c.get("/api/journal").json()
+        assert [x["evenement"] for x in tout] == ["fin", "creation", "creation"]  # le plus récent d'abord
+        seul_r1 = c.get("/api/journal", params={"recherche": "r1"}).json()
+        assert [x["recherche_id"] for x in seul_r1] == ["r1", "r1"]
