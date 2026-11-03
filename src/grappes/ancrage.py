@@ -9,7 +9,12 @@ L'édition du YAML se fait par le TEXTE, jamais par un aller-retour `yaml.safe_l
 (le bug de la Norvège « NO » devenue `False`, voir `900-demenagement-du-code.md`). Après chaque
 ajout, le fichier est relu avec `yaml.safe_load` pour vérifier qu'il reste valide et que la
 référence y figure bien ; sinon rien n'est écrit sur disque.
-"""
+
+Décision 904/Q29 : une grappe issue d'un sujet (`sujets.yaml`, créée automatiquement) n'a pas de
+fichier YAML à elle, donc pas de `anchors:` où écrire. Un fichier séparé par sujet (`config/ancres/
+<grappe>.yaml`) en tient lieu — JAMAIS dans `config/apprentissage/` : rien ici n'est réécrit par la
+boucle d'apprentissage, qui ne lit ces ancres qu'en lecture (`cycle/learn.py`, via `config.py` qui
+les charge dans `Grappe.anchors`, au même titre qu'une ancre posée à la main dans `config/grappes/`)."""
 
 from __future__ import annotations
 
@@ -22,9 +27,11 @@ import yaml
 _INLINE = re.compile(r"^(?P<cle>anchors:[ \t]*)\[(?P<contenu>.*)\](?P<fin>[ \t]*(?:#.*)?)$", re.MULTILINE)
 _CLE_BLOC = re.compile(r"^anchors:[ \t]*(?:#.*)?$", re.MULTILINE)
 _ITEM_BLOC = re.compile(r"^([ \t]*-[ \t]*)(.+?)[ \t]*(?:#.*)?$")
+_SAFE = re.compile(r"[^a-z0-9_-]+")
 
 DECISION_GARDER = "garder"
 DECISION_EXCLURE = "exclure"
+ANCRES_DIR = "ancres"
 
 
 def _dequote(s: str) -> str:
@@ -84,6 +91,25 @@ def _fichier_de_grappe(racine: Path, grappe_id: str) -> Path | None:
     return None
 
 
+def fichier_ancres_sujet(racine: str | Path, grappe_id: str) -> Path:
+    """`config/ancres/<grappe>.yaml` : les ancres d'une grappe-sujet (décision 904/Q29)."""
+    return Path(racine) / ANCRES_DIR / f"{_SAFE.sub('_', grappe_id.lower())}.yaml"
+
+
+def lire_ancres_sujet(racine: str | Path, grappe_id: str) -> tuple[str, ...]:
+    """Les ancres déjà promues pour cette grappe-sujet, lues par `config.py` à chaque chargement — exactement
+    comme `anchors:` dans le YAML d'une grappe déclarée à la main. Fichier absent = aucune ancre, jamais une erreur."""
+    f = fichier_ancres_sujet(racine, grappe_id)
+    if not f.exists():
+        return ()
+    try:
+        d = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return ()
+    brut = d.get("anchors") if isinstance(d, dict) else None
+    return tuple(dict.fromkeys(str(a) for a in brut)) if isinstance(brut, list) else ()
+
+
 def lire_decisions(path: Path) -> list[tuple[str, str]]:
     """[(grappe_id, ref), ...] des lignes de `resultat_a_trancher.csv` marquées « garder »."""
     out = []
@@ -109,13 +135,15 @@ def promouvoir(racine: str | Path, decisions_csv: str | Path) -> list[str]:
         if fichier is None:
             from grappes.autonomy import load_subjects
 
-            if any(s.id == grappe_id for s in load_subjects(racine).subjects):
-                raise ConfigError(
-                    f"ancrage : la grappe {grappe_id!r} vient d'un sujet (sujets.yaml), qui n'a pas de liste anchors: — "
-                    "rien n'est écrit (question ouverte, QUESTIONS.md Q29)"
-                )
-            raise ConfigError(f"ancrage : grappe {grappe_id!r} introuvable sous {racine / 'grappes'}")
-        texte = par_fichier.get(fichier, fichier.read_text(encoding="utf-8"))
+            if not any(s.id == grappe_id for s in load_subjects(racine).subjects):
+                raise ConfigError(f"ancrage : grappe {grappe_id!r} introuvable sous {racine / 'grappes'} ni dans sujets.yaml")
+            fichier = fichier_ancres_sujet(racine, grappe_id)  # grappe-sujet (904/Q29) : fichier à part, créé au besoin
+        if fichier in par_fichier:
+            texte = par_fichier[fichier]
+        elif fichier.exists():
+            texte = fichier.read_text(encoding="utf-8")
+        else:
+            texte = f"grappe: {grappe_id}\nanchors: []\n"  # rien sur disque avant la validation finale (voir plus bas)
         avant = ancres_existantes(texte)
         par_fichier[fichier] = ajouter_ancre(texte, ref)
         attendues.setdefault(fichier, set()).add(ref)
@@ -130,5 +158,6 @@ def promouvoir(racine: str | Path, decisions_csv: str | Path) -> list[str]:
         manquantes = attendues[fichier] - presentes
         if manquantes:
             raise ConfigError(f"ancrage : {fichier} n'aurait pas {sorted(manquantes)} dans anchors après ajout, rien n'est écrit")
+        fichier.parent.mkdir(parents=True, exist_ok=True)
         fichier.write_text(texte, encoding="utf-8")
     return ajoutees

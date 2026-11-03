@@ -6,7 +6,13 @@ import csv
 import pytest
 import yaml
 
-from grappes.ancrage import ajouter_ancre, ancres_existantes, promouvoir
+from grappes.ancrage import (
+    ajouter_ancre,
+    ancres_existantes,
+    fichier_ancres_sujet,
+    lire_ancres_sujet,
+    promouvoir,
+)
 from grappes.cli import main
 from grappes.config import ConfigError
 
@@ -94,12 +100,38 @@ def test_promouvoir_grappe_introuvable_leve_et_n_ecrit_rien(depot, tmp_path):
     assert (depot / "grappes" / "a.yaml").read_text(encoding="utf-8") == avant
 
 
-def test_promouvoir_grappe_issue_d_un_sujet_le_dit_clairement(depot, tmp_path):
-    """La configuration réelle n'a qu'un sujet (sujets.yaml), sans liste anchors: : refus explicite, rien d'écrit."""
-    (depot / "sujets.yaml").write_text("sujets:\n  - nom: cuisine_demo\n    phrase: \"La cuisine de démonstration\"\n", encoding="utf-8")
+def test_promouvoir_grappe_sujet_ecrit_un_fichier_a_part(depot, tmp_path):
+    """904/Q29 : une grappe-sujet (sujets.yaml, sans anchors: propre) obtient un fichier dédié, jamais dans
+    config/apprentissage/ (la boucle d'apprentissage ne doit jamais pouvoir le réécrire)."""
+    (depot / "sujets.yaml").write_text('sujets:\n  - nom: cuisine_demo\n    phrase: "La cuisine de démonstration"\n', encoding="utf-8")
     csv_path = _a_trancher(tmp_path / "t.csv", [["Qui", "cuisine_demo", "x:qui", "garder"]])
-    with pytest.raises(ConfigError, match="vient d'un sujet"):
-        promouvoir(depot, csv_path)
+    assert promouvoir(depot, csv_path) == ["x:qui"]
+    f = fichier_ancres_sujet(depot, "cuisine_demo")
+    assert f.parent.name == "ancres" and f.parent.parent == depot  # jamais sous apprentissage/
+    assert ancres_existantes(f.read_text(encoding="utf-8")) == {"x:qui"}
+
+
+def test_lire_ancres_sujet_absent_rend_vide(depot):
+    assert lire_ancres_sujet(depot, "cuisine_demo") == ()
+
+
+def test_config_charge_les_ancres_d_un_sujet(depot, tmp_path):
+    """`config.py` doit lire ce fichier exactement comme anchors: dans un YAML de grappe à la main."""
+    from grappes.config import load_config
+
+    (depot / "sujets.yaml").write_text('sujets:\n  - nom: cuisine_demo\n    phrase: "La cuisine de démonstration"\n', encoding="utf-8")
+    csv_path = _a_trancher(tmp_path / "t.csv", [["Qui", "cuisine_demo", "x:qui", "garder"]])
+    promouvoir(depot, csv_path)
+    cfg = load_config(depot)
+    g = next(g for g in cfg.grappes if g.grappe_id == "cuisine_demo")
+    assert g.anchors == ("x:qui",)
+
+
+def test_promouvoir_sujet_est_idempotent_et_cumule(depot, tmp_path):
+    (depot / "sujets.yaml").write_text('sujets:\n  - nom: cuisine_demo\n    phrase: "La cuisine de démonstration"\n', encoding="utf-8")
+    promouvoir(depot, _a_trancher(tmp_path / "t1.csv", [["Qui", "cuisine_demo", "x:qui", "garder"]]))
+    assert promouvoir(depot, _a_trancher(tmp_path / "t2.csv", [["Autre", "cuisine_demo", "x:autre", "garder"]])) == ["x:autre"]
+    assert lire_ancres_sujet(depot, "cuisine_demo") == ("x:qui", "x:autre") or set(lire_ancres_sujet(depot, "cuisine_demo")) == {"x:qui", "x:autre"}
 
 
 def test_cli_ancrer(depot, tmp_path, capsys):

@@ -11,6 +11,7 @@ from typing import Any
 
 import yaml
 
+from grappes.ancrage import lire_ancres_sujet
 from grappes.canon import canonical_domain, canonical_handle
 from grappes.ecosystem.crossref import CrossRefRule
 from grappes.fiabilite import Fiabilite, FiabiliteError, load_fiabilite
@@ -419,6 +420,7 @@ def load_config(config_dir: str | Path = "config") -> Config:
                 label=s.phrase,
                 lexicon=Lexicon(terms={t: lt.weight for t, lt in load_seed(root, s.id).items()}),
                 subject=s.phrase,
+                anchors=lire_ancres_sujet(root, s.id),  # 904/Q29 : config/ancres/<grappe>.yaml, promues par `grappes ancrer`
             )
             for s in subjects.subjects
         )
@@ -429,11 +431,14 @@ def load_config(config_dir: str | Path = "config") -> Config:
     if thresholds:
         scoring = replace(scoring, **thresholds)
     # empreinte : contenu brut de tous les fichiers pris en compte, dans l'ordre
+    adir_ancres = root / "ancres"
+    ancres_files = sorted(adir_ancres.glob("*.yaml")) if adir_ancres.is_dir() else []
     h = hashlib.sha256()
     for p in (
         [p for p in (scoring_path, sources_path) if p.exists()]
         + files
         + subject_files
+        + ancres_files  # 904/Q29 : une ancre promue change le scoring (apprentissage), donc l'empreinte
         + ([tg_path] if tg_path.exists() else [])
         + ([fiab_path] if fiab_path.exists() else [])
     ):
