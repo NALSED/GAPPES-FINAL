@@ -89,14 +89,29 @@ Les champs spécifiques d'un fournisseur sont conservés tels quels dans la colo
 * Le nom est lisible (organisation, média, site, canal, compte institutionnel), jamais un identifiant ni une URL. Une entité sans nom connu n'est pas exportée.
 * Les variantes d'écriture (casse, accents, espaces, suffixes comme « officiel ») sont fusionnées.
 * Seuil : `resultat.confiance_min` dans `config/scoring.yaml` (défaut : niveau « probable »).
-* **Personnes physiques exclues par défaut.** Un compte est une personne, sauf indice explicite dans son nom (association, journal, radio, mairie...). En cas de doute : une personne.
+* **Personnes physiques : trois cas, pas une exclusion de principe** (décision 901/Q21). Un compte est une
+  personne, sauf indice explicite dans son nom (association, journal, radio, mairie...). (1) Matche
+  directement la recherche (statut « classé ») : gardée dans `resultat.csv`, comme n'importe quelle entité —
+  ex. le compte public d'une personnalité du sport dans une recherche sur le sport. (2) Hors sujet (sous le
+  seuil, ou statut « non classé ») : exclue, comme avant. (3) Doute (statut « ambigu », le programme ne peut
+  pas trancher) : `sorties/resultat_a_trancher.csv`, ni dans `resultat.csv` ni silencieusement perdue.
 
 ````yaml
 resultat:
   inclure_personnes: false   # NE PASSEZ À true QU'EN CONNAISSANCE DE CAUSE
 ````
 
-**Avertissement.** Avec `inclure_personnes: true`, les noms de personnes physiques figurent **en clair** dans `resultat.csv` : le masquage (`redact_persons`) ne s'applique plus à ce fichier. `entites.csv`, le serveur MCP et le rapport continuent de masquer les personnes. Le fichier est alors un traitement de données personnelles : à votre charge.
+**Avertissement.** Avec `inclure_personnes: true`, les noms de personnes physiques figurent **en clair** dans `resultat.csv`, sans tri en trois cas (pas de `resultat_a_trancher.csv`) : le masquage (`redact_persons`) ne s'applique plus à ce fichier. `entites.csv`, le serveur MCP et le rapport continuent de masquer les personnes. Le fichier est alors un traitement de données personnelles : à votre charge.
+
+## Mode de recherche : `scoring.mode_recherche`
+
+Décision 901/Q26. Deux valeurs fermées dans `config/scoring.yaml` :
+
+* **`sites`** (défaut) : trouve des sites et des comptes qui correspondent aux critères, comme aujourd'hui.
+* **`extraction`** : lit en plus le contenu des sources de la recherche et en extrait les acteurs nommés
+  (reconnaissance de noms, `config/ner.yaml`, D63) ; les entités ainsi trouvées deviennent des candidats de
+  recoupement, au même titre que les sources. Active le classement de production (`config/classement.yaml`)
+  et le rend autoritaire sur `resultat.csv`, sans changer les fournisseurs de registres déjà choisis là.
 
 ## Cadre de données
 

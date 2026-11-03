@@ -5,6 +5,7 @@ import math
 from grappes import vraisemblance as vr
 from grappes.classement import production as pr
 from grappes.classement.candidats import Candidat
+from test_phase4 import make_cfg
 
 
 def test_calibreur_par_defaut_est_un_rapport_de_cotes_un_pour_un():
@@ -25,6 +26,23 @@ def test_config_absente_inactive(tmp_path):
 def test_config_du_depot_inactive_par_defaut():
     cc = pr.charger_config("config")
     assert cc.actif is False and "wikidata" in cc.registres and cc.variantes is False
+
+
+def test_mode_recherche_sites_ne_change_rien(tmp_path):
+    """Décision 901/Q26 : le mode par défaut ne touche pas classement.yaml (« comportement actuel »)."""
+    cfg = make_cfg(tmp_path)
+    cc = pr.ClassementConfig()
+    assert pr.cc_pour_mode(cc, cfg) is cc
+
+
+def test_mode_recherche_extraction_active_le_classement_sans_changer_les_registres(tmp_path):
+    """Décision 901/Q26 : le mode « lire le contenu » force actif/noms/remplace_resultat, pas les registres déjà
+    choisis par classement.yaml (pas d'appel réseau supplémentaire non demandé)."""
+    cfg = make_cfg(tmp_path, mode_recherche="extraction")
+    cc = pr.ClassementConfig(actif=False, noms=False, remplace_resultat=False, registres=())
+    nouveau = pr.cc_pour_mode(cc, cfg)
+    assert nouveau.actif is True and nouveau.noms is True and nouveau.remplace_resultat is True
+    assert nouveau.registres == ()  # inchangé : pas de registres ajoutés sans qu'on les ait demandés
 
 
 def test_lignes_disent_si_le_chiffre_est_une_mesure():

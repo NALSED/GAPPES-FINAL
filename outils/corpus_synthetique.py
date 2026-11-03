@@ -325,16 +325,18 @@ def build(seed: int = 11) -> Corpus:
     # --- ce que doit produire la chaîne complète (intention de conception) ---------------------
     a = c.attendu
     a["resultat"] = {
-        A: ["Cible Enrichie Cuisine 1", "Cible Enrichie Cuisine 2", "Cible Enrichie Cuisine 3", "Café Crème Actu", "Canal Cuisine Un", "Chaîne Recettes", "Cible Validée Cuisine", "Cuisine Demo",
+        # décision 901/Q21 : une personne physique (ex. « Alice Démo », sans indice institutionnel explicite dans
+        # son nom) qui matche directement la grappe (10 messages thématiques, statut « classé ») est gardée comme
+        # n'importe quelle entité — l'ancienne règle « en cas de doute, une personne » l'excluait à tort.
+        A: ["Alice Démo", "Atelier Chef Demo", "Bob Démo", "Cible Enrichie Cuisine 1", "Cible Enrichie Cuisine 2",
+            "Cible Enrichie Cuisine 3", "Café Crème Actu", "Canal Cuisine Un", "Chaîne Recettes", "Cible Validée Cuisine", "Cuisine Demo",
             *[f"Cuisine Info {i}" for i in range(2, 7)], "Journal Cuisine Demo"],
-        B: ["Cible Enrichie Potager 1", "Cible Enrichie Potager 2", "Cible Enrichie Potager 3", "Association Jardin Demo", "Canal Jardin", "Canal Potager Trois", "Cible Validée Jardin",
-            *[f"Potager Info {i}" for i in range(1, 7)], "Radio Potager Demo"],
-        C: ["Cible Enrichie Musique 1", "Cible Enrichie Musique 2", "Cible Enrichie Musique 3", "Canal Musique Un", "Cible Validée Musique", "Musique Demo",
+        B: ["Cible Enrichie Potager 1", "Cible Enrichie Potager 2", "Cible Enrichie Potager 3", "Association Jardin Demo", "Canal Jardin", "Canal Potager Trois",
+            "Cible Validée Jardin", "Clara Démo", *[f"Potager Info {i}" for i in range(1, 7)], "Radio Potager Demo"],
+        C: ["Cible Enrichie Musique 1", "Cible Enrichie Musique 2", "Cible Enrichie Musique 3", "Canal Musique Un", "Cible Validée Musique", "Denis Démo", "Musique Demo",
             *[f"Musique Info {i}" for i in range(2, 6)], "Orchestre Demo Officiel", "Scène Ouverte"],
     }  # fmt: skip
     a["hors_resultat"] = [
-        "Alice Démo", "Bob Démo", "Clara Démo", "Denis Démo",  # personnes physiques
-        "Atelier Chef Demo",  # aucun indice institutionnel explicite : en cas de doute, une personne
         "Cible Peu Citée", "Cible Hors Fenêtre", "Cible Mono Écosystème", "Cible Bruit",  # recoupements refusés
         "Mixte Cuisine Jardin", "Mixte Jardin Musique", "Marché Info",  # ambigus ou faibles
         "Sans Rapport", *[f"Cercle {i}" for i in range(5)],

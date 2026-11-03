@@ -99,12 +99,22 @@ Une ligne par entité retenue, rien d'autre dans le fichier. UTF-8 sans BOM, tri
 - Dédoublonne les variantes d'écriture (casse, accents, espaces, suffixes).
 - N'exporte que les entités assignées à une grappe (confirmées et probables), seuil configurable.
 - Un fichier par grappe si plusieurs grappes : `sorties/resultat_<grappe>.csv`.
-- EXCLUT les personnes physiques par défaut (organisations, médias, sites, canaux et comptes
-  institutionnels seulement). Option `inclure_personnes` en configuration, à false ; si Sednal la
-  passe à true, les personnes y figurent en clair et le masquage ne s'applique plus à ce fichier :
-  écris cet avertissement dans docs/utilisateur.md et dans le rapport de cycle. Dans tous les cas,
-  `entites.csv` et la base continuent d'appliquer redact_persons. Distingue personne physique et
-  compte institutionnel par des indices explicites ; en cas de doute, traite comme une personne.
+- Personnes physiques (compte sans indice institutionnel explicite dans son nom) : trois cas, pas
+  une exclusion de principe (décision 901/Q21, remplace l'ancienne règle « en cas de doute, une
+  personne » qui perdait des résultats utiles, ex. le compte public d'une personnalité du sport
+  dans une recherche sur le sport). (1) Matche directement la grappe (statut « classé », au-dessus
+  du seuil) : gardée dans `resultat.csv` comme n'importe quelle entité. (2) Hors sujet (sous le
+  seuil ou « non classé ») : exclue, comme avant. (3) Doute (statut « ambigu », le programme ne
+  peut pas trancher) : `sorties/resultat_a_trancher.csv`, jamais mêlée à `resultat.csv` ni
+  silencieusement exclue. Option `inclure_personnes` en configuration, à false ; si Sednal la passe
+  à true, les personnes suivent la même règle que les autres entités, sans fichier « à trancher »
+  séparé, et le masquage ne s'applique plus à ce fichier : écris cet avertissement dans
+  docs/utilisateur.md et dans le rapport de cycle. Dans tous les cas, `entites.csv` et la base
+  continuent d'appliquer redact_persons.
+- `scoring.mode_recherche` (décision 901/Q26, deux valeurs fermées) : `sites` (défaut) trouve des
+  sites/comptes qui correspondent aux critères, aucune extraction ; `extraction` lit le contenu des
+  sources de la recherche, extrait les acteurs nommés dans le texte (`config/ner.yaml`, D63) et les
+  ajoute comme candidats de recoupement, au même titre que les sources.
 Inchangés : `entites.csv`, `appartenances.csv`, la base SQLite et le serveur MCP en lecture seule,
 qui gardent scores, confiance et explications.
 `resultat.csv` reste la sortie de référence. `sorties/resultat_tsites.csv` (`nom;ville;pays`, mêmes noms,

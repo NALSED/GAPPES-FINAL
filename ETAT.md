@@ -3,7 +3,7 @@
 Phase en cours : aucune
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-10-11 (Q24 close ; cycles normaux). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
+Dernière mise à jour : 2026-11-03 (D82 : réponses moteur du 901, Q20/Q21/Q26 codées, Q3/Q10/Q11/Q27 closes sans code, Q28 ouverte ; 600 tests verts). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
 
 ## En attente de Sednal
 

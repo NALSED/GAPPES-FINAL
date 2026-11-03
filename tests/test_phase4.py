@@ -300,6 +300,16 @@ def test_formule_invalide(tmp_path, bad):
         make_cfg(tmp_path, **{bad.split(":", 1)[0]: bad.split(":", 1)[1]})
 
 
+def test_mode_recherche_sites_par_defaut_et_les_deux_valeurs_fermees(tmp_path):
+    """Décision 901/Q26 : réglage réel à deux valeurs, défaut « sites » (comportement actuel, aucune extraction)."""
+    for sub in ("a", "x", "y"):
+        (tmp_path / sub).mkdir()
+    assert make_cfg(tmp_path / "a").scoring.mode_recherche == "sites"
+    assert make_cfg(tmp_path / "x", mode_recherche="extraction").scoring.mode_recherche == "extraction"
+    with pytest.raises(Exception, match="mode_recherche"):
+        make_cfg(tmp_path / "y", mode_recherche="autre")
+
+
 # --- D19 : E vaut 0 tant que le recoupement n'est pas validé ---------------------------------
 
 

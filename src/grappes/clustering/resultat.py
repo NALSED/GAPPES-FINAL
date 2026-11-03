@@ -2,9 +2,17 @@
 
 Une ligne par entité retenue : assignée à une grappe (confirmée ou probable, seuil configurable),
 sous un nom lisible. Variantes d'écriture fusionnées, tri alphabétique, UTF-8 sans BOM. Un fichier
-par grappe (`resultat_<grappe>.csv`) quand il y en a plusieurs. Les personnes physiques (type
-`person`, c'est-à-dire sans indice institutionnel explicite) sont exclues sauf `inclure_personnes`. Les scores et explications restent dans
-`entites.csv`, `appartenances.csv`, la base et le serveur MCP.
+par grappe (`resultat_<grappe>.csv`) quand il y en a plusieurs. Les scores et explications restent
+dans `entites.csv`, `appartenances.csv`, la base et le serveur MCP.
+
+Personnes physiques (type `person`, sans indice institutionnel explicite) : décision 901/Q21, trois cas
+(l'ancienne règle « en cas de doute, une personne » excluait des résultats utiles, ex. le compte Instagram
+public de Messi dans une recherche sur le football). (1) Matche directement la recherche (statut « classé »,
+au-dessus du seuil) : gardée dans `resultat.csv`, comme n'importe quelle entité. (2) Hors sujet (sous le seuil,
+ou statut « non classé ») : exclue, comme avant. (3) Doute (statut « ambigu », le programme ne peut pas
+trancher) : part dans `resultat_a_trancher.csv`, jamais dans `resultat.csv` ni silencieusement exclue. Le
+réglage `resultat.inclure_personnes` reste une échappatoire : à true, les personnes suivent la même règle que
+les autres entités, sans fichier « à trancher » séparé.
 """
 
 from __future__ import annotations
@@ -55,8 +63,11 @@ def sort_key(name: str) -> tuple[str, str]:
     return (re.sub(r"[^\w]+", " ", normalize(name)).strip(), name)
 
 
-def select_rows(result: AssignResult, cfg: Config) -> dict[str, list[tuple[str, float, str]]]:
-    """grappe -> [(nom, confiance, clé de source)] des entités retenues, avant fusion des variantes."""
+def select_rows(
+    result: AssignResult, cfg: Config
+) -> tuple[dict[str, list[tuple[str, float, str]]], list[tuple[str, float, str]]]:
+    """(grappe -> [(nom, confiance, clé de source)] des entités retenues, [(nom, confiance, clé)] des personnes
+    physiques en doute — décision 901/Q21), avant fusion des variantes."""
     sc = cfg.scoring
     threshold = (
         sc.niveau_probable if sc.resultat_confiance_min is None else sc.resultat_confiance_min
@@ -64,21 +75,29 @@ def select_rows(result: AssignResult, cfg: Config) -> dict[str, list[tuple[str, 
     kept = {CLASSE, AMBIGU} if sc.resultat_inclure_ambigus else {CLASSE}
     ents = {e.entity_id: e for e in result.entities}
     out: dict[str, list[tuple[str, float, str]]] = {g.grappe_id: [] for g in cfg.grappes}
+    doute: list[tuple[str, float, str]] = []
     for m in result.memberships:
         e = ents[m["entity_id"]]
-        if m["status"] not in kept or m["confidence"] < threshold:
+        if m["confidence"] < threshold:
             continue
-        if e.type is EntityType.PERSON and not sc.resultat_inclure_personnes:
-            continue  # personnes physiques exclues par défaut (en cas de doute : une personne)
+        est_personne = e.type is EntityType.PERSON and not sc.resultat_inclure_personnes
+        if est_personne and m["status"] == AMBIGU:
+            name = readable_name(result.names.get(e.primary_ref), e.primary_ref.split(":", 1)[-1])
+            if name:
+                doute.append((name, m["confidence"], e.primary_ref))
+            continue  # doute : ni un match direct ni du bruit, jamais silencieusement exclu ni inclus
+        if m["status"] not in kept:
+            continue  # hors sujet : exclu, comme pour n'importe quelle entité
         name = readable_name(result.names.get(e.primary_ref), e.primary_ref.split(":", 1)[-1])
         if name:
             out[m["grappe_id"]].append((name, m["confidence"], e.primary_ref))
-    return out
+    return out, doute
 
 
 def select_names(result: AssignResult, cfg: Config) -> dict[str, list[tuple[str, float]]]:
     """grappe -> [(nom, confiance)] des entités retenues, avant fusion des variantes."""
-    return {g: [(n, c) for n, c, _ in rows] for g, rows in select_rows(result, cfg).items()}
+    by_grappe, _ = select_rows(result, cfg)
+    return {g: [(n, c) for n, c, _ in rows] for g, rows in by_grappe.items()}
 
 
 def merge_rows(
@@ -148,9 +167,15 @@ def write_resultat(
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     sfx = cfg.scoring.resultat_suffixes
-    by_grappe = select_rows(result, cfg)
+    by_grappe, doute = select_rows(result, cfg)
     everything = [row for rows in by_grappe.values() for row in rows]
     merged = merge_rows(everything, sfx)
+    a_trancher = out / "resultat_a_trancher.csv"
+    a_trancher_paths = []
+    if doute:
+        a_trancher_paths.append(_write(a_trancher, [n for n, _ in merge_rows(doute, sfx)]))
+    else:
+        a_trancher.unlink(missing_ok=True)  # pas de doute cette fois : pas de fichier périmé
     from grappes.sortie import LigneSortie, charger_profils
     from grappes.sortie import ecrire as ecrire_profils
 
@@ -166,6 +191,7 @@ def write_resultat(
                 )
     else:
         (out / "resultat.csv").unlink(missing_ok=True)
+    paths += a_trancher_paths
     if auto is None:
         auto = load_autonomy(cfg.racine) if cfg.racine is not None else Autonomy()
     tsites = out / "resultat_tsites.csv"

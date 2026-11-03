@@ -89,7 +89,10 @@ def test_seuil_ambigus_et_non_classes(cfgdir):
     assert rows == [["NOM"]]  # seuil configurable
 
 
-def test_personnes_exclues_par_defaut_sauf_indice_institutionnel(cfgdir):
+def test_personne_qui_matche_directement_est_gardee(cfgdir):
+    """Décision 901/Q21 : une personne physique qui répond directement au critère (statut « classé ») est gardée
+    dans resultat.csv comme n'importe quelle entité — ex. le compte Instagram public de Messi dans une recherche
+    sur le football. L'ancienne règle (« en cas de doute, une personne » -> exclue) perdait ce résultat utile."""
     o = [obs("x:jean_d", STRONG), obs("x:le_quotidien", STRONG), obs("telegram:canal_c", STRONG)]
     names = {
         "x:jean_d": "Jean Dupont",
@@ -97,25 +100,50 @@ def test_personnes_exclues_par_defaut_sauf_indice_institutionnel(cfgdir):
         "telegram:canal_c": "Canal C",
     }
     rows = lire(sortie(cfgdir, o, names)[0][0])
-    assert [r[0] for r in rows[1:]] == ["Canal C", "Le Quotidien du Soir"]  # Jean Dupont absent
-    assert "Jean Dupont" not in "".join(map(str, rows))
+    assert [r[0] for r in rows[1:]] == ["Canal C", "Jean Dupont", "Le Quotidien du Soir"]
 
 
-def test_en_cas_de_doute_c_est_une_personne(cfgdir):
-    """Sans indice explicite, ou sans nom : traité comme une personne, donc exclu."""
-    o = [obs("x:compte_sans_nom", STRONG), obs("x:marie_m", STRONG), obs("web:site.test", STRONG)]
-    names = {"x:marie_m": "Marie Martin", "web:site.test": "Le Site"}
+def test_personne_hors_sujet_exclue_comme_avant(cfgdir):
+    """Sous le seuil, ou sans nom : exclue comme n'importe quelle entité hors sujet (cas 2 de la décision 901/Q21)."""
+    o = [
+        obs("x:compte_sans_nom", STRONG),
+        obs("x:bruit", "bonjour"),  # commentaire isolé, ne répond pas au critère : NON_CLASSE
+        obs("web:site.test", STRONG),
+    ]
+    names = {"x:bruit": "Compte Bruit", "web:site.test": "Le Site"}
     rows = lire(sortie(cfgdir, o, names)[0][0])
     assert rows == [["NOM"], ["Le Site"]]
+    assert (cfgdir / "out" / "resultat_a_trancher.csv").exists() is False
 
 
-def test_inclure_personnes_les_met_en_clair(tmp_path):
+def test_personne_en_doute_part_dans_resultat_a_trancher(cfgdir):
+    """Décision 901/Q21, cas 3 : le programme ne peut pas trancher (statut « ambigu ») -> fichier séparé, jamais
+    silencieusement exclue ni mêlée à resultat.csv."""
+    o = [obs("x:marie_m", f"{STRONG} {STRONG_B}"), obs("web:site.test", STRONG)]
+    names = {"x:marie_m": "Marie Martin", "web:site.test": "Le Site"}
+    paths, res = sortie(cfgdir, o, names)
+    eid = next(e.entity_id for e in res.entities if e.primary_ref == "x:marie_m")
+    m = next(m for m in res.memberships if m["entity_id"] == eid)
+    assert m["status"] == "ambigu"  # deux grappes à égalité : la fixture produit bien un doute
+    rows = lire(paths[0])
+    assert rows == [["NOM"], ["Le Site"]]  # Marie Martin n'est pas dans resultat.csv
+    trancher = next(p for p in paths if p.name == "resultat_a_trancher.csv")
+    assert lire(trancher) == [["NOM"], ["Marie Martin"]]
+
+
+def test_inclure_personnes_les_met_en_clair_sans_fichier_a_trancher(tmp_path):
+    """L'échappatoire `inclure_personnes` traite les personnes comme n'importe quelle entité : pas de tri en
+    trois cas, pas de resultat_a_trancher.csv."""
     (tmp_path / "cfg").mkdir()
-    o = [obs("x:jean_d", STRONG)]
+    o = [obs("x:jean_d", STRONG), obs("x:marie_m", STRONG), obs("x:marie_m", STRONG_B)]
     paths, _ = sortie(
-        tmp_path, o, {"x:jean_d": "Jean Dupont"}, resultat="{inclure_personnes: true}"
+        tmp_path,
+        o,
+        {"x:jean_d": "Jean Dupont", "x:marie_m": "Marie Martin"},
+        resultat="{inclure_personnes: true}",
     )
-    assert lire(paths[0]) == [["NOM"], ["Jean Dupont"]]
+    assert lire(paths[0]) == [["NOM"], ["Jean Dupont"]]  # Marie Martin (ambigu) exclue, pas « à trancher »
+    assert not any(p.name == "resultat_a_trancher.csv" for p in paths)
 
 
 def test_un_fichier_par_grappe(cfgdir):

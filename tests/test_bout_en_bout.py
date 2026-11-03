@@ -191,11 +191,13 @@ def test_resultat_contenu_attendu_par_grappe(monde):
     assert not set(tous) & set(att["hors_resultat"])  # personnes, refus, ambigus, bruit : absents
 
 
-def test_resultat_sans_identifiant_technique_ni_personne(monde):
+def test_resultat_sans_identifiant_technique_mais_avec_les_personnes_qui_matchent(monde):
+    """Décision 901/Q21 : aucun identifiant technique dans resultat.csv, mais une personne physique qui matche
+    directement sa grappe (Alice, Bob, Clara, Denis Démo) y figure bien — ce n'est plus un bruit à masquer."""
     texte = monde["paths"]["resultat.csv"].read_text("utf-8")
     assert "://" not in texte and ".test" not in texte and "@" not in texte
-    for personne in ("Alice", "Bob", "Clara", "Denis"):
-        assert personne not in texte
+    for personne in ("Alice Démo", "Bob Démo", "Clara Démo", "Denis Démo"):
+        assert personne in texte
     assert "insta_" not in texte  # Instagram : aucun nom lisible, donc rien à exporter
 
 

@@ -34,9 +34,13 @@ contexte_min_citants: null   # entité sans texte propre : null = jamais classé
 max_fichier_mo: 200        # taille maximale d'un fichier .json (un .jsonl est lu en flux, sans limite) ; null = aucune
 retention_days: 90         # données brutes (observations) conservées 90 jours ; null = illimité (D30)
 redact_persons: true       # entités de type `person` : nom et identifiant masqués dans les sorties (D30)
+mode_recherche: sites      # sites (défaut) : trouve des sites/comptes qui correspondent aux critères, aucune extraction.
+                            # extraction : lit le contenu des sources de la recherche, extrait les acteurs nommés (config/ner.yaml) et
+                            # les ajoute comme candidats de recoupement (active classement.yaml : actif, noms, remplace_resultat) — décision 901/Q26
 resultat:                  # sorties/resultat.csv (une colonne NOM)
   confiance_min: null      # null = niveau_probable ; entités assignées à une grappe au-dessus de ce seuil
   inclure_ambigus: false
-  inclure_personnes: false # ATTENTION : à true, les personnes physiques figurent en clair dans resultat.csv
+  inclure_personnes: false # ATTENTION : à true, toutes les personnes physiques figurent en clair dans resultat.csv, même douteuses
+                            # (court-circuite le tri en trois cas de la décision 901/Q21 : direct / hors sujet / resultat_a_trancher.csv)
   # indices_institution: [...]  # mots qui désignent un compte institutionnel (défaut : liste intégrée)
   suffixes: [officiel, official, channel, chaîne, chaine]   # ignorés pour fusionner les variantes d'un nom

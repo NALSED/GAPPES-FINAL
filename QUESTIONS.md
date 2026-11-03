@@ -4,12 +4,14 @@ Statut au 2026-10-06. Référence unique : `FINAL.md`. Aucune réponse inventée
 
 ## Ouvertes (valeur par défaut en attendant)
 
-* **Q3** Langues des corpus ? Défaut : normalisation multilingue (accents latins retirés, autres écritures intactes).
-* **Q10** Clients MCP visés et lieu d'exécution ? Défaut : serveur MCP stdio en lecture seule.
-* **Q11** Scoring par embeddings plus tard, oui ou non ? Défaut : non (lexique et recoupement).
+* **Q3** Close (D82, 2026-11-03) : normalisation multilingue reste le défaut, pas de changement tant qu'aucun cas réel multilingue ne le justifie.
+* **Q10** Close (D82) : client visé = agent Claude (abonnement Pro/Max), même machine que grappes (.115 production, .250 test) ; stdio/lecture seule déjà le cas, pas d'exposition réseau nécessaire.
+* **Q11** Close (D82) : pas de scoring par embeddings — moins vérifiable à l'œil que le lexique, rien ne montre que le lexique rate des recoupements ; à revoir seulement si un cas réel le montre.
 
-* **Q20** Garde-fou de la boucle d'apprentissage (D41) : une entité confirmée n'enseigne des mots que si elle descend d'une ancre ou d'une source trouvée par la recherche. Sans ancre et avant la première recherche réelle, rien n'est appris. Faut-il relâcher cette exigence (`apprentissage.exiger_racine_de_confiance: false`) ? Défaut : non, par prudence.
-* **Q21** Personnes physiques (D32) : exclues de `resultat.csv` par défaut ; un compte X ou Instagram sans indice institutionnel explicite dans son nom est traité comme une personne (« en cas de doute, une personne »). La liste d'indices est intégrée (`resultat.indices_institution` pour la remplacer). Défaut : à garder.
+* **Q20** Close (D82) : le garde-fou reste actif par défaut, mais c'était déjà un réglage réel (`autonomie.yaml: apprentissage.exiger_racine_de_confiance`, chargé par `autonomy.py`) — confirmé, rien à coder.
+* **Q21** Close (D82) : remplacé par un critère de correspondance en trois cas (matche directement / hors sujet / doute → `resultat_a_trancher.csv`), pas une exclusion de principe. Détail et code : D82, `clustering/resultat.py`.
+
+* **Q28** (nouvelle, 2026-11-03) Boucle d'apprentissage et `resultat_a_trancher.csv` (901/Q21) : la décision de Sednal sur un cas « à trancher » (garder/exclure) doit compter comme ancre de confiance (garde-fou Q20), mais le mécanisme par lequel cette décision est enregistrée et relue (quel fichier, quelle colonne) n'est pas spécifié. Défaut en attendant : aucune boucle de retour, le fichier reste un export à relire à la main.
 
 * **Q22** Réglée (D46) : écosystèmes `rss` et `wikipedia` ajoutés comme fournisseurs. Voir Q24 pour ce qui reste.
 * **Q23** Réglée (D47) : nouveau sujet, `seuil_ingestion` auto-ajustable dans [5 ; 40].
@@ -55,21 +57,18 @@ Aucun export n'est attendu de Sednal (`FINAL.md` § 3) : ces points se tranchent
 * Corrections de `MISSION.md` (dont les Q12 à Q19 manquantes du §17) : proposées dans `docs/conception/corrections_mission.md` ; `MISSION.md` n'est pas modifié.
 * **Q25** Close (D61) : aucun filtre, on garde toutes les sources ; ville = résultat de trouver-sites. Énoncé d'origine : Distinguer, dans les sorties, les articles Wikipédia d'**organisations** de ceux de **concepts ou d'événements** (trouver-sites ne peut rien trouver pour ces derniers). Faisabilité : oui, avec les catégories Wikipédia déjà lues à l'ingestion (elles servent à écarter les personnes), mais elles ne sont pas conservées en base : il faudrait les stocker. Essai à blanc sur le jeu actuel (catégories lues le 2026-10-11, 5 articles) : 4 lignes sur les 8 de `resultat.csv` seraient écartées (« Mouvements étudiants en France », « Mouvements lycéens », « Mouvement contre le contrat première embauche de 2006 », « Mouvement lycéen et étudiant de 2026 en France » : catégories « Mouvement social… », « Mouvement étudiant », « Manifestation en… », « Conflit social… », « Grève étudiante »), 1 conservée (« Union nationale des étudiants de France » : « Syndicat étudiant en France », « Organisation étudiante représentative », « Association… »). Les 3 lignes de sites web (L'Étudiant, Le Bonbon, Valeurs actuelles) ne sont pas concernées. Réserve : la règle repose sur deux listes de préfixes de catégories (événement/mouvement d'un côté, organisation de l'autre), donc sur un critère à valider ; sur d'autres sujets elle pourrait écarter à tort (ex. un mouvement qui est aussi une organisation). Si accord : filtre appliqué seulement à `resultat_tsites.csv`, ou aussi à `resultat.csv` (à préciser).
 
-## Q26 — Autocalibration : plafond de rappel de 0 à 17 % (2026-10-12)
+## Q26 — Autocalibration : plafond de rappel de 0 à 17 % (2026-10-12) — Close (D82, 2026-11-03)
 
 Sur dev et validation, au plus 17 % de la référence Wikidata existe comme candidat vérifié « juste » (12 sujets mesurés) ; R-précision stricte observée 0,020 / 0,007, identique pour tous les algorithmes. Le seuil 0,90 du critère 1 est inatteignable avec des entités = sources. Pistes à chiffrer avant tout gel (rien n'est appliqué) : (a) crawl plus grand, (b) extraction d'entités nommées dans les textes lus (hors liste des méthodes de la mission, donc à décider par Sednal), (c) nom lisible des domaines. Sans changement d'architecture, le verdict sera « non certifié ».
 
 Mesures complémentaires (2026-10-12) : (1) trois cycles de collecte successifs sur handball-pro et sur g-q56199177 (réseau réel) ne changent rien : 21 puis 37 candidats, plafond de rappel inchangé (5,9 % et 17,4 %) ; le crawl plus long ne relève pas le plafond. (2) `min_ecosystemes = 1` (autonomie, apprentissage des termes) rejoué sur les 12 sujets de dev et validation : mêmes candidats, mêmes « justes » ; aucun effet mesurable sur un cycle. Rapporté, non appliqué. (3) Un classement parfait plafonne la R-précision stricte à ≤ 0,17 ; atteindre 0,90 suppose que les ACTEURS (organisations nommées dans les textes) soient les candidats, pas les sources.
 
-## Q27 — D69 : trois décisions qui reviennent à Sednal (2026-10-13)
+**Décision (D82)** : Sednal autorise l'extraction (b), sa seule utilité étant pour un mode de recherche précis (une recherche qui cible directement des sites/comptes n'a rien à en extraire). Nouveau réglage **`scoring.mode_recherche`**, deux valeurs fermées : `sites` (défaut, comportement actuel) ou `extraction` (lit le contenu, les acteurs nommés deviennent candidats de recoupement). Réutilise le classement de production déjà mesuré (D63-D65) plutôt que d'inventer un nouveau mécanisme. Code et tests : `config.py`, `classement/production.py::cc_pour_mode`, `tests/test_phase4.py`, `tests/test_classement_production.py`. Le gain de rappel réel (le chiffrage du plafond avec extraction activée) reste à mesurer sur un vrai cycle réseau, hors de ce sandbox.
 
-Rien n'est appliqué. Détail et chiffres : `docs/conception/cibles.md` §§ 4, 5 et 7.
+## Q27 — D69 : trois décisions qui reviennent à Sednal (2026-10-13) — Close (D82, 2026-11-03)
 
-* **Thésaurus de types** : le vérificateur de type compare des mots ; un type équivalent écrit autrement (« compagnie » pour
-  « troupe ») est jugé incompatible. Perte éventuelle invisible à la référence. Faut-il un thésaurus (ou un rattachement
-  code NAF ↔ classe) ? Je n'invente aucune liste de synonymes.
-* **Amorces par requêtes web** : le mécanisme mesuré (code NAF des exemples) ne donne rien (0 sur 60 tirages) ; le
-  mécanisme de TREC (requêtes de recherche à partir des noms des exemples) demande une collecte, environ 3 crédits Tavily
-  par sujet. Autorisation à donner avant mesure.
-* **Nouveau jeu test** : toute certification suppose un nouveau jeu test, une nouvelle graine, figé avant toute modification
-  (classification A/B comprise, `autocal/cibles.json`).
+Détail et chiffres : `docs/conception/cibles.md` §§ 4, 5 et 7.
+
+* **Thésaurus de types** : décision (D82) : rattachement au code NAF officiel (INSEE) ↔ classe plutôt qu'une liste de synonymes inventée — nomenclature déjà existante et autoritaire. **Pas encore codé.**
+* **Amorces par requêtes web** : mesure du mécanisme TREC autorisée par Sednal (~3 crédits Tavily/sujet), décision d'implémentation seulement après ce chiffrage. **Pas lancée ici** : coûte des crédits réels, à faire dans une session dédiée avec le budget alloué.
+* **Nouveau jeu test** : confirmé nécessaire avant toute certification ; à geler juste avant la prochaine tentative, pas avant si aucune n'est encore visée. **Pas fait.**

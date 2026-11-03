@@ -6,7 +6,7 @@ from __future__ import annotations
 import bisect
 import json
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 import yaml
@@ -37,6 +37,14 @@ class ClassementConfig:
     calibration: str = "config/calibration.json"
     cache_jours: int = 30
     lien_variantes: str = "complet"  # en dernier : la configuration est construite par position
+
+
+def cc_pour_mode(cc: ClassementConfig, cfg: Config) -> ClassementConfig:
+    """Décision 901/Q26 : `scoring.mode_recherche == "extraction"` active ce classement (déjà mesuré, D63-D65) et le
+    rend autoritaire sur resultat.csv, sans changer les fournisseurs de registres déjà choisis dans classement.yaml."""
+    if cfg.scoring.mode_recherche != "extraction":
+        return cc
+    return replace(cc, actif=True, noms=True, remplace_resultat=True)
 
 
 def charger_config(config_dir: str | Path) -> ClassementConfig:
@@ -118,10 +126,11 @@ def lignes(classes: list[tuple[Candidat, float, float]], cfg: ClassementConfig, 
     ]  # fmt: skip
 
 
-def classer_production(db: Database, cfg: Config, config_dir: str | Path, data_dir: str | Path, pays: str = "FR", http: Http | None = None) -> list[LigneSortie]:
+def classer_production(db: Database, cfg: Config, config_dir: str | Path, data_dir: str | Path, pays: str = "FR", http: Http | None = None, cc: ClassementConfig | None = None) -> list[LigneSortie]:
     """Chaîne complète pour le premier sujet de la configuration. Les registres sont interrogés (cache disque à durée
-    de vie limitée) ; les noms sont extraits des textes déjà en base (cache disque par texte)."""
-    cc = charger_config(config_dir)
+    de vie limitée) ; les noms sont extraits des textes déjà en base (cache disque par texte). `cc` : configuration
+    déjà résolue (par ex. avec le mode de recherche, décision 901/Q26) ; sinon relue de `classement.yaml`."""
+    cc = cc if cc is not None else charger_config(config_dir)
     ctx = charger(None, cfg, db)
     phrase = cfg.grappes[0].subject
     data = Path(data_dir)
@@ -153,14 +162,14 @@ def appliquer(db: Database, cfg: Config, config_dir: str | Path, out_dir: str | 
     from grappes.sortie import charger_profils
     from grappes.sortie import ecrire as ecrire_profils
 
-    cc = charger_config(config_dir)
+    cc = cc_pour_mode(charger_config(config_dir), cfg)
     out = Path(out_dir)
     if not cc.actif:
         return []
     erreur = out / "classement_erreur.txt"
     try:
         avancement.signaler("etape", etape="verification", detail="classement")
-        ls = classer_production(db, cfg, config_dir, data_dir, pays)
+        ls = classer_production(db, cfg, config_dir, data_dir, pays, cc=cc)
         avancement.signaler("noms", n=len(ls))
         avancement.signaler("etape", etape="sortie", detail="profils")
         ignorer = frozenset() if cc.remplace_resultat else frozenset({"resultat", "tsites"})

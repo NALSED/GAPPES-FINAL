@@ -63,7 +63,8 @@ class ScoringConfig:
     redact_persons: bool = True  # entités de type `person` masquées dans les sorties (D30)
     resultat_confiance_min: float | None = None  # seuil de resultat.csv ; None = niveau_probable
     resultat_inclure_ambigus: bool = False
-    resultat_inclure_personnes: bool = False  # si vrai : personnes en clair dans resultat.csv (D32)
+    resultat_inclure_personnes: bool = False  # si vrai : personnes en clair dans resultat.csv, sans distinguer le doute (D32)
+    mode_recherche: str = "sites"  # "sites" (défaut : aucune extraction) | "extraction" (lit le contenu, les acteurs nommés deviennent candidats de recoupement, décision 901/Q26)
     resultat_indices_institution: tuple[str, ...] = DEFAULT_INSTITUTION_HINTS
     resultat_suffixes: tuple[str, ...] = ("officiel", "official", "channel", "chaîne", "chaine")
     crossref: CrossRefRule = field(default_factory=CrossRefRule)
@@ -229,6 +230,7 @@ def load_scoring(path: Path) -> ScoringConfig:
             ),
             resultat_inclure_ambigus=bool(res.get("inclure_ambigus", False)),
             resultat_inclure_personnes=bool(res.get("inclure_personnes", False)),
+            mode_recherche=str(d.get("mode_recherche", default.mode_recherche)),
             resultat_indices_institution=tuple(
                 str(x) for x in res.get("indices_institution", DEFAULT_INSTITUTION_HINTS)
             ),
@@ -287,6 +289,8 @@ def load_scoring(path: Path) -> ScoringConfig:
     bad = set(cfg.entity_types.values()) - {"person", "group", "site"}
     if bad:
         raise ConfigError(f"{path}: types d'entité inconnus {sorted(bad)}")
+    if cfg.mode_recherche not in ("sites", "extraction"):
+        raise ConfigError(f"{path}: mode_recherche doit être sites ou extraction")
     return cfg
 
 
