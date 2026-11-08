@@ -379,3 +379,20 @@ rencontré (LibreTranslate). D'autres `except ... as exc: raise ...(f"...{exc}")
 code (`ajout.py`, `fichier_local.py`, `sources_ajout.py`, `taches.py`…) sans qu'un cas réel ait révélé un
 texte Python brut à l'écran pour eux — je ne les ai pas réécrits à l'aveugle (rien à deviner sans un vrai cas),
 mais la règle s'applique à toute correction future qui en croise un.
+
+## D90 — 908, étape 2 (08/11/2026)
+
+Commit `d7d46fb` : règle d'affichage 3.10 (plus de 4 choix fermés -> menu déroulant) appliquée aux quatre
+points qu'elle couvre : conditions de « si »/Filtre en déroulants une par ligne (8.1), différences Filtre/« si »
+rendues visibles (11.1), Format de sortie en blocs repliables (6.2), langues multiples pour Traduction (7.3).
+
+Deux nouveaux composants partagés dans `ui.js` (`menu`, `menuMultiple`), même convention d'appel que
+`groupePuces` existant — pas de second mécanisme pour la même règle. `rendreOptionsFormat` réutilise
+`carteRepliable` (déjà utilisé par Réglages/Sources) plutôt que d'inventer un nouveau type de bloc repliable.
+
+Choix fait seul pour 7.3 : la restriction de « Langue d'entrée » (liste de langues autorisées pour la
+détection) est appliquée côté moteur dans `suite_plan._traduction()` — une langue détectée hors de la liste
+retombe sur `auto`. Le test manuel « Tester sur un exemple » (route `/traduction/tester`, séparée de la tuile)
+garde une sémantique à une seule langue d'entrée (prend la première de la liste si plusieurs) : il ne joue pas
+le même rôle que la détection automatique d'une recherche réelle, pas de raison de lui donner la même
+restriction multiple.
