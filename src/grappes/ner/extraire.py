@@ -70,6 +70,7 @@ class Mention:
     fin: int
     score: float
     modele: str
+    categorie: str = ""  # 903 : la clé de `ModeleNer.categories` (« ORG », « PER », « LOC »…), jamais l'étiquette brute du modèle
 
 
 def morceaux(texte: str, taille: int) -> list[tuple[int, str]]:
@@ -108,20 +109,27 @@ def _recoller(ms: list[Mention], texte: str) -> list[Mention]:
     sont un seul nom coupé par le découpage en sous-mots du modèle."""
     out: list[Mention] = []
     for m in sorted(ms, key=lambda x: x.debut):
-        if out and texte[out[-1].fin : m.debut] in ("'", "’", "-") and out[-1].modele == m.modele:
-            out[-1] = Mention(out[-1].debut, m.fin, min(out[-1].score, m.score), m.modele)
+        if out and texte[out[-1].fin : m.debut] in ("'", "’", "-") and out[-1].modele == m.modele and out[-1].categorie == m.categorie:
+            out[-1] = Mention(out[-1].debut, m.fin, min(out[-1].score, m.score), m.modele, m.categorie)
         else:
             out.append(m)
     return out
 
 
 def _dict(x: Mention) -> dict:
-    return {"debut": x.debut, "fin": x.fin, "score": x.score, "modele": x.modele}
+    return {"debut": x.debut, "fin": x.fin, "score": x.score, "modele": x.modele, "categorie": x.categorie}
+
+
+def _categorie_de(m: ModeleNer, etiquette: str) -> str:
+    """L'étiquette brute du modèle (« ORG », « PER »…) -> la catégorie retenue (clé de `m.categories`) ; vide si
+    aucune catégorie ne la revendique (ne devrait pas arriver : `labels` ne garde que les étiquettes connues)."""
+    return next((cat for cat, ls in m.categories.items() if etiquette in ls), "")
 
 
 def mentions_modele(texte: str, m: ModeleNer, cfg: NerConfig, cache: Path | None = None) -> list[Mention]:
-    """Mentions d'organisations d'UN texte par UN modèle (cache disque). Toutes les mentions de catégorie retenue sont
-    archivées avec leur score ; le seuil s'applique à la lecture (on peut donc le régler sans relancer le modèle)."""
+    """Mentions d'UN texte par UN modèle (cache disque), toutes catégories retenues confondues (903 : organisations,
+    personnes, lieux... selon `m.categories`). Toutes les mentions de catégorie retenue sont archivées avec leur
+    score ; le seuil s'applique à la lecture (on peut donc le régler sans relancer le modèle)."""
     p = None
     if cache is not None:
         h = hashlib.sha256((m.nom + "\x00" + str(cfg.morceau_caracteres) + "\x00" + texte).encode()).hexdigest()[:24]
@@ -133,12 +141,13 @@ def mentions_modele(texte: str, m: ModeleNer, cfg: NerConfig, cache: Path | None
     out: list[Mention] = []
     for dec, morceau in morceaux(texte, cfg.morceau_caracteres):
         for e in pipe(morceau):  # type: ignore[operator]
-            if e.get("entity_group") not in labels:
+            etiquette = e.get("entity_group")
+            if etiquette not in labels:
                 continue
             debut, fin = dec + int(e["start"]), dec + int(e["end"])
             if not (0 <= debut < fin <= len(texte)):
                 continue  # garde-fou : le segment doit exister dans le texte d'origine
-            out.append(Mention(debut, fin, float(e["score"]), m.id))
+            out.append(Mention(debut, fin, float(e["score"]), m.id, _categorie_de(m, etiquette)))
     out = _recoller(out, texte)
     if p is not None:
         p.parent.mkdir(parents=True, exist_ok=True)
@@ -170,6 +179,8 @@ class Nomme:
     scores: list[float] = field(default_factory=list)
     modeles: set[str] = field(default_factory=set)
     score_par_site: dict[str, float] = field(default_factory=dict)  # éditeur -> meilleur score du modèle
+    categories: Counter = field(default_factory=Counter)  # 903 : « ORG », « PER », « LOC »… par occurrence
+    categorie: str = ""  # la plus fréquente des `categories` ; vide si aucune (rétro-compatibilité)
 
 
 def norm_cle(nom: str) -> str:
@@ -193,8 +204,12 @@ def extraire(pages: list[tuple[str, str, str]], cfg: NerConfig, cache: Path | No
                 n.score_par_site[site] = max(n.score_par_site.get(site, 0.0), me.score)
                 n.scores.append(me.score)
                 n.modeles.add(me.modele)
+                if me.categorie:
+                    n.categories[me.categorie] += 1
     for n in res.values():
         n.nom = n.surfaces.most_common(1)[0][0]
+        if n.categories:
+            n.categorie = n.categories.most_common(1)[0][0]
     return {k: v for k, v in res.items() if len(v.pages) >= cfg.min_pages}
 
 

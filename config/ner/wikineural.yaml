@@ -1,5 +1,6 @@
 # Babelscape/wikineural-multilingual-ner : 9 langues, pour un sujet qui change de langue. Désactivé par défaut.
+# Élargi à PER et LOC le 03/11/2026 (décision 903), même principe que camembert_ner.yaml.
 nom: Babelscape/wikineural-multilingual-ner
 agregation: simple
-categories: {ORG: [ORG]}
+categories: {ORG: [ORG], PER: [PER], LOC: [LOC]}
 langues: [de, en, es, fr, it, nl, pl, pt, ru]

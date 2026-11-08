@@ -55,3 +55,43 @@ def test_mentions_cache_et_seuil(tmp_path: Path, monkeypatch):
     assert [(x.debut, x.fin) for x in r] == [(0, 5)]
     r2 = ex.mentions_modele(texte, m, cfg, tmp_path)  # cache : le modèle ne retourne pas
     assert r2 == r and len(appels) == 1
+
+
+def test_categorie_propagee_de_l_etiquette_a_la_mention(tmp_path, monkeypatch):
+    """903 : ORG et PER élargis en même temps, chaque mention garde la catégorie qui l'a retenue, pas l'étiquette brute."""
+    m = ex.ModeleNer("m", "faux/modele", categories={"ORG": ["ORG"], "PER": ["PER"]})
+    cfg = ex.NerConfig((m,), seuil_confiance=0.8)
+
+    class Pipe:
+        def __call__(self, morceau):
+            return [
+                {"entity_group": "ORG", "start": 0, "end": 4, "score": 0.9},
+                {"entity_group": "PER", "start": 8, "end": 13, "score": 0.95},
+                {"entity_group": "MISC", "start": 14, "end": 18, "score": 0.99},  # catégorie non retenue : écartée
+            ]
+
+    monkeypatch.setattr(ex, "_pipeline", lambda *_: Pipe())
+    texte = "ACME dirigée par Marie demain"
+    r = ex.mentions_modele(texte, m, cfg, tmp_path)
+    assert [(x.debut, x.fin, x.categorie) for x in r] == [(0, 4, "ORG"), (8, 13, "PER")]
+    r2 = ex.mentions_modele(texte, m, cfg, tmp_path)  # cache : la catégorie survit au round-trip JSON
+    assert [x.categorie for x in r2] == ["ORG", "PER"]
+
+
+def test_extraire_agrege_la_categorie_la_plus_frequente(tmp_path, monkeypatch):
+    m = ex.ModeleNer("m", "faux/modele", categories={"ORG": ["ORG"], "PER": ["PER"]})
+    cfg = ex.NerConfig((m,), seuil_confiance=0.0, min_pages=1)
+
+    appels = {"n": 0}
+
+    class Pipe:
+        def __call__(self, morceau):
+            appels["n"] += 1
+            if appels["n"] == 1:
+                return [{"entity_group": "PER", "start": 0, "end": 12, "score": 0.9}]
+            return [{"entity_group": "PER", "start": 0, "end": 12, "score": 0.9}]
+
+    monkeypatch.setattr(ex, "_pipeline", lambda *_: Pipe())
+    res = ex.extraire([("o1", "web:x.fr", "Marie Dupont parle"), ("o2", "web:y.fr", "Marie Dupont écrit")], cfg)
+    n = res[ex.norm_cle("Marie Dupont")]
+    assert n.categorie == "PER" and n.categories["PER"] == 2

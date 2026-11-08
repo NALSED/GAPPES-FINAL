@@ -1,5 +1,7 @@
-# Jean-Baptiste/camembert-ner : français, F1 documenté de 0,82 sur la catégorie organisations. Choix par défaut.
+# Jean-Baptiste/camembert-ner : français, F1 documenté de 0,82 sur la catégorie organisations.
+# Choix par défaut. Élargi à PER (personne) et LOC (lieu) le 03/11/2026 (décision 903) : changer de
+# catégorie retenue = changer cette liste, jamais le code (voir grappes.ner.extraire).
 nom: Jean-Baptiste/camembert-ner
 agregation: simple
-categories: {ORG: [ORG]}      # étiquette du modèle -> catégorie retenue
+categories: {ORG: [ORG], PER: [PER], LOC: [LOC]}      # étiquette du modèle -> catégorie retenue
 langues: [fr]
