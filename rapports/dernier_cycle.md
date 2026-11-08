@@ -1,4 +1,4 @@
-# Rapport du cycle 28 — 02/11/2026 09:02
+# Rapport du cycle 3 — 08/11/2026 06:10
 
 **Mode : réel.** Cycle terminé normalement.
 
@@ -13,30 +13,33 @@ Aucune alerte.
 ## Ce qui est entré
 
 * Requêtes de recherche : 9
-* Résultats examinés : 152
-* Pages visitées : 8
-* Nouvelles sources : **1**
-  * fr.wikipedia.org
-* Observations ajoutées : **13**
+* Résultats examinés : 154
+* Pages visitées : 19
+* Nouvelles sources : **2**
+  * elabe.fr
+  * cultureetspectacle.francetravail.fr
+* Observations ajoutées : **8**
 * Refusé, et pourquoi :
-  * 105 × proximité insuffisante avec les sujets
-  * 19 × document déjà ingéré
-  * 7 × personne physique (catégorie biographique)
+  * 94 × proximité insuffisante avec les sujets
+  * 22 × document déjà ingéré
+  * 12 × réseau social ou identité sans page : citation seulement, jamais lu
+  * 9 × personne physique (catégorie biographique)
+  * 9 × robots.txt : visite interdite ou illisible
   * 4 × plafond de pages par domaine atteint
-  * 3 × réseau social ou identité sans page : citation seulement, jamais lu
-  * 3 × robots.txt : visite interdite ou illisible
-  * 2 × personne physique (texte biographique)
-  * 2 × échec de la requête (SearchError)
-* Fiabilité des sources (code Admiralty) : A : 1, B : 8, C : 17, D : 9
-* Registres officiels : 0 requête(s) ce cycle, 1 source(s) placée(s) en A
+  * 2 × page déjà ingérée
+  * 1 × personne physique (texte biographique)
+  * 1 × type non HTML ignoré (application/pdf)
+  * 1 × page introuvable ou en erreur
+* Fiabilité des sources (code Admiralty) : A : 1, B : 8, C : 20, D : 14
+* Registres officiels : 1 requête(s) ce cycle, 1 source(s) placée(s) en A
 * Classement Tranco : liste 8PXYV du 2026-10-10T22:00:02.102152 (tranco-list.eu)
 
 ## Où en sont les entités
 
-* Entités connues : 36
-* Rangées dans une grappe : 27 (dont 0 ambiguës)
+* Entités connues : 44
+* Rangées dans une grappe : 33 (dont 0 ambiguës)
 * Confirmées (recoupées sur au moins deux écosystèmes) : 0
-* Avant ce cycle : 26 rangées, 0 confirmées
+* Avant ce cycle : 31 rangées, 0 confirmées
 * Une source qui n'est pas recoupée reste « probable » au mieux.
 
 ## Ce qui a changé de grappe
@@ -48,7 +51,7 @@ Aucune entité n'a changé de grappe.
 **Les acteurs des blocages et mobilisations étudiantes en France en ce moment** : 0 entité(s) confirmée(s) fiable(s) sur 1
 * 0 entité(s) confirmée(s) fiable(s) < 3 : rien appris
 * Seuils inchangés (1 entité(s) confirmée(s) < 3 : seuils inchangés).
-* **Seuil d'ingestion modifié** : 15 → 10. Raison : 4 source(s) sur 4 rangée(s) (100%) et 69% des résultats refusés pour proximité insuffisante : des sources pertinentes sont probablement écartées.
+* Seuil d'ingestion inchangé (5) : 2 source(s) ingérée(s) < 3 : trop peu pour juger de la pertinence.
 
 ## Stabilité
 
