@@ -6,14 +6,34 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Body, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from pilote import actions, budget, emoji_texte, rapprochements, suite, suite_ia, suite_modele, suite_plan, suite_reel, suite_rsshub, suite_traduction, tri
+from pilote import (
+    actions,
+    budget,
+    emoji_texte,
+    rapprochements,
+    suite,
+    suite_ia,
+    suite_modele,
+    suite_plan,
+    suite_reel,
+    suite_rsshub,
+    suite_traduction,
+    tri,
+)
 from pilote import reglages as rg
 from pilote.base import Candidat, Journal, Recherche
 from pilote.config import Config
-from pilote.refus import ConfigRefusee
+from pilote.refus import ConfigRefusee, verrou
+
+
+class CorpsTestReel(BaseModel):
+    mot: str
+    confirme: bool = False
+    qui: str | None = None
 
 Corps = Body(default_factory=dict)
 
@@ -157,6 +177,38 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
         res = appeler(suite.tester_source, cfg, ident)
         noter(corps, "suite_source_testee", f"{ident} {'ok' if res['ok'] else 'echec'}")
         return {"ok": res["ok"], "raisons": res["raisons"], "etat": res["source"]["etat"]}
+
+    @r.get("/sources/{ident}/test-reel")
+    def source_test_reel_prix(ident: str) -> dict[str, Any]:
+        """3.3 (retour du 08/11/2026) : le prix du test réel, dit avant le clic — portage de l'ancienne page, même logique."""
+        return appeler(suite_reel.prix_test_reel, cfg, ident, unites().get(ident, 0.0))
+
+    @r.post("/sources/{ident}/test-reel")
+    def source_test_reel(ident: str, corps: CorpsTestReel) -> dict[str, Any]:
+        """3.3 : UNE vraie requête, refusée tant que l'utilisateur n'a pas confirmé le prix, ou si le plafond mensuel ne le permet pas."""
+        from pilote import tests_source
+
+        prix = appeler(suite_reel.prix_test_reel, cfg, ident, unites().get(ident, 0.0))
+        if not corps.confirme:
+            raise HTTPException(422, f"Confirmez d'abord le prix : {prix['phrase']}")
+        qui = corps.qui or cfg.qui_par_defaut
+        # sous verrou : deux tests réels lancés en même temps passaient tous les deux le plafond avant que l'un des
+        # deux ne soit compté, et dépensaient donc le double de ce qui restait (même garde que l'ancienne page).
+        with verrou(cfg.fichier_reglages):
+            b = budget.vue(cfg, fabrique)
+            if prix["dollars"] > 0 and prix["dollars"] > b["reste_usd"]:
+                raise HTTPException(422, f"Le plafond mensuel ne permet pas ce test ({prix['phrase']} ; il reste {b['reste_usd']:.2f} $).".replace(".", ","))
+            try:
+                res = appeler(suite_reel.test_reel, cfg, ident, corps.mot)
+            except tests_source.Echec as exc:
+                raise HTTPException(422, exc.raison) from exc
+            dollars = budget.dollars_pour(res["cout"], res["appels"], unites().get(ident, 0.0))
+            with fabrique.begin() as s:  # le test coûte de l'argent réel : il compte dans la dépense du mois, comme une recherche
+                s.add(Recherche(qui=qui, sujet={"quoi": corps.mot, "test_reel": ident}, parametres={"test_reel": True}, etat="terminee",
+                                 couts={ident: {"unites": res["appels"] * float(res["cout"].get("par_appel", 1) or 0), "dollars": dollars}} if dollars > 0 or res["cout"].get("vers_dollar") else {},
+                                 message=f"Test réel de {res['nom']}"))  # fmt: skip
+        noter({"qui": qui}, "suite_source_test_reel", ident)
+        return {**res, "dollars": dollars}
 
     @r.post("/sources/{ident}/reprendre")
     def source_reprendre(ident: str, corps: dict[str, Any] = Corps) -> dict[str, Any]:

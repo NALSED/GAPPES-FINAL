@@ -38,6 +38,7 @@ function appel(methode, chemin, corps) {
 export const api = {
   etat: () => appel("GET", "/etat"),
   tri: () => appel("GET", "/tri"),
+  get: (chemin) => appel("GET", chemin),
   post: (chemin, corps = {}) => appel("POST", chemin, corps),
   put: (chemin, corps = {}) => appel("PUT", chemin, corps),
   supprimer: (chemin) => appel("DELETE", chemin),

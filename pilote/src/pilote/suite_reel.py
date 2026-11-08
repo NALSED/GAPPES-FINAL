@@ -210,6 +210,29 @@ def tester(cfg: Config, ident: str) -> dict[str, Any]:
     return tests_source.tester(cfg, declaration(cfg, ident))
 
 
+# 3.3 (retour du 08/11/2026) : le test RÉEL (fiche 11) existait déjà, entièrement codé, mais seulement exposé par
+# les routes de l'ancienne page (`api_reglages.py`) — portage, pas une écriture : même logique (`tests_source`),
+# même coût effectif de Réglages (`rg.choix_source`), depuis `/suite`.
+def prix_test_reel(cfg: Config, ident: str, unites_deja: float = 0.0) -> dict[str, Any]:
+    """Le PRIX du test réel, dit avant le clic. N'appelle rien."""
+    from pilote import tests_source
+
+    d = declaration(cfg, ident)
+    reg, _ = rg.charger_tolerant(cfg)
+    cout = rg.choix_source(reg, d)["cout"]
+    return {"nom": d.nom, "avertissement": d.avertissement, "cout": cout, **tests_source.prix_du_test(d, cout, unites_deja)}
+
+
+def test_reel(cfg: Config, ident: str, mot: str) -> dict[str, Any]:
+    """Facultatif : UNE vraie requête. L'appelant (API) confirme le prix et vérifie le plafond mensuel avant d'appeler ceci."""
+    from pilote import tests_source
+
+    d = declaration(cfg, ident)
+    reg, _ = rg.charger_tolerant(cfg)
+    cout = rg.choix_source(reg, d)["cout"]
+    return {**tests_source.test_reel(cfg, d, mot, cout), "nom": d.nom, "cout": cout}
+
+
 def ecrire_cle(cfg: Config, ident: str, valeurs: dict[str, str]) -> None:
     """Une valeur par nom de variable (`Declaration.cles` — Reddit en déclare deux). Ignore une valeur vide :
     on peut en remplir une seule sans effacer l'autre (03/11/2026, retour de Sednal : 3.6)."""

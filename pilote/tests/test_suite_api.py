@@ -178,6 +178,49 @@ def test_type_de_source_inconnu_refuse(c):
     assert c.post("/api/suite/sources", json={**COMMUN_TYPE, "type": "inconnu", "nom": "X"}).status_code == 422
 
 
+# --- 3.3 (retour du 08/11/2026) : le test RÉEL (fiche 11) existait déjà, mais seulement exposé par l'ancienne
+# page — portage dans `/suite` : prix dit avant le clic, rien ne part sans confirmation, dépense comptée.
+def test_le_test_reel_est_expose_depuis_suite_prix_puis_confirmation(c, cfg):
+    class FauxPayant(http.server.BaseHTTPRequestHandler):
+        recus: list = []
+
+        def do_GET(self):
+            FauxPayant.recus.append(self.path)
+            corps = json.dumps({"resultats": [{"n": "Club Payant"}]}).encode()
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(corps)))
+            self.end_headers()
+            self.wfile.write(corps)
+
+        def log_message(self, *a):
+            pass
+
+    srv = http.server.HTTPServer(("127.0.0.1", 0), FauxPayant)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        ident = c.post(
+            "/api/suite/sources",
+            json={**COMMUN_TYPE, "nom": "Service payant", "url": f"http://127.0.0.1:{srv.server_port}/payant",
+                  "parametre_requete": "q", "liste": "resultats", "champ_nom": "n", "cout": "payant", "tarif": "0,0015",
+                  "exemple": '{"resultats": [{"n": "Club Payant"}]}'},
+        ).json()["id"]
+        avant = len(FauxPayant.recus)
+        p = c.get(f"/api/suite/sources/{ident}/test-reel").json()
+        assert p["gratuit"] is False and p["dollars"] == 0.0015
+        assert len(FauxPayant.recus) == avant  # afficher le prix n'appelle rien
+        refus = c.post(f"/api/suite/sources/{ident}/test-reel", json={"mot": "club"})
+        assert refus.status_code == 422 and "prix" in refus.json()["detail"] and len(FauxPayant.recus) == avant
+        r = c.post(f"/api/suite/sources/{ident}/test-reel", json={"mot": "club", "confirme": True})
+        assert r.status_code == 200, r.text
+        assert r.json()["total"] == 1 and r.json()["dollars"] == 0.0015
+        assert len(FauxPayant.recus) == avant + 1
+        assert c.get("/api/reglages").json()["budget"]["depense_du_mois_usd"] == pytest.approx(0.0015)
+        assert c.get(f"/api/suite/sources/{ident}/test-reel").json()["dollars"] > 0  # la dépense déjà comptée est reprise dans le prix suivant
+        assert c.get("/api/suite/sources/inconnue/test-reel").status_code == 422
+    finally:
+        srv.shutdown()
+
+
 def test_une_source_declaree_ne_change_que_par_la_surcouche(c, cfg):
     fichier = cfg.dossier_sources / "tavily.yaml"
     avant = fichier.read_bytes()

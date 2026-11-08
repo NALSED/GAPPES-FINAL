@@ -161,7 +161,33 @@ export function ficheSource(id) {
   // retrouve dans la documentation du service pour savoir quoi coller où.
   const nomsCle = edition ? (s.cles_noms && s.cles_noms.length ? s.cles_noms : [s.cle]).filter(Boolean) : [];
   const champsCle = nomsCle.map((nomVar) => champ({ libelle: nomVar, type: "password", autocomplete: "new-password", aide: "Elle ne s'affiche plus une fois enregistrée." }));
-  const zones = { cat: h("div", { class: "champ" }), role: h("div", { class: "champ" }), cout: h("div", { class: "champ" }), fiab: h("div", { class: "champ" }), auth: h("div", { class: "champ" }), type: h("div", { class: "champ" }) };
+  const zones = { cat: h("div", { class: "champ" }), role: h("div", { class: "champ" }), cout: h("div", { class: "champ" }), fiab: h("div", { class: "champ" }), auth: h("div", { class: "champ" }), type: h("div", { class: "champ" }), testReel: h("div", { class: "champ" }) };
+  // 3.3 (retour du 08/11/2026) : le test RÉEL existait déjà côté moteur (une vraie requête, le prix dit avant le
+  // clic) mais n'était exposé que par l'ancienne page — portage ici, pas une écriture.
+  const motEssaiReel = champ({ libelle: "Mot d'essai", placeholder: "ex. handball" });
+  const etatReel = { prix: null, message: "" };
+  async function voirPrixReel() {
+    try {
+      etatReel.prix = await api.get(`/sources/${id}/test-reel`);
+      etatReel.message = "";
+    } catch (e) {
+      etatReel.prix = null;
+      etatReel.message = e instanceof Refus ? e.message : "Le prix n'a pas pu être obtenu.";
+    }
+    dessiner();
+  }
+  async function lancerTestReel() {
+    const mot = motEssaiReel.valeur().trim();
+    if (!mot) { etatReel.message = "Donne un mot d'essai."; dessiner(); return; }
+    try {
+      const r = await api.post(`/sources/${id}/test-reel`, { mot, confirme: true });
+      etatReel.prix = null;
+      etatReel.message = `${r.total} résultat${r.total === 1 ? "" : "s"} obtenu${r.total === 1 ? "" : "s"}${r.dollars > 0 ? `, ${String(r.dollars).replace(".", ",")} $` : ", gratuit"}.`;
+    } catch (e) {
+      etatReel.message = e instanceof Refus ? e.message : "Le test réel a échoué.";
+    }
+    dessiner();
+  }
   const manque = h("div", { class: "mot-manque", role: "status" });
   const principal = bouton({ libelle: edition ? VERBES.enregistrer : `${VERBES.ajouter} la source`, variante: "principal", onclick: valider });
   const catNom = (c) => app.data.categories.find((x) => x.id === c)?.nom;
@@ -215,6 +241,17 @@ export function ficheSource(id) {
     const pret = val.cat && val.role;
     principal.disabled = !edition && !pret;
     manque.textContent = !edition && !pret ? `Il manque ${!val.cat && !val.role ? "la catégorie et le rôle" : !val.cat ? "la catégorie" : "le rôle"}.` : "";
+    if (edition && !s.copie && s.acces !== "base_exterieure") {
+      zones.testReel.replaceChildren(
+        h("span", { class: "titre-champ" }, "Test réel"),
+        motEssaiReel.el,
+        etatReel.prix
+          ? bouton({ libelle: `Confirmer (${etatReel.prix.phrase})`, icon: "tester", petit: true, onclick: lancerTestReel })
+          : bouton({ libelle: "Voir le prix du test réel", icon: "tester", petit: true, onclick: voirPrixReel }),
+        etatReel.message && h("div", { class: "sortie-test", "aria-live": "polite" }, etatReel.message),
+        h("span", { class: "aide-champ" }, "Une vraie requête vers la source : le prix est annoncé avant le clic, rien ne part sans confirmation."),
+      );
+    }
   }
 
   // 905 §2 : les champs propres au type choisi, ajoutés au corps commun — une fonction par type, comme `ajout_types.js` de l'ancienne page.
@@ -281,7 +318,7 @@ export function ficheSource(id) {
       !s.copie && s.acces !== "base_exterieure" && s.cle_requise && champsCle.map((c) => c.el), !s.copie && s.acces !== "base_exterieure" && s.cle_requise && s.cle && h("span", { class: "legende" }, "clé enregistrée"),
       champsParametres.length > 0 && champsParametres,
       h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "État"), h("div", { class: "pied-boutons" }, pastilleEtat(s.etat, ETATS_SOURCE), interrupteur)),
-      tests,
+      tests, zones.testReel,
     ]
     : [
       zones.type, f.nom.el, zones.cat, zones.role,
