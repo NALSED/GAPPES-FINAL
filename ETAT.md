@@ -1,9 +1,17 @@
 # ETAT — grappes
 
-Phase en cours : 903 — cible de recherche (« Ce que je recherche »), chantier non commencé
+Phase en cours : 903 — cible de recherche (« Ce que je recherche »), chantier en cours (1/2 fait : NER)
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-03 (D86 : réponses Q29-Q34 de la revue 902 — 900 §3 corrigé pour de vrai, ancrage par sujet, Assistant IA en tokens réels + plafond, règle 8 alignée sur Q21, Q35 ouverte (fichier « à trancher » sans producteur côté pilote) ; grappes 615 verts, pilote 581 verts avec la racine corrigée). Référence unique : `FINAL.md` (les fichiers de `docs/archive/` sont obsolètes).
+Dernière mise à jour : 2026-11-08 (903, pièce 1/2 : NER élargi à PER/LOC, catégorie propagée jusqu'à `Nomme`
+(commit `92c890e`) — prépare le filtre « Ce que je recherche » sans encore le consommer. Pièce 2/2
+(`TypeDemande` multi-natures dans `verification_type.py`, champ UI, export par cible) non commencée : le volet
+association/entreprise dépend du rattachement NAF de Q27, **pas encore fait** (D82 : coûte des crédits réels,
+décidé pour une session dédiée) — la spec 903 suppose ce rattachement déjà fait, ce qui n'est pas le cas ; les
+quatre catégories structurelles (compte/site/média/mouvement) et « événement » (MISC, à mesurer) restent aussi
+à préciser. Q36 ouverte : 4 tests de `test_cycle.py` rouges, indépendants de ce travail (dérive d'environnement,
+pas une régression de commit — détail dans QUESTIONS.md). Référence unique : `FINAL.md` (les fichiers de
+`docs/archive/` sont obsolètes).
 
 ## En attente de Sednal
 

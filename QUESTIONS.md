@@ -222,3 +222,15 @@ Défaut en attendant : rien construit côté Tri.
   registre sans texte, le résumé ne fait que reformuler les métadonnées — l'opération sera utile surtout sur de la
   presse. Le registre lui-même a rendu 2 résultats sur 3 hors sujet (UCPA) pour « fédération des associations
   générales étudiantes ».
+
+### Q36 — 4 tests de `test_cycle.py` rouges, indépendants du travail en cours (constat, 08/11/2026)
+
+`rtk pytest -q` : 4 échecs, tous sur l'indicateur de stabilité `derive_du_lexique` (dépassement du seuil
+`max_derive_lexique`, cycle rendu `annule` au lieu d'`ok`) ou sur le vocabulaire appris (`chaine` en trop dans
+`test_apprentissage_uniquement_du_vocabulaire_des_confirmees`). Vérifié : absent de mon commit (`903 (1/2)` ne
+touche que le NER) — bisecté jusqu'au commit qui a introduit `test_instantanes_conserves_en_nombre_borne`
+(`0290a0e`, boucle `grappes cycle`) : **déjà rouge sur ce commit, dans l'environnement actuel**. N'est donc pas
+une régression d'un commit récent sur CE dépôt — plutôt une dérive d'environnement (dépendance Python,
+`.venv`) entre le moment où ces tests ont été rendus verts et aujourd'hui. Pas creusé plus loin (coût élevé,
+hors sujet du chantier en cours). Valeur par défaut : laissé rouge, signalé ici plutôt qu'un correctif inventé
+sans comprendre la cause réelle ; à reprendre si ça bloque une vérification de phase.
