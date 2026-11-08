@@ -135,3 +135,13 @@ Bloquant : aucun. Routage §4.5 : les fixtures synthétiques du jour sont passé
 Retrait complet d'Intelligence X (D74), retours de Sednal sur Réglages (D75) puis revue complète (D76, cinq défauts corrigés) : tout est dans
 `/opt/pilote` (dernier commit `a7c2fec`, 350 tests verts ; 2 tests Wayback en échec externe, archive.org répond 429). Mesure des économies
 réparée : `outils/economies.py` (ccr mesuré, rtk corrigé), rapport `docs/economies_2026-10-20.md`. Bloquant : aucun.
+
+## Pilote — spec 905 § 1 faite (08/11/2026, aucune phase de grappes en cours)
+
+D87 : menus fermés de `plan.js` (`RENDUS_OPTIONS`) partagés avec `reglages.js::ficheOutil()` via un nouveau
+module commun `pilote/static/suite/js/options_outils.js` ; la fiche de réglage par défaut d'un outil livré
+affiche désormais les mêmes vocabulaires fermés que l'éditeur de tuile, plus de champ texte libre masquant la
+valeur réelle. Vérifié en navigateur réel (tool « Compteur budget ») ; 33 tests `test_suite_navigateur.py` +
+`test_suite_api.py` verts, suite complète relancée (résultat à `rapports/`).
+Suite de la 905 (points 2 et 3 : parité `/suite` pour l'ajout de source puis suppression de l'ancienne UI) :
+non commencée, à faire dans l'ordre imposé par la spec, chaque type vérifié par Sednal sur `.60` avant le suivant.

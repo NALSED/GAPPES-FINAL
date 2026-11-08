@@ -4,6 +4,7 @@ import { agir, app, outilParId, recharger, sourceParId, sourcesDe } from "./etat
 import { AVERTISSEMENT_IA, COUTS, EFFETS, ETATS_OUTIL, ETATS_SOURCE, FIABILITES, ROLES, ROLES_ORDRE, ROLES_OUTIL, VERBES, aPluriel, fiabiliteParDefaut } from "./mots.js";
 import { api, Refus } from "./api.js";
 import { annoncer, avertissement, bouton, boutonIcone, champ, etiquetteRole, groupePuces, ouvrirCouche, pastilleEtat, quotaVue, carteRepliable } from "./ui.js";
+import { RENDUS_OPTIONS, genreDeOutil } from "./options_outils.js";
 
 // ================================================================ Sources
 
@@ -316,7 +317,13 @@ export function ficheOutil(id) {
       couche.titre(m.nom);
       dessiner();
     })]));
-    zones.options.replaceChildren(...(script || !champsOptions.length ? [] : [h("span", { class: "titre-champ" }, "Réglages du modèle"), h("div", { class: "options-grille" }, champsOptions.map((c) => c.el))]));
+    const genre = genreDeOutil({ nature: val.nature, modele: val.modele, id: o.id });
+    const renduOptions = RENDUS_OPTIONS[genre];
+    // Même registre que plan.js (905 § 1) : un genre reconnu rend son propre composant (vocabulaire fermé) sur
+    // les options vivantes (val.options, mutées en place) ; sinon on garde le champ texte générique par option.
+    const adapteurOptions = { get opts() { return val.options; }, set opts(v) { val.options = v; } };
+    const zoneOptions = script ? null : renduOptions ? renduOptions(adapteurOptions, dessiner, () => {}) : (champsOptions.length ? h("div", { class: "options-grille" }, champsOptions.map((c) => c.el)) : null);
+    zones.options.replaceChildren(...(zoneOptions ? [h("span", { class: "titre-champ" }, "Réglages du modèle"), zoneOptions] : []));
     zones.role.replaceChildren(h("span", { class: "titre-champ" }, "Rôle"), groupePuces(ROLES_OUTIL.map((r) => [r, ROLES[r].nom]), val.role, (v) => { val.role = v; dessiner(); }));
     zones.effet.replaceChildren(h("span", { class: "titre-champ" }, "Effet dans le Tableau de bord"), groupePuces(EFFETS.map(([k, l]) => [k, l]), val.effet, (v) => { val.effet = v; dessiner(); }), h("span", { class: "aide-champ" }, EFFETS.find((e) => e[0] === val.effet)[2]));
     f.code.el.classList.toggle("cache", !script);
@@ -331,9 +338,13 @@ export function ficheOutil(id) {
     manque.textContent = !edition && !pret ? "Choisis un modèle." : "";
   }
   function corps() {
+    const genre = genreDeOutil({ nature: val.nature, modele: val.modele, id: o.id });
+    const options = RENDUS_OPTIONS[genre]
+      ? val.options.map((p) => [...p]) // rendu dédié : déjà à jour dans val.options (mutée en place par le composant)
+      : val.options.map(([lib], i) => [lib, champsOptions[i] ? champsOptions[i].valeur() : val.options[i][1]]);
     return {
       nom: f.nom.valeur(), nature: val.nature, modele: val.nature === "modele" ? val.modele : null, role: val.role, effet: val.effet, fait: f.fait.valeur(), recoit: f.recoit.valeur(), renvoie: f.renvoie.valeur(),
-      options: val.options.map(([lib], i) => [lib, champsOptions[i] ? champsOptions[i].valeur() : val.options[i][1]]), code: f.code.valeur(), test_entree: f.entree.valeur(), test_sortie: f.sortie.valeur(),
+      options, code: f.code.valeur(), test_entree: f.entree.valeur(), test_sortie: f.sortie.valeur(),
     };
   }
   async function enregistrer() {

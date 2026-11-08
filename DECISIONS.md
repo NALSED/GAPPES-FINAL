@@ -301,3 +301,29 @@ ne peut donc alimenter cet écran : je n'ai rien construit sur cette prémisse f
 Tests : `tests/test_ancrage.py` (+4), `pilote/tests/test_suite_ia.py` (réécrit, contrat `--output-format json`),
 `pilote/tests/test_suite_plan.py` (+1, plafond), `pilote/tests/test_regle8_personnes_morales.py` (+3). Suite
 complète : grappes 615 verts ; pilote (racine corrigée pour de vrai) en cours de vérification finale.
+
+## D87 — 905 § 1 : menus fermés aussi dans la fiche outil (`GRAPPES/specs/905-menus-fermes-et-ancienne-ui.md`, 08/11/2026)
+
+Régression de câblage relevée par Sednal le 08/11/2026 : les vocabulaires fermés (séparateur CSV, comparateurs
+ET/OU, « Quand le quota est atteint », Opération/Effort/Marquer de l'IA, etc.) n'étaient câblés que dans
+l'éditeur de tuile posée sur le plan (`plan.js`, `RENDUS_OPTIONS`) — jamais dans la fiche de réglage par défaut
+de l'outil (`reglages.js::ficheOutil()`, Réglages › Outils › Modifier), qui gardait un champ texte libre par
+option, y compris pour les 10 outils livrés.
+
+**Fait** : les fonctions `rendreOptions*` et le registre `RENDUS_OPTIONS` de `plan.js` déplacés dans un module
+commun (`static/suite/js/options_outils.js`), importé par `plan.js` et `reglages.js` — une seule source de
+vérité pour les listes fermées (`COMPARATEURS`, `CHOIX_ATTENTE`, `EFFORTS_IA`, etc.), comme demandé par la 905.
+Chaque fonction prend désormais un troisième paramètre `guarder` (au lieu d'appeler directement `sauvegarder()`
+du plan) : `plan.js` lui passe sa sauvegarde différée, `ficheOutil()` ne persiste qu'au clic sur Enregistrer, donc
+lui passe un no-op — les options restent mutées en place dans `val.options` via un petit adaptateur
+(`{get/set opts}`), relu directement par `corps()` à l'enregistrement. `genreDe` (plan.js) et le choix du genre
+dans `ficheOutil()` passent par le même `genreDeOutil()` exporté.
+
+Vérifié en navigateur réel (Playwright) : la fiche de l'outil « Compteur budget » affiche désormais les puces
+fermées (« Budget maximum », « Montant fixe », « Prévenir ») au lieu d'un champ texte dont la valeur stockée
+était jusque-là invisible à l'écran (valeur d'`<input>`, hors du texte affiché). Suite pilote : 33 tests
+navigateur/API verts (`test_suite_navigateur.py`, `test_suite_api.py`) ; suite complète relancée.
+
+Point 2 (parité `/suite` pour l'ajout de source, les cinq types manquants) et point 3 (suppression de
+l'ancienne UI) de la 905 restent à faire, dans l'ordre imposé par la spec — chacun vérifié par Sednal sur `.60`
+avant le suivant.
