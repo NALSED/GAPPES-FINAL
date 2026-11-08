@@ -363,6 +363,17 @@ def test_traduction_vers_la_langue_de_chaque_source():
         )
 
 
+def test_traduction_langue_d_entree_multiple_restreint_la_detection():
+    # 7.3 (retour du 08/11/2026) : « Langue d'entrée » devient multiple, au sens « détecte uniquement parmi ces
+    # langues-là » — un texte détecté hors de la liste cochée retombe sur « auto » plutôt que d'être pris tel quel
+    # (le cas que Sednal voulait éviter : un texte français pris pour du portugais).
+    opts = [("Langue d'entrée", "français, anglais, allemand"), ("Traduire vers", "anglais"), ("Ne pas traduire", "rien")]
+    dans_la_liste = comp(plan_traduction(opts), langue_saisie="fr", traduction_disponible=True)
+    assert dans_la_liste["traductions"]["c"] == {"tuile": "t", "de": "fr", "vers": "en", "presets": []}
+    hors_liste = comp(plan_traduction(opts), langue_saisie="pt", traduction_disponible=True)
+    assert hors_liste["traductions"]["c"]["de"] == "auto"
+
+
 def test_traduction_ne_pas_traduire_presets_et_interrupteur_global():
     avec_presets = [
         ("Langue d'entrée", "détecter"), ("Traduire vers", "anglais"), ("Ne pas traduire", "majuscules, urls"), ("Protéger certains mots", "oui"),

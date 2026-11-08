@@ -9,7 +9,7 @@
 import { api, Refus } from "./api.js";
 import { h } from "./dom.js";
 import { EFFORTS_IA, VERBES } from "./mots.js";
-import { bouton, boutonIcone, caseSource, champ, groupePuces, puce } from "./ui.js";
+import { bouton, boutonIcone, carteRepliable, champ, groupePuces, menu, menuMultiple, puce } from "./ui.js";
 
 export const genreDeOutil = (o) => (o && o.nature !== "script" ? o.modele || o.id : null);
 
@@ -49,31 +49,38 @@ function rendreOptionsFormat(n, refresh, guarder) {
     guarder();
     refresh();
   };
-  const sections = FORMATS_CACHE.filter((f) => choisis.includes(f.id)).map((f) => {
+  // 6.2 (règle 3.10) : un bloc repliable par format (modèle des blocs de Réglages / Sources) au lieu d'une
+  // liste de neuf cases suivie de sections empilées — la liste reste courte fermée, les réglages d'un format se
+  // lisent en le dépliant. Déplier/replier LE format l'active/le désactive : pas de double case à cocher.
+  const cartes = FORMATS_CACHE.map((f) => {
+    const actif = choisis.includes(f.id);
     const champs = [];
-    if (f.contenus.length > 1) {
+    if (actif && f.contenus.length > 1) {
       const lib = `${f.nom} : contenu`;
       champs.push(h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Contenu"),
         groupePuces(f.contenus.map((c) => [c, c]), optLabel(n, lib) || f.contenus_defaut[0], (v) => { optDefinir(n, lib, v); guarder(); refresh(); })));
     }
-    if (f.id === "csv") {
+    if (actif && f.id === "csv") {
       const lib = "Séparateur";
       champs.push(h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Séparateur"),
         groupePuces([[";", ";"], [",", ","]], optLabel(n, lib) || ";", (v) => { optDefinir(n, lib, v); guarder(); refresh(); })));
     }
-    (f.besoin || []).forEach((champBesoin) => {
+    if (actif) (f.besoin || []).forEach((champBesoin) => {
       const lib = `${f.nom} : ${champBesoin}`;
       const c = champ({ libelle: `${f.nom} — ${champBesoin}`, valeur: optLabel(n, lib), placeholder: champBesoin === "url" ? "https://…" : "" });
       c.saisie.addEventListener("change", () => { optDefinir(n, lib, c.valeur()); guarder(); });
       champs.push(c.el);
     });
-    return champs.length > 0 && h("div", { class: "champ" }, h("span", { class: "titre-champ" }, f.nom), ...champs);
-  }).filter(Boolean);
+    return carteRepliable({
+      titre: f.nom, compte: actif ? "activé" : null, ouverte: actif,
+      onbascule: () => bascule(f.id),
+      corps: actif ? h("div", { class: "options-grille" }, ...champs) : null,
+    });
+  });
   return h(
     "div", { class: "options-grille" },
-    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Format de sortie"),
-      h("div", { class: "liste-liens" }, FORMATS_CACHE.map((f) => caseSource({ nom: f.nom, actif: choisis.includes(f.id), onclick: () => bascule(f.id) })))),
-    ...sections,
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Format de sortie")),
+    ...cartes,
   );
 }
 // 3.8.02 : les 19 langues connues de suite_plan.LANGUES — le même mot, pour que le choix fermé de l'interface
@@ -90,15 +97,18 @@ const PRESETS_NE_PAS_TRADUIRE = [
 ];  // fmt: skip
 
 function rendreOptionsTraduction(n, refresh, guarder) {
-  const entree = optLabel(n, "Langue d'entrée") || "détecter";
+  // 7.3 (retour du 08/11/2026) : « Langue d'entrée » devient multiple, au sens « détecte uniquement parmi ces
+  // langues-là » (un seul appel de traduction par texte, comme avant) ; « Traduire vers » reprend le même
+  // composant visuel — les deux listes de langues se règlent désormais de la même façon (menu déroulant à choix
+  // multiple, règle 3.10 : 19 langues).
+  const entreeListe = optLabel(n, "Langue d'entrée").split(",").map((s) => s.trim()).filter(Boolean);
   const versListe = optLabel(n, "Traduire vers").split(",").map((s) => s.trim()).filter(Boolean);
   const presetsListe = optLabel(n, "Ne pas traduire").split(",").map((s) => s.trim()).filter(Boolean);
   const actif = optLabel(n, "Protéger certains mots") !== "non";
-  const majEntree = (v) => { optDefinir(n, "Langue d'entrée", v); guarder(); refresh(); };
+  const majEntree = (l) => { optDefinir(n, "Langue d'entrée", l.join(", ")); guarder(); refresh(); };
   const majVers = (l) => { optDefinir(n, "Traduire vers", l.join(", ")); guarder(); refresh(); };
   const majPresets = (l) => { optDefinir(n, "Ne pas traduire", l.join(", ")); guarder(); refresh(); };
   const majActif = (v) => { optDefinir(n, "Protéger certains mots", v); guarder(); refresh(); };
-  const basculeVers = (l) => majVers(versListe.includes(l) ? versListe.filter((x) => x !== l) : [...versListe, l]);
   const basculePreset = (l) => majPresets(presetsListe.includes(l) ? presetsListe.filter((x) => x !== l) : [...presetsListe, l]);
 
   const champTest = champ({ libelle: "Un texte à traduire", placeholder: "ex. club FFSA" });
@@ -107,7 +117,7 @@ function rendreOptionsTraduction(n, refresh, guarder) {
     const texte = champTest.valeur().trim();
     if (!texte) return;
     try {
-      const r = await api.traductionTester({ texte, de: entree, vers: versListe, presets: actif ? presetsListe : [] });
+      const r = await api.traductionTester({ texte, de: entreeListe[0] || "détecter", vers: versListe, presets: actif ? presetsListe : [] });
       resultatTest.textContent = Object.entries(r.traductions).map(([v, t]) => `${v} : ${t}`).join("\n") || "Choisis au moins une langue « Traduire vers ».";
     } catch (e) {
       resultatTest.textContent = e instanceof Refus ? e.message : "Le test a échoué.";
@@ -117,9 +127,10 @@ function rendreOptionsTraduction(n, refresh, guarder) {
   return h(
     "div", { class: "options-grille" },
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Langue d'entrée"),
-      groupePuces([["détecter", "Détecter"], ...LANGUES.map((l) => [l, l])], entree, majEntree)),
+      menuMultiple(LANGUES.map((l) => [l, l]), entreeListe, majEntree),
+      h("span", { class: "aide-champ" }, entreeListe.length ? "La détection se limite à ces langues-là." : "Aucune choisie : la détection n'est pas restreinte.")),
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Traduire vers"),
-      h("div", { class: "liste-liens" }, LANGUES.map((l) => caseSource({ nom: l, actif: versListe.includes(l), onclick: () => basculeVers(l) })))),
+      menuMultiple(LANGUES.map((l) => [l, l]), versListe, majVers)),
     h("div", { class: "champ" },
       h("span", { class: "titre-champ" }, "Ne pas traduire certains mots"),
       groupePuces([["oui", "oui"], ["non", "non"]], actif ? "oui" : "non", majActif),
@@ -166,6 +177,8 @@ function rendreOptionsConditions(filtre) {
     const champsChoix = filtre ? [...CHAMPS_CONDITION, ...CHAMPS_FILTRE_SEULEMENT] : CHAMPS_CONDITION;
     const mode = optLabel(n, "Combinateur") || "et";
     const maj = (l) => { ecrireLignesConditions(n, l); guarder(); refresh(); };
+    // 8.1 (règle 3.10) : champ (8 ou 10 choix) et comparateur (8 choix) en menus déroulants plutôt qu'en pastilles
+    // — une condition = une ligne, au lieu de 16 à 18 pastilles empilées pour une seule condition.
     const ligneVue = (l, i) => {
       const special = l.champ === "Nombre de sources" || l.champ === "Fiabilité minimale";
       const sansValeur = !special && (l.comparateur === "est vide" || l.comparateur === "n'est pas vide");
@@ -173,17 +186,24 @@ function rendreOptionsConditions(filtre) {
       champValeur.saisie.addEventListener("change", () => { const copie = [...lignes]; copie[i] = { ...l, valeur: champValeur.valeur() }; maj(copie); });
       return h(
         "div", { class: "champ" },
-        h("div", { class: "deux-col" },
-          groupePuces(champsChoix.map((c) => [c, c]), l.champ, (v) => { const copie = [...lignes]; copie[i] = { ...l, champ: v }; maj(copie); }),
-          !special && groupePuces(COMPARATEURS.map((c) => [c, c]), l.comparateur, (v) => { const copie = [...lignes]; copie[i] = { ...l, comparateur: v }; maj(copie); })),
-        !sansValeur && champValeur.el,
+        h("div", { class: "trois-col" },
+          menu(champsChoix.map((c) => [c, c]), l.champ, (v) => { const copie = [...lignes]; copie[i] = { ...l, champ: v }; maj(copie); }),
+          !special && menu(COMPARATEURS.map((c) => [c, c]), l.comparateur, (v) => { const copie = [...lignes]; copie[i] = { ...l, comparateur: v }; maj(copie); }),
+          !sansValeur && champValeur.el),
         lignes.length > 1 && boutonIcone({ icon: "retirer", etiquette: "Retirer cette condition", onclick: () => maj(lignes.filter((_, j) => j !== i)) }),
       );
     };
     const maximum = filtre && champ({ libelle: "Garder au maximum", valeur: optLabel(n, "Garder au maximum"), placeholder: "sans plafond" });
     if (maximum) maximum.saisie.addEventListener("change", () => { optDefinir(n, "Garder au maximum", maximum.valeur()); guarder(); });
+    // 11.1 : Filtre et Condition « si » sont visuellement des jumeaux (même nombre apparent de pastilles) alors
+    // que leurs trois différences réelles — nombre de sorties en premier, c'est ce qui change l'usage sur le plan —
+    // ne se voyaient nulle part. Dites ici, pour qu'on sache en ouvrant la fiche lequel des deux on règle.
+    const sorties = filtre
+      ? h("p", { class: "legende" }, "Une seule sortie : ce qui passe la condition (les autres résultats sont écartés).")
+      : h("p", { class: "legende" }, "Deux sorties : « oui » et « non ». Les deux se branchent séparément sur le plan.");
     return h(
       "div", { class: "options-grille" },
+      sorties,
       lignes.length > 1 && h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Combiner les conditions"),
         groupePuces([["et", "Toutes les conditions (ET)"], ["ou", "Au moins une condition (OU)"]], mode, (v) => { optDefinir(n, "Combinateur", v); guarder(); refresh(); })),
       ...lignes.map(ligneVue),

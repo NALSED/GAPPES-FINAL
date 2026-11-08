@@ -20,6 +20,32 @@ export function groupePuces(options, valeur, onchoisir) {
   return h("div", { class: "puces", role: "group" }, options.map(([v, l]) => puce({ libelle: l, actif: v === valeur, onclick: () => onchoisir(v) })));
 }
 
+/** 3.10 (règle d'affichage, retour du 08/11/2026) : au-delà de 4 choix fermés, un menu déroulant plutôt que des
+ *  pastilles — le vocabulaire reste le même liste fermée, seule la présentation change. Même convention
+ *  d'appel que `groupePuces` : `options` est `[valeur, libellé][]`. */
+export function menu(options, valeur, onchoisir, { id: idChamp } = {}) {
+  const id = idChamp || `menu-${++compteur}`;
+  const sel = h(
+    "select",
+    { id, onchange: (e) => onchoisir(e.target.value) },
+    options.map(([v, l]) => h("option", { value: v, selected: v === valeur }, l)),
+  );
+  sel.value = valeur;
+  return sel;
+}
+
+/** Même règle, à choix multiple : un `<select multiple>`, plusieurs lignes visibles au lieu d'une liste de cases
+ *  à cocher qui s'étalerait sur toute la largeur (ex. les 19 langues de Traduction, 7.3). */
+export function menuMultiple(options, valeurs, onchoisir, { lignes = 6 } = {}) {
+  const id = `menu-${++compteur}`;
+  const sel = h(
+    "select",
+    { id, multiple: true, size: Math.min(lignes, options.length), onchange: (e) => onchoisir([...e.target.selectedOptions].map((o) => o.value)) },
+    options.map(([v, l]) => h("option", { value: v, selected: valeurs.includes(v) }, l)),
+  );
+  return sel;
+}
+
 /** La case : activer ou désactiver une source dans une longue liste. */
 export function caseSource({ nom, sous, actif, disabled, onclick, etat }) {
   return h(

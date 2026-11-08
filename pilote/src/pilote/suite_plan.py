@@ -479,11 +479,16 @@ def _traduction(
         dire_non(i, "aucun moteur de traduction n'est réglé (suite.traduction_url dans pilote.yaml)")
         return
     cibles = codes_langues(_option(opts, 1, "traduire vers"))
-    entree_txt = norme(_option(opts, 0, "entree"))
-    entree = None if entree_txt in ("", "detecter", "auto") else (codes_langues(entree_txt) or [None])[0]
-    # « Détecter » (par défaut) : la langue déjà détectée sur la saisie si elle a réussi, sinon « auto » — le moteur de
-    # traduction sait lui-même détecter la langue à la volée (3.8.02), la tuile ne refuse plus de fonctionner.
-    entree = entree or langue_saisie or "auto"
+    # 7.3 (retour du 08/11/2026) : « Langue d'entrée » est devenue multiple, au sens « détecte uniquement parmi
+    # ces langues-là » — la détection reste faite par le moteur (un seul appel, jamais plusieurs langues à la fois),
+    # mais restreinte à l'ensemble coché, pour qu'un texte français ne soit pas pris pour du portugais. Rien de
+    # coché = aucune restriction, comme avant.
+    entree_brut = _option(opts, 0, "entree")
+    entree_choisies = [] if norme(entree_brut) in ("", "detecter", "auto") else codes_langues(entree_brut)
+    detectee = langue_saisie if (not entree_choisies or langue_saisie in entree_choisies) else None
+    # « Détecter » (par défaut) : la langue déjà détectée sur la saisie si elle a réussi et respecte la restriction,
+    # sinon « auto » — le moteur de traduction sait lui-même détecter la langue à la volée (3.8.02).
+    entree = detectee or "auto"
     presets = _presets_ne_pas_traduire(opts)
     faites = []
     for m in sources_apres:
