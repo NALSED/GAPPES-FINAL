@@ -62,6 +62,7 @@ export const apiAssistant = {
   presetsPersonnaliser: (corps) => requete("POST", "/api/presets/personnaliser", corps),
   definirCle: (nom, corps) => requete("PUT", `/api/cles/${nom}`, corps),
   modifierSource: (id, corps) => requete("PUT", `/api/reglages/source/${id}`, corps),
+  definirSortie: (corps) => requete("PUT", "/api/reglages/sortie", corps),
   testerSource: (id) => requete("POST", `/api/sources/${id}/tester`, {}),
   terminer: (corps) => requete("POST", "/api/assistant/terminer", corps),
 };

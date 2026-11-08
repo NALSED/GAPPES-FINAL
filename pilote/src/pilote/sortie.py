@@ -73,6 +73,34 @@ def dossier_de_sortie(cfg: Config, rid: str, choix: str = "") -> Path:
     return p if p.is_absolute() else cfg.donnees / p
 
 
+def verifier_dossier_sortie(cfg: Config, choix: str) -> None:
+    """6.3 (retour du 08/11/2026) : vérifie qu'un export pourra réellement écrire là, SANS exiger que le dossier
+    existe déjà — `exporter()` le crée à la volée (`mkdir(parents=True)`, convention déjà en place et testée, ex.
+    un dossier choisi dans Réglages avant sa première recherche). On vérifie donc l'ancêtre existant le plus
+    proche : s'il est accessible en écriture, la création réussira. Linux uniquement (seul système visé). Chaîne
+    vide : rien à vérifier, c'est le repli vers le dossier de la recherche."""
+    import os
+
+    from pilote.refus import ConfigRefusee
+
+    choix = choix.strip()
+    if not choix:
+        return
+    p = Path(choix).expanduser()
+    cible = p if p.is_absolute() else cfg.donnees / p
+    ancetre = cible
+    while not ancetre.exists():
+        parent = ancetre.parent
+        if parent == ancetre:  # racine atteinte sans rien trouver : chemin invalide
+            raise ConfigRefusee(f"« {choix} » n'est pas un chemin valide.")
+        ancetre = parent
+    if not ancetre.is_dir():
+        raise ConfigRefusee(f"« {ancetre} » n'est pas un dossier : « {choix} » ne peut pas y être créé.")
+    if not os.access(ancetre, os.W_OK):
+        raison = "le dossier existe mais pilote ne peut pas y écrire" if ancetre == cible else f"« {ancetre} » n'est pas accessible en écriture"
+        raise ConfigRefusee(f"Impossible d'écrire dans « {choix} » : {raison}.")
+
+
 def _texte_ia(faits: dict[str, Any]) -> str:
     """Ce que l'Assistant IA a produit pour cette fiche (3.8.09), préfixé « [IA] » si la tuile marquait ses résultats.
     Jamais mêlé à une colonne de faits trouvés (spécification 10, règle 1)."""

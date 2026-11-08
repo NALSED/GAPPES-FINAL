@@ -399,6 +399,12 @@ def construire(cfg: Config, fabrique: sessionmaker[Session]) -> APIRouter:
                     raise HTTPException(422, f"Le format « {connus[fid]['nom']} » propose : {', '.join(connus[fid]['contenus'])}.")
             actuel["contenus"] = corps.contenus
         if corps.dossier is not None:
+            from pilote import sortie
+
+            try:
+                sortie.verifier_dossier_sortie(cfg, corps.dossier)
+            except ConfigRefusee as exc:
+                raise HTTPException(422, str(exc)) from exc
             actuel["dossier"] = corps.dossier.strip()
         if corps.webhook_url is not None:
             actuel["webhook_url"] = corps.webhook_url.strip()

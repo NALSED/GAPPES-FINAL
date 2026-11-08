@@ -6,7 +6,7 @@
 // `n` est n'importe quel objet exposant `.opts` (liste [libellé, valeur]) ; `guarder` est appelé après chaque
 // mutation pour que l'appelant persiste à sa façon (sauvegarde immédiate du plan, ou rien : la fiche outil ne
 // persiste qu'au clic sur Enregistrer).
-import { api, Refus } from "./api.js";
+import { api, apiAssistant, Refus } from "./api.js";
 import { h } from "./dom.js";
 import { EFFORTS_IA, VERBES } from "./mots.js";
 import { bouton, boutonIcone, carteRepliable, champ, groupePuces, menu, menuMultiple, puce } from "./ui.js";
@@ -17,6 +17,16 @@ let FORMATS_CACHE = null;
 async function chargerFormats() {
   if (!FORMATS_CACHE) FORMATS_CACHE = await api.formats();
   return FORMATS_CACHE;
+}
+
+// 6.3 (retour du 08/11/2026) : la destination des fichiers de sortie n'a nulle part où s'afficher dans /suite —
+// c'est un réglage GÉNÉRAL (vaut pour tout export, pas propre à une tuile), partagé avec l'ancienne page
+// (`reglages.sortie.dossier`, déjà lu par `sortie.dossier_de_sortie()`) : on réutilise sa route plutôt que
+// d'inventer un second stockage propre à cette tuile.
+let SORTIE_CACHE = null;
+async function chargerSortie() {
+  if (!SORTIE_CACHE) SORTIE_CACHE = (await apiAssistant.reglages()).sortie || { dossier: "" };
+  return SORTIE_CACHE;
 }
 const optLabel = (n, lib) => (n.opts.find((p) => p[0] === lib) || [])[1] || "";
 function optDefinir(n, lib, valeur) {
@@ -31,8 +41,8 @@ function optRetirer(n, lib) {
 /** 3.8.01 : menu fermé dynamique (pilote.formats.vue, pas CSV/JSON en dur) + une section par format choisi,
  *  construite depuis ce que CE format déclare de lui-même (contenus, séparateur pour CSV, champs « besoin »). */
 function rendreOptionsFormat(n, refresh, guarder) {
-  if (!FORMATS_CACHE) {
-    chargerFormats().then(refresh);
+  if (!FORMATS_CACHE || !SORTIE_CACHE) {
+    Promise.all([chargerFormats(), chargerSortie()]).then(refresh);
     return h("p", { class: "legende" }, "Les formats arrivent…");
   }
   const choisis = optLabel(n, "Format de sortie").toLowerCase().split(/\s+/).filter(Boolean);
@@ -77,10 +87,27 @@ function rendreOptionsFormat(n, refresh, guarder) {
       corps: actif ? h("div", { class: "options-grille" }, ...champs) : null,
     });
   });
+  const destChamp = champ({
+    libelle: "Destination des fichiers de sortie", valeur: SORTIE_CACHE.dossier || "",
+    placeholder: "/chemin/absolu/vers/un/dossier — vide : chaque recherche garde son propre dossier",
+  });
+  const destMessage = h("div", { class: "sortie-test", "aria-live": "polite" });
+  async function enregistrerDest() {
+    try {
+      const r = await apiAssistant.definirSortie({ dossier: destChamp.valeur().trim() });
+      SORTIE_CACHE.dossier = r.dossier;
+      destMessage.textContent = r.dossier ? `Enregistré : les fichiers s'écriront dans « ${r.dossier} ».` : "Enregistré : chaque recherche garde son propre dossier.";
+    } catch (e) {
+      destMessage.textContent = e instanceof Refus ? e.message : "Le dossier n'a pas pu être enregistré.";
+    }
+  }
   return h(
     "div", { class: "options-grille" },
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Format de sortie")),
     ...cartes,
+    h("div", { class: "champ" }, destChamp.el,
+      bouton({ libelle: "Enregistrer la destination", icon: "tester", petit: true, onclick: enregistrerDest }), destMessage,
+      h("span", { class: "aide-champ" }, "Vérifié avant l'enregistrement (le dossier existe, ou son ancêtre est accessible en écriture). Vaut pour tous les exports, pas seulement ce format.")),
   );
 }
 // 3.8.02 : les 19 langues connues de suite_plan.LANGUES — le même mot, pour que le choix fermé de l'interface

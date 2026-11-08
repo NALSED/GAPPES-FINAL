@@ -366,6 +366,29 @@ def test_le_chemin_est_choisi_par_l_utilisateur_jamais_en_dur(monde, tmp_path):
     # sans choix : le dossier de la recherche
     c.put("/api/reglages/sortie", json={"dossier": ""})
     assert dossier(exporter(c, [{"format": "json"}])) == cfg.dossier_recherche("r14") / "export"
+
+
+def test_le_dossier_de_reglages_est_verifie_avant_d_etre_enregistre(monde, tmp_path):
+    # 6.3 (retour du 08/11/2026) : un dossier qui n'existe pas ENCORE reste accepté (créé à la volée par l'export,
+    # convention déjà en place) ; ce qui est refusé, c'est un ancêtre introuvable en écriture, ou un chemin qui
+    # pointe sur un fichier.
+    c, _ = monde
+    assert c.put("/api/reglages/sortie", json={"dossier": str(tmp_path / "pas-encore-cree")}).status_code == 200
+    (tmp_path / "un-fichier").write_text("x", encoding="utf-8")
+    r = c.put("/api/reglages/sortie", json={"dossier": str(tmp_path / "un-fichier")})
+    assert r.status_code == 422 and "n'est pas un dossier" in r.json()["detail"]
+    r2 = c.put("/api/reglages/sortie", json={"dossier": str(tmp_path / "un-fichier" / "sous" / "dossier")})
+    assert r2.status_code == 422 and "n'est pas un dossier" in r2.json()["detail"]  # « un-fichier » bloque toute création dessous
+    import os
+
+    lecture_seule = tmp_path / "lecture-seule"
+    lecture_seule.mkdir()
+    os.chmod(lecture_seule, 0o500)
+    try:
+        r3 = c.put("/api/reglages/sortie", json={"dossier": str(lecture_seule / "sous")})
+        assert r3.status_code == 422 and "accessible en écriture" in r3.json()["detail"]
+    finally:
+        os.chmod(lecture_seule, 0o700)
     # un dossier impossible à créer est dit en français
     (tmp_path / "fichier").write_text("x", encoding="utf-8")
     r = c.post("/api/recherches/r14/export", json={"formats": [{"format": "json"}], "dossier": str(tmp_path / "fichier" / "sous")})
