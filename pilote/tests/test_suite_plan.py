@@ -461,7 +461,7 @@ def test_ia_choisit_l_operation_et_le_modele():
         [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
     )  # fmt: skip
     c = comp_ia(p)
-    assert c["ia"] == {"tuile": "ia", "operation": "resumer", "modele": "haiku", "effort": "", "marquer": True, "plafond": None}
+    assert c["ia"] == {"tuile": "ia", "operation": "resumer", "modele": "haiku", "effort": "", "marquer": True, "plafond": None, "categories": ""}
     assert any("Résumer" in x["texte"] for x in c["appliques"] if x["nom"] == "ia")
     assert "ia" not in {x["nom"] for x in c["non_appliques"]}
 
@@ -477,10 +477,21 @@ def test_ia_operation_inconnue_refuse():
 
 def test_ia_marquer_non_desactive_le_marquage():
     p = plan(
-        [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Classer / catégoriser"], ["Marquer les résultats", "non"]])],
+        [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Classer / catégoriser"], ["Catégories", "sport, culture"], ["Marquer les résultats", "non"]])],
         [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
     )  # fmt: skip
-    assert comp_ia(p)["ia"] == {"tuile": "ia", "operation": "classer", "modele": "", "effort": "", "marquer": False, "plafond": None}
+    assert comp_ia(p)["ia"] == {"tuile": "ia", "operation": "classer", "modele": "", "effort": "", "marquer": False, "plafond": None, "categories": "sport, culture"}
+
+
+# 12.2 (retour du 08/11/2026) : « Classer / catégoriser » retombait sur « autre » faute d'un champ pour saisir
+# les catégories ; refuser de lancer tant qu'elles ne sont pas données, plutôt que de tout classer en silence.
+def test_ia_classer_sans_categories_refuse():
+    p = plan(
+        [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Classer / catégoriser"]])],
+        [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
+    )  # fmt: skip
+    with pytest.raises(ConfigRefusee, match="catégories"):
+        comp_ia(p)
 
 
 def test_ia_une_seule_tuile_jouee():

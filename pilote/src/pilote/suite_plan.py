@@ -337,7 +337,10 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
                 marquer = norme(opts_map.get("Marquer les résultats", "oui")) != "non"
                 plafond_txt = str(opts_map.get("Traiter au maximum", "") or "").strip()
                 plafond = int(plafond_txt) if plafond_txt.isdigit() else None
-                ia = {"tuile": i, "operation": op_id, "modele": str(opts_map.get("Modèle", "") or "").strip(), "effort": effort, "marquer": marquer, "plafond": plafond}
+                categories = str(opts_map.get("Catégories", "") or "").strip()
+                if op_id == "classer" and not categories:
+                    raise ConfigRefusee(f"« {node['nom']} » : donne la liste des catégories (séparées par une virgule) — « Classer / catégoriser » ne range rien dans « autre » faute de mieux.")
+                ia = {"tuile": i, "operation": op_id, "modele": str(opts_map.get("Modèle", "") or "").strip(), "effort": effort, "marquer": marquer, "plafond": plafond, "categories": categories}
                 appliques.append({
                     "tuile": i, "nom": node["nom"],
                     "texte": f"applique « {ops_connues[op_id]['nom']} » aux résultats qui atteignent la tuile"

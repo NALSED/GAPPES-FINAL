@@ -269,7 +269,9 @@ export function ficheSource(id) {
       h("div", { class: "deux-col" }, lecture("Coût", s.cout), lecture("Pays", s.pays)),
       zones.fiab,
       h("div", { class: "deux-col" }, f.langue.el, h("div", {})),
-      h("div", { class: "deux-col" }, lecture("Quota", s.acces === "base_exterieure" ? "Base extérieure" : s.copie ? "Copie locale" : s.quota ? `${s.quota.utilise} / ${s.quota.plafond} · ${s.quota.unite}` : "illimité"), lecture("Adresse", s.domaine)),
+      // 3.4/4.1 (retour du 08/11/2026) : une source payante sans quota n'est pas « illimitée » — chaque appel coûte,
+      // seul le budget mensuel la borne. « Illimité » reste réservé à ce qui l'est vraiment : une source gratuite sans quota.
+      h("div", { class: "deux-col" }, lecture("Quota", s.acces === "base_exterieure" ? "Base extérieure" : s.copie ? "Copie locale" : s.quota ? `${s.quota.utilise} / ${s.quota.plafond} · ${s.quota.unite}` : s.cout === "payant" ? "payante, bornée par le budget du mois" : "illimité"), lecture("Adresse", s.domaine)),
       s.description && h("p", { class: "douce" }, s.description),
       lecture("Accès", s.acces === "base_exterieure" ? "Base extérieure" : s.copie ? "Copie locale" : "API"),
       s.acces === "base_exterieure" && lecture("Machine", s.machine), // une adresse et des identifiants, ni clé d'API, ni quota, ni date de copie
@@ -354,8 +356,10 @@ export function ficheOutil(id) {
     nom: champ({ libelle: "Nom de l'outil", valeur: o.nom, placeholder: "ex. Garder la France" }),
     code: champ({ libelle: "Ton script (Python)", valeur: o.code || CODE_MODELE, lignes: 7, code: true, aide: "Le script reçoit la liste des résultats et renvoie une liste. Il tourne dans un processus isolé : pas de réseau, 10 secondes au maximum." }),
     fait: champ({ libelle: "Description", valeur: o.fait, placeholder: "Une phrase" }),
-    recoit: champ({ libelle: "Ce qu'il reçoit", valeur: o.recoit }),
-    renvoie: champ({ libelle: "Ce qu'il renvoie", valeur: o.renvoie }),
+    // 3.6 (retour du 08/11/2026) : phrases longues, coupées en plein milieu dans deux colonnes étroites — affichées
+    // en entier (pleine largeur, textarea qui s'enroule) au lieu d'être serrées.
+    recoit: champ({ libelle: "Ce qu'il reçoit", valeur: o.recoit, lignes: 2 }),
+    renvoie: champ({ libelle: "Ce qu'il renvoie", valeur: o.renvoie, lignes: 2 }),
     entree: champ({ libelle: "Exemple d'entrée", valeur: o.test_entree, lignes: 3, code: true }),
     sortie: champ({ libelle: "Sortie attendue", valeur: o.test_sortie, lignes: 3, code: true }),
     cle: champ({ libelle: "Clé d'API", type: "password", autocomplete: "new-password", aide: o.cle ? "clé enregistrée — pour la changer, saisis-en une nouvelle." : "Elle ne s'affiche plus une fois enregistrée." }),
@@ -440,11 +444,14 @@ export function ficheOutil(id) {
 
   // Trois blocs (3.7, décidé avec Sednal) : un seul panneau continu, pas d'onglets cliquables — juste des
   // titres de bloc nettement plus marqués que les titres de section habituels (titre-bloc, pas titre-champ).
+  // 5.1 (retour du 08/11/2026) : « Comment il travaille » et « Modèle » n'ont de sens qu'à la création — choisir
+  // un modèle est ce qui débloque le bouton. En modification, cliquer une autre pastille de « Modèle » écraserait
+  // d'un coup rôle, effet, options, description et exemples de test de l'outil qu'on est en train de régler.
   const contenu = [
     h("span", { class: "titre-bloc" }, "Général"),
-    f.nom.el, zones.nature, zones.modele, f.fait.el,
+    f.nom.el, ...(edition ? [] : [zones.nature, zones.modele]), f.fait.el,
     h("span", { class: "titre-bloc" }, "Réglages"),
-    zones.options, f.code.el, h("div", { class: "deux-col" }, f.recoit.el, f.renvoie.el), zones.role, zones.effet,
+    zones.options, f.code.el, f.recoit.el, f.renvoie.el, zones.role, zones.effet,
     h("span", { class: "titre-bloc" }, "Vérifier"),
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Test sur un exemple"), h("div", { class: "deux-col" }, f.entree.el, f.sortie.el), bouton({ libelle: `${VERBES.lancer} le test`, icon: "tester", petit: true, onclick: tester }), resultatTest,
       h("span", { class: "aide-champ" }, "L'outil passe « opérationnel » après un test réussi.")),

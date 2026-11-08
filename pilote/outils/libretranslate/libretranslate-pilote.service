@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 User=sednal
-ExecStart=/mnt/carte/pilote-copies/libretranslate/lancer.sh
+ExecStart=%CIBLE%/lancer.sh
 Restart=on-failure
 RestartSec=10
 

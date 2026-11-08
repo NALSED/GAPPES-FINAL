@@ -442,6 +442,21 @@ def test_traduction_tester_appelle_le_moteur_et_protege_les_presets(tmp_path):
         srv.shutdown()
 
 
+def test_traduction_tester_dit_le_service_eteint_sans_texte_d_exception(tmp_path):
+    # 7.1 (retour du 08/11/2026) : Sednal a vu « <urlopen error [Errno 111] Connection refused> » à l'écran —
+    # jamais ce texte brut, un message clair avec le renvoi vers l'installation.
+    srv = http.server.HTTPServer(("127.0.0.1", 0), http.server.BaseHTTPRequestHandler)
+    port = srv.server_port
+    srv.server_close()  # le port est fermé : connexion refusée, garanti
+    cfg = charger(copier_config(tmp_path, suite={"traduction_url": f"http://127.0.0.1:{port}"}))
+    with TestClient(creer_app(cfg)) as c:
+        r = c.post("/api/suite/traduction/tester", json={"texte": "club FFSA", "de": "fr", "vers": ["en"]})
+        assert r.status_code == 422
+        message = r.json()["detail"]
+        assert "urlopen" not in message and "Errno" not in message
+        assert "n'est pas démarré" in message and "LISEZMOI.md" in message
+
+
 def test_traduction_tester_refuse_sans_moteur_regle(cfg):
     with TestClient(creer_app(cfg)) as c:
         assert c.post("/api/suite/traduction/tester", json={"texte": "x", "vers": ["en"]}).status_code == 422

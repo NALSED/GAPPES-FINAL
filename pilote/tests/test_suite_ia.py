@@ -128,6 +128,17 @@ def test_appliquer_lignes_pose_le_champ_la_marque_et_compte_les_tokens(monkeypat
     assert all(set(x) == {"nom", "faits"} for x in lignes)
 
 
+def test_appliquer_lignes_passe_les_categories_a_classer(monkeypatch):
+    # 12.2 (retour du 08/11/2026) : `appliquer_lignes` appelait toujours `appliquer(..., {}, ...)` — les
+    # catégories saisies par l'utilisateur n'atteignaient jamais `classer.prompt()`, qui retombait sur « autre ».
+    vus = []
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": (vus.append(prompt) or "sport", 5))
+    decl = operations_ia.decouvrir()["classer"]
+    lignes = [{"nom": "FFSA"}]
+    suite_ia.appliquer_lignes(lignes, decl, {"marquer": True, "categories": "sport, culture"})
+    assert "sport, culture" in vus[0]
+
+
 def test_appliquer_lignes_sans_marquer_pose_le_champ_sans_la_marque(monkeypatch):
     monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": ("un résumé", 5))
     decl = operations_ia.decouvrir()["resumer"]

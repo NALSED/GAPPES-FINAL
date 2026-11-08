@@ -94,7 +94,12 @@ def _appel(url: str, texte: str, de: str, vers: str) -> str:
         with urllib.request.urlopen(req, timeout=DELAI_S) as r:
             rep = json.loads(r.read().decode())
     except urllib.error.URLError as exc:
-        raise OSError(f"le moteur de traduction ne répond pas ({exc})") from exc
+        # 7.1 (retour du 08/11/2026) : jamais le texte brut d'une exception Python à l'écran (vu par Sednal :
+        # « <urlopen error [Errno 111] Connection refused> »). Service éteint : message clair et renvoi vers
+        # son fichier d'installation. Autre panne réseau : message générique, encore sans texte technique.
+        if isinstance(exc.reason, ConnectionRefusedError):
+            raise OSError("le service de traduction n'est pas démarré sur cette machine (voir outils/libretranslate/LISEZMOI.md)") from exc
+        raise OSError("le moteur de traduction n'a pas pu être contacté") from exc
     t = rep.get("translatedText") if isinstance(rep, dict) else None
     if not isinstance(t, str) or not t.strip():
         raise ValueError("le moteur de traduction n'a rien rendu")

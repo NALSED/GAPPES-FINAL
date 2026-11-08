@@ -254,6 +254,47 @@ function rendreOptionsBudget(n, refresh, guarder) {
   );
 }
 
+// 10.2 (retour du 08/11/2026) : « Même entité si » et « En cas de doublon, garder » sont des choix fermés
+// (SEUILS_FUSION, suite_plan.py) oubliés de ce registre à sa création (905 §1) — ils tombaient sur le champ
+// texte libre générique, avec repli silencieux du moteur sur une faute de frappe. *large* regroupe davantage,
+// au risque de confondre deux entités ; *strict* ne propose que les quasi-certitudes, au risque de laisser
+// passer de vrais doublons.
+const NIVEAUX_FUSION = [
+  ["Large", "Regroupe plus largement : moins de doublons manqués, au risque de confondre deux entités différentes."],
+  ["Normal", "Réglage équilibré, par défaut."],
+  ["Strict", "Ne propose que les quasi-certitudes, au risque de laisser passer de vrais doublons."],
+];  // fmt: skip
+const CHOIX_GARDER_FUSION = ["la plus récente", "la première trouvée", "la plus fiable"];
+
+function rendreOptionsFusion(n, refresh, guarder) {
+  const niveau = optLabel(n, "Même entité si") || "Normal";
+  const garder = optLabel(n, "En cas de doublon, garder") || CHOIX_GARDER_FUSION[2];
+  return h(
+    "div", { class: "options-grille" },
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Même entité si"),
+      groupePuces(NIVEAUX_FUSION.map(([l]) => [l, l]), niveau, (v) => { optDefinir(n, "Même entité si", v); guarder(); refresh(); }),
+      h("span", { class: "aide-champ" }, NIVEAUX_FUSION.find(([l]) => l === niveau)?.[1] || "")),
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "En cas de doublon, garder"),
+      groupePuces(CHOIX_GARDER_FUSION.map((c) => [c, c]), garder, (v) => { optDefinir(n, "En cas de doublon, garder", v); guarder(); refresh(); })),
+  );
+}
+
+// 10.2, même oubli : l'intervalle de rafraîchissement de RSSHub est aussi une liste fermée (pas encore
+// consommée par le moteur, qui ne lit que « Site à transformer » — le réglage se garde en attendant).
+const INTERVALLES_RSSHUB = ["15 minutes", "30 minutes", "1 heure", "4 heures"];
+
+function rendreOptionsRsshub(n, refresh, guarder) {
+  const site = champ({ libelle: "Site à transformer", valeur: optLabel(n, "Site à transformer"), placeholder: "https://www.exemple.fr/rubrique" });
+  site.saisie.addEventListener("change", () => { optDefinir(n, "Site à transformer", site.valeur()); guarder(); });
+  const intervalle = optLabel(n, "Rafraîchir toutes les") || INTERVALLES_RSSHUB[1];
+  return h(
+    "div", { class: "options-grille" },
+    site.el,
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Rafraîchir toutes les"),
+      groupePuces(INTERVALLES_RSSHUB.map((c) => [c, c]), intervalle, (v) => { optDefinir(n, "Rafraîchir toutes les", v); guarder(); refresh(); })),
+  );
+}
+
 // 3.8.09 : liste fermée mais extensible (pilote.operations_ia.vue, même principe que les formats de sortie, 3.8.01).
 let OPERATIONS_IA_CACHE = null;
 async function chargerOperationsIa() {
@@ -267,26 +308,35 @@ function rendreOptionsIa(n, refresh, guarder) {
     return h("p", { class: "legende" }, "Les opérations arrivent…");
   }
   const operation = optLabel(n, "Opération") || OPERATIONS_IA_CACHE[0]?.nom || "";
-  const modele = champ({ libelle: "Modèle", valeur: optLabel(n, "Modèle"), placeholder: "laisse vide pour le modèle par défaut de l'agent" });
-  modele.saisie.addEventListener("change", () => { optDefinir(n, "Modèle", modele.valeur()); guarder(); });
+  // 12.3 (08/11/2026) : le champ « Modèle » disparaît — le modèle est l'agent Claude installé sur la machine,
+  // point ; on verra plus tard s'il doit revenir. Le réglage se garde en base s'il existait déjà, juste plus édité ici.
   const marquer = optLabel(n, "Marquer les résultats") !== "non";
   const effort = optLabel(n, "Effort") || EFFORTS_IA[0];
-  const plafond = champ({ libelle: "Traiter au maximum", valeur: optLabel(n, "Traiter au maximum"), placeholder: "laisse vide pour tout traiter", type: "number" });
+  // 12.4 : « Traiter au maximum » ne disait ni qu'il s'agit de FICHES, ni ce qu'il advient des autres (elles
+  // passent sans être touchées) — les deux sont dites dans le libellé et son aide.
+  const plafond = champ({ libelle: "Traiter au maximum (fiches)", valeur: optLabel(n, "Traiter au maximum"), placeholder: "laisse vide pour toutes les traiter", type: "number" });
   plafond.saisie.addEventListener("change", () => { optDefinir(n, "Traiter au maximum", plafond.valeur()); guarder(); });
+  // 12.2 : « Classer / catégoriser » ne range tout dans « autre » que parce qu'aucun champ ne permet de saisir
+  // ses catégories — ajouté seulement pour cette opération, pour ne pas encombrer les deux autres qui n'en ont pas besoin.
+  const estClasser = operation === "Classer / catégoriser";
+  const categories = estClasser ? champ({ libelle: "Catégories (séparées par une virgule)", valeur: optLabel(n, "Catégories"), placeholder: "ex. association, entreprise, administration" }) : null;
+  if (categories) categories.saisie.addEventListener("change", () => { optDefinir(n, "Catégories", categories.valeur()); guarder(); });
   return h(
     "div", { class: "options-grille" },
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Opération"),
       groupePuces(OPERATIONS_IA_CACHE.map((o) => [o.nom, o.nom]), operation, (v) => { optDefinir(n, "Opération", v); guarder(); refresh(); }),
       h("span", { class: "aide-champ" }, OPERATIONS_IA_CACHE.find((o) => o.nom === operation)?.description || "")),
-    modele.el,
+    categories && h("div", { class: "champ" }, categories.el,
+      h("span", { class: "aide-champ" }, "Sans cette liste, l'opération ne peut pas être lancée.")),
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Effort"),
       groupePuces(EFFORTS_IA.map((e) => [e, e]), effort, (v) => { optDefinir(n, "Effort", v); guarder(); refresh(); }),
       h("span", { class: "aide-champ" }, "Plus d'effort : une réponse plus réfléchie, mais plus lente.")),
-    plafond.el,
+    h("div", { class: "champ" }, plafond.el,
+      h("span", { class: "aide-champ" }, "Les fiches au-delà de cette limite passent sans être touchées par l'IA.")),
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Marquer les résultats"),
       groupePuces([["oui", "oui"], ["non", "non"]], marquer ? "oui" : "non", (v) => { optDefinir(n, "Marquer les résultats", v); guarder(); refresh(); }),
       h("span", { class: "aide-champ" }, "Par défaut activé : ce que l'IA produit reste marqué « IA » dans la grappe.")),
   );
 }
 
-export const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true), boucle: rendreOptionsBoucle, attente: rendreOptionsAttente, budget: rendreOptionsBudget, ia: rendreOptionsIa };
+export const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true), boucle: rendreOptionsBoucle, attente: rendreOptionsAttente, budget: rendreOptionsBudget, ia: rendreOptionsIa, fusion: rendreOptionsFusion, rsshub: rendreOptionsRsshub };

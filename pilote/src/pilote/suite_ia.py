@@ -113,7 +113,8 @@ def appliquer_lignes(lignes: list[dict], operation: dict, ia_spec: dict, signale
                 "ia_non_traitees": len(a_traiter) - n, **({"ia_plafonnees": plafonnees} if plafonnees else {}),
             }  # fmt: skip
         try:
-            texte, cout = appliquer(operation, ligne, {}, ia_spec.get("modele", ""), ia_spec.get("effort", ""))
+            options = {"categories": ia_spec.get("categories", "")} if ia_spec.get("categories") else {}
+            texte, cout = appliquer(operation, ligne, options, ia_spec.get("modele", ""), ia_spec.get("effort", ""))
         except (OSError, ValueError) as exc:
             echecs += 1
             if signaler:
