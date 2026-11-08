@@ -1,15 +1,19 @@
 # ETAT — grappes
 
-Phase en cours : 905 §2/906/907 (hors du pavé, enchaînés sur demande de Sednal le 08/11/2026) — 905 §2 codé
-(vérification `.60` restante), 906 et 907 codés et testés en réel ; 905 §3 (suppression ancienne UI) et 903
-pièce 2/2 en attente.
+Phase en cours : 908 (retour de Sednal du 08/11/2026, autonomie complète — momo tranche, trace dans
+DECISIONS.md) — étape 1/6 de l'ordre de travail de la spec faite (commit `d4b2f0f`, D89) ; étapes 2 à 6
+restantes. En parallèle : 905 §2 (vérification `.60` par Sednal), 905 §3 et 903 pièce 2/2 en attente.
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-08 (D88 : 905 §2 — MCP/fichier/base/base extérieure/programme local ajoutables
-depuis `/suite` ; 906 — Scrapling branché (nouvel adaptateur générique, dépendance optionnelle) ; 907 — HDX et
-UN Civil Society Database ajoutées en réel (`config/sources/hdx.yaml`, `un-civil-society.yaml`), testées de
-bout en bout sur le vrai service. Détail et vérifications : D88. Suite pilote complète relancée (2 échecs
-pré-existants, hors de ce pavé — QUESTIONS.md).
+Dernière mise à jour : 2026-11-08 (D89 : 908 étape 1 — fusion/rsshub en pastilles, Modèle masqué en
+modification d'un outil, textes entiers, « illimité » corrigé pour une source payante, catégories de
+l'Assistant IA branchées, chemin en dur et erreur Python brute corrigés côté Traduction. Détail : D89. Suite
+pilote complète relancée (1 échec pré-existant, hors de ce travail — QUESTIONS.md).
+
+D88 (précédent) : 905 §2 — MCP/fichier/base/base extérieure/programme local ajoutables depuis `/suite` ; 906 —
+Scrapling branché (nouvel adaptateur générique, dépendance optionnelle) ; 907 — HDX et UN Civil Society
+Database ajoutées en réel (`config/sources/hdx.yaml`, `un-civil-society.yaml`), testées de bout en bout sur le
+vrai service.
 
 903, pièce 1/2 faite (NER élargi à PER/LOC, commit `92c890e`) — prépare le filtre « Ce que je recherche » sans
 encore le consommer. Pièce 2/2 (`TypeDemande` multi-natures, champ UI, export par cible) **en attente d'une

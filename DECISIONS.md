@@ -362,3 +362,20 @@ résultats (convention des autres `exemples/*.json|txt`, pas la page brute).
 
 Tests : `tests/test_f20_scrapling.py` (+7, serveur HTTP local, se saute sans `scrapling`). Suite pilote complète
 relancée (voir `QUESTIONS.md` pour les 2 échecs pré-existants, hors de ce pavé).
+
+## D89 — 908, étape 1 (08/11/2026, retour de Sednal, autonomie complète)
+
+Spec 908 (`NALSED/GRAPPES`, commit `54fd218`) : retour de Sednal après usage réel de `/suite` sur `.60`,
+quinze points tranchés, momo a toute autonomie dessus. Ordre de travail proposé par la spec suivi tel quel.
+
+**Étape 1 (corrections contenues), commit `d4b2f0f`** : voir le message de commit pour le détail des huit
+points (10.2, 5.1, 3.6, 3.4/4.1, 12.2, 12.3/12.4, 7.1 × 2). Un choix fait seul à noter : les quatre intervalles
+de `rsshub` (« Rafraîchir toutes les ») ne sont pas encore consommés par le moteur (seul « Site à transformer »
+l'est) — rendu en pastilles quand même, pour la même raison que `fusion` (repli silencieux évité), le
+branchement réel restant à faire ailleurs dans le pavé.
+
+Note : le point 7.1 (« aucune erreur technique brute à l'écran ») n'a été corrigé que sur le cas réellement
+rencontré (LibreTranslate). D'autres `except ... as exc: raise ...(f"...{exc}")` existent ailleurs dans le
+code (`ajout.py`, `fichier_local.py`, `sources_ajout.py`, `taches.py`…) sans qu'un cas réel ait révélé un
+texte Python brut à l'écran pour eux — je ne les ai pas réécrits à l'aveugle (rien à deviner sans un vrai cas),
+mais la règle s'applique à toute correction future qui en croise un.
