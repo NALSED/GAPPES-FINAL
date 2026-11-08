@@ -387,6 +387,38 @@ def test_script_sans_reseau_et_borne_en_temps(c):
     assert c.post(f"/api/suite/outils/{boucle}/test").json()["ok"] is False
 
 
+# --- 6.1 (retour du 08/11/2026) : les dix outils livrés avaient un « test » qui ne vérifiait que des champs non
+# vides, toujours réussi. « si », « filtre » et « format » s'exécutent désormais réellement sur leur exemple.
+def test_le_test_de_si_et_filtre_execute_vraiment_les_conditions(c):
+    r = c.post("/api/suite/outils/si/test").json()
+    assert r["ok"] is True and r["execute"] is True
+    assert json.loads(r["sortie"])["non"] == [{"nom": "Entreprise C", "genre_de_chose": "entreprise"}]
+    r = c.post("/api/suite/outils/filtre/test").json()
+    assert r["ok"] is True and r["execute"] is True
+    assert json.loads(r["sortie"]) == [{"nom": "A", "pays": "FR"}, {"nom": "B", "pays": "FR"}]
+
+
+def test_le_test_de_si_echoue_si_la_sortie_attendue_ne_colle_plus(c):
+    c.put("/api/suite/outils/si", json={"test_sortie": '{"oui": [], "non": []}'})
+    r = c.post("/api/suite/outils/si/test").json()
+    assert r["ok"] is False and "n'est pas celle attendue" in r["raisons"][0]
+    assert outil(c, "si")["etat"] == "warn"  # 6.1 : jamais « opérationnel » sur un test qui a vraiment échoué
+
+
+def test_le_test_de_format_execute_vraiment_le_vrai_ecrivain_csv(c):
+    r = c.post("/api/suite/outils/format/test").json()
+    assert r["ok"] is True and r["execute"] is True and r["sortie"] == "nom;ville;pays\nClub A;Lyon;FR\n"
+
+
+def test_le_test_d_un_outil_non_executable_ne_dit_jamais_operationnel(c):
+    # fusion, boucle, ia, rsshub, attente, budget : pas d'exemple isolé possible (rapprochement entre plusieurs
+    # résultats réels, agent, ou réseau). Jamais « opérationnel » sur la seule base d'un champ non vide (6.1).
+    r = c.post("/api/suite/outils/fusion/test").json()
+    assert r["ok"] is False and r["execute"] is False
+    assert "ne peut pas être vérifié sur un exemple isolé" in r["raisons"][0]
+    assert outil(c, "fusion")["etat"] == "warn"
+
+
 # --- 05 : une clé d'API ne ressort JAMAIS de l'API, seulement « enregistrée »
 def test_la_cle_ne_sort_jamais(c, cfg):
     secret = "sk-ultra-secret-12345"

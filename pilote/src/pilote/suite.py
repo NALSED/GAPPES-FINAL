@@ -391,11 +391,86 @@ def retirer_outil(cfg: Config, ident: str, retire: bool = True) -> dict[str, Any
     return modifier(cfg, f)
 
 
+# 6.1 (retour du 08/11/2026) : genres de modèle livré qu'on peut réellement exécuter sur un exemple isolé, sans
+# réseau ni agent. Les autres (fusion, boucle, ia, rsshub, attente, budget) ont besoin de plusieurs résultats
+# réels rapprochés entre eux, d'un agent, ou du réseau — pas d'un exemple isolé : prétendre les exécuter serait
+# une nouvelle façon de dire « opérationnel » sans rien avoir vérifié, exactement le défaut que ce point corrige.
+_GENRES_EXECUTABLES = {"si", "filtre", "format"}
+
+
+def _executer_si_filtre(o: dict[str, Any], genre: str) -> dict[str, Any]:
+    from pilote.suite_plan import _lignes_conditions, _option, _teste_lignes
+
+    try:
+        entree = json.loads(o["test_entree"] or "null")
+    except ValueError:
+        entree = None
+    if not isinstance(entree, list):
+        return {"ok": False, "sortie": "", "raisons": ["l'exemple d'entrée n'est pas une liste de résultats en JSON"]}
+    try:
+        lignes_cond, mode = _lignes_conditions(o["nom"], o["options"])
+    except ConfigRefusee as exc:
+        return {"ok": False, "sortie": "", "raisons": [str(exc)]}
+    passe = [isinstance(ligne, dict) and _teste_lignes(ligne, lignes_cond, mode, {}, None) for ligne in entree]
+    if genre == "filtre":
+        gardees = [ligne for ligne, p in zip(entree, passe) if p]
+        maximum = _option(o["options"], 0, "garder au maximum")
+        obtenue: Any = gardees[: int(maximum)] if maximum.strip().isdigit() else gardees
+    else:  # « si » : deux sorties, oui et non
+        obtenue = {
+            "oui": [ligne for ligne, p in zip(entree, passe) if p],
+            "non": [ligne for ligne, p in zip(entree, passe) if not p],
+        }
+    sortie_txt = json.dumps(obtenue, ensure_ascii=False)
+    attendue_txt = o["test_sortie"].strip()
+    if not attendue_txt:
+        return {"ok": False, "sortie": sortie_txt, "raisons": ["la sortie attendue est vide"]}
+    try:
+        ok = obtenue == json.loads(attendue_txt)
+    except ValueError:
+        return {"ok": False, "sortie": sortie_txt, "raisons": ["la sortie attendue n'est pas un JSON lisible"]}
+    return {"ok": ok, "sortie": sortie_txt, "raisons": [] if ok else ["la sortie obtenue n'est pas celle attendue"]}
+
+
+def _executer_format(cfg: Config, o: dict[str, Any]) -> dict[str, Any]:
+    import tempfile
+    from pathlib import Path
+
+    from pilote import formats as _formats
+
+    try:
+        lignes = json.loads(o["test_entree"] or "null")
+    except ValueError:
+        lignes = None
+    if not isinstance(lignes, list):
+        return {"ok": False, "sortie": "", "raisons": ["l'exemple d'entrée n'est pas une liste de résultats en JSON"]}
+    opts_map = {lib: v for lib, v in o["options"]}
+    connus = _formats.decouvrir(cfg)
+    choisis = [fid for fid in connus if fid in re.sub(r"[^a-z0-9]+", " ", str(opts_map.get("Format de sortie", "")).lower()).split()]
+    if not choisis:
+        return {"ok": False, "sortie": "", "raisons": ["aucun format de sortie n'est choisi"]}
+    f = connus[choisis[0]]  # un seul exécuté : les autres formats choisis suivent la même logique, un exemple suffit à vérifier la fiche
+    contenu = opts_map.get(f"{f['nom']} : contenu") or f["contenus_defaut"][0]
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            chemin = Path(d) / f"exemple{f['extension'] or '.out'}"
+            f["module"].ecrire({"lignes": lignes, "trace": {}}, contenu, {}, chemin)
+            obtenue = chemin.read_text(encoding="utf-8")
+    except Exception as exc:  # noqa: BLE001 - un exemple mal formé pour ce format : le dire, jamais planter l'API
+        return {"ok": False, "sortie": "", "raisons": [f"« {f['nom']} » n'a pas pu écrire cet exemple : {exc}"]}
+    attendue = o["test_sortie"]
+    if not attendue.strip():
+        return {"ok": False, "sortie": obtenue, "raisons": ["la sortie attendue est vide"]}
+    ok = obtenue.strip() == attendue.strip()
+    return {"ok": ok, "sortie": obtenue, "raisons": [] if ok else ["la sortie obtenue n'est pas celle attendue"]}
+
+
 def tester_outil(cfg: Config, ident: str) -> dict[str, Any]:
     from pilote import suite_script
 
     def f(e):
         o = _trouver(e["outils"], ident, "L'outil")
+        genre = o.get("modele") if o["nature"] == "modele" else None
         if o["nature"] == "script":
             res = suite_script.executer(o["code"], o["test_entree"])
             ok = res["ok"] and (not o["test_sortie"].strip() or _meme_sortie(res["sortie"], o["test_sortie"]))
@@ -403,22 +478,18 @@ def tester_outil(cfg: Config, ident: str) -> dict[str, Any]:
                 res = {**res, "ok": False, "erreur": "La sortie obtenue n'est pas celle attendue."}
             sortie = res["sortie"] if res["ok"] or res.get("sortie") else res.get("erreur", "")
             raisons = [] if ok else [res.get("erreur") or "Le test a échoué."]
-        else:  # un modèle livré ne s'exécute pas encore sur de vraies données : on vérifie la fiche, et on le dit
-            raisons = [
-                m
-                for m, vide in (
-                    ("l'exemple d'entrée est vide", not o["test_entree"].strip()),
-                    ("la sortie attendue est vide", not o["test_sortie"].strip()),
-                )
-                if vide
-            ]
-            ok, sortie = not raisons, o["test_sortie"]
+        elif genre in _GENRES_EXECUTABLES:  # 6.1 : une vraie exécution sur l'exemple, jamais un simple « champ non vide »
+            res = _executer_format(cfg, o) if genre == "format" else _executer_si_filtre(o, genre)
+            ok, sortie, raisons = res["ok"], res["sortie"], res["raisons"]
+        else:  # fusion, boucle, ia, rsshub, attente, budget : pas exécutable sur un exemple isolé (6.1) — jamais « opérationnel » sans preuve
+            raisons = ["cet outil ne peut pas être vérifié sur un exemple isolé (il lui faut plusieurs résultats réels, un agent, ou le réseau) : la fiche est relue, pas exécutée"]
+            ok, sortie = False, o["test_sortie"]
         o["test_reussi"] = ok
         if not ok and o["etat"] == "ok":
             o["etat"] = "warn"
         elif ok and o["etat"] == "warn":
             o["etat"] = "ok"
-        return {"ok": ok, "sortie": sortie, "raisons": raisons, "execute": o["nature"] == "script", "outil": o}
+        return {"ok": ok, "sortie": sortie, "raisons": raisons, "execute": o["nature"] == "script" or genre in _GENRES_EXECUTABLES, "outil": o}
 
     return modifier(cfg, f)
 

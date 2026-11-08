@@ -352,6 +352,10 @@ export function ficheOutil(id) {
   const edition = !!id;
   const o = edition ? outilParId(id) : { nom: "", nature: "modele", modele: null, role: "OUTIL", fait: "", recoit: "", renvoie: "", effet: "journal", options: [], code: CODE_MODELE, test_entree: "", test_sortie: "", etat: "warn", livre: false };
   const val = { nature: o.nature, modele: o.modele, role: o.role, effet: o.effet, options: o.options.map((p) => [...p]) };
+  // 7.2 (retour du 08/11/2026) : Traduction a déjà son propre test réel (« Tester sur un exemple », dans
+  // « Réglages du modèle », qui appelle vraiment le moteur de traduction) — le bloc « Vérifier » générique
+  // ci-dessous ne peut plus réussir pour elle (6.1) et ferait doublon avec un intitulé presque identique.
+  const genreInitial = genreDeOutil({ nature: val.nature, modele: val.modele, id: o.id });
   const f = {
     nom: champ({ libelle: "Nom de l'outil", valeur: o.nom, placeholder: "ex. Garder la France" }),
     code: champ({ libelle: "Ton script (Python)", valeur: o.code || CODE_MODELE, lignes: 7, code: true, aide: "Le script reçoit la liste des résultats et renvoie une liste. Il tourne dans un processus isolé : pas de réseau, 10 secondes au maximum." }),
@@ -452,9 +456,11 @@ export function ficheOutil(id) {
     f.nom.el, ...(edition ? [] : [zones.nature, zones.modele]), f.fait.el,
     h("span", { class: "titre-bloc" }, "Réglages"),
     zones.options, f.code.el, f.recoit.el, f.renvoie.el, zones.role, zones.effet,
-    h("span", { class: "titre-bloc" }, "Vérifier"),
-    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Test sur un exemple"), h("div", { class: "deux-col" }, f.entree.el, f.sortie.el), bouton({ libelle: `${VERBES.lancer} le test`, icon: "tester", petit: true, onclick: tester }), resultatTest,
-      h("span", { class: "aide-champ" }, "L'outil passe « opérationnel » après un test réussi.")),
+    ...(genreInitial === "traduction" ? [] : [
+      h("span", { class: "titre-bloc" }, "Vérifier"),
+      h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Test sur un exemple"), h("div", { class: "deux-col" }, f.entree.el, f.sortie.el), bouton({ libelle: `${VERBES.lancer} le test`, icon: "tester", petit: true, onclick: tester }), resultatTest,
+        h("span", { class: "aide-champ" }, "L'outil passe « opérationnel » après un test réussi.")),
+    ]),
     f.cle.el,
   ];
   const pied = [manque, h("div", { class: "pied-boutons" }, principal, bouton({ libelle: VERBES.annuler, onclick: () => couche.fermer(true) }),

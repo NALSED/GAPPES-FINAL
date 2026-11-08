@@ -30,21 +30,30 @@ AVERTISSEMENT_IA = [
 
 # (id, nom, rôle, état, fait, reçoit, renvoie, effet, options, entrée de test, sortie de test)
 _OUTILS: list[tuple[Any, ...]] = [
+    # 6.1 (retour du 08/11/2026) : exemple réellement exécutable (le vrai écrivain CSV, « tsites », sépare par « ; »
+    # et porte nom/ville/pays) — l'ancien exemple ("nom;ville\nClub A;Lyon") ne correspondait déjà plus à ce que le
+    # programme écrit vraiment.
     ("format", "Format de sortie", "OUTIL", "ok", "Choisit dans quel(s) fichier(s) la recherche s'exporte.", "Les résultats de la recherche", "Un fichier par format choisi", "journal",
-     [["Format de sortie", "CSV"], ["Séparateur", ";"]], '{"nom": "Club A", "ville": "Lyon"}', "nom;ville\nClub A;Lyon"),
+     [["Format de sortie", "CSV"], ["Séparateur", ";"], ["CSV : contenu", "tsites"]], '[{"nom": "Club A", "ville": "Lyon", "pays": "FR"}]', "nom;ville;pays\nClub A;Lyon;FR\n"),
     ("traduction", "Traduction", "OUTIL", "ok", "Traduit la requête ou les résultats, et garde toujours l'original à côté.", "Le texte de la recherche, ou les résultats trouvés",
      "Le même contenu, avec sa traduction ajoutée à côté — l'original n'est jamais remplacé", "journal",
      [["Langue d'entrée", "détecter"], ["Traduire vers", "français, anglais, allemand"], ["Ne pas traduire", ""], ["Protéger certains mots", "oui"]],
      "charpentier (français)", "charpentier (fr, original)\nZimmermann (de)\ncarpenter (en)"),
+    # 6.1 : exemple réellement exécutable par le même moteur que la tuile (`_lignes_conditions`/`_teste_lignes`).
     ("si", "Condition « si »", "OUTIL", "ok", "Envoie les résultats vers une branche ou une autre selon un test.", "Une liste de résultats", "Deux listes : oui et non", "compteur",
-     [["Si le champ", "catégorie"], ["est égal à", "association"]], "3 résultats : 2 associations, 1 entreprise", "oui : 2 résultats\nnon : 1 résultat"),
+     [["Si le champ", "catégorie"], ["est égal à", "association"]],
+     '[{"nom": "Club A", "genre_de_chose": "association"}, {"nom": "Club B", "genre_de_chose": "association"}, {"nom": "Entreprise C", "genre_de_chose": "entreprise"}]',
+     '{"oui": [{"nom": "Club A", "genre_de_chose": "association"}, {"nom": "Club B", "genre_de_chose": "association"}], "non": [{"nom": "Entreprise C", "genre_de_chose": "entreprise"}]}'),
     ("boucle", "Boucle", "OUTIL", "ok", "Répète une recherche pour chaque élément d'une liste.", "Une liste (villes, noms…)", "Les résultats de chaque tour, regroupés", "journal",
      [["Origine de la liste", "Liste collée"], ["Liste", ""], ["Répéter pour chaque", "le lieu cherché"], ["Maximum de tours", "50"]],
      "Liste de 3 villes", "3 recherches lancées\n3 réponses regroupées"),
     ("fusion", "Fusion / doublons", "RAPPROCHER", "ok", "Regroupe les résultats qui parlent de la même entité.", "Plusieurs listes de résultats", "Une seule liste sans doublons", "compteur",
      [["Même entité si", "Normal"], ["En cas de doublon, garder", "la plus fiable"]], "5 résultats dont 2 doublons", "3 résultats"),
+    # 6.1 : idem, même moteur que le filtre réel.
     ("filtre", "Filtre", "OUTIL", "ok", "Garde seulement les résultats qui répondent à un critère.", "Une liste de résultats", "La même liste, réduite", "compteur",
-     [["Garder si le champ", "pays"], ["est égal à", "FR"]], "3 résultats : FR, FR, UK", "2 résultats : FR, FR"),
+     [["Garder si le champ", "pays"], ["est égal à", "FR"]],
+     '[{"nom": "A", "pays": "FR"}, {"nom": "B", "pays": "FR"}, {"nom": "C", "pays": "UK"}]',
+     '[{"nom": "A", "pays": "FR"}, {"nom": "B", "pays": "FR"}]'),
     ("attente", "Quand une source est à court", "OUTIL", "off", "Dit si une source à court de quota externe arrête toute la recherche, ou si on continue sans elle.",
      "Une source qui épuise son quota externe (le programme réessaie déjà seul les limites qui se renouvellent vite)", "Les autres sources continuent, ou la recherche s'arrête proprement", "journal",
      [["Quand le quota est atteint", "Sauter cette source, continuer les autres"]], "OpenSanctions : quota mensuel épuisé", "Les autres sources continuent normalement"),
