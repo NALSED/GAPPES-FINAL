@@ -161,6 +161,9 @@ function sectionAlertes(r, reglages) {
     alertes.push(`${nom} est en pause : ${raison}.`);
   }
   if (r.avancement?.limitee_aux_gratuites) alertes.push("Plafond du mois atteint : seules les sources gratuites sont interrogées.");
+  // 2.3 (retour du 08/11/2026) : l'effet « alerte » du Compteur budget (seuil « À partir de … %», action « Prévenir »)
+  // n'avait aucun chemin jusqu'ici — calculé par l'exécuteur (executeur_grappes.verifier_alerte_budget), affiché ici.
+  if (r.avancement?.alerte_budget) alertes.push(r.avancement.alerte_budget);
   if (!alertes.length) return null;
   return h("div", { class: "champ" }, alertes.map((texte) => h("div", { class: "alerte-ligne" }, icone("attention", 20), h("span", {}, texte))));
 }

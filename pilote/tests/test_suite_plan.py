@@ -34,7 +34,7 @@ OUTILS = [
     outil("si", options=[("Si le champ", "catégorie"), ("est égal à", "association")]),
     outil("fusion"), outil("format", options=[("Format de sortie", "CSV"), ("Séparateur", ";")]),
     outil("traduction", options=[("Langue d'entrée", "détecter"), ("Traduire vers", "français, anglais"), ("Ne pas traduire", "rien")]),
-    outil("boucle"), outil("ia", etat="off"), outil("attente"), outil("rsshub"),
+    outil("boucle"), outil("ia", etat="off"), outil("attente"), outil("rsshub"), outil("budget"),
 ]  # fmt: skip
 
 
@@ -293,6 +293,26 @@ def test_attente_choix_arreter_toute_la_recherche():
     c = comp(p)
     assert c["attente"] == {"tuile": "at", "action": "arreter"}
     assert any("arrête toute la recherche" in x["texte"] for x in c["appliques"] if x["nom"] == "at")
+
+
+# 2.3 (retour du 08/11/2026) : le plafond PROPRE à la recherche reste non appliqué (NON_APPLIQUES, inchangé),
+# mais son seuil et son action « Prévenir » sont désormais extraits pour l'alerte du Tableau de bord.
+def test_budget_alerte_extraite_montant_fixe_par_defaut():
+    p = plan([("saisie",), ("grappes",), ("n1", "a"), ("bu", "budget")],
+             [lien("saisie", "n1"), lien("n1", "bu"), lien("bu", "grappes")])  # fmt: skip
+    c = comp(p)
+    assert c["budget_alerte"] == {"tuile": "bu", "nom": "bu", "type": "montant", "montant": 5.0, "seuil_pct": 80.0, "prevenir": True}
+    assert any("plafond de dépense est celui de Réglages" in x["raison"] for x in c["non_appliques"] if x["nom"] == "bu")
+
+
+def test_budget_alerte_pourcentage_et_action_ne_rien_faire():
+    p = plan(
+        [("saisie",), ("grappes",), ("n1", "a"),
+         ("bu", "budget", None, [["Budget maximum", "Pourcentage du plafond mensuel"], ["Pourcentage du plafond mensuel", "10"], ["À partir de", "50"], ["Action", "Ne rien faire"]])],
+        [lien("saisie", "n1"), lien("n1", "bu"), lien("bu", "grappes")],
+    )  # fmt: skip
+    c = comp(p)
+    assert c["budget_alerte"] == {"tuile": "bu", "nom": "bu", "type": "pourcentage", "pourcentage": 10.0, "seuil_pct": 50.0, "prevenir": False}
 
 
 def test_boucle_non_appliquee_dit_pourquoi_selon_l_origine():

@@ -342,7 +342,6 @@ class ExecuteurGrappes:
 
     def compter_couts(self, ctx: ContexteRecherche, spec: dict[str, Any], suivi_fichier: Path) -> None:
         """Garde ce que la recherche a coûté (sources payantes seulement) : c'est la dépense du mois, comparée au plafond."""
-        from pilote import budget
         from pilote.moteur_sources import choisies, verificatrices
 
         n = appels_par_source(suivi_fichier, spec.get("jetons", {}))
@@ -351,4 +350,24 @@ class ExecuteurGrappes:
         reg, _ = rg.charger_tolerant(self.cfg)
         sources = {d.id: (d, rg.choix_source(reg, d)["cout"]) for d in [*choisies(self.cfg, ctx.parametres), *verificatrices(self.cfg, ctx.parametres)]}
         _, unites = ctx.depense_du_mois()
-        ctx.enregistrer_couts(budget.couts_de_la_recherche(sources, n, unites))
+        couts = budget.couts_de_la_recherche(sources, n, unites)
+        ctx.enregistrer_couts(couts)
+        self.verifier_alerte_budget(ctx, spec, couts)
+
+    def verifier_alerte_budget(self, ctx: ContexteRecherche, spec: dict[str, Any], couts: dict[str, dict[str, float]]) -> None:
+        """2.3 (retour du 08/11/2026) : le seuil « À partir de … % » et l'action « Prévenir » du Compteur budget
+        (3.8.08) ne menaient nulle part — aucun chemin d'affichage pour l'effet « alerte ». Évalué ici, une fois,
+        à la fin de la recherche (le seul moment où son propre coût est connu) ; « Ne rien faire » ne produit
+        toujours aucune alerte, et le plafond PROPRE à la recherche reste non appliqué (NON_APPLIQUES, inchangé)."""
+        alerte = ((spec.get("plan") or {}).get("budget_alerte"))
+        if not alerte or not alerte["prevenir"]:
+            return
+        depense = sum(c.get("dollars", 0.0) for c in couts.values())
+        maximum = budget.plafond_mensuel(self.cfg) * alerte["pourcentage"] / 100 if alerte["type"] == "pourcentage" else alerte["montant"]
+        if maximum <= 0:
+            return
+        pct = round(depense / maximum * 100)
+        if pct >= alerte["seuil_pct"]:
+            texte = f"« {alerte['nom']} » : {pct} % du budget de cette recherche ({depense:.4f} $ sur {maximum:.4f} $)".replace(".", ",")
+            ctx.avancer(alerte_budget=texte)
+            ctx.noter("alerte_budget_tuile", tuile=alerte["tuile"], pct=pct)

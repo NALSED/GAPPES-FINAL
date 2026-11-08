@@ -249,6 +249,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     attente: dict[str, Any] | None = None
     ia: dict[str, Any] | None = None
     rsshub: list[dict[str, Any]] = []  # 3.8.10 : un site par tuile ; son flux est trouvé au lancement (réseau), pas ici
+    budget_alerte: dict[str, Any] | None = None  # 2.3 : le seuil/l'action du Compteur budget, pour l'alerte du Tableau de bord
     effets: dict[str, str] = {}  # tuile -> effet dans le Tableau de bord (1.1 §5) : lu par ExecuteurGrappes pour « tuile_passee »
     for i in chemin_outils:
         node, o = nodes[i], par_outil[ref(i)]
@@ -355,6 +356,23 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
                 raise ConfigRefusee(f"« {node['nom']} » : donne l'adresse du site à transformer (par exemple https://www.exemple.fr/rubrique).")
             else:
                 rsshub.append({"tuile": i, "nom": node["nom"], "site": site})
+        elif genre == "budget":
+            # 2.3 (retour du 08/11/2026) : le plafond propre à la recherche n'est toujours pas appliqué (NON_APPLIQUES,
+            # inchangé) — seul son seuil d'ALERTE est désormais extrait, pour que « À partir de … % » et « Prévenir »
+            # produisent une vraie ligne dans le Tableau de bord (exécuteur_grappes, à la fin de la recherche).
+            opts_map = {lib: v for lib, v in opts}
+            seuil_txt = str(opts_map.get("À partir de", "80") or "80").strip().replace(",", ".")
+            seuil_pct = float(seuil_txt) if re.fullmatch(r"\d+(\.\d+)?", seuil_txt) else 80.0
+            prevenir = norme(opts_map.get("Action", "Prévenir")) != "ne rien faire"
+            if "pourcentage" in norme(opts_map.get("Budget maximum", "Montant fixe")):
+                pourcentage_txt = str(opts_map.get("Pourcentage du plafond mensuel", "20") or "20").strip().replace(",", ".")
+                pourcentage = float(pourcentage_txt) if re.fullmatch(r"\d+(\.\d+)?", pourcentage_txt) else 20.0
+                budget_alerte = {"tuile": i, "nom": node["nom"], "type": "pourcentage", "pourcentage": pourcentage, "seuil_pct": seuil_pct, "prevenir": prevenir}
+            else:
+                montant_txt = str(opts_map.get("Montant (crédits)", "5") or "5").strip().replace(",", ".")
+                montant = float(montant_txt) if re.fullmatch(r"\d+(\.\d+)?", montant_txt) else 5.0
+                budget_alerte = {"tuile": i, "nom": node["nom"], "type": "montant", "montant": montant, "seuil_pct": seuil_pct, "prevenir": prevenir}
+            dire_non(i, NON_APPLIQUES["budget"])
         elif genre in NON_APPLIQUES:
             dire_non(i, NON_APPLIQUES[genre])
         else:
@@ -371,7 +389,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     ordre = {i: k for k, i in enumerate(nodes)}
     return {
         "sources": sorted(dict.fromkeys(cherchent), key=lambda s: min(ordre[i] for i in chemin_sources if ref(i) == s)), "verificateurs": [{"id": v["id"], "en_amont": v["en_amont"], "fonction": v["fonction"]} for v in verifient],
-        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "attente": attente, "ia": ia, "rsshub": rsshub, "effets": effets, "appliques": appliques, "non_appliques": non_appliques,
+        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "attente": attente, "ia": ia, "rsshub": rsshub, "budget_alerte": budget_alerte, "effets": effets, "appliques": appliques, "non_appliques": non_appliques,
         "pays_equiv": pays_equiv or {},
     }  # fmt: skip
 
