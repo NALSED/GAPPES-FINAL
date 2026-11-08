@@ -426,3 +426,16 @@ Commit `5f3cd0f` : le test réel d'une source exposé depuis `/suite` (voir le m
 aucune nouvelle logique, `suite_reel.py` appelle `tests_source`/`rg.choix_source` exactement comme
 `api_reglages.py` le faisait déjà pour l'ancienne page — même verrou, même vérification de plafond, même
 façon de compter la dépense comme un test réel (pas une recherche).
+
+## D93 — 908, étape 4, point 2/7 (08/11/2026, 6.3)
+
+Commit `f94aefd` : destination des fichiers de sortie exposée et vérifiée (voir le message de commit).
+Décision de conception tracée ici : `verifier_dossier_sortie()` ne demande PAS que le dossier existe déjà — un
+dossier choisi dans Réglages avant la première recherche n'existe pas encore, et `exporter()` le crée à la
+volée (`mkdir(parents=True)`, déjà testé dans `test_f14_sortie.py`). Exiger l'existence immédiate aurait cassé
+cette convenience déjà en place ; la vérification porte sur l'ancêtre existant le plus proche (accessible en
+écriture ⇒ la création future réussira).
+
+Rangé dans la fiche de l'outil Format de sortie plutôt que dans une page « Réglages généraux » de `/suite`
+(qui n'existe pas) : c'est là que Sednal l'a réclamé, et le réglage reste quand même global (même route
+`PUT /api/reglages/sortie`, pas un second stockage par tuile).
