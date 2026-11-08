@@ -1,16 +1,20 @@
 # ETAT — grappes
 
 Phase en cours : 908 (retour de Sednal du 08/11/2026, autonomie complète — momo tranche, trace dans
-DECISIONS.md) — étapes 1 à 3/6 de l'ordre de travail de la spec faites (commits `d4b2f0f`/D89, `d7d46fb`/D90,
-`f349566`/D91) ; étapes 4 à 6 restantes. En parallèle : 905 §2 (vérification `.60` par Sednal), 905 §3 et 903
-pièce 2/2 en attente.
+DECISIONS.md) — étapes 1 à 3/6 faites (commits `d4b2f0f`/D89, `d7d46fb`/D90, `f349566`/D91) ; étape 4/6 en
+cours (chantiers de taille moyenne, 7 points, dans n'importe quel ordre) — point 1/7 fait (3.3, commit
+`5f3cd0f`/D92) ; 6 points restants dans l'étape 4, puis étapes 5 et 6. En parallèle : 905 §2 (vérification
+`.60` par Sednal), 905 §3 et 903 pièce 2/2 en attente.
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-08 (D91 : 908 étape 3 (6.1) — un vrai test pour « si »/Filtre/Format de sortie
-(exécution réelle, même moteur que la tuile) ; les six genres non exécutables hors ligne (fusion, boucle, ia,
-rsshub, attente, budget) ne peuvent plus afficher « opérationnel » sans preuve ; Traduction perd son bloc de
-test générique, doublon de son test réel (7.2). Détail : D91. Suite pilote complète relancée (673 passés, 2
-échecs pré-existants, hors de ce travail — QUESTIONS.md).
+Dernière mise à jour : 2026-11-08 (D92 : 908 étape 4, point 3.3 — le test réel d'une source (prix avant le
+clic, plafond mensuel) exposé depuis `/suite` ; pur portage des routes de l'ancienne page. Détail : D92.
+Suite pilote complète relancée (674 passés, 2 échecs pré-existants, hors de ce travail — QUESTIONS.md).
+
+D91 (précédent) : 908 étape 3 (6.1) — un vrai test pour « si »/Filtre/Format de sortie (exécution réelle,
+même moteur que la tuile) ; les six genres non exécutables hors ligne (fusion, boucle, ia, rsshub, attente,
+budget) ne peuvent plus afficher « opérationnel » sans preuve ; Traduction perd son bloc de test générique,
+doublon de son test réel (7.2).
 
 D90 (précédent) : 908 étape 2 — règle 3.10 appliquée : conditions « si »/Filtre en déroulants une par ligne,
 différences Filtre/« si » visibles, Format de sortie en blocs repliables, langues de Traduction multiples.

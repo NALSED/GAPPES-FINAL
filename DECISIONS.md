@@ -419,3 +419,10 @@ bloc générique de sa fiche pour ne plus avoir deux tests presque identiques à
 Je n'ai pas non plus caché le bouton « Lancer le test » pour les six genres non exécutables : le message
 clair qu'il produit désormais (« ne peut pas être vérifié sur un exemple isolé… ») suffit à dire la vérité,
 et retirer le bouton aurait été une extension non demandée par ce point précis.
+
+## D92 — 908, étape 4, point 1/7 (08/11/2026, 3.3)
+
+Commit `5f3cd0f` : le test réel d'une source exposé depuis `/suite` (voir le message de commit). Pur portage :
+aucune nouvelle logique, `suite_reel.py` appelle `tests_source`/`rg.choix_source` exactement comme
+`api_reglages.py` le faisait déjà pour l'ancienne page — même verrou, même vérification de plafond, même
+façon de compter la dépense comme un test réel (pas une recherche).
