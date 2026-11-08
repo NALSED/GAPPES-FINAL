@@ -9,6 +9,7 @@ dependencies = ["fastapi", "uvicorn", "sqlalchemy>=2", "pyyaml>=6", "apscheduler
 
 [project.optional-dependencies]
 dev = ["pytest", "httpx", "ruff", "playwright", "followthemoney", "emoji", "regex"]  # emoji et regex : l'oracle des tests de reconnaissance des emoji (UTS #51)
+scrapling = ["scrapling[fetchers]>=0.5"]  # spec 906 : famille prestataire de collecte, sans clé ni coût — absent par défaut (patchright/curl_cffi, ~65 Mo)
 
 [project.scripts]
 pilote = "pilote.__main__:main"

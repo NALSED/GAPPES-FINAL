@@ -118,3 +118,16 @@ racine). Toute recherche réelle (`test_suite_plan_moteur.py`, `test_f12_recherc
 explicitement hors de ce pavé, « à valider » avant de vider `grappes/` et `pilote/` de GRAPPES). Je ne l'ai pas
 touché : ce n'est pas mon rôle de le trancher seul, et plusieurs tuiles du pavé (3.8.04, 3.8.07, 3.8.09, 3.8.10)
 ne pourront être vérifiées pour de vrai qu'une fois ce trou refermé.
+
+## Deux tests rouges, pré-existants, hors de la 905 (constat, 08/11/2026)
+
+`rtk pytest -q` (suite complète) : 658 verts, 2 rouges. Vérifiés tous les deux : rouges aussi sur le commit juste
+avant la 905 §2 (bisecté par `git worktree` jusqu'à `1909984`, avant mes commits de la session) — pas une
+régression de ce travail.
+
+* `test_f19_retours_reglages.py::test_chaque_bloc_se_replie_et_garde_intitule_etat_et_rappel` : `assert blocs.count()
+  == 8` rend 9 (page `/` ancienne UI, `#pg-reglages details.bloc`). Pas creusé : hors sujet de la 905/906/907,
+  et touche l'ancienne UI que la 905 §3 va retirer.
+* `test_suite_plan.py::test_la_tuile_jouee_ne_depend_pas_du_hasard_du_processus` : le sous-processus lancé avec
+  `PYTHONHASHSEED` et `PATH=""` échoue (`CalledProcessError`) — sent la dérive d'environnement déjà vue côté
+  `grappes` (Q36 de `QUESTIONS.md` racine), pas une régression de code.

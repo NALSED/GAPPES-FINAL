@@ -9,10 +9,9 @@ import sqlite3
 import threading
 
 import pytest
-import yaml
 from conftest import copier_config
-from test_f07_reseaux import faux_mcp  # noqa: F401  (le serveur MCP simulé de la fiche 07)
 from fastapi.testclient import TestClient
+from test_f07_reseaux import faux_mcp  # noqa: F401  (le serveur MCP simulé de la fiche 07)
 
 from pilote import cles, suite
 from pilote.app import creer_app
