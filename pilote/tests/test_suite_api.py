@@ -5,10 +5,13 @@ from __future__ import annotations
 
 import http.server
 import json
+import sqlite3
 import threading
 
 import pytest
+import yaml
 from conftest import copier_config
+from test_f07_reseaux import faux_mcp  # noqa: F401  (le serveur MCP simulé de la fiche 07)
 from fastapi.testclient import TestClient
 
 from pilote import cles, suite
@@ -111,6 +114,69 @@ def test_champs_de_source_refuses_avec_la_raison(c):
     assert len(etat(c)["sources"]) == avant  # rien n'a été écrit
     assert c.post("/api/suite/sources", json=NOUVELLE).status_code == 201
     assert c.post("/api/suite/sources", json=NOUVELLE).status_code == 422  # même nom : refusé
+
+
+# --- 905 §2 : parité avec l'ancienne page Ajout pour les types manquants (MCP, fichier, base, base extérieure, programme local)
+COMMUN_TYPE = {"cat": "web", "role": "CHERCHER", "pays": "FR"}
+
+
+def test_une_source_mcp_s_ajoute_depuis_la_suite(c, cfg, faux_mcp):  # noqa: F811
+    url, _ = faux_mcp
+    corps = {**COMMUN_TYPE, "type": "mcp", "nom": "Mon serveur MCP", "mcp": url, "outil": "call-actor",
+             "exemple": json.dumps([{"fullName": "Club Imaginaire", "city": "Ville-Exemple"}]), "champ_nom": "fullName"}  # fmt: skip
+    r = c.post("/api/suite/sources", json=corps)
+    assert r.status_code == 201, r.json()
+    ident = r.json()["id"]
+    assert (cfg.dossier_sources / f"{ident}.yaml").exists()
+    assert src(c, ident)["declaree"] is True
+    assert c.post("/api/suite/sources", json={**corps, "mcp": "pas-une-adresse"}).status_code == 422
+
+
+def test_une_source_fichier_s_ajoute_depuis_la_suite(c, cfg, tmp_path):
+    f = tmp_path / "clubs.csv"
+    f.write_text("club;commune\nChorale des Quatre Vents;Ville-Exemple\n", encoding="utf-8")
+    corps = {**COMMUN_TYPE, "type": "fichier", "nom": "Mon fichier", "chemin": str(f), "format": "csv", "delimiteur": ";", "champ_nom": "club"}
+    r = c.post("/api/suite/sources", json=corps)
+    assert r.status_code == 201, r.json()
+    assert (cfg.dossier_sources / f"{r.json()['id']}.yaml").exists()
+    assert c.post("/api/suite/sources", json={**corps, "nom": "Autre", "chemin": ""}).status_code == 422
+
+
+def test_une_base_sqlite_s_ajoute_depuis_la_suite(c, cfg, tmp_path):
+    base = tmp_path / "clubs.db"
+    con = sqlite3.connect(base)
+    con.execute("create table clubs (nom text, ville text)")
+    con.execute("insert into clubs values ('Club Nautique Imaginaire', 'Port-Exemple')")
+    con.commit()
+    con.close()
+    corps = {**COMMUN_TYPE, "type": "base", "nom": "Ma base", "base": str(base),
+             "requete": "select nom, ville from clubs where nom like :q_like", "mot_essai": "nautique"}  # fmt: skip
+    r = c.post("/api/suite/sources", json=corps)
+    assert r.status_code == 201, r.json()
+    assert (cfg.dossier_sources / f"{r.json()['id']}.yaml").exists()
+    assert c.post("/api/suite/sources", json={**corps, "nom": "Piège", "requete": "delete from clubs"}).status_code == 422
+
+
+def test_une_base_exterieure_s_ajoute_depuis_la_suite(c, cfg):
+    corps = {**COMMUN_TYPE, "type": "base_exterieure", "nom": "Ma base distante", "systeme": "postgresql", "hote": "127.0.0.1",
+             "base_nom": "clubs", "utilisateur": "lecteur", "requete": "select nom from clubs where nom like :q_like"}  # fmt: skip
+    r = c.post("/api/suite/sources", json=corps)
+    assert r.status_code == 422  # pas de base réelle ici : refusée proprement (connexion), jamais une 500
+    assert r.json()["detail"]
+    assert c.post("/api/suite/sources", json={**corps, "systeme": "oracle"}).status_code == 422  # système inconnu : refusé avant toute connexion
+
+
+def test_un_programme_local_s_ajoute_depuis_la_suite(c, cfg):
+    corps = {**COMMUN_TYPE, "type": "programme", "nom": "Mon programme", "commande": ["echo", "[]"],
+             "exemple": [{"nom": "Club Imaginaire", "origine": "programme local"}]}  # fmt: skip
+    r = c.post("/api/suite/sources", json=corps)
+    assert r.status_code == 201, r.json()
+    assert (cfg.dossier_sources / f"{r.json()['id']}.yaml").exists()
+    assert c.post("/api/suite/sources", json={**corps, "nom": "Sans commande", "commande": []}).status_code == 422
+
+
+def test_type_de_source_inconnu_refuse(c):
+    assert c.post("/api/suite/sources", json={**COMMUN_TYPE, "type": "inconnu", "nom": "X"}).status_code == 422
 
 
 def test_une_source_declaree_ne_change_que_par_la_surcouche(c, cfg):

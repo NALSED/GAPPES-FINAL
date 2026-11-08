@@ -156,14 +156,31 @@ def _id_libre(liste: list[dict[str, Any]], base: str) -> str:
     return cand
 
 
+TYPES_AJOUT = {
+    "api": suite_reel.ajouter_api,
+    "mcp": suite_reel.ajouter_mcp,
+    "fichier": suite_reel.ajouter_fichier,
+    "base": suite_reel.ajouter_base,
+    "base_exterieure": suite_reel.ajouter_base_exterieure,
+    "programme": suite_reel.ajouter_programme,
+}  # fmt: skip
+# 905 §2 : parité avec l'ancienne page Ajout pour les types qui n'avaient qu'elle. Flux RSS à part : pas une
+# Declaration (pas de catégorie ni de rôle), `/suite` appelle directement `/api/flux-rss` (page Presse, même
+# backend `flux_rss.py`, déjà monté indépendamment de l'ancienne UI).
+
+
 def ajouter_source(cfg: Config, d: dict[str, Any]) -> dict[str, Any]:
-    """AJOUTER : écrit la déclaration d'une source API par la fonction de l'ancienne page Ajout (éteinte, test local lancé), puis garde ce que la
+    """AJOUTER : écrit la déclaration d'une source (API, MCP, fichier, base, base extérieure ou programme local — `d["type"]`,
+    « api » par défaut) par la fonction équivalente de l'ancienne page Ajout (éteinte, test local lancé), puis garde ce que la
     suite ajoute (langue, rôle, catégorie) dans la surcouche."""
+    type_ = d.get("type") or "api"
+    if type_ not in TYPES_AJOUT:
+        raise ConfigRefusee(f"Type de source inconnu : {type_}.")
     if str(d.get("langue") or "").strip() and not re.fullmatch(
         r"[a-z]{2,3}(-[a-z]{2,4})?", str(d["langue"]).strip().lower()
     ):
         raise ConfigRefusee("La langue s'écrit avec son code : fr, en, de…")  # avant d'écrire quoi que ce soit
-    ident = suite_reel.ajouter_api(cfg, d)
+    ident = TYPES_AJOUT[type_](cfg, d)
     _surcouche(cfg, ident, {k: d[k] for k in ("langue", "role", "cat", "fiabilite") if d.get(k)})
 
     def f(e):
@@ -171,6 +188,8 @@ def ajouter_source(cfg: Config, d: dict[str, Any]) -> dict[str, Any]:
 
     modifier(cfg, f)
     return {"id": ident}
+
+
 
 
 def _surcouche(cfg: Config, ident: str, champs: dict[str, Any]) -> None:

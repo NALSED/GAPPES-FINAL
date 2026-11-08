@@ -99,10 +99,17 @@ async function allumerSource(s) {
 
 /** La fiche d'une source. Une source DÉCLARÉE (toutes celles de la liste) montre ce que sa déclaration dit, en lecture seule ; on ne change d'ici que
  *  ce que la suite ajoute (langue, rôle, catégorie), la clé, et l'état. Sans `id` : ajout d'une source API (fenêtre centrée de 600 px). */
+// 905 §2 : les six types qu'on pouvait ajouter depuis l'ancienne page Ajout, maintenant depuis la suite (flux RSS à
+// part, voir `pageFluxRss` — pas de catégorie/rôle, une autre fiche).
+const TYPES_SOURCE = [
+  ["api", "API"], ["mcp", "Serveur MCP"], ["fichier", "Fichier local"], ["base", "Base SQLite"],
+  ["base_exterieure", "Base extérieure"], ["programme", "Programme local"],
+];
+
 export function ficheSource(id) {
   const edition = !!id;
   const s = edition ? sourceParId(id) : { nom: "", cat: null, role: null, cout: "gratuit", fiabilite: null, pays: "", langue: "", etat: "warn", quota: null, description: "", cle: false, cle_requise: false, tests: [], voyant: "" };
-  const val = { cat: s.cat, role: s.role, cout: s.cout, fiabilite: edition ? s.fiabilite : null, auth: "bearer" };
+  const val = { cat: s.cat, role: s.role, cout: s.cout, fiabilite: edition ? s.fiabilite : null, auth: "bearer", type: "api", format: "csv", systeme: "postgresql" };
   const fiabiliteVoulue = () => val.fiabilite || fiabiliteParDefaut(val.cat); // à la création : B pour une source officielle, D pour le web ou la presse, à ajuster une fois testée
   const lecture = (libelle, valeur) => h("div", { class: "champ" }, h("span", { class: "titre-champ" }, libelle), h("span", {}, valeur || "—"));
   const f = {
@@ -111,12 +118,34 @@ export function ficheSource(id) {
     langue: champ({ libelle: "Langue", valeur: s.langue, placeholder: "fr, en, de…", aide: "La langue dans laquelle cette source attend les mots cherchés. L'Aide s'en sert pour signaler qu'une Traduction manque." }),
     desc: champ({ libelle: "Description", valeur: s.description, lignes: 3 }),
     cle: champ({ libelle: "Clé d'API", type: "password", autocomplete: "new-password", aide: s.cle ? "Pour la changer, saisis-en une nouvelle." : "Elle ne s'affiche plus une fois enregistrée." }),
-    url: champ({ libelle: "Adresse de la source", placeholder: "https://…", aide: "Une source de type API : le service est interrogé en GET. Les autres types (serveur MCP, fichier, base, programme local, flux RSS) s'ajoutent dans l'ancienne page Ajout." }),
+    url: champ({ libelle: "Adresse de la source", placeholder: "https://…", aide: "Le service est interrogé en GET." }),
     requete: champ({ libelle: "Paramètre de la recherche", placeholder: "q", aide: "Le nom sous lequel la source reçoit ce qu'on cherche." }),
     champNom: champ({ libelle: "Champ du nom", placeholder: "title", aide: "Où se trouve le NOM dans chaque résultat de la réponse." }),
     liste: champ({ libelle: "Liste des résultats", placeholder: "items", aide: "Le chemin de la liste dans la réponse. Vide si la réponse est elle-même la liste." }),
     exemple: champ({ libelle: "Exemple de réponse", lignes: 5, code: true, obligatoire: true, aide: "Une vraie réponse du service. Le test la lit ; il n'appelle jamais la source." }),
     tarif: champ({ libelle: "Prix par appel (crédits)", placeholder: "0.005" }),
+    // Serveur MCP
+    mcpUrl: champ({ libelle: "Adresse du serveur MCP", placeholder: "https://…" }),
+    outilMcp: champ({ libelle: "Outil à appeler", placeholder: "search" }),
+    // Fichier local
+    chemin: champ({ libelle: "Chemin du fichier", placeholder: "/chemin/vers/clubs.csv" }),
+    delimFichier: champ({ libelle: "Délimiteur (CSV)", valeur: ";", placeholder: ";" }),
+    // Base SQLite
+    baseChemin: champ({ libelle: "Chemin du fichier de base", placeholder: "/chemin/vers/clubs.db" }),
+    sql: champ({ libelle: "Requête SQL (lecture seule)", lignes: 3, code: true, placeholder: "select nom, ville from clubs where nom like :q_like" }),
+    motEssai: champ({ libelle: "Mot d'essai", placeholder: "un mot qui existe dans la base" }),
+    // Base extérieure (PostgreSQL/MySQL)
+    hote: champ({ libelle: "Adresse de la machine", placeholder: "127.0.0.1" }),
+    port: champ({ libelle: "Port (laisser vide pour le port par défaut)", placeholder: "5432" }),
+    baseNom: champ({ libelle: "Nom de la base", placeholder: "clubs" }),
+    utilisateur: champ({ libelle: "Identifiant", placeholder: "lecteur" }),
+    motDePasse: champ({ libelle: "Mot de passe", type: "password", autocomplete: "new-password" }),
+    sqlExt: champ({ libelle: "Requête SQL (lecture seule)", lignes: 3, code: true, placeholder: "select nom, ville from clubs where nom like :q_like" }),
+    motEssaiExt: champ({ libelle: "Mot d'essai", placeholder: "un mot qui existe dans la base" }),
+    // Programme local
+    commande: champ({ libelle: "Commande (un mot par ligne)", lignes: 3, code: true, placeholder: "python3\nmon_script.py" }),
+    delaiS: champ({ libelle: "Limite de temps (secondes)", placeholder: "10" }),
+    exempleProgramme: champ({ libelle: "Exemple de sortie (JSON)", lignes: 5, code: true, obligatoire: true, aide: "Une vraie sortie du programme. Le test la lit ; il ne lance jamais le programme ici." }),
   };
   // réglages non-secrets propres à la source (ex. adresse du portail CKAN) : ni une clé ni un coût, mais sans eux la
   // source reste « à vérifier » ; absents des deux interfaces jusqu'au 02/11/2026 (retour de Sednal : « je mets ça où ? »)
@@ -132,13 +161,39 @@ export function ficheSource(id) {
   // retrouve dans la documentation du service pour savoir quoi coller où.
   const nomsCle = edition ? (s.cles_noms && s.cles_noms.length ? s.cles_noms : [s.cle]).filter(Boolean) : [];
   const champsCle = nomsCle.map((nomVar) => champ({ libelle: nomVar, type: "password", autocomplete: "new-password", aide: "Elle ne s'affiche plus une fois enregistrée." }));
-  const zones = { cat: h("div", { class: "champ" }), role: h("div", { class: "champ" }), cout: h("div", { class: "champ" }), fiab: h("div", { class: "champ" }), auth: h("div", { class: "champ" }) };
+  const zones = { cat: h("div", { class: "champ" }), role: h("div", { class: "champ" }), cout: h("div", { class: "champ" }), fiab: h("div", { class: "champ" }), auth: h("div", { class: "champ" }), type: h("div", { class: "champ" }) };
   const manque = h("div", { class: "mot-manque", role: "status" });
   const principal = bouton({ libelle: edition ? VERBES.enregistrer : `${VERBES.ajouter} la source`, variante: "principal", onclick: valider });
   const catNom = (c) => app.data.categories.find((x) => x.id === c)?.nom;
-  const ajoutCles = h("div", { class: "options-grille" }, f.url.el, h("div", { class: "deux-col" }, f.requete.el, f.champNom.el), f.liste.el, f.exemple.el);
+  // 905 §2 : le panneau de champs propre au type choisi (API par défaut) — une seule fiche, six types, jamais six fiches qui divergent.
+  function panneauType() {
+    if (val.type === "mcp") return h("div", { class: "options-grille" }, f.mcpUrl.el, h("div", { class: "deux-col" }, f.outilMcp.el, f.champNom.el), f.liste.el, f.exemple.el);
+    if (val.type === "fichier")
+      return h(
+        "div", { class: "options-grille" }, f.chemin.el,
+        h("span", { class: "titre-champ" }, "Format"), groupePuces([["csv", "CSV"], ["json", "JSON"]], val.format, (v) => { val.format = v; dessiner(); }),
+        val.format === "csv" && f.delimFichier.el, h("div", { class: "deux-col" }, f.champNom.el, f.liste.el),
+      );  // fmt: skip
+    if (val.type === "base") return h("div", { class: "options-grille" }, f.baseChemin.el, f.sql.el, f.motEssai.el);
+    if (val.type === "base_exterieure")
+      return h(
+        "div", { class: "options-grille" },
+        h("span", { class: "titre-champ" }, "Système"),
+        groupePuces([["postgresql", "PostgreSQL"], ["mysql", "MySQL"]], val.systeme, (v) => { val.systeme = v; dessiner(); }),
+        h("div", { class: "deux-col" }, f.hote.el, f.port.el), f.baseNom.el,
+        h("div", { class: "deux-col" }, f.utilisateur.el, f.motDePasse.el), f.sqlExt.el, f.motEssaiExt.el,
+      );  // fmt: skip
+    if (val.type === "programme") return h("div", { class: "options-grille" }, f.commande.el, f.delaiS.el, f.exempleProgramme.el);
+    return h("div", { class: "options-grille" }, f.url.el, h("div", { class: "deux-col" }, f.requete.el, f.champNom.el), f.liste.el, f.exemple.el);
+  }
+  const panneau = h("div", {});
 
   function dessiner() {
+    if (!edition) {
+      zones.type.replaceChildren(h("span", { class: "titre-champ" }, "Type de source"), groupePuces(TYPES_SOURCE, val.type, (v) => { val.type = v; dessiner(); }));
+      panneau.replaceChildren(panneauType());
+      f.cle.el.classList.toggle("cache", !["api", "mcp"].includes(val.type));
+    }
     zones.cat.replaceChildren(h("span", { class: "titre-champ" }, "Catégorie ", h("span", { class: "obligatoire" }, "obligatoire")), groupePuces(app.data.categories.map((c) => [c.id, c.nom]), val.cat, (v) => { val.cat = v; dessiner(); }));
     zones.role.replaceChildren(
       h("span", { class: "titre-champ" }, "Rôle ", h("span", { class: "obligatoire" }, "obligatoire")),
@@ -147,8 +202,10 @@ export function ficheSource(id) {
     );
     if (!edition) {
       zones.cout.replaceChildren(h("span", { class: "titre-champ" }, "Coût"), groupePuces(COUTS.map((c) => [c, c]), val.cout, (v) => { val.cout = v; dessiner(); }));
-      f.tarif.el.classList.toggle("cache", val.cout !== "payant");
+      zones.cout.classList.toggle("cache", val.type !== "api");  // les autres types sont toujours enregistrés gratuits (905 §2) : rien de cosmétique à montrer
+      f.tarif.el.classList.toggle("cache", val.cout !== "payant" || val.type !== "api");
       zones.auth.replaceChildren(h("span", { class: "titre-champ" }, "La clé s'envoie"), groupePuces([["bearer", "bearer"], ["header", "header"], ["basic", "basic"], ["query", "query"]], val.auth, (v) => { val.auth = v; dessiner(); }), h("span", { class: "aide-champ" }, "Seulement si tu colles une clé ci-dessous."));
+      zones.auth.classList.toggle("cache", val.type !== "api");
     }
     zones.fiab.replaceChildren(
       h("span", { class: "titre-champ" }, "Fiabilité de la source"),
@@ -160,13 +217,24 @@ export function ficheSource(id) {
     manque.textContent = !edition && !pret ? `Il manque ${!val.cat && !val.role ? "la catégorie et le rôle" : !val.cat ? "la catégorie" : "le rôle"}.` : "";
   }
 
+  // 905 §2 : les champs propres au type choisi, ajoutés au corps commun — une fonction par type, comme `ajout_types.js` de l'ancienne page.
+  function corpsDuType() {
+    if (val.type === "mcp") return { mcp: f.mcpUrl.valeur(), outil: f.outilMcp.valeur(), champ_nom: f.champNom.valeur(), liste: f.liste.valeur(), exemple: f.exemple.valeur(), cle_valeur: f.cle.valeur() };
+    if (val.type === "fichier") return { chemin: f.chemin.valeur(), format: val.format, delimiteur: f.delimFichier.valeur(), champ_nom: f.champNom.valeur(), liste: f.liste.valeur() };
+    if (val.type === "base") return { base: f.baseChemin.valeur(), requete: f.sql.valeur(), mot_essai: f.motEssai.valeur() };
+    if (val.type === "base_exterieure")
+      return { systeme: val.systeme, hote: f.hote.valeur(), port: f.port.valeur(), base_nom: f.baseNom.valeur(), utilisateur: f.utilisateur.valeur(), mot_de_passe: f.motDePasse.valeur(), requete: f.sqlExt.valeur(), mot_essai: f.motEssaiExt.valeur() };
+    if (val.type === "programme")
+      return { commande: f.commande.valeur().split("\n").map((x) => x.trim()).filter(Boolean), delai_s: parseFloat(f.delaiS.valeur()) || undefined, exemple: f.exempleProgramme.valeur() };  // fmt: skip
+    return { url: f.url.valeur(), parametre_requete: f.requete.valeur(), champ_nom: f.champNom.valeur(), liste: f.liste.valeur(), exemple: f.exemple.valeur(), tarif: f.tarif.valeur(), cle_valeur: f.cle.valeur(), auth: val.auth };
+  }
+
   async function valider() {
     const parametresValeurs = Object.fromEntries(Object.keys(fParams).map((nom) => [nom, fParams[nom].valeur()]));
     const corps = edition
       ? { cat: val.cat, role: val.role, langue: f.langue.valeur(), fiabilite: fiabiliteVoulue(), ...(champsParametres.length ? { parametres: parametresValeurs } : {}) }
-      : { nom: f.nom.valeur(), cat: val.cat, role: val.role, cout: val.cout, fiabilite: fiabiliteVoulue(), pays: f.pays.valeur(), langue: f.langue.valeur(), description: f.desc.valeur(),
-          url: f.url.valeur(), parametre_requete: f.requete.valeur(), champ_nom: f.champNom.valeur(), liste: f.liste.valeur(), exemple: f.exemple.valeur(), tarif: f.tarif.valeur(),
-          cle_valeur: f.cle.valeur(), auth: val.auth };
+      : { type: val.type, nom: f.nom.valeur(), cat: val.cat, role: val.role, cout: val.cout, fiabilite: fiabiliteVoulue(), pays: f.pays.valeur(), langue: f.langue.valeur(), description: f.desc.valeur(),
+          ...corpsDuType() };
     const res = await agir(() => (edition ? api.put(`/sources/${id}`, corps) : api.post("/sources", corps)), { rechargerApres: false });
     if (!res) return;
     if (edition && champsCle.some((c) => c.valeur())) {
@@ -214,9 +282,9 @@ export function ficheSource(id) {
       tests,
     ]
     : [
-      f.nom.el, zones.cat, zones.role,
+      zones.type, f.nom.el, zones.cat, zones.role,
       h("div", { class: "deux-col" }, zones.cout, f.pays.el), f.tarif.el,
-      h("div", { class: "deux-col" }, f.langue.el, h("div", {})), zones.fiab, ajoutCles, f.desc.el, f.cle.el, zones.auth,
+      h("div", { class: "deux-col" }, f.langue.el, h("div", {})), zones.fiab, panneau, f.desc.el, f.cle.el, zones.auth,
       h("p", { class: "note" }, "Une nouvelle source est enregistrée éteinte, et son test local tourne tout de suite. Elle démarre « à vérifier » tant qu'il n'a pas réussi."),
     ];
   const pied = [

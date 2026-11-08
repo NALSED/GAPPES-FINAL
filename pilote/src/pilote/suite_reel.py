@@ -283,3 +283,136 @@ def ajouter_api(cfg: Config, d: dict[str, Any]) -> str:
         spec.update(cle_valeur=t("cle_valeur"), auth={"type": t("auth") or "bearer"})
     decl, _ = sources_ajout.enregistrer(cfg, "api", spec)
     return decl.id
+
+
+def _commun_ajout(d: dict[str, Any]) -> dict[str, Any]:
+    """Les champs partagés par tous les types de source ajoutée depuis `/suite` (905 §2) : catégorie, rôle, nom,
+    pays, description, coût — la même validation que `ajouter_api`, factorisée pour ne pas la répéter six fois."""
+
+    def t(k: str) -> str:
+        v = d.get(k, "")
+        return v.strip() if isinstance(v, str) else ""
+
+    cat = d.get("cat")
+    if cat not in CAT_VERS_USAGE:
+        raise ConfigRefusee("Choisis la catégorie de la source.")
+    if d.get("role") not in ("CHERCHER", "VERIFIER", "ENRICHIR", "CATALOGUE", "OUTIL", "RAPPROCHER"):
+        raise ConfigRefusee("Choisis le rôle de la source.")
+    if not t("nom"):
+        raise ConfigRefusee("Donne un nom à la source.")
+    pays = t("pays")
+    return {
+        "nom": t("nom"),
+        "usages": [CAT_VERS_USAGE[cat]],
+        "main": "seconde",
+        "pays": [{"UK": "GB", "Mondial": "monde"}.get(pays, pays)] if pays else ["monde"],
+        "description": t("description") or f"Source ajoutée par l'utilisateur ({t('nom')}).",
+        "roles": ["verifier"] if d.get("role") == "VERIFIER" else ["chercher"],
+    }
+
+
+def ajouter_mcp(cfg: Config, d: dict[str, Any]) -> str:
+    """AJOUTER une source de type serveur MCP (905 §2) : même modèle que `ajouter_api`, l'adaptateur générique
+    `mcp_generique` de `sources_ajout` fait le travail, rien de nouveau à écrire."""
+    from pilote import sources_ajout
+
+    def t(k: str) -> str:
+        v = d.get(k, "")
+        return v.strip() if isinstance(v, str) else ""
+
+    if not t("mcp"):
+        raise ConfigRefusee("Donne l'adresse du serveur MCP (https://…).")
+    if not t("outil"):
+        raise ConfigRefusee("Dis quel outil du serveur appeler.")
+    spec = {
+        **_commun_ajout(d),
+        "mcp": t("mcp"), "outil": t("outil"), "champs": {"nom": t("champ_nom")} if t("champ_nom") else {},
+        "liste": t("liste"), "cle_valeur": t("cle_valeur"),
+    }  # fmt: skip
+    if d.get("exemple") not in (None, ""):
+        spec["exemple"] = d["exemple"]
+    decl, _ = sources_ajout.enregistrer(cfg, "mcp", spec)
+    return decl.id
+
+
+def ajouter_fichier(cfg: Config, d: dict[str, Any]) -> str:
+    """AJOUTER une source de type fichier local (905 §2) : même modèle que `ajouter_api`, sur l'adaptateur
+    générique `api_json`/`fichier` de `sources_ajout`."""
+    from pilote import sources_ajout
+
+    def t(k: str) -> str:
+        v = d.get(k, "")
+        return v.strip() if isinstance(v, str) else ""
+
+    if not t("chemin"):
+        raise ConfigRefusee("Donne le chemin du fichier.")
+    if not t("champ_nom"):
+        raise ConfigRefusee("Dis quel champ ou quelle colonne contient le NOM.")
+    spec = {
+        **_commun_ajout(d),
+        "chemin": t("chemin"), "format": t("format"), "delimiteur": t("delimiteur"),
+        "champs": {"nom": t("champ_nom")}, "liste": t("liste"),
+    }  # fmt: skip
+    decl, _ = sources_ajout.enregistrer(cfg, "fichier", spec)
+    return decl.id
+
+
+def ajouter_base(cfg: Config, d: dict[str, Any]) -> str:
+    """AJOUTER une source de type base SQLite locale (905 §2), sur l'adaptateur générique `base_sql`."""
+    from pilote import sources_ajout
+
+    def t(k: str) -> str:
+        v = d.get(k, "")
+        return v.strip() if isinstance(v, str) else ""
+
+    if not t("base"):
+        raise ConfigRefusee("Donne le chemin du fichier de base.")
+    if not t("requete"):
+        raise ConfigRefusee("Donne la requête SQL qui rend les noms.")
+    spec = {**_commun_ajout(d), "base": t("base"), "requete": d.get("requete"), "mot_essai": t("mot_essai")}
+    decl, _ = sources_ajout.enregistrer(cfg, "base", spec)
+    return decl.id
+
+
+def ajouter_base_exterieure(cfg: Config, d: dict[str, Any]) -> str:
+    """AJOUTER une base extérieure (PostgreSQL/MySQL, 905 §2) : identifiants rangés dans le fichier de clés,
+    jamais dans la déclaration versionnée (même garde-fou que `sources_ajout._base_exterieure`)."""
+    from pilote import sources_ajout
+
+    def t(k: str) -> str:
+        v = d.get(k, "")
+        return v.strip() if isinstance(v, str) else ""
+
+    if t("systeme").lower() not in ("postgresql", "mysql"):
+        raise ConfigRefusee("Le système doit être PostgreSQL ou MySQL.")
+    if not t("hote") or not t("base_nom"):
+        raise ConfigRefusee("Donne l'adresse de la machine et le nom de la base.")
+    spec = {
+        **_commun_ajout(d), "systeme": t("systeme"), "hote": t("hote"), "port": d.get("port") or "",
+        "base_nom": t("base_nom"), "utilisateur": t("utilisateur"), "mot_de_passe": d.get("mot_de_passe") or "",
+        "requete": d.get("requete"), "mot_essai": t("mot_essai"),
+    }  # fmt: skip
+    decl, _ = sources_ajout.enregistrer(cfg, "base_exterieure", spec)
+    return decl.id
+
+
+def ajouter_programme(cfg: Config, d: dict[str, Any]) -> str:
+    """AJOUTER un programme local (905 §2) : même module `programme_local` que l'ancienne page Ajout, rien
+    réécrit — un programme qui lit un JSON sur l'entrée standard et rend une liste de noms sur la sortie."""
+    from pilote import programme_local
+
+    def t(k: str) -> str:
+        v = d.get(k, "")
+        return v.strip() if isinstance(v, str) else ""
+
+    commande = [str(c) for c in d.get("commande") or [] if str(c).strip()]
+    if not commande:
+        raise ConfigRefusee("Indique la commande qui lance le programme.")
+    spec = {**_commun_ajout(d), "commande": commande, "delai_s": d.get("delai_s"), "exemple": d.get("exemple")}
+    decl, _ = programme_local.enregistrer(cfg, spec)
+    return decl.id
+
+
+### Flux RSS/OPML (905 §2) : rien à ajouter ici — `/suite` appelle directement les routes déjà montées de la
+### page Presse (`/api/flux-rss`, `/api/flux-rss/opml`), même backend (`flux_rss.py`), jamais réécrit. Pas une
+### Declaration (ni catégorie, ni rôle, ni surcouche) : ça n'a pas sa place dans `ajouter_source`/`TYPES_AJOUT`.
