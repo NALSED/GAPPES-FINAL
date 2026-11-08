@@ -2,15 +2,19 @@
 
 Phase en cours : 908 (retour de Sednal du 08/11/2026, autonomie complète — momo tranche, trace dans
 DECISIONS.md) — étapes 1 à 3/6 faites (commits `d4b2f0f`/D89, `d7d46fb`/D90, `f349566`/D91) ; étape 4/6 en
-cours (chantiers de taille moyenne, 7 points, dans n'importe quel ordre) — points 1/7 (3.3, `5f3cd0f`/D92) et
-2/7 (6.3, `f94aefd`/D93) faits ; 5 points restants dans l'étape 4, puis étapes 5 et 6. En parallèle : 905 §2
-(vérification `.60` par Sednal), 905 §3 et 903 pièce 2/2 en attente.
+cours (chantiers de taille moyenne, 7 points, dans n'importe quel ordre) — points 1/7 (3.3, `5f3cd0f`/D92),
+2/7 (6.3, `f94aefd`/D93) et 3/7 (2.3, `71fc5d3`/D94) faits ; 4 points restants dans l'étape 4 (9.1/9.3, 5.2,
+point 15, 4.2), puis étapes 5 et 6. En parallèle : 905 §2 (vérification `.60` par Sednal), 905 §3 et 903
+pièce 2/2 en attente.
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-08 (D93 : 908 étape 4, point 6.3 — destination des fichiers de sortie exposée
-dans la fiche Format de sortie de `/suite`, vérifiée avant l'enregistrement (ancêtre existant accessible en
-écriture, sans exiger que le dossier existe déjà). Détail : D93. Suite pilote complète relancée (675 passés,
-2 échecs pré-existants, hors de ce travail — QUESTIONS.md).
+Dernière mise à jour : 2026-11-08 (D94 : 908 étape 4, point 2.3 — l'effet « alerte » du Compteur budget
+(seuil, action « Prévenir ») rejoint enfin la section Alertes du Tableau de bord, évalué à la fin de chaque
+recherche. Détail : D94. Tests ciblés relancés (93 passés, 1 échec pré-existant — QUESTIONS.md) + navigateur
+(15 passés).
+
+D93 (précédent) : 908 étape 4, point 6.3 — destination des fichiers de sortie exposée dans la fiche Format
+de sortie de `/suite`, vérifiée avant l'enregistrement.
 
 D92 (précédent) : 908 étape 4, point 3.3 — le test réel d'une source (prix avant le clic, plafond mensuel)
 exposé depuis `/suite` ; pur portage des routes de l'ancienne page.

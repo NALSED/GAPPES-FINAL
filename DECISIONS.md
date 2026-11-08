@@ -439,3 +439,10 @@ cette convenience déjà en place ; la vérification porte sur l'ancêtre exista
 Rangé dans la fiche de l'outil Format de sortie plutôt que dans une page « Réglages généraux » de `/suite`
 (qui n'existe pas) : c'est là que Sednal l'a réclamé, et le réglage reste quand même global (même route
 `PUT /api/reglages/sortie`, pas un second stockage par tuile).
+
+## D94 — 908, étape 4, point 3/7 (08/11/2026, 2.3)
+
+Commit `71fc5d3` : l'effet « alerte » du Compteur budget rejoint le Tableau de bord (voir le message de
+commit). Évalué une seule fois, à la fin de la recherche (son propre coût n'est connu qu'alors) — pas en
+continu pendant la collecte, ce qui resterait à faire si une alerte « en direct » était un jour demandée ;
+non demandé par ce point précis, pas inventé.
