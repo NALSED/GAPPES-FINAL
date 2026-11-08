@@ -1,15 +1,19 @@
 # ETAT — grappes
 
 Phase en cours : 908 (retour de Sednal du 08/11/2026, autonomie complète — momo tranche, trace dans
-DECISIONS.md) — étapes 1 et 2/6 de l'ordre de travail de la spec faites (commits `d4b2f0f`/D89,
-`d7d46fb`/D90) ; étapes 3 à 6 restantes. En parallèle : 905 §2 (vérification `.60` par Sednal), 905 §3 et 903
+DECISIONS.md) — étapes 1 à 3/6 de l'ordre de travail de la spec faites (commits `d4b2f0f`/D89, `d7d46fb`/D90,
+`f349566`/D91) ; étapes 4 à 6 restantes. En parallèle : 905 §2 (vérification `.60` par Sednal), 905 §3 et 903
 pièce 2/2 en attente.
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-08 (D90 : 908 étape 2 — règle 3.10 appliquée : conditions « si »/Filtre en
-déroulants une par ligne, différences Filtre/« si » visibles, Format de sortie en blocs repliables, langues
-de Traduction multiples. Détail : D90. Suite pilote complète relancée (669 passés, 2 échecs pré-existants,
-hors de ce travail — QUESTIONS.md).
+Dernière mise à jour : 2026-11-08 (D91 : 908 étape 3 (6.1) — un vrai test pour « si »/Filtre/Format de sortie
+(exécution réelle, même moteur que la tuile) ; les six genres non exécutables hors ligne (fusion, boucle, ia,
+rsshub, attente, budget) ne peuvent plus afficher « opérationnel » sans preuve ; Traduction perd son bloc de
+test générique, doublon de son test réel (7.2). Détail : D91. Suite pilote complète relancée (673 passés, 2
+échecs pré-existants, hors de ce travail — QUESTIONS.md).
+
+D90 (précédent) : 908 étape 2 — règle 3.10 appliquée : conditions « si »/Filtre en déroulants une par ligne,
+différences Filtre/« si » visibles, Format de sortie en blocs repliables, langues de Traduction multiples.
 
 D89 (précédent) : 908 étape 1 — fusion/rsshub en pastilles, Modèle masqué en modification d'un outil, textes
 entiers, « illimité » corrigé pour une source payante, catégories de l'Assistant IA branchées, chemin en dur

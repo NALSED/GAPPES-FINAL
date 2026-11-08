@@ -396,3 +396,26 @@ retombe sur `auto`. Le test manuel « Tester sur un exemple » (route `/traducti
 garde une sémantique à une seule langue d'entrée (prend la première de la liste si plusieurs) : il ne joue pas
 le même rôle que la détection automatique d'une recherche réelle, pas de raison de lui donner la même
 restriction multiple.
+
+## D91 — 908, étape 3 / 6.1 (08/11/2026)
+
+Commit `f349566` : un vrai test pour les outils livrés — voir le message de commit pour le détail. Décision
+de scoping tracée ici (rien dans la spec ne listait précisément QUELS des dix genres sont exécutables hors
+ligne, c'est une analyse à faire) :
+
+**Exécutables réellement, sans réseau ni agent** : `si`, `filtre` (même moteur de conditions que la tuile
+réelle, `suite_plan._lignes_conditions`/`_teste_lignes`) et `format` (même écrivain réel que l'export,
+`formats.*.ecrire()`). Exemples réécrits en JSON structuré (`suite_graine.py`) pour être vraiment rejouables ;
+l'ancien exemple de Format de sortie était déjà faux par rapport au vrai écrivain CSV (corrigé au passage).
+
+**Non exécutables sur un exemple isolé, le test générique le dit et ne peut plus réussir** : `fusion` (a
+besoin de plusieurs résultats réels rapprochés entre eux — Splink, pas un exemple seul), `boucle` (dépend
+d'une recherche relancée, pas branché pour les origines manquantes — 9.1), `ia` (appel à l'agent réel, coûte
+des tokens, pas pour un test automatique), `rsshub` (réseau), `attente`/`budget` (réglages de comportement,
+pas des transformations de données testables sur un exemple). `traduction` entre aussi dans ce lot pour le
+test GÉNÉRIQUE (elle a son propre test réel séparé, déjà câblé — 7.2, résolu dans ce commit en retirant le
+bloc générique de sa fiche pour ne plus avoir deux tests presque identiques à l'écran).
+
+Je n'ai pas non plus caché le bouton « Lancer le test » pour les six genres non exécutables : le message
+clair qu'il produit désormais (« ne peut pas être vérifié sur un exemple isolé… ») suffit à dire la vérité,
+et retirer le bouton aurait été une extension non demandée par ce point précis.
