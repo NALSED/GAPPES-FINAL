@@ -1,0 +1,40 @@
+<table>
+<tr class="searchResult">
+                            <td>
+                                <a href="showProfileDetail.do?method=showProfileDetails&profileCode=674137">AATASSIMO</a>
+                            </td>
+                            <td>
+                                                                    <span class="dynamichg1">Special 2021
+                                                                            </span>
+                                                                                            </td>
+                                                        <td class="center">
+                                <img align="top" src="/civilsociety/images/digitize.gif" alt="icon" title="Print"
+                                     onclick="window.open('/civilsociety/showProfileDetail.do?method=printProfile&tab=1&profileCode=674137');">
+                            </td>
+                        </tr>
+<tr class="searchResult">
+                            <td>
+                                <a href="showProfileDetail.do?method=showProfileDetails&profileCode=684037">African Refugee and Migrants Aid &quot;ARMA&quot;</a>
+                            </td>
+                            <td>
+                                                                    <span class="dynamichg1">Special 2022
+                                                                            </span>
+                                                                                            </td>
+                                                        <td class="center">
+                                <img align="top" src="/civilsociety/images/digitize.gif" alt="icon" title="Print"
+                                     onclick="window.open('/civilsociety/showProfileDetail.do?method=printProfile&tab=1&profileCode=684037');">
+                            </td>
+                        </tr>
+<tr class="searchResult">
+                            <td>
+                                <a href="showProfileDetail.do?method=showProfileDetails&profileCode=1706">African Refugees Foundation</a>
+                            </td>
+                            <td>
+                                                                                                    <span  class="dynamichg2" >OSAA</span>
+                                                            </td>
+                                                        <td class="center">
+                                <img align="top" src="/civilsociety/images/digitize.gif" alt="icon" title="Print"
+                                     onclick="window.open('/civilsociety/showProfileDetail.do?method=printProfile&tab=1&profileCode=1706');">
+                            </td>
+                        </tr>
+</table>

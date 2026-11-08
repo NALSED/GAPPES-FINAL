@@ -4,11 +4,14 @@ TLS de navigateur (`Fetcher` de Scrapling), pour les pages qu'un simple `urllib`
 bloquer. Rejoint la famille « prestataire de collecte » (même famille qu'Apify/Bright Data/ZenRows) mais sans
 clé ni coût : pas soumis au plafond de budget.
 
-Convention identique à `api_json.py`, en HTML au lieu de JSON : `url` (avec {quoi}, {mots_cles}, {lieu},
-{mots_et_lieu}, {limite}, {pays}), `liste` (sélecteur CSS d'un résultat), `champs` (sélecteurs CSS RELATIFS à
-un résultat — `::text` pour du texte, `::attr(href)` pour un attribut), `genre`, `origine_texte`. Ne réinvente
-rien de Scrapling (pas de navigateur furtif ici, juste son client HTTP à empreinte TLS — la bibliothèque fait
-le travail, cet adaptateur ne fait que le brancher à la convention de pilote)."""
+Convention identique à `api_json.py`, en HTML au lieu de JSON : `url` (l'adresse SANS les mots cherchés —
+{quoi} etc. n'y sont tolérés que hors paramètres, ex. un chemin), `params` (valeurs avec {quoi}, {mots_cles},
+{lieu}, {mots_et_lieu}, {limite}, {pays} — toujours ENCODÉES dans l'adresse, jamais collées dans le texte),
+`liste` (sélecteur CSS d'un résultat), `champs` (sélecteurs CSS RELATIFS à un résultat — `::text` pour du
+texte, `::attr(href)` pour un attribut), `genre`, `origine_texte`, `site_prefixe` (adresse à placer devant un
+`site` qui n'est qu'un lien relatif, même convention qu'api_json). Ne réinvente rien de Scrapling (pas de
+navigateur furtif ici, juste son client HTTP à empreinte TLS — la bibliothèque fait le travail, cet
+adaptateur ne fait que le brancher à la convention de pilote)."""
 
 from __future__ import annotations
 
@@ -60,6 +63,8 @@ def convertir(page: Any, parametres: dict[str, Any] | None = None) -> list[dict[
                 v = _champ(resultat, str(champs[k]))
                 if v:
                     e[k] = v
+        if e.get("site") and p.get("site_prefixe") and not e["site"].startswith(("http://", "https://")):
+            e["site"] = str(p["site_prefixe"]) + e["site"]  # le résultat ne donne qu'une adresse relative (lien interne) : la page le préfixe, même convention qu'api_json
         if genre:
             e["genre"] = genre
         out.append(e)
@@ -87,6 +92,11 @@ def chercher(entree: dict[str, Any], client: Client, parametres: dict[str, Any])
         "mots_et_lieu": f"{quoi} {entree.get('lieu', '')}".strip(),
     }  # fmt: skip
     url_remplie = str(remplir(url, valeurs))
+    params = {k: v for k, v in remplir(parametres.get("params") or {}, valeurs).items() if v not in ("", None)}
+    if params:  # toujours par paramètres encodés, jamais collés dans le texte de l'adresse (un mot cherché peut avoir une espace ou un « & »)
+        import urllib.parse
+
+        url_remplie += ("&" if "?" in url_remplie else "?") + urllib.parse.urlencode(params)
     client._avant()  # pas d'appel HTTP par `client` lui-même (Scrapling fait sa propre requête) : juste l'arrêt et le journal, comme `Client.mcp()`
     try:
         page = Fetcher.get(url_remplie, timeout=client.timeout)

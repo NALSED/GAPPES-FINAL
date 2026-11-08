@@ -1,0 +1,61 @@
+# Déclaration d'une source (fiche 01). Les CHOIX de l'utilisateur sont dans reglages.yaml, jamais ici.
+# Spec 907 : trouvé dans awesome-public-datasets, demandé par Sednal le 08/11/2026. Premier cas réel de
+# l'adaptateur Scrapling (906) : la recherche simple (`simpleSearch.do`) est une page HTML sans login
+# (vérifié en réel), lue par sélecteurs CSS — aucun code propre à ce site.
+id: un-civil-society
+nom: Base des organisations de la société civile (ONU)
+description: Organisations non gouvernementales accréditées auprès du Conseil économique et social de
+  l'ONU (ECOSOC) — statut consultatif général, spécial ou de liste.
+trouve: organisations de la société civile accréditées à l'ONU (ECOSOC)
+genres:
+- association
+pays:
+- monde
+usages:
+- organisations
+- associations
+famille: api
+confiance: 0.7
+consomme:
+- sujet
+produit:
+- nom
+- origine
+- site
+main: premiere
+origine: registre
+roles:
+- chercher
+cle: ''
+cout:
+  unite: appel
+  vers_dollar: 0
+  par_appel: 1
+  gratuit_par_mois: 0
+mode:
+  en_ligne: true
+  local: false
+verifie_le: '2026-11-08'
+defaut:
+  chercher: false
+  verifier: false
+exemple_reponse: exemples/un-civil-society.txt
+note: 'Spec 907 : testé en réel le 08/11/2026 (simpleSearch.do?organizationNamee=refugee, 25 organisations
+  rendues, sans connexion). La recherche avancée (statut, pays, type) existe sur le site mais n''est pas
+  câblée : seule la recherche simple par nom, suffisante pour le mode « extraction » de grappes.'
+moteur:
+  adaptateur: scrapling
+  parametres:
+    url: https://esango.un.org/civilsociety/simpleSearch.do
+    params:
+      method: search
+      searchTypeRedef: simpleSearch
+      searchType: simpleSearch
+      organizationNamee: '{quoi}'
+    liste: tr.searchResult
+    champs:
+      nom: td a::text
+      site: td a::attr(href)
+    genre: association
+    origine_texte: Base des organisations de la société civile (ONU, ECOSOC)
+    site_prefixe: https://esango.un.org/civilsociety/

@@ -49,12 +49,17 @@ PARAMETRES = {"liste": "li.club", "champs": {"nom": "h3 a::text", "site": "h3 a:
 
 
 def test_scrapling_rend_les_noms_d_une_page_html_par_selecteur_css(site):
-    noms = charger("scrapling").chercher({"quoi": "nautique"}, Client("scrapling"), {**PARAMETRES, "url": site + "/recherche?q={quoi}"})
+    noms = charger("scrapling").chercher({"quoi": "nautique"}, Client("scrapling"), {**PARAMETRES, "url": site + "/recherche"})
     assert noms == [
         {"nom": "Club Nautique Imaginaire", "origine": "Site d'essai (Scrapling)", "site": "/clubs/1", "ville": "Port-Exemple", "genre": "club"},
         {"nom": "Club Nautique du Lac", "origine": "Site d'essai (Scrapling)", "site": "/clubs/2", "ville": "Lac-Exemple", "genre": "club"},
     ]
-    assert FauxSite.chemins[-1] == "/recherche?q=nautique"  # {quoi} rempli dans l'adresse, comme api_json
+
+
+def test_scrapling_encode_les_mots_cherches_jamais_colles_dans_le_texte(site):
+    # un mot avec une espace et un « & » ne doit jamais casser l'adresse ni s'y coller tel quel (toujours par `params`, encodé)
+    charger("scrapling").chercher({"quoi": "clubs & associations"}, Client("scrapling"), {**PARAMETRES, "url": site + "/recherche", "params": {"q": "{quoi}"}})
+    assert FauxSite.chemins[-1] == "/recherche?q=clubs+%26+associations"
 
 
 def test_scrapling_ecarte_un_resultat_sans_nom(site):
@@ -75,6 +80,11 @@ def test_scrapling_refuse_sans_adresse_ni_selecteurs(site):
 def test_scrapling_dit_clairement_une_page_en_erreur(site):
     with pytest.raises(ErreurSource, match="404"):
         charger("scrapling").chercher({"quoi": "x"}, Client("scrapling"), {**PARAMETRES, "url": site + "/404", "liste": "introuvable"})  # fmt: skip
+
+
+def test_scrapling_prefixe_un_site_relatif(site):
+    noms = charger("scrapling").chercher({"quoi": "nautique"}, Client("scrapling"), {**PARAMETRES, "url": site + "/recherche", "site_prefixe": site})
+    assert [n["site"] for n in noms] == [site + "/clubs/1", site + "/clubs/2"]
 
 
 def test_scrapling_lit_un_exemple_enregistre_comme_le_niveau_2_de_la_fiche_11():

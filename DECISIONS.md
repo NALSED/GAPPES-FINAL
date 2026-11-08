@@ -327,3 +327,38 @@ navigateur/API verts (`test_suite_navigateur.py`, `test_suite_api.py`) ; suite c
 Point 2 (parité `/suite` pour l'ajout de source, les cinq types manquants) et point 3 (suppression de
 l'ancienne UI) de la 905 restent à faire, dans l'ordre imposé par la spec — chacun vérifié par Sednal sur `.60`
 avant le suivant.
+
+## D88 — 905 §2, 906, 907 (08/11/2026, pavé hors-pavé enchaîné sur demande de Sednal)
+
+**905 §2** (`commit d01a413`) : les cinq types manquants (MCP, fichier, base SQLite, base extérieure, programme
+local) s'ajoutent désormais depuis `/suite`, par les mêmes fonctions que l'ancienne page (`sources_ajout.enregistrer`,
+`programme_local.enregistrer`) — `suite.TYPES_AJOUT` route sur `d["type"]`. Flux RSS/OPML laissé à part (pas une
+Declaration) : `/suite` appellera `/api/flux-rss` directement, déjà monté indépendamment de l'ancienne UI. Vérifié
+dans un vrai navigateur (Playwright, hors suite de tests) pour les quatre types qui peuvent l'être sans service
+réel ; **vérification sur `.60` par Sednal encore à faire** (spec : chaque type avant le suivant) — je n'ai pas
+accès à cette machine depuis cette session.
+
+**906** (`commit 22a802c` + ce pavé) : Scrapling branché comme nouveau prestataire de collecte — nouvel adaptateur
+générique `pilote.adaptateurs.scrapling` (sélection par CSS, RÉGLAGE de la source, jamais de code par site, même
+principe qu'`api_json.py`). Dépendance optionnelle `pilote[scrapling]` (~65 Mo, `curl_cffi`/`patchright`), absente
+par défaut. `famille: api` retenu pour ses déclarations (transport HTTP-forme, pas MCP) — `ordre_familles` n'a pas
+de case « scraping » et je n'en crée pas une pour un seul exemple. api-anything (point 2) : rien à faire sans un
+site réel à onboarder, le type MCP qu'il demande est déjà porté par la 905 §2.
+
+**907** : deux des trois sources retenues ajoutées en réel, testées de bout en bout (pas seulement l'exemple
+enregistré — un vrai appel réseau pour chacune) :
+* **HDX** (`config/sources/hdx.yaml`) : même adaptateur que `ckan.yaml` (déjà générique, zéro code), portail
+  pré-rempli (`https://data.humdata.org`) — `organization_list?q=...` filtre déjà correctement (vérifié : 5
+  organisations humanitaires réelles pour « refugee »).
+* **UN Civil Society Database** (`config/sources/un-civil-society.yaml`) : premier cas réel de l'adaptateur
+  Scrapling (906) — `simpleSearch.do` est une page HTML publique, sans connexion (vérifié), lue par sélecteurs CSS
+  (`tr.searchResult`). 25 organisations réelles rendues pour « refugee », 0 (sans erreur) pour « handball ».
+* **Company Registry Atlas** : non construit — la spec le dit explicitement « après le pavé » (catalogue de bases
+  officielles par pays, mis de côté le 13/10/2026 pour après les presets). Rien à faire ici.
+
+Les deux déclarations ajoutées : `parametres.requis: false` sur le champ pré-rempli (sinon le niveau 1 de la fiche
+11 exige une valeur dans Réglages, qui n'existe pas encore pour une source neuve) ; exemples recadrés à 2-3
+résultats (convention des autres `exemples/*.json|txt`, pas la page brute).
+
+Tests : `tests/test_f20_scrapling.py` (+7, serveur HTTP local, se saute sans `scrapling`). Suite pilote complète
+relancée (voir `QUESTIONS.md` pour les 2 échecs pré-existants, hors de ce pavé).

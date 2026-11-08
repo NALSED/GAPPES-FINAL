@@ -1,0 +1,55 @@
+# Déclaration d'une source (fiche 01). Les CHOIX de l'utilisateur sont dans reglages.yaml, jamais ici.
+# Spec 907 : trouvé dans awesome-public-datasets, demandé par Sednal le 08/11/2026. Même adaptateur que
+# ckan.yaml (générique, « donne l'adresse du portail »), ici pré-rempli avec le portail HDX — aucun code
+# nouveau, l'adaptateur `ckan` lit déjà `organization_list` filtré par mot.
+id: hdx
+nom: Humanitarian Data Exchange (organisations)
+description: Organisations humanitaires (ONG, agences de l'ONU, partenaires) qui publient sur le portail
+  de données ouvertes d'UN OCHA — Humanitarian Data Exchange.
+trouve: organisations humanitaires qui publient sur HDX
+genres:
+- administration
+pays:
+- monde
+usages:
+- organisations
+- associations
+famille: api
+confiance: 0.7
+consomme:
+- sujet
+produit:
+- nom
+- origine
+- site
+main: premiere
+origine: registre
+roles:
+- chercher
+cle: ''
+cout:
+  unite: appel
+  vers_dollar: 0
+  par_appel: 1
+  gratuit_par_mois: 0
+mode:
+  en_ligne: true
+  local: false
+verifie_le: '2026-11-08'
+defaut:
+  chercher: false
+  verifier: false
+exemple_reponse: exemples/hdx.json
+parametres:
+  portail:
+    libelle: Adresse du portail (pré-remplie, modifiable)
+    type: url
+    requis: false
+    exemple: https://data.humdata.org
+note: 'Spec 907 : testé en réel le 08/11/2026 (organization_list?q=refugee, 5 organisations rendues), avant
+  d''être enregistré comme déclaration. Les jeux de données eux-mêmes (30 000+) ne sont jamais lus : seules
+  les organisations qui publient.'
+moteur:
+  adaptateur: ckan
+  parametres:
+    portail: https://data.humdata.org

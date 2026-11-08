@@ -1,0 +1,40 @@
+{
+ "help": "https://data.humdata.org/api/3/action/help_show?name=organization_list",
+ "success": true,
+ "result": [
+  {
+   "approval_status": "approved",
+   "closed_organization": false,
+   "created": "2017-01-31T02:03:20.213761",
+   "description": "As an independent, non-profit organization, BICC (Bonn International Centre for Conflict Studies) deals with a wide range of global topics in the field of peace and conflict research centering around …",
+   "display_name": "Bonn International Centre for Conflict Studies (BICC)",
+   "id": "c64b1f58-53ec-4c66-b59b-b60ae9ef9a6f",
+   "image_display_url": "",
+   "image_url": "",
+   "is_organization": true,
+   "name": "bicc",
+   "num_followers": 0,
+   "package_count": 2,
+   "state": "active",
+   "title": "Bonn International Centre for Conflict Studies (BICC)",
+   "type": "organization"
+  },
+  {
+   "approval_status": "approved",
+   "closed_organization": false,
+   "created": "2023-02-13T07:34:56.237399",
+   "description": "Founded in 1956, the Danish Refugee Council (DRC) is Denmark’s largest, and a leading international NGO - one of the few with a specific expertise in forced displacement. In 40 countries 7,500 employe…",
+   "display_name": "Danish Refugee Council",
+   "id": "9441c997-fe3b-4ca3-aa06-a615d94a57a7",
+   "image_display_url": "",
+   "image_url": "",
+   "is_organization": true,
+   "name": "danish-refugee-council",
+   "num_followers": 0,
+   "package_count": 12,
+   "state": "active",
+   "title": "Danish Refugee Council",
+   "type": "organization"
+  }
+ ]
+}
