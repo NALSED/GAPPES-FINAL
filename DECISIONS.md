@@ -572,3 +572,17 @@ Reste dans 909 : 1.2 (a-f, améliorations vérifier — dont d, « le point le p
 mécanisme de vérification par texte de page), 1.3 (découverte de sources OSINT Framework), 2.1 (b, c restants),
 §3 (nouvel outil Requête avancée), §2 volet comparaison systématique ancienne UI / /suite. §4 (zones du plan,
 Switch/Jonction) explicitement mis en attente par la spec elle-même — pas commencé, conforme à la spec.
+
+## D105 — 909, point 2.1.b/c (09/11/2026)
+
+Commit `7d22ebc` : voir le message de commit pour la liste des 13 sources et les 6 laissées de côté, avec
+leur raison. §2.1 est maintenant complet (a, b, c tous faits). Reste dans 909 : 1.2 (b déjà acquis par le
+travail précédent sur le test réel, D92 ; c, d, e, f restants), 1.3 (découverte OSINT Framework), §3
+(Requête avancée), le volet comparaison systématique ancienne UI/`/suite`. §4 toujours en attente (décidé
+par la spec elle-même).
+
+## D106 — 909, point 1.2.a (09/11/2026, note de suivi rétroactive)
+
+Commit `08e8c4e` (fait avant D105, entrée de suivi oubliée sur le moment) : une alerte de vérification
+rejoint le Tableau de bord (`executeur_grappes.dire_les_alertes_verification`), même mécanisme que l'alerte
+budget (908 §2.3). Voir le message de ce commit pour le détail.
