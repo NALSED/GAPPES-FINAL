@@ -41,6 +41,24 @@ pas à deux. Je n'ai pas branché l'exécution pour cette raison — ce serait r
 aperçu des recherches que la boucle produirait, affiché sans rien lancer (9.3) — les deux utiles même une fois
 le branchement fait, et sans risque de régression silencieuse.
 
+## 908, point 14.1/14.2 — l'Aide parle au vrai agent ; agir via les routes, pas encore (09/11/2026)
+
+Fait (14.1) : l'Aide (fiche 11) choisissait sa fonction via un serveur Ollama local « pas tranché »
+(`suite_modele.py`, Q suite-4, jamais déployé nulle part) — elle parle maintenant au même agent que
+l'Assistant IA (`suite_ia.py`, 3.8.09, déjà vérifié en réel sur .250). Même contrat, même garde-fou : une
+liste CLOSE de six fonctions (`lister_sources`, `lire_plan`, `proposer_plan`, `verifier_plan`, `definir`,
+`ouvrir`), toutes DÉJÀ existantes et sûres — l'agent choisit, une fonction réelle exécute, jamais de code
+exécuté à l'aveugle. Les trois puces (« Comment je fais… », etc.) continuent de marcher sans agent.
+
+Pas fait (14.2, le volet « agir ») : étendre la liste aux actions qui CHANGENT l'état (allumer une source,
+changer un réglage, lancer une recherche) avec confirmation avant tout geste qui dépense ou change l'état,
+attribution au Journal (« IA », pas l'utilisateur), et les quatre interdits absolus (jamais supprimer un
+résultat, jamais écraser une décision de Tri, jamais lever la règle 8, jamais de shell). Je n'ai pas voulu
+construire ces garde-fous dans la même passe que le changement d'agent : c'est la partie qui, mal câblée,
+abîmerait vraiment quelque chose (contrairement à une lecture, qui ne risque rien). Prêt à reprendre : la
+liste close existe déjà comme modèle (six fonctions READ), il s'agit d'y ajouter des fonctions WRITE une par
+une, chacune avec sa propre confirmation — pas un mécanisme générique « appelle n'importe quelle route ».
+
 ## 908, point 5.2 b — « source de secours » générale : pas câblée, même prudence que la Boucle (09/11/2026)
 
 Demande de Sednal (retour du 08/11/2026) : sortir de `osm-overpass.yaml` (son essai serveur auto-hébergé puis

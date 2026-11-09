@@ -78,7 +78,9 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
                     rch["verification"] = _verification(s, rch["recherche_id"])
                     rch["ecartes"] = _ecartes(s, rch["recherche_id"])
                     rch["emoji"] = _emoji(s, rch["recherche_id"])
-        v["modele"] = bool(cfg.suite_modele_url) and suite_modele.disponible(cfg.suite_modele_url)
+        # 908, 14.1 (retour du 08/11/2026) : l'Aide parle maintenant au même agent que l'Assistant IA (suite_ia,
+        # 3.8.09, déjà vérifié en réel), plus au serveur Ollama « pas tranché » (Q suite-4, suite_modele.py).
+        v["modele"] = suite_ia.disponible()
         v["premiere_installation"] = not rg.existe(cfg)  # même source de vérité que /api/reglages (D-assistant-suite)
         return v
 
@@ -488,13 +490,14 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
 
     @r.post("/aide/phrase")
     def aide_phrase(corps: dict[str, Any] = Corps) -> dict[str, Any]:
-        """La phrase libre : le modèle CHOISIT une fonction, on l'exécute, et la page met en forme le retour. Sans modèle, rien ne se passe."""
+        """La phrase libre : l'agent CHOISIT une fonction, on l'exécute, et la page met en forme le retour. Sans
+        agent, rien ne se passe (908, 14.1 : même agent que l'Assistant IA, plus le serveur Ollama Q suite-4)."""
         phrase = str(corps.get("phrase", "")).strip()
         if not phrase:
             raise HTTPException(422, "Écris ta question.")
-        if not cfg.suite_modele_url or not suite_modele.disponible(cfg.suite_modele_url):
+        if not suite_ia.disponible():
             return {"modele": False}
-        choix = suite_modele.choisir_fonction(cfg.suite_modele_url, phrase)
+        choix = suite_ia.choisir_fonction(suite_modele.FONCTIONS, suite_modele.CONSIGNE, phrase)
         if choix is None:
             return {"modele": True, "fonction": None}
         a, f = choix["args"], choix["fonction"]

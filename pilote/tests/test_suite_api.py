@@ -729,7 +729,10 @@ def test_lister_sources_definir_ouvrir(c):
 
 
 # --- 11 : sans modèle, la phrase libre ne fait rien et le reste marche
-def test_sans_modele_la_phrase_libre_est_desactivee(c):
+def test_sans_modele_la_phrase_libre_est_desactivee(c, monkeypatch):
+    from pilote import suite_ia
+
+    monkeypatch.setattr(suite_ia, "disponible", lambda: False)  # l'agent peut être installé sur CETTE machine (momo l'utilise) : jamais supposé absent sans le dire
     assert etat(c)["modele"] is False
     assert c.post("/api/suite/aide/phrase", json={"phrase": "comment je cherche une asso ?"}).json() == {
         "modele": False
@@ -738,19 +741,19 @@ def test_sans_modele_la_phrase_libre_est_desactivee(c):
 
 
 def test_avec_modele_il_choisit_la_fonction_mais_n_ecrit_rien(c, monkeypatch):
-    monkeypatch.setattr(c.app.state.cfg.__class__, "suite_modele_url", "http://modele.test", raising=False)
-    from pilote import suite_modele
+    # 908, 14.1 : l'Aide parle maintenant au même agent que l'Assistant IA (suite_ia), plus au serveur Ollama.
+    from pilote import suite_ia
 
-    monkeypatch.setattr(suite_modele, "disponible", lambda url: True)
+    monkeypatch.setattr(suite_ia, "disponible", lambda: True)
     monkeypatch.setattr(
-        suite_modele, "choisir_fonction", lambda url, phrase: {"fonction": "definir", "args": {"mot": "Retirer"}}
+        suite_ia, "choisir_fonction", lambda fonctions, consigne, phrase, modele="": {"fonction": "definir", "args": {"mot": "Retirer"}}
     )
     r = c.post("/api/suite/aide/phrase", json={"phrase": "retirer ça veut dire quoi ?"}).json()
     assert (
         r["fonction"] == "definir" and "sans rien effacer" in r["resultat"]["definition"]
     )  # le texte vient de la liste close, pas du modèle
     monkeypatch.setattr(
-        suite_modele, "choisir_fonction", lambda url, phrase: {"fonction": "ouvrir", "args": {"ecran": "tableau-de-bord"}}
+        suite_ia, "choisir_fonction", lambda fonctions, consigne, phrase, modele="": {"fonction": "ouvrir", "args": {"ecran": "tableau-de-bord"}}
     )
     assert "pas encore conçu" in c.post("/api/suite/aide/phrase", json={"phrase": "ouvre le tableau"}).json()["refus"]
 

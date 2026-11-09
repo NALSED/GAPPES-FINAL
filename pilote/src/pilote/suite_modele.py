@@ -13,6 +13,11 @@ import urllib.request
 from typing import Any
 
 FONCTIONS = ("lister_sources", "lire_plan", "proposer_plan", "verifier_plan", "definir", "ouvrir")
+CONSIGNE = (
+    'Tu aides à se servir de grappes. Réponds par UN objet JSON {"fonction": ..., "args": {...}} et rien d\'autre. Fonctions : '
+    "lister_sources(role, pays, etat), lire_plan(), proposer_plan(objectif, pays), verifier_plan(), definir(mot), ouvrir(ecran). "
+    'Si la phrase ne correspond à aucune, réponds {"fonction": null}.'
+)  # partagée avec `suite_ia.choisir_fonction` (908, 14.1) : un seul texte, pas un second à tenir à jour en double
 DELAI_S = 20
 
 
@@ -38,13 +43,8 @@ def choisir_fonction(url: str, phrase: str) -> dict[str, Any] | None:
     base = url.rstrip("/")
     try:
         modeles = _appel(base + "/api/tags", None, 1.5).get("models") or []
-        consigne = (
-            'Tu aides à se servir de grappes. Réponds par UN objet JSON {"fonction": ..., "args": {...}} et rien d\'autre. Fonctions : '
-            "lister_sources(role, pays, etat), lire_plan(), proposer_plan(objectif, pays), verifier_plan(), definir(mot), ouvrir(ecran). "
-            'Si la phrase ne correspond à aucune, réponds {"fonction": null}.'
-        )
         rep = _appel(base + "/api/chat", {"model": modeles[0]["name"], "stream": False, "format": "json",
-                                           "messages": [{"role": "system", "content": consigne}, {"role": "user", "content": phrase[:500]}]})  # fmt: skip
+                                           "messages": [{"role": "system", "content": CONSIGNE}, {"role": "user", "content": phrase[:500]}]})  # fmt: skip
         choix = json.loads(rep["message"]["content"])
     except (OSError, ValueError, KeyError, IndexError, urllib.error.URLError):
         return None

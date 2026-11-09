@@ -8,7 +8,6 @@ import json
 import subprocess
 
 import pytest
-
 from fastapi.testclient import TestClient
 
 from pilote import operations_ia, suite_ia
@@ -39,6 +38,31 @@ def test_les_trois_operations_se_declarent_et_savent_construire_leur_invite():
     assert "FFSA" in decls["resumer"]["module"].prompt({"nom": "FFSA"}, {})
     assert "sport" in decls["classer"]["module"].prompt({"nom": "x"}, {"categories": "sport, culture"})
     assert "3" in decls["extraire_mots_cles"]["module"].prompt({"nom": "x"}, {"maximum": "3"})
+
+
+# 908, 14.1 (retour du 08/11/2026) : l'Aide choisit sa fonction via le même agent que l'Assistant IA, plus le
+# serveur Ollama « pas tranché » (suite_modele.py, Q suite-4) — même contrat, tout ce qu'il rend est vérifié.
+def test_choisir_fonction_rend_la_fonction_et_les_arguments(monkeypatch):
+    monkeypatch.setattr(suite_ia, "disponible", lambda: True)
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": ('{"fonction": "definir", "args": {"mot": "Retirer"}}', 5))
+    assert suite_ia.choisir_fonction(("definir", "ouvrir"), "consigne", "retirer ça veut dire quoi ?") == {"fonction": "definir", "args": {"mot": "Retirer"}}
+
+
+def test_choisir_fonction_refuse_une_fonction_hors_de_la_liste_close(monkeypatch):
+    monkeypatch.setattr(suite_ia, "disponible", lambda: True)
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": ('{"fonction": "poser_tuile", "args": {}}', 5))
+    assert suite_ia.choisir_fonction(("definir", "ouvrir"), "consigne", "pose une tuile") is None
+
+
+def test_choisir_fonction_ignore_une_reponse_qui_n_est_pas_du_json(monkeypatch):
+    monkeypatch.setattr(suite_ia, "disponible", lambda: True)
+    monkeypatch.setattr(suite_ia, "demander", lambda modele, prompt, effort="": ("pas du json", 5))
+    assert suite_ia.choisir_fonction(("definir",), "consigne", "n'importe quoi") is None
+
+
+def test_choisir_fonction_sans_agent_installe_ne_rend_rien(monkeypatch):
+    monkeypatch.setattr(suite_ia, "disponible", lambda: False)
+    assert suite_ia.choisir_fonction(("definir",), "consigne", "retirer ça veut dire quoi ?") is None
 
 
 def test_route_api_operations_ia(cfg):

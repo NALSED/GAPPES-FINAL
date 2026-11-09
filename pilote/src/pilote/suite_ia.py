@@ -89,6 +89,24 @@ def demander(modele: str, prompt: str, effort: str = "") -> tuple[str, int]:
     return sortie, total_tokens(d.get("usage") or {})
 
 
+def choisir_fonction(fonctions: tuple[str, ...], consigne: str, phrase: str, modele: str = "") -> dict[str, Any] | None:
+    """908, 14.1 (retour du 08/11/2026) : l'Aide (fiche 11) choisissait sa fonction via un serveur Ollama local
+    « pas tranché » (`suite_modele.py`, Q suite-4) — remplacé par ce même agent, déjà vérifié en réel pour
+    l'Assistant IA (3.8.09). Même contrat que `suite_modele.choisir_fonction` ({fonction, args} ou None) : tout
+    ce que l'agent rend est vérifié, une fonction hors de la liste close est ignorée, jamais exécutée à l'aveugle."""
+    if not disponible():
+        return None
+    try:
+        texte, _ = demander(modele, f"{consigne}\n\nPhrase : {phrase[:500]}")
+        choix = json.loads(texte)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(choix, dict) or choix.get("fonction") not in fonctions:
+        return None
+    args = choix.get("args")
+    return {"fonction": choix["fonction"], "args": args if isinstance(args, dict) else {}}
+
+
 def appliquer(operation: dict, resultat: dict, options: dict, modele: str = "", effort: str = "") -> tuple[str, int]:
     """(le texte de `operation['champ_sortie']` pour ce résultat, les tokens consommés). Ne modifie resultat nulle part."""
     return demander(modele, operation["module"].prompt(resultat, options), effort)
