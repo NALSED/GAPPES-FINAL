@@ -493,3 +493,15 @@ notable : les « vocabulaires fermés connus » de l'inventaire backend sont dé
 JS `RENDUS_OPTIONS` d'`options_outils.js`, qui reste côté affichage (il régit comment chaque genre se RENDS à
 l'écran, question différente de ce que l'inventaire décrit : ce que le moteur accepte réellement). Les deux
 dérivent des mêmes faits réels, chacun à sa couche, sans dupliquer une troisième liste pour les relier.
+
+## D100 — 908, étape 5, point 2/2 (09/11/2026, 14.1/14.2) — étape 5/6 complète
+
+Commit `357a34f` : l'Aide parle au même agent que l'Assistant IA (voir le message de commit). Le volet
+« agir » de 14.2 est documenté dans QUESTIONS.md plutôt que construit dans la même passe — décision
+délibérée : lire ne risque rien, agir mal câblé abîmerait quelque chose pour de vrai (supprimer un résultat,
+écraser une décision de Tri, lever la règle 8 sont des interdits absolus de la spec). La liste close de six
+fonctions READ reste le modèle à suivre pour y ajouter des fonctions WRITE, une par une, chacune avec sa
+propre confirmation.
+
+Étape 5/6 complète. Restent : étape 6 (les quatre niveaux d'implication de l'IA, point 13 — puis, et
+seulement dans cet ordre, porter les réglages de Lancement dans /suite, Tri, et supprimer l'ancienne UI).
