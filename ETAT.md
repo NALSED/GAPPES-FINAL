@@ -1,6 +1,6 @@
 # ETAT — grappes
 
-Phase en cours : aucune.
+Phase en cours : revue totale du code (demande de Sednal du 09/11/2026 : revue, corrections, poussée sur main) — lot 909 revu et corrigé (D112) ; reste le moteur `src/grappes` et le reste de `pilote/`.
 
 909 (« Vérifier et enrichir ») clos pour tout ce qui est câblable sans Sednal ni infra manquante : §1.1 fait
 (D104), §2.1 complet (a/b/c, D104+D105), 1.2 (a/b/c/d) faits (D106/D92/D108/D107), 1.2 (e/f) déclinés avec

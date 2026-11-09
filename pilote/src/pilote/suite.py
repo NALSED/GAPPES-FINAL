@@ -76,6 +76,9 @@ def _brut(cfg: Config) -> dict[str, Any]:
         e.pop(
             "sources", None
         )  # un état de la première version (catalogue à part) : ignoré, les sources viennent des déclarations
+        # Un outil livré après la création de ce fichier y manque : on l'ajoute. Un outil retiré reste dans la liste (drapeau `retire`), il ne revient donc pas.
+        connus = {o.get("id") for o in e["outils"] if isinstance(o, dict)}
+        e["outils"] += [o for o in graine()["outils"] if o["id"] not in connus]
         return e
     try:
         f.replace(f.with_name(f.name + ".abime"))

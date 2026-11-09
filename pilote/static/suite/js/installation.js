@@ -296,10 +296,12 @@ function etape2() {
   const eligibles = S.e2.mode === "memes" ? capables.filter((s) => S.e1.chercher.has(s.id)) : capables;
   // 909, point 2.1.c (retour du 09/11/2026) : enrichir a sa propre place ici, comme verifier — sans elle, une
   // source enrichir SEULE (rdap, intelligencex) n'apparaissait jamais dans cet assistant.
+  // Même règle que verifier : en mode « memes », une source qui ne cherche pas n'est jamais appelée (moteur_sources.verificatrices) ; la proposer serait une case sans effet.
   const capablesEnrichir = D.parties.recherche.filter((s) => s.roles.includes("enrichir"));
+  const eligiblesEnrichir = S.e2.mode === "memes" ? capablesEnrichir.filter((s) => S.e1.chercher.has(s.id)) : capablesEnrichir;
   if (!S.e2.initialise) {
     eligibles.forEach((s) => { if (s.defaut.verifier || S.e2.mode === "memes") S.e2.verifier.add(s.id); });
-    capablesEnrichir.forEach((s) => { if (s.defaut.enrichir) S.e2.enrichir.add(s.id); });
+    eligiblesEnrichir.forEach((s) => { if (s.defaut.enrichir) S.e2.enrichir.add(s.id); });
     S.e2.initialise = true;
   }
   return [
@@ -336,12 +338,12 @@ function etape2() {
                 )
               : h("p", { class: "legende pale" }, "Aucune source ne peut vérifier avec ce choix."),
           ),
-        S.e2.active && capablesEnrichir.length > 0 &&
+        S.e2.active && eligiblesEnrichir.length > 0 &&
           h(
             "div",
             { class: "options-grille" },
             h("p", { class: "legende" }, "Enrichir ajoute de vrais champs (ville, site, numéro...) à une fiche déjà trouvée, sans jamais en écraser un."),
-            capablesEnrichir.map((s) =>
+            eligiblesEnrichir.map((s) =>
               caseSource({
                 nom: `Utiliser « ${s.nom} » pour enrichir`,
                 sous: s.main_phrase,

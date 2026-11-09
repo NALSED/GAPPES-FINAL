@@ -28,9 +28,14 @@ def verifier_candidats(lignes: list[dict], spec: dict, secrets: dict[str, str], 
         parametres = {**v.get("parametres", {}), **({"_cle": secrets.get(v["cles_noms"][0], ""), "_cles": {n: secrets.get(n, "") for n in v["cles_noms"]}} if v.get("cles_noms") else {})}
         signaler("prise_debut", prise=source)
         a_verifier = [l for l in lignes if sur_le_nom or l.get(cle_ligne if cle_ligne in ("site", "ville") else "site")]
-        if v.get("en_amont") is not None:  # posée après certaines sources sur le plan : elle ne vérifie que les noms que ces sources ont trouvés
-            a_verifier = [l for l in a_verifier if set(l.get("trouve_par") or []) & set(v["en_amont"])]
         faits_ok, examines, coupee = 0, 0, ""
+        if v.get("en_amont") is not None:  # posée après certaines sources sur le plan, ou restreinte dans Réglages : elle ne vérifie que les noms que ces sources ont trouvés
+            # `trouve_par` garde l'étiquette d'une prise (un flux RSS est « rss-… ») ; `en_amont` parle en sources déclarées : on compare dans la même langue.
+            jetons = spec.get("jetons") or {}
+            eligibles = a_verifier
+            a_verifier = [l for l in eligibles if {jetons.get(t, t) for t in l.get("trouve_par") or []} & set(v["en_amont"])]
+            if eligibles and not a_verifier:  # rien d'examiné à cause de la restriction : à dire, sinon « 0 sur 0 » se lit comme une vérification sans trouvaille
+                coupee = "aucun nom n'a été trouvé par les sources auxquelles cette vérification est restreinte"
         plafond = int(v.get("parametres", {}).get("max_candidats") or 0)  # source à crédits comptés : on n'examine que les premiers (les mieux classés)
         for ligne in a_verifier:
             if hors_service:

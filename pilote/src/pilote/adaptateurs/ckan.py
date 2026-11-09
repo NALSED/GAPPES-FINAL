@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import Any
 
 from pilote.adaptateurs import Client, ErreurSource, mots_significatifs
+from pilote.adaptateurs.api_json import _exactes
 
 
 def convertir(rep: dict[str, Any], portail: str, pays: str = "") -> list[dict[str, Any]]:
@@ -32,6 +33,7 @@ def chercher(entree: dict[str, Any], client: Client, parametres: dict[str, Any])
         for e in convertir(rep, portail, str(entree.get("pays") or "")):
             if e["_id"] not in vus:
                 vus[e["_id"]] = {k: v for k, v in e.items() if k != "_id"}
-        if len(vus) >= limite:
+        if len(vus) >= limite and "nom" not in entree:  # en vérification, le bon nom peut n'arriver qu'avec le dernier mot : on les interroge tous
             break
-    return list(vus.values())[:limite]
+    # La recherche se fait mot par mot : en vérification, une organisation qui partage UN mot avec le candidat n'est pas une confirmation. Sans réglage possible : c'est vrai de tout portail.
+    return _exactes(list(vus.values()), {"correspondance_exacte": True}, entree)[:limite]

@@ -380,6 +380,32 @@ def test_requete_avancee_type_inconnu_est_refuse():
         comp(plan_requete_avancee(opts))
 
 
+def test_requete_avancee_une_source_posee_deux_fois_est_qualifiee_une_fois():
+    opts = [("Type de qualificatif", "Limiter à un site/domaine"), ("Valeur", "linkedin.com/in/")]
+    noeuds = [("saisie",), ("grappes",), ("r", "requete_avancee", None, opts), ("n1", "d"), ("n2", "d")]
+    liens = [lien("saisie", "r"), lien("r", "n1"), lien("r", "n2"), lien("n1", "grappes"), lien("n2", "grappes")]
+    assert comp(plan(noeuds, liens))["requetes"] == {"d": [{"type": "site", "valeur": "linkedin.com/in/"}]}
+
+
+@pytest.mark.parametrize(
+    "qualificatif, valeur_saisie",
+    [
+        ("Limiter à un site/domaine", "exemple.test inurl:admin"),  # un opérateur de plus, glissé dans la valeur
+        ("Limiter à un type de fichier", "env"),  # famille reconnaissance de sécurité, écartée par la spécification
+        ("Exclure un mot", "deux mots"),  # seul le premier serait exclu
+        ("Phrase exacte", 'une "phrase'),  # casserait les guillemets
+    ],
+)
+def test_requete_avancee_une_valeur_hors_du_vocabulaire_est_refusee(qualificatif, valeur_saisie):
+    with pytest.raises(ConfigRefusee):
+        comp(plan_requete_avancee([("Type de qualificatif", qualificatif), ("Valeur", valeur_saisie)]))
+
+
+def test_requete_avancee_type_de_fichier_document_accepte_et_normalise():
+    opts = [("Type de qualificatif", "Limiter à un type de fichier"), ("Valeur", ".PDF")]
+    assert comp(plan_requete_avancee(opts))["requetes"] == {"d": [{"type": "filetype", "valeur": "pdf"}]}
+
+
 def plan_traduction(opts):
     return plan(
         [("saisie",), ("grappes",), ("t", "traduction", None, opts), ("n1", "a"), ("n3", "c")],

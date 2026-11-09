@@ -37,9 +37,10 @@ def patch_etape(etape: int, p: dict[str, Any], decls: dict[str, Declaration]) ->
         if p.get("mode") is not None:
             verif["mode"] = str(p["mode"])
         sources: dict[str, Any] = {sid: {"verifier": actif and sid in verifier} for sid in decls if "verifier" in decls[sid].roles}
-        for sid, d in decls.items():
-            if "enrichir" in d.roles:
-                sources[sid] = {**sources.get(sid, {}), "enrichir": actif and sid in enrichir}
+        if "enrichir" in p:  # comme le mode : une page qui ne connaît pas encore cette section (ancienne interface) n'éteint pas en silence ce qui a été coché ailleurs
+            for sid, d in decls.items():
+                if "enrichir" in d.roles:
+                    sources[sid] = {**sources.get(sid, {}), "enrichir": actif and sid in enrichir}
         return {"verification": verif, "sources": sources}
     if etape == 3:
         return {"sortie": {"actifs": list(p.get("actifs") or []), "dossier": str(p.get("dossier", "")).strip()}}

@@ -743,3 +743,43 @@ passés, 1 échec pré-existant (flake déjà documenté).
 909 est maintenant clos pour tout ce qui est câblable sans Sednal/sans infra manquante : reste 1.3.a/b/c
 (process), le volet comparaison systématique ancienne UI/`/suite` (second volet, plus large, pas commencé),
 et §4 (mis en attente par la spec elle-même).
+
+## D112 — Revue du lot 909 : défauts corrigés (09/11/2026)
+
+Revue de code des commits 909 (`66d8d7b^..57183e5`). Corrigé, chaque point avec son test de non-régression :
+
+* **Confirmation par un seul mot commun.** `ckan`/`hdx`/`un-civil-society` (D111) cherchent par mots ; tout
+  résultat comptait comme confirmation, et D107 en tirait une fiabilité relevée. Vérifier exige maintenant le nom
+  exact (la règle `_exactes` d'`api_json`) : toujours pour l'adaptateur `ckan`, par `correspondance_exacte` pour
+  `un-civil-society` (`scrapling` est générique).
+* **`en_amont` :** comparé à `trouve_par` à travers les jetons (un flux RSS n'y est connu que par sa prise) ; une
+  restriction qui écarte tous les noms est dite au bilan au lieu d'un « 0 sur 0, complet » ; une source cochée
+  puis éteinte reste visible dans Réglages pour pouvoir être décochée ; une valeur retouchée à la main est signalée.
+* **Assistant, étape 2 :** une page qui n'envoie pas `enrichir` (ancienne interface) n'éteint plus les choix
+  existants ; le refus « test échoué / adaptateur manquant » vaut aussi pour `enrichir` ; une source qui ne fait
+  qu'enrichir n'est proposée qu'en mode « plus », le seul où elle est appelée.
+* **Fiabilité :** la lettre passée au pont est celle de la fiche (choix de l'utilisateur), plus celle de la
+  déclaration seule. Le filtre « Fiabilité minimale » en bénéficie aussi.
+* **Requête avancée :** l'outil rejoint un `etat.json` déjà écrit (il n'existait que sur une installation
+  neuve) ; `Valeur` ne peut plus rouvrir ce que le vocabulaire fermé écarte (un seul terme, types de document
+  seulement) ; une source posée deux fois n'est qualifiée qu'une fois ; ordre du plan au lieu de celui d'un
+  ensemble (`_sources_apres`, partagé avec Traduction) ; trace au journal (`plan_requete_qualifiee`).
+* **Déclaration :** `operateurs: 3` levait `TypeError` et emportait le chargement de toutes les sources.
+* **Alertes du Tableau de bord :** au-delà de 50, le reste est annoncé ; libellé réécrit (`origine` est souvent
+  une phrase entière).
+
+Non corrigé, renvoyé à `pilote/QUESTIONS.md` : neuf sources ont un rôle `enrichir` sans `verifie_sur`.
+
+Portée réelle de cette revue : les 15 commits du lot 909, pas tout le dépôt.
+
+Rectifications d'entrées de ce même jour (le journal reste en ajout seul, les entrées d'origine ne sont pas réécrites) :
+
+* **D111, « bug pré-existant sur `ckan` » : erreur de diagnostic.** Un rôle `verifier` sans `verifie_sur` est un
+  choix voulu : c'est le recoupement entre sources de recherche (docstring de `verificatrices()`, commentaire de
+  `test_f16_verification.py`). Poser `verifie_sur: nom` n'était donc pas une réparation mais un changement de
+  comportement, et sans contrôle du nom exact il créait de fausses confirmations (corrigé ci-dessus).
+* **D105, « fonctionne automatiquement en recherche simple » : faux pour neuf des treize sources** (pas de
+  `verifie_sur`, jamais appelées ; voir `pilote/QUESTIONS.md`).
+* **D110, « construit et testé de bout en bout » : exagéré.** L'ajout du qualificatif au texte de la requête
+  (`_qualifiee`, `pont/executer.py`) n'est exécuté par aucun test, et aucune source réelle ne déclare `operateurs` :
+  la tuile n'a aujourd'hui aucun effet sur une requête.

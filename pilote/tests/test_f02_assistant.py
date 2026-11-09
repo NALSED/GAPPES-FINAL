@@ -72,6 +72,23 @@ def test_enrichir_a_sa_propre_case_dans_l_assistant(cfg):
     assert y["sources"]["wikipedia"] == {"chercher": True, "verifier": True}  # inchangé : wikipedia ne déclare pas « enrichir »
 
 
+def test_rejouer_l_etape_2_sans_enrichir_garde_les_choix_d_enrichissement(cfg):
+    with TestClient(app_de(cfg)) as c:
+        c.post("/api/assistant/terminer", json={"etape1": E1, "etape2": {**E2, "enrichir": ["rdap"]}, "etape3": E3}).raise_for_status()
+        assert c.post("/api/assistant/etape/2", json={"donnees": E2}).status_code == 200  # l'ancienne page (assistant.js) n'envoie pas « enrichir »
+    y = yaml.safe_load(cfg.fichier_reglages.read_text(encoding="utf-8"))
+    assert y["sources"]["rdap"]["enrichir"] is True
+
+
+def test_enrichir_est_refuse_pour_une_source_dont_le_test_a_echoue(cfg):
+    from pilote.etat_sources import noter
+
+    noter(cfg, "rdap", teste_le="2026-11-09T08:00:00+00:00", statut="echec", raison="panne")
+    with TestClient(app_de(cfg)) as c:
+        r = c.post("/api/assistant/terminer", json={"etape1": E1, "etape2": {**E2, "enrichir": ["rdap"]}, "etape3": E3})
+    assert r.status_code == 422 and "a échoué à son test" in r.json()["detail"]
+
+
 def test_etape_invalide_refusee_et_rien_n_est_ecrit(cfg):
     with TestClient(app_de(cfg)) as c:
         r = c.post("/api/assistant/terminer", json={"etape1": {**E1, "pays": "France"}, "etape2": E2, "etape3": E3})

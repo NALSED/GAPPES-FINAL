@@ -142,8 +142,16 @@ def materialiser(cfg: Config, cible: Path, params: dict[str, Any]) -> Materialis
         gardes = {d.id for d in ok}
         utilisees = [d for d in utilisees if d.id in gardes]
         verif = [d for d in verif if d.id in gardes]
+    from pilote import suite
+
+    # La lettre affichée et exportée : celle que l'utilisateur a choisie dans la fiche si elle existe, sinon celle de la déclaration.
+    lettres = {s["id"]: s["fiabilite"] for s in suite.charger(cfg)["sources"]}
+
+    def fiabilite(d: Declaration) -> str:
+        return lettres.get(d.id) or fiabilite_par_defaut(d)
+
     res = Materialise(ids=[d.id for d in utilisees], origines={d.id: d.origine for d in utilisees}, mains={d.id: d.main for d in utilisees},
-                      fiabilites={d.id: fiabilite_par_defaut(d) for d in utilisees},
+                      fiabilites={d.id: fiabilite(d) for d in utilisees},
                       exclues_budget=exclues, couts={d.id: rg.choix_source(reg, d)["cout"] for d in utilisees}, en_pause=en_pause,
                       emoji_ok=sorted(d.id for d in utilisees if "emoji" in d.consomme))
     dossier = cible / "recherche"
@@ -248,7 +256,7 @@ def materialiser(cfg: Config, cible: Path, params: dict[str, Any]) -> Materialis
                                     **_delai(donnes)})  # `parametres.delai_s` : la pause minimale entre deux appels, quand le service limite son débit
         res.jetons[d.id] = d.id
         res.origines[d.id], res.mains[d.id] = d.origine, d.main
-        res.fiabilites[d.id] = fiabilite_par_defaut(d)
+        res.fiabilites[d.id] = fiabilite(d)
         res.couts[d.id] = rg.choix_source(reg, d)["cout"]
     # clés : seulement celles des sources utilisées, dans un fichier à droits restreints
     lignes = sorted({f"{n}={(d.cle_prefixe if n == d.cle else '')}{cles.valeur(cfg, n)}" for d in [*utilisees, *verif] for n in d.cles if cles.presente(cfg, n)})

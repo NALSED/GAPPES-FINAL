@@ -103,6 +103,9 @@ def problemes_de_valeurs(cfg: Config, r: dict[str, Any], decls: dict[str, Declar
         out.append({"fichier": nom_f, "raison": f"le plafond de dépense mensuel (« {b} ») n'est pas un nombre : {DEFAUT['budget']['plafond_mensuel_usd']:g} $ est utilisé."})
     if not isinstance((r.get("verification") or {}).get("active"), bool):
         out.append({"fichier": nom_f, "raison": "la vérification doit être oui ou non : elle est considérée comme active."})
+    ea = (r.get("verification") or {}).get("en_amont", [])
+    if not isinstance(ea, list) or not all(isinstance(x, str) for x in ea):
+        out.append({"fichier": nom_f, "raison": "la restriction « en amont » de la vérification est mal écrite : ce qui n'est pas un nom de source est ignoré."})
     for cle_a in ("sources_masquees", "verification_masquees"):
         v = (r.get("affichage") or {}).get(cle_a, [])
         if not isinstance(v, list) or not all(isinstance(x, str) for x in v):

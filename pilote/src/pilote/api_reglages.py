@@ -273,9 +273,10 @@ def construire(cfg: Config, fabrique: sessionmaker[Session]) -> APIRouter:
         if "source" in patch:
             voulues[patch["source"]["id"]] = patch["source"]
         for sid, ch in voulues.items():
-            if (ch.get("chercher") or ch.get("verifier")) and sid in decls and adaptateur_manquant(decls[sid]):
+            allumee = ch.get("chercher") or ch.get("verifier") or ch.get("enrichir")
+            if allumee and sid in decls and adaptateur_manquant(decls[sid]):
                 raise HTTPException(422, f"La source « {decls[sid].nom} » : {MESSAGE_ADAPTATEUR}")
-            if (ch.get("chercher") or ch.get("verifier")) and sid in decls and (etats.get(sid) or {}).get("statut") == "echec":
+            if allumee and sid in decls and (etats.get(sid) or {}).get("statut") == "echec":
                 raise HTTPException(422, f"La source « {decls[sid].nom} » a échoué à son test ({etats[sid].get('raison', 'raison inconnue')}) : "
                                          "elle ne peut pas être activée tant que le test ne passe pas.")
 

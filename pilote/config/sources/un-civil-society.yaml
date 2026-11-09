@@ -63,3 +63,4 @@ moteur:
     genre: association
     origine_texte: Base des organisations de la société civile (ONU, ECOSOC)
     site_prefixe: https://esango.un.org/civilsociety/
+    correspondance_exacte: true

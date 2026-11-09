@@ -242,12 +242,32 @@ def test_une_alerte_de_verification_rejoint_le_tableau_de_bord(cfg):
     ]
     ctx = FauxContexte()
     ExecuteurGrappes(cfg).dire_les_alertes_verification(ctx, lignes)
-    assert ctx.avances["alertes_verification"] == ["« Club A » : OpenSanctions signale une alerte (entrée du 12/03)."]
+    assert ctx.avances["alertes_verification"] == ["« Club A » : alerte signalée — OpenSanctions (entrée du 12/03)."]
     assert ctx.notes == [("verification_alerte", {"n": 1})]
     # aucune alerte : rien n'est posé (pas de clé « alertes_verification » à faux ou vide)
     ctx2 = FauxContexte()
     ExecuteurGrappes(cfg).dire_les_alertes_verification(ctx2, [{"nom": "Club B", "faits": {}}])
     assert ctx2.avances == {} and ctx2.notes == []
+
+
+def test_les_alertes_au_dela_du_plafond_d_affichage_sont_dites(cfg):
+    from pilote.executeur_grappes import ExecuteurGrappes
+
+    lignes = [{"nom": f"Club {k}", "faits": {"verifications": [{"source": "s", "origine": "S", "signal": "alerte"}]}} for k in range(53)]
+    ctx = FauxContexte()
+    ExecuteurGrappes(cfg).dire_les_alertes_verification(ctx, lignes)
+    alertes = ctx.avances["alertes_verification"]
+    assert len(alertes) == 51 and "3 autre(s) alerte(s)" in alertes[-1]  # la 51e n'est pas perdue sans un mot
+    assert ctx.notes == [("verification_alerte", {"n": 53})]
+
+
+def test_la_requete_avancee_laisse_une_trace_au_journal(cfg):
+    from pilote.executeur_grappes import ExecuteurGrappes
+
+    requetes = {"d": [{"type": "site", "valeur": "exemple.test"}]}
+    ctx = FauxContexte()
+    ExecuteurGrappes(cfg).dire_le_plan(ctx, {"plan": {"requetes": requetes}}, {})
+    assert ("plan_requete_qualifiee", {"requetes": requetes}) in ctx.notes
 
 
 # --- [ ] Le bilan de vérification arrive jusqu'à la page Tri.

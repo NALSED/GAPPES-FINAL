@@ -93,6 +93,55 @@ def test_en_amont_mal_ecrit_est_refuse(cfg):
         assert r.status_code == 422
 
 
+# --- Vérifier par le nom, c'est retrouver CE nom : CKAN cherche mot par mot, partager un mot ne confirme rien (ni n'enrichit la fiche).
+def test_ckan_ne_confirme_qu_avec_le_nom_exact():
+    from pilote.adaptateurs import ckan
+
+    class Faux:
+        def get_json(self, url, params):
+            orgs = {"lyon": [{"id": "1", "name": "ville", "display_name": "Ville de Lyon"}], "judo": [{"id": "2", "name": "club", "display_name": "Club de Judo de Lyon"}]}
+            return {"success": True, "result": orgs.get(params["q"].lower(), [])}
+
+    p = {"portail": "https://portail.test"}
+    assert ckan.chercher({"nom": "Ville de Lyon Sud", "quoi": "Ville de Lyon Sud"}, Faux(), p) == []
+    assert [o["nom"] for o in ckan.chercher({"nom": "club de JUDO de lyon", "quoi": "club de JUDO de lyon"}, Faux(), p)] == ["Club de Judo de Lyon"]
+    assert len(ckan.chercher({"quoi": "judo lyon"}, Faux(), p)) == 2  # en recherche (pas de « nom » à retrouver), rien n'est filtré
+
+
+def test_un_civil_society_exige_le_nom_exact_pour_verifier(cfg):
+    from pilote.sources import charger_sources
+
+    decls, _ = charger_sources(cfg)
+    assert decls["un-civil-society"].moteur["parametres"]["correspondance_exacte"] is True  # adaptateur générique : la règle est un réglage de la source
+
+
+# --- `en_amont` parle en sources déclarées, `trouve_par` peut porter l'étiquette d'une prise ; et une restriction qui écarte tout est dite.
+def test_en_amont_passe_par_les_jetons_et_dit_quand_il_ecarte_tout(monkeypatch):
+    class Faux:
+        @staticmethod
+        def chercher(entree, client, parametres):
+            return [{"nom": entree["nom"], "numero": "n"}]
+
+    monkeypatch.setattr(adaptateurs, "charger", lambda m: Faux)
+    lignes = [{"nom": "Asso", "site": "a.example", "trouve_par": ["rss-abc"]}]
+    v = {"source": "v", "verifie_sur": "site", "module": "m", "parametres": {}, "cles_noms": [], "en_amont": ["flux-rss-utilisateur"]}
+    bilans = verifier_candidats(lignes, {"jetons": {"rss-abc": "flux-rss-utilisateur"}, "verificateurs": [v]}, {}, lambda: False, 60.0, lambda *a, **k: None)
+    assert bilans[0]["examines"] == 1 and bilans[0]["complete"] is True
+    bilan = verifier_candidats(lignes, {"verificateurs": [{**v, "en_amont": ["autre-source"]}]}, {}, lambda: False, 60.0, lambda *a, **k: None)[0]
+    assert bilan["examines"] == 0 and bilan["complete"] is False and "restreinte" in bilan["raison"]  # jamais « 0 sur 0, complet »
+
+
+# --- La lettre qui relève la fiabilité d'un candidat est celle que l'utilisateur voit et a pu choisir dans la fiche, pas celle de la déclaration.
+def test_la_fiabilite_choisie_dans_la_fiche_vaut_pour_la_recherche(cfg, tmp_path):
+    from pilote import suite
+
+    with TestClient(creer_app(cfg, lambda c: None)) as c:
+        assert c.put("/api/reglages/source/wayback", json={"verifier": True}).status_code == 200
+        c.put("/api/reglages/verification", json={"active": True, "mode": "plus"})
+        suite._surcouche(cfg, "wayback", {"fiabilite": "E"})
+        assert materialiser(cfg, cible(tmp_path), {"sources": []}).fiabilites["wayback"] == "E"
+
+
 # --- [ ] Chaque candidat qui a un site reçoit sa vérification ; les autres sont laissés tels quels ; un défaut n'arrête rien.
 def test_verifier_candidats_ajoute_la_preuve_sans_toucher_aux_endroits(monkeypatch):
     class Faux:

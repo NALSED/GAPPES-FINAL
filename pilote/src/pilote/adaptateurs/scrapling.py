@@ -24,6 +24,7 @@ from __future__ import annotations
 from typing import Any
 
 from pilote.adaptateurs import Client, ErreurSource, mots_significatifs
+from pilote.adaptateurs.api_json import _exactes
 from pilote.adaptateurs.mcp_generique import remplir
 
 LIT_PARAMETRES = True  # adaptateur générique (fiche 11, niveau 2) : sa lecture dépend des réglages (`liste`, `champs`) de la source
@@ -151,4 +152,4 @@ def chercher(entree: dict[str, Any], client: Client, parametres: dict[str, Any])
         erreur = ErreurSource(f"La page a répondu une erreur ({page.status}).")
         erreur.code = page.status
         raise erreur
-    return convertir(page, parametres)[:limite]
+    return _exactes(convertir(page, parametres), parametres, entree)[:limite]  # même règle qu'api_json : en vérification, un résultat approchant ne confirme rien

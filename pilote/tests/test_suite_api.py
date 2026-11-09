@@ -76,6 +76,17 @@ def test_etat_de_depart(c, cfg):
     assert src(c, "charity-commission")["pays"] == "UK"  # GB dans la déclaration, UK à l'écran
 
 
+def test_un_outil_livre_apres_coup_rejoint_un_etat_deja_ecrit(cfg):
+    e = suite.graine()
+    e["outils"] = [o for o in e["outils"] if o["id"] != "requete_avancee"]
+    e["outils"][0]["retire"] = True  # un outil retiré reste retiré : il est présent dans la liste, rien n'est remis à neuf
+    f = suite.fichier(cfg)
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(json.dumps(e), encoding="utf-8")
+    outils = suite.charger(cfg)["outils"]
+    assert len([o for o in outils if o["id"] == "requete_avancee"]) == 1 and outils[0]["retire"] is True and len(outils) == 11
+
+
 # --- règle « une source nouvelle démarre à vérifier » (05) : jamais opérationnelle sans test réussi
 def test_une_source_ajoutee_ecrit_sa_declaration_et_demarre_a_verifier(c, cfg):
     # exemple de réponse qui ne contient pas le champ du nom : le test local échoue, la source reste « à vérifier »

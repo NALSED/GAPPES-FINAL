@@ -171,8 +171,8 @@ def valider_declaration(d: dict[str, Any], cfg: Config, fichier: str = "") -> De
     verifie_sur = str(d.get("verifie_sur") or "")
     if verifie_sur and (verifie_sur not in ("site", "nom", "ville") or not ({"verifier", "enrichir"} & set(roles)) or "adaptateur" not in moteur or (verifie_sur == "ville" and "enrichir" not in roles)):
         raise ConfigRefusee(f"{nom_f} : « verifie_sur » vaut « site » ou « nom » (rôle « verifier » ou « enrichir » avec un adaptateur), ou « ville » (rôle « enrichir »).")
-    operateurs = [str(x) for x in (d.get("operateurs") or [])]
-    if not isinstance(d.get("operateurs") or [], list) or set(operateurs) - set(OPERATEURS):
+    operateurs = _liste(d, "operateurs", nom_f, requis=False)  # une valeur mal écrite est refusée : jamais une exception qui emporterait le chargement de toutes les sources
+    if set(operateurs) - set(OPERATEURS):
         raise ConfigRefusee(f"{nom_f} : « operateurs » ne contient que : {', '.join(OPERATEURS)}.")
     if operateurs and ("chercher" not in roles or "adaptateur" not in moteur):
         # 909 §3 : seule une source « adaptateur » passe par `pont.executer.entree_de()`, le seul endroit où le

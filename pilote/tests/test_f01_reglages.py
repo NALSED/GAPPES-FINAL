@@ -149,6 +149,25 @@ def test_operateurs_vocabulaire_ferme(cfg):
     assert "operateurs" in raisons["mauvais-operateur.yaml"]
 
 
+def test_operateurs_mal_ecrit_ne_fait_pas_tomber_le_chargement(cfg):
+    from pilote.sources import charger_sources
+
+    (cfg.dossier_sources / "operateurs-nombre.yaml").write_text(
+        yaml.safe_dump({"id": "operateurs-nombre", "nom": "X", "genres": ["page"], "pays": ["FR"], "usages": ["web"], "main": "seconde",
+                        "famille": "api", "roles": ["chercher"], "moteur": {"adaptateur": "x"}, "operateurs": 3}), encoding="utf-8")  # fmt: skip
+    decls, problemes = charger_sources(cfg)  # un fichier cassé n'arrête pas les autres, quelle que soit la façon dont il est cassé
+    raisons = {p["fichier"]: p["raison"] for p in problemes}
+    assert "operateurs" in raisons["operateurs-nombre.yaml"] and "tavily" in decls
+
+
+def test_en_amont_retouche_a_la_main_est_signale(cfg):
+    cfg.fichier_reglages.write_text("verification: {active: true, en_amont: une-source}\n", encoding="utf-8")
+    with TestClient(app_de(cfg)) as c:
+        r = c.get("/api/reglages")
+    assert r.status_code == 200 and r.json()["verification"]["en_amont"] == []
+    assert any("en amont" in p["raison"] for p in r.json()["problemes"])
+
+
 def test_reglages_yaml_casse_ne_fait_pas_tomber_la_page(cfg):
     cfg.fichier_reglages.write_text("budget: [ceci n'est pas\n", encoding="utf-8")
     with TestClient(app_de(cfg)) as c:

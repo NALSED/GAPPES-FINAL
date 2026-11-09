@@ -470,6 +470,22 @@ def _presets_ne_pas_traduire(opts: list) -> list[str]:
     return mots_vers_presets([_option(opts, 2, "ne pas traduire")])
 
 
+def _sources_apres(i: str, nodes: dict[str, Any], par_source: dict[str, Any], pred: dict[str, list[str]]) -> list[str]:
+    """Les tuiles de sources qui cherchent, placées après la tuile `i`. Dans l'ordre du plan, jamais dans celui d'un ensemble (aléatoire d'un processus à l'autre)."""
+    succ_de: dict[str, list[str]] = {}
+    for n_id in nodes:
+        for p in pred[n_id]:
+            succ_de.setdefault(p, []).append(n_id)
+    descendants: set[str] = set()
+    pile = [i]
+    while pile:
+        for m in succ_de.get(pile.pop(), []):
+            if m not in descendants:
+                descendants.add(m)
+                pile.append(m)
+    return [m for m in nodes if m in descendants and nodes[m].get("ref") in par_source and par_source[nodes[m]["ref"]]["role"] not in ("VERIFIER", "ENRICHIR")]
+
+
 def _traduction(
     i,
     node,
@@ -488,22 +504,7 @@ def _traduction(
 ) -> None:
     """Une Traduction AVANT une source traduit la requête vers la langue de cette source (son champ Langue, d'où l'intérêt du champ). Après une
     source, elle traduirait les résultats : pas branché. Et sans reconnaissance d'entités nommées, la protection des noms propres n'est pas possible."""
-    descendants = set()
-    pile = [i]
-    succ_de = {}
-    for n_id in nodes:
-        for p in pred[n_id]:
-            succ_de.setdefault(p, []).append(n_id)
-    while pile:
-        for m in succ_de.get(pile.pop(), []):
-            if m not in descendants:
-                descendants.add(m)
-                pile.append(m)
-    sources_apres = [
-        m
-        for m in descendants
-        if nodes[m].get("ref") in par_source and par_source[nodes[m]["ref"]]["role"] not in ("VERIFIER", "ENRICHIR")
-    ]
+    sources_apres = _sources_apres(i, nodes, par_source, pred)
     if not sources_apres:
         dire_non(i, "placée après les sources, elle traduirait les résultats : ce n'est pas encore branché")
         return
@@ -552,6 +553,23 @@ OPERATEURS_DORKING = {
     "limiter a un site domaine": "site", "limiter a un type de fichier": "filetype", "mot dans le titre": "titre",
     "phrase exacte": "phrase", "exclure un mot": "exclure",
 }  # fmt: skip
+_TYPES_DE_DOCUMENT = {"pdf", "doc", "docx", "odt", "rtf", "txt", "csv", "xls", "xlsx", "ods", "ppt", "pptx", "odp"}
+
+
+def _valeur_qualificatif(nom: str, qtype: str, v: str) -> str:
+    """La valeur libre de la tuile ne doit pas rouvrir ce que le vocabulaire fermé écarte : un seul terme (« x inurl:admin » ajouterait un
+    opérateur, « -deux mots » n'exclurait que le premier) et, pour un type de fichier, seulement des documents (ni `env`, ni `sql`…)."""
+    if qtype == "phrase":
+        if '"' in v:
+            raise ConfigRefusee(f"« {nom} » : une phrase exacte ne contient pas de guillemet droit.")
+        return v
+    if re.search(r'[\s:"]', v):
+        raise ConfigRefusee(f"« {nom} » : donne un seul terme, sans espace ni deux-points (par exemple linkedin.com/in/).")
+    if qtype == "filetype":
+        v = v.removeprefix(".").lower()
+        if v not in _TYPES_DE_DOCUMENT:
+            raise ConfigRefusee(f"« {nom} » : le type de fichier est un type de document ({', '.join(sorted(_TYPES_DE_DOCUMENT))}).")
+    return v
 
 
 def _requete_avancee(i, node, opts, nodes, par_source, pred, requetes, appliques, dire_non) -> None:
@@ -559,18 +577,7 @@ def _requete_avancee(i, node, opts, nodes, par_source, pred, requetes, appliques
     exacte, mot exclu). Posée après les sources, elle n'a rien à enrichir : jamais branché (cohérent avec
     Traduction, 3.8.02). Chaque source décide elle-même si elle comprend ce qualificatif (`Declaration.operateurs`) ;
     une source qui ne le comprend pas reçoit la requête sans lui — jamais une syntaxe inventée pour elle."""
-    descendants = set()
-    pile = [i]
-    succ_de: dict[str, list[str]] = {}
-    for n_id in nodes:
-        for p in pred[n_id]:
-            succ_de.setdefault(p, []).append(n_id)
-    while pile:
-        for m in succ_de.get(pile.pop(), []):
-            if m not in descendants:
-                descendants.add(m)
-                pile.append(m)
-    sources_apres = [m for m in descendants if nodes[m].get("ref") in par_source and par_source[nodes[m]["ref"]]["role"] not in ("VERIFIER", "ENRICHIR")]
+    sources_apres = _sources_apres(i, nodes, par_source, pred)
     if not sources_apres:
         dire_non(i, "placée après les sources, elle n'a rien à enrichir : ce n'est pas encore branché")
         return
@@ -582,9 +589,10 @@ def _requete_avancee(i, node, opts, nodes, par_source, pred, requetes, appliques
     if not valeur_q:
         dire_non(i, "aucune valeur n'est donnée au qualificatif : la tuile ne fait rien")
         return
+    valeur_q = _valeur_qualificatif(node["nom"], qtype, valeur_q)
     comprises, ignorees = [], []
-    for m in sources_apres:
-        s = par_source[nodes[m]["ref"]]
+    for sid in dict.fromkeys(nodes[m]["ref"] for m in sources_apres):  # une source posée sur deux tuiles part une seule fois : son qualificatif aussi
+        s = par_source[sid]
         if qtype in (s.get("operateurs") or []):
             requetes.setdefault(s["id"], []).append({"type": qtype, "valeur": valeur_q})
             comprises.append(s["nom"])

@@ -421,7 +421,7 @@ function rendreOptionsIa(n, refresh, guarder) {
 // 909 §3 (retour du 09/11/2026) : la tuile agit AVANT la collecte — elle enrichit la requête envoyée aux
 // sources chercher, qualificatif par qualificatif. Vocabulaire fermé de deux familles seulement (document/texte
 // et présence ciblée) ; la famille reconnaissance de sécurité (inurl:admin, filetype:env…) est écartée, comme
-// bbot (908). « Valeur » reste du texte libre : le qualificatif lui-même ne se fermable pas (un domaine, un mot…).
+// bbot (908). « Valeur » reste du texte libre (un domaine, un mot…), borné au lancement par suite_plan._valeur_qualificatif.
 const TYPES_QUALIFICATIF = [
   "Limiter à un site/domaine", "Limiter à un type de fichier", "Mot dans le titre", "Phrase exacte", "Exclure un mot",
 ];

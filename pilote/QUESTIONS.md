@@ -267,3 +267,15 @@ JAMAIS utilisable comme la source de première main exigée par le garde-fou IA 
 domaines confirmants indépendants (même esprit que `SEUILS_FUSION` de `suite_plan.py`, à relire avant d'écrire
 le compteur) plutôt qu'un binaire est la seule partie de la demande qui ne dépend d'aucune des deux inconnues
 ci-dessus et peut se concevoir dès maintenant si une session s'y attaque.
+
+## Neuf sources avec un rôle `enrichir` sans effet (revue du 09/11/2026, D112)
+
+`charity-commission`, `companies-house`, `datagouv-organisations`, `gleif`, `opencorporates`, `pappers`,
+`recherche-entreprises`, `registre-associations` et `ror` ont reçu `enrichir` en 909 §2.1.b, mais n'ont pas de
+`verifie_sur` : `moteur_sources.verificatrices()` ne les appelle donc jamais. La case se coche, rien ne se passe
+(leur rôle `verifier` est dans le même cas, et `test_f16_verification.py` le tient pour voulu).
+
+Pas corrigé par un simple `verifie_sur: nom` : cela allumerait aussi `verifier`, ajouterait des appels par
+candidat sur des sources payantes (`pappers`, `opencorporates`), et chaque adaptateur doit d'abord être relu pour
+la correspondance exacte du nom (même défaut que `ckan`, D112). À trancher : rendre ces rôles effectifs source par
+source, ou retirer `enrichir` de ces neuf déclarations.

@@ -48,11 +48,12 @@ function blocReglagesTransverse() {
 // résultats des sources posées avant elle sur le plan ; en recherche simple il n'y a pas de plan — ce réglage
 // transverse restreint, faute de mieux, TOUTES les vérifications à certaines sources de recherche choisies.
 function blocEnAmont() {
-  const chercheuses = (app.data.sources || []).filter((s) => s.chercher);
+  // Une source cochée puis éteinte reste listée : la restriction continue de s'appliquer, il faut pouvoir la voir et la décocher.
+  const chercheuses = (app.data.sources || []).filter((s) => (s.chercher && !s.retiree) || VERIFICATION_CACHE.enAmont.includes(s.id));
   if (!chercheuses.length) return null;
   return h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Restreindre à certaines sources de recherche"),
     h("div", { class: "liste-liens" }, chercheuses.map((s) => caseSource({
-      nom: s.nom, actif: VERIFICATION_CACHE.enAmont.includes(s.id),
+      nom: s.nom, sous: s.chercher ? undefined : "ne cherche plus ; tant qu'elle reste cochée, la restriction s'applique", actif: VERIFICATION_CACHE.enAmont.includes(s.id),
       onclick: async () => {
         const liste = VERIFICATION_CACHE.enAmont.includes(s.id) ? VERIFICATION_CACHE.enAmont.filter((x) => x !== s.id) : [...VERIFICATION_CACHE.enAmont, s.id];
         const r = await agir(() => apiAssistant.definirVerification({ active: true, mode: VERIFICATION_CACHE.mode, en_amont: liste }), { rechargerApres: false });

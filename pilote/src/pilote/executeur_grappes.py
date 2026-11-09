@@ -289,6 +289,8 @@ class ExecuteurGrappes:
             ctx.noter("plan_requete_traduite" if "echec" not in tr else "plan_traduction_en_echec", **tr)
         if plan.get("traduction_non_appliquee"):
             ctx.noter("plan_traduction_non_appliquee", sources=plan["traduction_non_appliquee"], raison="la source passe par le moteur de collecte de grappes, qui n'a qu'une langue de requête")
+        if plan.get("requetes"):  # Requête avancée : elle agit avant la collecte, aucun nom ne la traverse (pas de ligne « tuile_passee ») ; sa trace au journal est celle-ci
+            ctx.noter("plan_requete_qualifiee", requetes=plan["requetes"])
         # Assistant IA (3.8.09) : tokens réels (Q33, 904), jamais mêlés au compteur crédits (facturé par
         # l'abonnement, pas par appel) — informatif seulement, pas un solde du forfait Pro/Max.
         if any(jeu.get(c) for c in ("ia_appels", "ia_echecs", "ia_non_traitees", "ia_plafonnees")):
@@ -334,9 +336,11 @@ class ExecuteurGrappes:
             for v in (ligne.get("faits") or {}).get("verifications") or []:
                 if isinstance(v, dict) and v.get("signal") == "alerte":
                     preuve = str(v.get("preuve") or "").strip()
-                    alertes.append(f"« {ligne.get('nom', '')} » : {v.get('origine', '')} signale une alerte" + (f" ({preuve})" if preuve else "") + ".")
+                    origine = str(v.get("origine") or v.get("source") or "une source de vérification")  # souvent une phrase entière (OpenSanctions) : elle ne peut pas être le sujet d'un verbe
+                    alertes.append(f"« {ligne.get('nom', '')} » : alerte signalée — {origine}" + (f" ({preuve})" if preuve else "") + ".")
         if alertes:
-            ctx.avancer(alertes_verification=alertes[:50])  # un plafond d'affichage, jamais un plafond de détection
+            plafond = 50  # un plafond d'affichage, jamais un plafond de détection : ce qu'il coupe est dit
+            ctx.avancer(alertes_verification=alertes[:plafond] + ([f"… et {len(alertes) - plafond} autre(s) alerte(s), à lire dans les fiches du Tri."] if len(alertes) > plafond else []))
             ctx.noter("verification_alerte", n=len(alertes))
 
     def faire_le_bilan(self, ctx: ContexteRecherche, spec: dict[str, Any], suivi_fichier: Path) -> None:
