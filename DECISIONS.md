@@ -515,3 +515,14 @@ momo » de la spec pour m'en assurer avant de clore l'étape pour de bon cette f
 
 Même prudence que 9.1 (Boucle) et 5.2 b (secours) pour les niveaux 2 à 4 : affichés et choisissables, mais
 refusés par le moteur avec une raison claire — rien de leur mécanisme réel n'existe, et je ne l'ai pas deviné.
+
+## D102 — 908, étape 6, point 1/3 (09/11/2026, point 1) — Lancement porté dans /suite
+
+Commit `ac1cb5a` : profondeur, limites et pause/reprise, portés dans `/suite` (voir le message de commit).
+Pur portage : aucune nouvelle logique côté moteur (`lancement.valider_options`, les routes pause/reprise
+existent depuis l'ancienne page), seul le câblage côté `/suite` manquait. L'affichage des sources en pause
+avec leur raison (demandé par le même point de la spec) était déjà fait au point 2.3 — rien à refaire.
+
+Reste, dans cet ordre strict : Tri (spec à venir de Sednal, pas encore écrite — 000-INDEX.md la dit « en
+cours de rédaction »), puis la suppression de l'ancienne UI (905 §3), qui dépend de Tri. Les deux sont donc
+bloqués en attendant la spec de Tri, pas par moi.
