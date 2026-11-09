@@ -234,7 +234,15 @@ def test_plan_pose_sans_lien_puis_relie_a_la_main(page):
     )
 
 
-def test_aide_sans_modele_les_puces_marchent_et_elle_ne_pose_rien(page):
+def test_aide_sans_modele_les_puces_marchent_et_elle_ne_pose_rien(page, monkeypatch):
+    # 908, 14.1 : l'Aide parle au même agent que l'Assistant IA (suite_ia.disponible) — vrai sur CETTE machine
+    # (momo y est installé) : jamais supposé absent sans le dire. La page a déjà chargé l'état avant ce test :
+    # on la recharge après avoir forcé l'absence, pour tester le cas "sans modèle" sans dépendre de la machine.
+    from pilote import suite_ia
+
+    monkeypatch.setattr(suite_ia, "disponible", lambda: False)
+    page.reload()
+    page.wait_for_selector(".carte")
     assert page.locator(".aide-saisie input").is_disabled()
     assert (
         page.locator("button[aria-label=Replier]").count() == 1

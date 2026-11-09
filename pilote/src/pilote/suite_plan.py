@@ -58,6 +58,14 @@ def codes_langues(texte: str) -> list[str]:
     return list(dict.fromkeys(out))
 
 
+def _niveau_ia(opts_map: dict[str, Any]) -> int:
+    """908, point 13 : le niveau du curseur de l'Assistant IA (« Niveau », ex. « 1 — Reformuler »). Le chiffre
+    de tête ; absent ou illisible, niveau 1 (le seul branché — jamais un refus sur un réglage ancien)."""
+    txt = str(opts_map.get("Niveau", "") or "").strip()
+    chiffre = txt.split()[0] if txt else "1"
+    return int(chiffre) if chiffre.isdigit() and chiffre in "1234" else 1
+
+
 def _option(opts: list, indice: int, mot: str = "") -> str:
     """La valeur d'une option de tuile : celle dont le libellé contient `mot`, sinon la n-ième (une tuile copie les options de sa fiche)."""
     for lib, v in opts:
@@ -316,16 +324,25 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
         elif genre == "boucle":
             dire_non(i, _raison_boucle(node["nom"], opts))
         elif genre == "ia":
+            opts_map_ia = {lib: v for lib, v in opts}
+            niveau_ia = _niveau_ia(opts_map_ia)
             if ia is not None:
                 dire_non(i, "une seule tuile Assistant IA est jouée par recherche ; les suivantes sont ignorées")
             elif not ia_disponible:
                 dire_non(i, "l'agent Claude Code n'est pas installé sur cette machine : rien de ce qu'elle produirait n'entre dans une grappe")
+            elif niveau_ia > 1:
+                # 908, point 13 (retour du 08/11/2026) : le curseur à quatre niveaux existe (options_outils.js),
+                # mais seul le niveau 1 (Reformuler) a un mécanisme réel aujourd'hui — les niveaux 2 à 4 touchent
+                # le Tri (spec à venir de Sednal), la construction de requêtes et l'extraction par page réelle
+                # (5.2), et surtout le garde-fou du niveau 4 (candidat IA à zéro point de confirmation) : rien
+                # de tout cela n'est construit, et ce n'est pas deviné ici. Même discipline que la Boucle (9.1).
+                dire_non(i, f"le niveau {niveau_ia} de l'Assistant IA n'est pas encore branché dans le moteur — seul le niveau 1 (Reformuler) l'est")
             else:
                 from pilote import operations_ia as _operations_ia
                 from pilote.suite_ia import EFFORTS
 
                 ops_connues = _operations_ia.decouvrir()
-                opts_map = {lib: v for lib, v in opts}
+                opts_map = opts_map_ia
                 op_id = next((oid for oid, d in ops_connues.items() if norme(d["nom"]) == norme(opts_map.get("Opération", ""))), None)
                 if op_id is None:
                     raise ConfigRefusee(

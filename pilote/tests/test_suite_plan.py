@@ -545,6 +545,27 @@ def test_ia_sans_agent_installe_n_est_pas_appliquee_et_le_dit():
     assert c["ia"] is None and "n'est pas installé" in c["non_appliques"][0]["raison"]
 
 
+# 908, point 13 (retour du 08/11/2026) : seul le niveau 1 a un mécanisme réel ; les trois autres sont refusés
+# avec une raison claire, jamais appliqués à l'aveugle.
+def test_ia_niveau_1_par_defaut_est_applique():
+    p = plan(
+        [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Résumer"]])],
+        [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
+    )  # fmt: skip
+    assert comp_ia(p)["ia"] is not None  # pas de « Niveau » réglé : niveau 1 implicite, jamais un refus sur un réglage ancien
+
+
+def test_ia_niveaux_2_a_4_sont_refuses_avec_leur_numero():
+    for niveau in ("2 — Aider à trier", "3 — Extraire et formuler", "4 — Chercher elle-même"):
+        p = plan(
+            [("saisie",), ("grappes",), ("n1", "a"), ("ia", "ia", None, [["Opération", "Résumer"], ["Niveau", niveau]])],
+            [lien("saisie", "n1"), lien("n1", "ia"), lien("ia", "grappes")],
+        )  # fmt: skip
+        c = comp_ia(p)
+        assert c["ia"] is None
+        assert f"niveau {niveau[0]}" in c["non_appliques"][0]["raison"] and "pas encore branché" in c["non_appliques"][0]["raison"]
+
+
 def test_ia_effort_menu_ferme():
     def ia_de(effort):
         p = plan(

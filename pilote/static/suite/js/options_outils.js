@@ -366,11 +366,23 @@ async function chargerOperationsIa() {
   return OPERATIONS_IA_CACHE;
 }
 
+// 13 (nouveau, retour du 08/11/2026) : un curseur à quatre niveaux, chacun activé explicitement — seul le
+// niveau 1 a un mécanisme réel aujourd'hui (le moteur refuse les trois autres avec une raison claire, jamais
+// un geste silencieux). La règle de fond ne change à aucun niveau : ce que l'IA écrit est marqué « IA » et ne
+// vaut jamais comme fait vérifié.
+const NIVEAUX_IA = [
+  ["1 — Reformuler", "Résumer, mots-clés, classer. N'ajoute aucun nom, aucune donnée."],
+  ["2 — Aider à trier", "Explique pourquoi deux fiches pourraient être la même entité, écarte le bruit évident en le disant, propose un ordre de lecture. Ne crée rien, ne supprime rien. Pas encore branché dans le moteur."],
+  ["3 — Extraire et formuler", "Fabrique les requêtes envoyées aux sources, extrait des champs depuis des pages réellement collectées. Pas encore branché dans le moteur."],
+  ["4 — Chercher elle-même", "Propose des noms depuis ce qu'elle sait, sans source. Un nom venu de l'IA n'entre qu'avec zéro point de confirmation, et ne rejoint les résultats normaux que si une source de première main le confirme. Pas encore branché dans le moteur."],
+];  // fmt: skip
+
 function rendreOptionsIa(n, refresh, guarder) {
   if (!OPERATIONS_IA_CACHE) {
     chargerOperationsIa().then(refresh);
     return h("p", { class: "legende" }, "Les opérations arrivent…");
   }
+  const niveau = optLabel(n, "Niveau") || NIVEAUX_IA[0][0];
   const operation = optLabel(n, "Opération") || OPERATIONS_IA_CACHE[0]?.nom || "";
   // 12.3 (08/11/2026) : le champ « Modèle » disparaît — le modèle est l'agent Claude installé sur la machine,
   // point ; on verra plus tard s'il doit revenir. Le réglage se garde en base s'il existait déjà, juste plus édité ici.
@@ -387,6 +399,9 @@ function rendreOptionsIa(n, refresh, guarder) {
   if (categories) categories.saisie.addEventListener("change", () => { optDefinir(n, "Catégories", categories.valeur()); guarder(); });
   return h(
     "div", { class: "options-grille" },
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Niveau"),
+      groupePuces(NIVEAUX_IA.map(([l]) => [l, l]), niveau, (v) => { optDefinir(n, "Niveau", v); guarder(); refresh(); }),
+      h("span", { class: "aide-champ" }, NIVEAUX_IA.find(([l]) => l === niveau)?.[1] || "")),
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Opération"),
       groupePuces(OPERATIONS_IA_CACHE.map((o) => [o.nom, o.nom]), operation, (v) => { optDefinir(n, "Opération", v); guarder(); refresh(); }),
       h("span", { class: "aide-champ" }, OPERATIONS_IA_CACHE.find((o) => o.nom === operation)?.description || "")),
