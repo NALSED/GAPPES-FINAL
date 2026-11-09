@@ -214,12 +214,3 @@ Pas fait, et pas inventé à l'aveugle :
   mécanique, sans jugement — candidat à `outils/appeler_gratuit.sh` plutôt qu'au compte Pro, comme le préfère
   CLAUDE.md), pas fait dans ce pavé.
 
-## 909, point 1.2.d — test dédié manquant (09/11/2026)
-
-`sortie._fiabilite_candidat()` et le calcul de `faits.fiabilite_effective` dans `pont/executer.py` (voir D107)
-sont couverts indirectement par les suites existantes (`test_f14_sortie`, `test_f16_verification`,
-`test_f17_revue`, tous verts) mais n'ont pas encore de test direct et dédié à la remontée de fiabilité par
-confirmation première main. À ajouter : un test posant une ligne avec `faits.verifications` contenant une
-confirmation première main de meilleure lettre que la source de recherche, et vérifiant que
-`jeu_de_donnees()`/`_fiabilite_candidat()` rendent bien cette meilleure lettre (et l'inverse : qu'une
-confirmation moins bonne, ou une alerte, ne change rien).

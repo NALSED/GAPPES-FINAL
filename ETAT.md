@@ -10,9 +10,9 @@ UI/`/suite`. §4 mis en attente par la spec elle-même.
 Dernière mise à jour : 2026-11-09 (D107 : 1.2.d — une confirmation de première main (`faits.verifications`,
 signal confirmation, source `mains_sources: premiere`) fait remonter `faits.fiabilite_effective` dans le pont,
 après la vérification ; `sortie._fiabilite_candidat()` en tient compte pour la colonne fiabilité des fiches,
-sans jamais l'abaisser. Calculé après Filtre/Fusion, sans toucher à leur ordre. Lint propre ; tests ciblés
-(test_f14_sortie, test_f16_verification, test_f17_revue) verts ; suite complète hors réseau non encore relancée
-(à faire). Pas encore de test dédié pour `_fiabilite_candidat`/`fiabilite_effective` — à ajouter.
+sans jamais l'abaisser. Calculé après Filtre/Fusion, sans toucher à leur ordre. Test dédié ajouté
+(`test_une_confirmation_premiere_main_releve_la_fiabilite_effective`). Suite complète hors réseau relancée :
+630 passés, 1 échec pré-existant (flake déjà documenté). 1.2.d entièrement clos.
 
 D104 (précédent) : Sednal a demandé explicitement de commencer 909 malgré son état « en cours de rédaction »
 — instruction directe qui prévaut sur la règle d'attente de validation écrite de `POUR_MOMO.md`. §1.1 fait :
