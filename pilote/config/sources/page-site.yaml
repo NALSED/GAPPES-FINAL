@@ -1,0 +1,59 @@
+# Déclaration d'une source (fiche 01). Les CHOIX de l'utilisateur sont dans reglages.yaml, jamais ici.
+# 5.2 c (retour de Sednal du 08/11/2026) : la tuile ENRICHIR que spec 906 n'avait pas construite — Scrapling
+# lit LA PROPRE PAGE d'un candidat déjà trouvé (son `site`), jamais une recherche par mot. Générique par
+# construction (balises `<title>`/`<meta name="description">`, présentes sur presque toute page web) : une
+# ville ou un contact ne se lisent fiablement que par des sélecteurs propres à chaque site, pas devinés ici.
+id: page-site
+nom: Page du site (titre et description)
+description: Le titre et la description de la propre page d'un candidat déjà trouvé (balises `<title>` et
+  `<meta name="description">`) — jamais une recherche par mot, jamais un champ écrasé (règle n° 1).
+trouve: ce qu'une page web dit d'elle-même (titre, description)
+genres:
+- entreprise
+- association
+- club
+- administration
+pays:
+- monde
+consomme:
+- site
+produit:
+- nom
+- detail
+usages:
+- web
+main: seconde
+origine: web
+fiabilite: E
+famille: api
+roles:
+- enrichir
+verifie_sur: site
+cle: ''
+cout:
+  unite: appel
+  vers_dollar: 0
+  par_appel: 1
+  gratuit_par_mois: 0
+confiance: 0.3
+defaut:
+  chercher: false
+  verifier: false
+mode:
+  en_ligne: true
+  local: false
+verifie_le: '2026-11-09'
+note: 'Générique par construction : seuls le titre et la description de la page, présents sur presque tout
+  site. Une ville ou un contact demanderaient des sélecteurs propres à chaque site, pas devinés ici — à
+  reprendre si un site concret le justifie (spec 906, « jamais inventé sans un vrai cas »). Mode navigateur
+  furtif disponible (`parametres.navigateur: true`) pour un site qui ne rend son contenu qu''en JavaScript,
+  pas activé par défaut (plus lourd).'
+exemple_reponse: exemples/page-site.txt
+moteur:
+  adaptateur: scrapling
+  parametres:
+    lire_site: true
+    origine_texte: Page du site de la fiche
+    champs:
+      nom: 'title::text'
+      detail: 'meta[name="description"]::attr(content)'

@@ -13,7 +13,8 @@ from pilote.adaptateurs import Client, ErreurSource, charger
 
 scrapling = pytest.importorskip("scrapling")
 
-PAGE = """<!doctype html><html><body>
+PAGE = """<!doctype html><html><head><title>Club Nautique Imaginaire</title>
+<meta name="description" content="Club de voile et d'aviron à Port-Exemple."></head><body>
 <ul>
 <li class="club"><h3><a href="/clubs/1">Club Nautique Imaginaire</a></h3><span class="ville">Port-Exemple</span></li>
 <li class="club"><h3><a href="/clubs/2">Club Nautique du Lac</a></h3><span class="ville">Lac-Exemple</span></li>
@@ -94,3 +95,48 @@ def test_scrapling_lit_un_exemple_enregistre_comme_le_niveau_2_de_la_fiche_11():
     assert m.LIT_PARAMETRES is True
     noms = m.convertir(PAGE, parametres=PARAMETRES)
     assert [n["nom"] for n in noms] == ["Club Nautique Imaginaire", "Club Nautique du Lac"]
+
+
+# 5.2 c (retour du 08/11/2026) : la tuile ENRICHIR — pas une recherche, la propre page d'un candidat.
+PARAMETRES_SITE = {"lire_site": True, "champs": {"nom": "title::text", "detail": 'meta[name="description"]::attr(content)'}}
+
+
+def test_scrapling_lire_site_lit_la_propre_page_du_candidat(site):
+    noms = charger("scrapling").chercher({"site": site + "/recherche"}, Client("scrapling"), PARAMETRES_SITE)
+    assert noms == [{"nom": "Club Nautique Imaginaire", "detail": "Club de voile et d'aviron à Port-Exemple.", "origine": "Scrapling (scraping auto-hébergé)"}]
+
+
+def test_scrapling_lire_site_sans_site_ne_fait_pas_echouer_la_verification(site):
+    assert charger("scrapling").chercher({}, Client("scrapling"), PARAMETRES_SITE) == []
+
+
+def test_scrapling_lire_site_page_en_erreur_ne_fait_pas_echouer_la_verification(site):
+    assert charger("scrapling").chercher({"site": site + "/404"}, Client("scrapling"), PARAMETRES_SITE) == []
+
+
+def test_scrapling_lire_site_offline_meme_chemin_que_niveau_2():
+    assert charger("scrapling").convertir(PAGE, parametres=PARAMETRES_SITE) == [
+        {"nom": "Club Nautique Imaginaire", "detail": "Club de voile et d'aviron à Port-Exemple.", "origine": "Scrapling (scraping auto-hébergé)"}
+    ]
+
+
+def test_scrapling_navigateur_appelle_le_fetcher_furtif(monkeypatch):
+    # 5.2 a : le mode navigateur furtif choisit StealthyFetcher plutôt que Fetcher — vérifié sans lancer de vrai
+    # navigateur (même principe que `suite_ia` : on ne mocke pas pour écarter le test, on isole l'appel externe).
+    from scrapling import fetchers as sf
+
+    class FauxReponse:
+        status = 200
+
+        def css(self, _sel):
+            return []
+
+    vus = []
+
+    def faux_fetch(url, **kw):
+        vus.append((url, kw))
+        return FauxReponse()
+
+    monkeypatch.setattr(sf.StealthyFetcher, "fetch", staticmethod(faux_fetch))
+    charger("scrapling").chercher({"site": "https://exemple.invalid/club"}, Client("scrapling"), {**PARAMETRES_SITE, "navigateur": True})
+    assert vus and vus[0][0] == "https://exemple.invalid/club" and vus[0][1]["headless"] is True

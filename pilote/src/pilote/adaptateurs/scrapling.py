@@ -1,17 +1,23 @@
-"""Scrapling (spec 906) : scraping auto-hébergé et gratuit (licence BSD-3, bibliothèque `scrapling[fetchers]`,
-dépendance optionnelle de pilote — `pip install "pilote[scrapling]"`). Requêtes HTTP qui imitent une empreinte
-TLS de navigateur (`Fetcher` de Scrapling), pour les pages qu'un simple `urllib` (voir `api_json.py`) se fait
-bloquer. Rejoint la famille « prestataire de collecte » (même famille qu'Apify/Bright Data/ZenRows) mais sans
-clé ni coût : pas soumis au plafond de budget.
+"""Scrapling (spec 906, complété en 908/5.2) : scraping auto-hébergé et gratuit (licence BSD-3, bibliothèque
+`scrapling[fetchers]`, dépendance optionnelle de pilote — `pip install "pilote[scrapling]"`). Deux moyens
+d'accès : le client HTTP à empreinte TLS de navigateur (`Fetcher`, par défaut), et le navigateur furtif
+(`StealthyFetcher`, `parametres.navigateur: true`) pour les pages dont les résultats n'arrivent qu'en
+JavaScript ou sont protégées — plus lourd, choisi PAR SOURCE, jamais le cas général. Rejoint la famille
+« prestataire de collecte » (même famille qu'Apify/Bright Data/ZenRows) mais sans clé ni coût : pas soumis au
+plafond de budget.
 
 Convention identique à `api_json.py`, en HTML au lieu de JSON : `url` (l'adresse SANS les mots cherchés —
 {quoi} etc. n'y sont tolérés que hors paramètres, ex. un chemin), `params` (valeurs avec {quoi}, {mots_cles},
 {lieu}, {mots_et_lieu}, {limite}, {pays} — toujours ENCODÉES dans l'adresse, jamais collées dans le texte),
 `liste` (sélecteur CSS d'un résultat), `champs` (sélecteurs CSS RELATIFS à un résultat — `::text` pour du
 texte, `::attr(href)` pour un attribut), `genre`, `origine_texte`, `site_prefixe` (adresse à placer devant un
-`site` qui n'est qu'un lien relatif, même convention qu'api_json). Ne réinvente rien de Scrapling (pas de
-navigateur furtif ici, juste son client HTTP à empreinte TLS — la bibliothèque fait le travail, cet
-adaptateur ne fait que le brancher à la convention de pilote)."""
+`site` qui n'est qu'un lien relatif, même convention qu'api_json).
+
+`parametres.lire_site: true` (5.2 c, rôle ENRICHIR) : change complètement ce qui est lu — pas une recherche
+dans une liste de résultats (`liste`/{quoi}), mais LA PROPRE PAGE d'un candidat déjà trouvé (`entree.site`),
+pour en tirer ce qu'elle porte (ville, site, numéro, un « detail » libre — ex. une description de page). Une
+seule fiche en sortie, jamais une liste ; un site absent ou en panne ne fait pas échouer la vérification, elle
+rend juste rien (règle d'ENRICHIR : compléter, ne jamais faire échouer la recherche pour autant)."""
 
 from __future__ import annotations
 
@@ -37,21 +43,38 @@ def _champ(resultat: Any, selecteur: str) -> str:
 
 
 def convertir(page: Any, parametres: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """`page` : le résultat de `Fetcher.get()`, ou directement le HTML (texte) d'un exemple enregistré (fiche
-    11, niveau 2) — les deux se parcourent au CSS pareil, une fois le texte passé par `scrapling.parser.Selector`."""
+    """`page` : le résultat de `Fetcher.get()`/`StealthyFetcher.fetch()`, ou directement le HTML (texte) d'un
+    exemple enregistré (fiche 11, niveau 2) — les deux se parcourent au CSS pareil, une fois le texte passé par
+    `scrapling.parser.Selector`."""
     p = parametres or {}
     if isinstance(page, (str, bytes)):
         from scrapling.parser import Selector
 
         page = Selector(page.decode("utf-8", "replace") if isinstance(page, bytes) else page)
     champs = p.get("champs") or {}
+    genre = str(p.get("genre") or "")
+    origine = str(p.get("origine_texte") or "Scrapling (scraping auto-hébergé)")
+    if p.get("lire_site"):
+        # 5.2 c : LA page entière est la fiche (pas une liste de résultats) — aucun champ n'est obligatoire,
+        # une page qui ne porte rien d'exploitable rend juste rien (jamais une erreur : ENRICHIR ne doit pas
+        # faire échouer la vérification d'un candidat).
+        e: dict[str, Any] = {}
+        for k in ("nom", "ville", "site", "pays", "numero", "detail"):
+            if k in champs:
+                v = _champ(page, str(champs[k]))
+                if v:
+                    e[k] = v
+        if not e:
+            return []
+        e["origine"] = origine
+        if genre:
+            e["genre"] = genre
+        return [e]
     if "nom" not in champs:
         raise ErreurSource("Cette source ne dit pas quel sélecteur CSS contient le nom.")
     liste = str(p.get("liste", "")).strip()
     if not liste:
         raise ErreurSource("Cette source ne dit pas le sélecteur CSS d'un résultat.")
-    genre = str(p.get("genre") or "")
-    origine = str(p.get("origine_texte") or "Scrapling (scraping auto-hébergé)")
     out: list[dict[str, Any]] = []
     for resultat in page.css(liste):
         nom = _champ(resultat, str(champs["nom"]))
@@ -71,13 +94,38 @@ def convertir(page: Any, parametres: dict[str, Any] | None = None) -> list[dict[
     return out
 
 
-def chercher(entree: dict[str, Any], client: Client, parametres: dict[str, Any]) -> list[dict[str, Any]]:
+def _page(url: str, navigateur: bool, timeout_s: float) -> Any:
+    """Lit `url` par le client HTTP à empreinte TLS (par défaut) ou le navigateur furtif (5.2 a, `navigateur: true`
+    — Chromium déjà installé pour les tests de `/suite`, pas une nouvelle dépendance)."""
     try:
+        if navigateur:
+            from scrapling.fetchers import StealthyFetcher
+
+            return StealthyFetcher.fetch(url, headless=True, timeout=int(timeout_s * 1000))
         from scrapling.fetchers import Fetcher
+
+        return Fetcher.get(url, timeout=timeout_s)
     except ImportError as exc:
         raise ErreurSource(
             "Scrapling n'est pas installé sur cette machine : `pip install \"pilote[scrapling]\"` (spec 906)."
         ) from exc
+    except Exception as exc:  # Scrapling lève ses propres exceptions (curl_cffi, Playwright, réseau) : toutes rendues en français
+        raise ErreurSource(f"Scrapling n'a pas pu lire la page : {exc}") from exc
+
+
+def chercher(entree: dict[str, Any], client: Client, parametres: dict[str, Any]) -> list[dict[str, Any]]:
+    navigateur = bool(parametres.get("navigateur"))
+    if parametres.get("lire_site"):
+        # 5.2 c (rôle ENRICHIR) : pas une recherche par mot, la propre page d'un candidat déjà trouvé. Un site
+        # absent ou en panne ne fait jamais échouer la vérification — elle ne rend juste rien pour ce candidat.
+        url_remplie = str(entree.get("site") or "").strip()
+        if not url_remplie:
+            return []
+        client._avant()
+        page = _page(url_remplie, navigateur, client.timeout)
+        if page.status >= 400:
+            return []
+        return convertir(page, parametres)
     url = str(parametres.get("url", "")).strip()
     if not url:
         raise ErreurSource("Cette source n'a pas d'adresse.")
@@ -98,10 +146,7 @@ def chercher(entree: dict[str, Any], client: Client, parametres: dict[str, Any])
 
         url_remplie += ("&" if "?" in url_remplie else "?") + urllib.parse.urlencode(params)
     client._avant()  # pas d'appel HTTP par `client` lui-même (Scrapling fait sa propre requête) : juste l'arrêt et le journal, comme `Client.mcp()`
-    try:
-        page = Fetcher.get(url_remplie, timeout=client.timeout)
-    except Exception as exc:  # Scrapling lève ses propres exceptions (curl_cffi, réseau) : toutes rendues en français
-        raise ErreurSource(f"Scrapling n'a pas pu lire la page : {exc}") from exc
+    page = _page(url_remplie, navigateur, client.timeout)
     if page.status >= 400:
         erreur = ErreurSource(f"La page a répondu une erreur ({page.status}).")
         erreur.code = page.status

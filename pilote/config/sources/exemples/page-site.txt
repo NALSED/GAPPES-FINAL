@@ -1,0 +1,11 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Club Nautique Imaginaire</title>
+<meta name="description" content="Club de voile et d'aviron à Port-Exemple, ouvert toute l'année.">
+</head>
+<body>
+<h1>Club Nautique Imaginaire</h1>
+</body>
+</html>

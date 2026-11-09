@@ -41,6 +41,29 @@ pas à deux. Je n'ai pas branché l'exécution pour cette raison — ce serait r
 aperçu des recherches que la boucle produirait, affiché sans rien lancer (9.3) — les deux utiles même une fois
 le branchement fait, et sans risque de régression silencieuse.
 
+## 908, point 5.2 b — « source de secours » générale : pas câblée, même prudence que la Boucle (09/11/2026)
+
+Demande de Sednal (retour du 08/11/2026) : sortir de `osm-overpass.yaml` (son essai serveur auto-hébergé puis
+serveurs publics) l'idée d'une source « appelée seulement si les sources principales n'ont rien rendu ou ont
+échoué », pour en faire un réglage partagé par n'importe quelle source (pas seulement Overpass, pas seulement
+Scrapling).
+
+Pourquoi je m'arrête là plutôt que de câbler cette séquence :
+
+* « Les sources principales n'ont rien rendu » ne se sait qu'APRÈS les avoir appelées, dans la boucle qui
+  interroge chaque source — `pont/executer.py` (le moteur grappes), pas un endroit où pilote décide à
+  l'avance. Changer cette boucle demande de la revoir avec un moteur grappes réellement accessible pour
+  vérifier (même trou d'infra que la Boucle, 3.8.04, et pour la même raison : `grappes.racine` ne résout pas
+  dans cet environnement — voir « Trou d'infra pré-existant » ci-dessous).
+* Le précédent d'Overpass fonctionne parce qu'il reste À L'INTÉRIEUR d'un seul adaptateur (une boucle Python
+  sur une liste d'URLs, rien à voir avec l'ordonnancement entre sources différentes que demande ce point).
+  Le généraliser à N'IMPORTE QUELLE source suppose de savoir, au niveau du moteur, lesquelles sont
+  « principales » et lesquelles sont « secours » pour une recherche donnée, puis de reporter l'appel des
+  secondes — une vraie décision d'ordonnancement, pas un réglage d'affichage.
+
+**Prêt pour la même session dédiée que 3.8.04** (Boucle) : les deux ont besoin du même accès à un moteur
+grappes réel pour être vérifiés avant de pousser quoi que ce soit qui touche `pont/executer.py`.
+
 ## 3.8.09 — Assistant IA : câblé pour de vrai, testé sur .250 (clos le 03/11/2026)
 
 `suite_ia.py` (appel silencieux à l'agent Claude Code, `claude -p … --model …`) et le registre
