@@ -505,3 +505,13 @@ propre confirmation.
 
 Étape 5/6 complète. Restent : étape 6 (les quatre niveaux d'implication de l'IA, point 13 — puis, et
 seulement dans cet ordre, porter les réglages de Lancement dans /suite, Tri, et supprimer l'ancienne UI).
+
+## D101 — 908, étape 5, point 3/3 (09/11/2026, point 13) — étape 5/6 réellement complète
+
+Commit `4aef765` : le curseur à quatre niveaux de l'Assistant IA (voir le message de commit). Correction de
+suivi : D99/D100 avaient compté l'étape 5 comme ayant deux points (inventaire, fusion Aide/IA) alors que la
+spec en liste trois (le point 13, ce curseur, en est le troisième) — relu l'« Ordre de travail proposé à
+momo » de la spec pour m'en assurer avant de clore l'étape pour de bon cette fois.
+
+Même prudence que 9.1 (Boucle) et 5.2 b (secours) pour les niveaux 2 à 4 : affichés et choisissables, mais
+refusés par le moteur avec une raison claire — rien de leur mécanisme réel n'existe, et je ne l'ai pas deviné.

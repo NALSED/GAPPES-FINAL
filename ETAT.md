@@ -1,17 +1,23 @@
 # ETAT — grappes
 
 Phase en cours : 908 (retour de Sednal du 08/11/2026, autonomie complète — momo tranche, trace dans
-DECISIONS.md) — étapes 1 à 5/6 faites (D89 à D100, détail dans les entrées précédentes de DECISIONS.md).
-Reste l'étape 6 : les quatre niveaux d'implication de l'IA (point 13), puis — et seulement dans cet ordre —
-porter les réglages de Lancement dans `/suite` (point 1), Tri (spec à venir de Sednal), puis supprimer
-l'ancienne UI (905 §3). En parallèle : 905 §2 (vérification `.60` par Sednal), 903 pièce 2/2 en attente.
+DECISIONS.md) — étapes 1 à 5/6 faites (D89 à D101, détail dans les entrées précédentes de DECISIONS.md).
+Reste l'étape 6, et seulement dans cet ordre : porter les réglages de Lancement dans `/suite` (point 1),
+puis Tri (spec à venir de Sednal — bloquant pour ce point et pour la suppression de l'ancienne UI), puis
+supprimer l'ancienne UI (905 §3). En parallèle : 905 §2 (vérification `.60` par Sednal), 903 pièce 2/2 en
+attente. Note : spec 909 (« Vérifier et enrichir... »)  vue sur `NALSED/GRAPPES` mais encore « en cours de
+rédaction avec Sednal » (000-INDEX.md) — pas actionnable, pas touchée.
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-09 (D100 : 908 étape 5, point 14.1/14.2 (dernier de l'étape, étape 5/6
-complète) — l'Aide parle au même agent que l'Assistant IA (suite_ia), plus au serveur Ollama « pas tranché » ;
-même liste close de six fonctions sûres. Le volet « agir » (actions qui changent l'état, confirmation,
-Journal) documenté dans QUESTIONS.md, pas construit dans la même passe. Détail : D100. Suite relancée hors
-réseau (621 passés, 1 échec pré-existant).
+Dernière mise à jour : 2026-11-09 (D101 : 908 étape 5, point 13 (3ᵉ et dernier point réel de l'étape, étape
+5/6 complète pour de bon) — le curseur à quatre niveaux de l'Assistant IA ; seul le niveau 1 a un mécanisme
+réel, les niveaux 2 à 4 sont refusés par le moteur avec une raison claire (même prudence que la Boucle et la
+source de secours). Détail : D101. Suite relancée hors réseau (623 passés, 1 échec pré-existant) ; navigateur
+(17 passés).
+
+D100 (précédent) : 908 étape 5, point 14.1/14.2 — l'Aide parle au même agent que l'Assistant IA (suite_ia),
+plus au serveur Ollama « pas tranché » ; même liste close de six fonctions sûres. Le volet « agir » documenté
+dans QUESTIONS.md, pas construit dans la même passe.
 
 D99 (précédent) : 908 étape 5, point 14.3/14.4 — l'inventaire du programme (`pilote.inventaire`) : sources,
 outils, formats, opérations IA, vocabulaires fermés, actions, tous DÉCOUVERTS depuis le programme réel ; test
