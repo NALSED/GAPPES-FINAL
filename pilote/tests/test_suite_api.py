@@ -826,6 +826,24 @@ def test_lancer_une_recherche_sur_les_sources_choisies(cfg):
         assert r2.status_code == 422 and "Aucune des sources choisies" in r2.json()["detail"]
 
 
+# --- 908, étape 6, point 1 (retour du 08/11/2026) : profondeur et limites, portées depuis l'ancienne page
+def test_lancer_avec_profondeur_et_limites_portees_de_l_ancienne_page(cfg):
+    class Faux:
+        def lancer(self, rid):
+            self.rid = rid
+
+    app = creer_app(cfg)
+    faux = Faux()
+    with TestClient(app) as c:
+        app.state.gestionnaire.lancer = faux.lancer
+        r = c.post("/api/suite/lancer", json={"saisie": "club de judo", "sources": ["searxng"], "mode": "Simple", "simple": {"preset": "web", "pays": "Tous", "saisie": "club de judo"}, "limites": {"temps_minutes": 5, "appels": 20}})
+        assert r.status_code == 202, r.json()
+        rch = c.get(f"/api/recherches/{faux.rid}").json()
+        assert rch["parametres"]["limites"] == {"temps_minutes": 5, "appels": 20}
+        r2 = c.post("/api/suite/lancer", json={"saisie": "x", "sources": ["searxng"], "exploration": 5})
+        assert r2.status_code == 422 and "profondeur d'exploration" in r2.json()["detail"]
+
+
 # --- 05 : la fiabilité A–F remplace « première / seconde main » ; défaut B (officiel), C (encyclopédie), D (web, presse), ajustable
 def test_fiabilite_de_la_source_par_defaut_et_choisie(c):
     assert (src(c, "companies-house")["fiabilite"], src(c, "wikipedia")["fiabilite"], src(c, "tavily")["fiabilite"]) == ("B", "C", "D")

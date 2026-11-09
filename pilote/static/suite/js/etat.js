@@ -7,7 +7,7 @@ export const app = {
   onglet: "recherche",
   reglages: { sous: "sources", ouverte: "entreprises", filtre: "" },
   tri: { donnees: null, ouvert: false },
-  recherche: { ouvert: { simple: true, adv: true, sauvees: true }, palette: "outils", message: "", selection: null, lien: null, lienChoisi: null },
+  recherche: { ouvert: { simple: true, adv: true, sauvees: true, lancement: false }, palette: "outils", message: "", selection: null, lien: null, lienChoisi: null },
   rendre: () => {},
 };
 

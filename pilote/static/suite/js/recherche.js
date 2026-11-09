@@ -1,5 +1,5 @@
 // Onglet Recherche : Recherche simple (07), Recherche avancée (08), Recherches sauvegardées (12).
-import { api } from "./api.js";
+import { api, apiAssistant } from "./api.js";
 import { h, icone } from "./dom.js";
 import { agir, app, recharger } from "./etat.js";
 import { PAYS, PRESETS_INFO, ROLES, VERBES, aPluriel, fmtDate, fmtNombre, SEUIL_QUOTA, AVIS_MOTEUR } from "./mots.js";
@@ -8,6 +8,47 @@ import { dessinerToile, initialiserPlan, palette, plan, ranger, toile, viderSauv
 
 let delaiSimple = null;
 const bascule = (cle) => () => { app.recherche.ouvert[cle] = !app.recherche.ouvert[cle]; app.rendre(); };
+
+// 908, étape 6, point 1 (retour du 08/11/2026) : profondeur, limites de temps et d'appels — portage de
+// l'ancienne page `/` (static/lancement.js), partagé entre Recherche simple et Recherche avancée (c'est le
+// même réglage, pas propre à l'une ou l'autre). `GET /api/lancement/options` est une route déjà existante,
+// partagée avec l'ancienne page — réutilisée telle quelle, pas un second stockage sous /api/suite.
+let LANCEMENT_CACHE = null;
+async function chargerLancementOptions() {
+  if (!LANCEMENT_CACHE) LANCEMENT_CACHE = await apiAssistant.lancementOptions();
+  return LANCEMENT_CACHE;
+}
+const optsLancement = { profondeur: null, tempsMinutes: "", appels: "" };
+
+function corpsLancement() {
+  const limites = {};
+  if (optsLancement.tempsMinutes) limites.temps_minutes = parseInt(optsLancement.tempsMinutes, 10) || null;
+  if (optsLancement.appels) limites.appels = parseInt(optsLancement.appels, 10) || null;
+  return {
+    ...(optsLancement.profondeur ? { profondeur: optsLancement.profondeur } : {}),
+    ...(Object.keys(limites).length ? { limites } : {}),
+  };
+}
+
+function blocLancement() {
+  if (!LANCEMENT_CACHE) {
+    chargerLancementOptions().then(() => app.rendre());
+    return h("p", { class: "legende" }, "Les profondeurs arrivent…");
+  }
+  const profondeur = optsLancement.profondeur || LANCEMENT_CACHE.profondeur_par_defaut;
+  const temps = champ({ libelle: "Limite de temps (minutes)", valeur: optsLancement.tempsMinutes, placeholder: "sans limite", type: "number" });
+  temps.saisie.addEventListener("change", () => { optsLancement.tempsMinutes = temps.valeur(); });
+  const appels = champ({ libelle: "Limite d'appels", valeur: optsLancement.appels, placeholder: "sans limite", type: "number" });
+  appels.saisie.addEventListener("change", () => { optsLancement.appels = appels.valeur(); });
+  return carteRepliable({
+    titre: "Profondeur et limites", icon: "outil", ouverte: app.recherche.ouvert.lancement, onbascule: bascule("lancement"),
+    corps: h("div", { class: "carte-corps options-grille" },
+      h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Profondeur"),
+        groupePuces(LANCEMENT_CACHE.profondeurs.map((p) => [p.id, p.nom]), profondeur, (v) => { optsLancement.profondeur = v; app.rendre(); }),
+        h("span", { class: "aide-champ" }, LANCEMENT_CACHE.profondeurs.find((p) => p.id === profondeur)?.description || "")),
+      h("div", { class: "deux-col" }, temps.el, appels.el)),
+  });
+}
 
 export function pageRecherche() {
   const s = app.data.simple;
@@ -67,7 +108,7 @@ function simple() {
     if (!texte) { annoncer("Dis ce que tu cherches.", true); saisie.saisie.focus(); return; }
     const detail = `${app.data.categories.find((c) => c.id === cat).nom} · pays ${st.pays}`;
     const choisies = visibles.filter((x) => coche(x, ov, cat)).map((x) => x.id);
-    const res = await agir(() => api.post("/lancer", { mode: "Simple", saisie: texte, sources: choisies, cats: [cat], pays: st.pays, titre: texte.slice(0, 80), detail, simple: { preset: cat, pays: st.pays, ov, saisie: texte } }));
+    const res = await agir(() => api.post("/lancer", { mode: "Simple", saisie: texte, sources: choisies, cats: [cat], pays: st.pays, titre: texte.slice(0, 80), detail, simple: { preset: cat, pays: st.pays, ov, saisie: texte }, ...corpsLancement() }));
     if (res) { annoncerLancement(texte, res); app.recherche.ouvert.sauvees = true; app.rendre(); }
   }
 
@@ -91,6 +132,7 @@ function simple() {
     h("div", { class: "info-ligne legende" },
       h("span", {}, `Coût : ${payantes.length ? `payant (${payantes.map((x) => x.nom).join(", ")})` : "gratuit"}`),
       h("span", {}, chaudes.length ? chaudes.map((x) => `${x.nom} : ${fmtNombre(x.quota.utilise)} / ${fmtNombre(x.quota.plafond)} ${x.quota.unite} (${x.pct} %)`).join(" · ") : "Aucun quota proche de la limite.")),
+    blocLancement(),
     h("div", { class: "lancer-ligne" }, saisie.el, bouton({ libelle: "Lancer la recherche", icon: "lancer", variante: "principal", onclick: lancer })),
     h("p", { class: "legende" }, AVIS_MOTEUR),
     refus,
@@ -119,13 +161,14 @@ function avancee() {
     const noms = cats.map((c) => app.data.categories.find((x) => x.id === c).nom);
     await api.put("/plan", { nodes: p.nodes, edges: p.edges, cats: p.cats, saisies: p.saisies, saisie: texte });
     const ids = [...new Set(sources.filter((n) => n.ref).map((n) => n.ref))];
-    const res = await agir(() => api.post("/lancer", { mode: "Avancée", saisie: texte, sources: ids, cats, titre: texte.slice(0, 80), detail: noms.join(" · "), plan: { nodes: p.nodes, edges: p.edges, saisie: texte } }));
+    const res = await agir(() => api.post("/lancer", { mode: "Avancée", saisie: texte, sources: ids, cats, titre: texte.slice(0, 80), detail: noms.join(" · "), plan: { nodes: p.nodes, edges: p.edges, saisie: texte }, ...corpsLancement() }));
     if (res) { annoncerLancement(texte, res); app.recherche.ouvert.sauvees = true; app.rendre(); }
   }
   return [
     h("div", { class: "plan-barre" }, saisie.el,
       bouton({ libelle: VERBES.ranger, icon: "ranger", onclick: () => ranger() }),
       bouton({ libelle: "Lancer la recherche", icon: "lancer", onclick: lancer })), // secondaire : le seul bouton principal de l'écran est celui de la Recherche simple
+    blocLancement(),
     app.recherche.bilan && bilanVue(app.recherche.bilan),
     h("div", { class: "adv-corps" }, paletteVue, h("div", { class: "plan-zone" }, zoneToile, h("p", { class: "legende" }, AVIS_MOTEUR))),
   ];

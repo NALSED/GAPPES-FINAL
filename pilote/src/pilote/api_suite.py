@@ -389,6 +389,16 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
             params["verificatrices"] = verifs
             if comp["format"]:
                 params["sortie"] = {"actifs": comp["format"]}
+        # 908, étape 6, point 1 (retour du 08/11/2026) : profondeur, limites de temps/d'appels — portage, pas une
+        # écriture (`lancement.valider_options`, déjà la vraie validation de l'ancienne page `/api/recherches`).
+        reglages_lancement = {k: corps[k] for k in ("profondeur", "limites", "exploration") if k in corps}
+        if reglages_lancement:
+            from pilote.lancement import LancementInvalide, valider_options
+
+            try:
+                params.update(valider_options(cfg, reglages_lancement))
+            except (LancementInvalide, ValueError) as exc:
+                raise HTTPException(422, str(exc)) from exc
         with fabrique.begin() as s:
             from pilote import reglages as rg_fichier
 

@@ -85,6 +85,7 @@ function enTeteRecherche(r) {
     h("p", { class: "legende" }, `${r.qui} · ${duree(r.debut, r.fin, enCours)}`),
     T.autres.length > 0 && h("button", { type: "button", class: "lien-discret", onclick: () => { T.recherche = T.autres[0]; demarrerPollSiBesoin(); app.rendre(); } },
       aPluriel(T.autres.length, "autre recherche en cours ou en attente", "autres recherches en cours ou en attente")),
+    enCours && bouton({ libelle: av.en_pause ? VERBES.reprendre : VERBES.pause, icon: "interrupteur", petit: true, onclick: () => bascPause(r, !!av.en_pause) }),
     enCours && bouton({ libelle: VERBES.arreter, icon: "interrupteur", petit: true, variante: "danger", onclick: () => arreter(r) }),
     r.etat === "terminee" && bouton({ libelle: VERBES.reutiliser, icon: "reutiliser", petit: true, onclick: () => { location.hash = "#/recherche/sauvegardees"; } }),
   );
@@ -92,6 +93,13 @@ function enTeteRecherche(r) {
 
 async function arreter(r) {
   const ok = await agir(() => api.arreterRecherche(r.id), { succes: "Arrêt demandé : ce qui est déjà collecté est gardé.", rechargerApres: false });
+  if (ok) { T.recherche = await api.recherche(r.id); app.rendre(); }
+}
+
+// 908, étape 6, point 1 (retour du 08/11/2026) : portage de la pause/reprise d'une recherche en cours, sur
+// les routes déjà existantes (`/api/recherches/{id}/pause` et `/reprise`, partagées avec l'ancienne page).
+async function bascPause(r, enPause) {
+  const ok = await agir(() => (enPause ? apiAssistant.repriseRecherche(r.id) : apiAssistant.pauseRecherche(r.id)), { rechargerApres: false });
   if (ok) { T.recherche = await api.recherche(r.id); app.rendre(); }
 }
 

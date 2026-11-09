@@ -186,6 +186,17 @@ def test_la_cle_est_masquee_et_jamais_relue(page):
     )
 
 
+def test_profondeur_et_limites_se_deplient_et_lancent(page):
+    """908, étape 6, point 1 : les réglages de Lancement (profondeur, limites), portés depuis l'ancienne page."""
+    page.click(".carte-tete:has-text('Profondeur et limites')")
+    page.wait_for_selector(".carte-corps .puce")
+    page.click(".carte-corps .puce >> nth=1")  # une profondeur autre que la première
+    page.fill("input[placeholder='sans limite'] >> nth=0", "5")
+    page.fill("#app .carte-corps input[type=text] >> nth=0", "club de judo")
+    page.click("button:has-text('Lancer la recherche') >> nth=0")
+    page.wait_for_selector(".sauvee")
+
+
 def test_supprimer_une_recherche_demande_une_fenetre(page):
     page.fill("#app .carte-corps input[type=text] >> nth=0", "club de judo")
     page.click("button:has-text('Lancer la recherche') >> nth=0")

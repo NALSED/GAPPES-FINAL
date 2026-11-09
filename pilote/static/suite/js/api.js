@@ -63,6 +63,9 @@ export const apiAssistant = {
   definirCle: (nom, corps) => requete("PUT", `/api/cles/${nom}`, corps),
   modifierSource: (id, corps) => requete("PUT", `/api/reglages/source/${id}`, corps),
   definirSortie: (corps) => requete("PUT", "/api/reglages/sortie", corps),
+  lancementOptions: () => requete("GET", "/api/lancement/options"),
+  pauseRecherche: (rid) => requete("POST", `/api/recherches/${rid}/pause`),
+  repriseRecherche: (rid) => requete("POST", `/api/recherches/${rid}/reprise`),
   testerSource: (id) => requete("POST", `/api/sources/${id}/tester`, {}),
   terminer: (corps) => requete("POST", "/api/assistant/terminer", corps),
 };
