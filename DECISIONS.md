@@ -455,3 +455,12 @@ supposé. Je n'ai pas branché l'exécution (risque de régression silencieuse d
 QUESTIONS.md 3.8.04, faute d'un moteur grappes accessible pour vérifier) ; j'ai seulement corrigé le message
 affiché pour qu'il dise la même chose, honnêtement, pour les trois origines. 9.2 et 9.3 avancent sans toucher
 à l'exécuteur.
+
+## D96 — 908, étape 4, point 5/7 (09/11/2026, 4.2)
+
+Commit `a5dc5fe` : adresses serveur mappées (voir le message de commit, et l'addendum 4.2 dans
+pilote/QUESTIONS.md pour le détail de ce qui n'a PAS été touché — SearXNG en lecture seule par prudence,
+RSSHub/LibreTranslate pas des sources, ~30 adaptateurs restants sans constante d'adresse laissés à « — »).
+Overpass est le seul exemple « auto-hébergé rendu modifiable » fait de bout en bout : je l'ai choisi parce que
+j'ai un contrôle complet et déjà vérifié sur son adaptateur (`osm_lieux.py`), contrairement à SearXNG dont
+l'adresse passe par le moteur « definition » de grappes, hors de ma zone de changement sûre pour ce pavé.
