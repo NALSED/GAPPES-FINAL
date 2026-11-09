@@ -524,3 +524,16 @@ def test_la_sortie_choisie_dans_recherches_est_appliquee_a_l_export_de_cette_rec
         decider(c)
         res = c.post("/api/recherches/r14/export").json()  # rien de précisé : les choix de cette recherche, pas ceux de Réglages (csv)
     assert dossier(res) == tmp_path / "pour-celle-ci" and (tmp_path / "pour-celle-ci" / "resultat.txt").exists() and not (tmp_path / "pour-celle-ci" / "resultat.csv").exists()
+
+
+# --- 909, point 1.2.d : une confirmation de première main relève la fiabilité, jamais l'inverse
+def test_une_confirmation_premiere_main_releve_la_fiabilite_effective():
+    from pilote.sortie import _fiabilite_candidat
+
+    fiabilites = {"source-recherche": "C"}
+    # pas de confirmation : la fiabilité de base, inchangée
+    assert _fiabilite_candidat({"source-recherche"}, fiabilites, {}) == "C"
+    # confirmation première main meilleure que la source de recherche : elle l'emporte
+    assert _fiabilite_candidat({"source-recherche"}, fiabilites, {"fiabilite_effective": "A"}) == "A"
+    # une confirmation moins bonne (jamais posée par le pont en pratique, mais la règle le dit) n'abaisse rien
+    assert _fiabilite_candidat({"source-recherche"}, fiabilites, {"fiabilite_effective": "F"}) == "C"
