@@ -470,3 +470,17 @@ l'adresse passe par le moteur « definition » de grappes, hors de ma zone de ch
 Commit `3c08e92` : `outils/installer_rsshub.sh`, rejouant la commande Docker déjà vérifiée en réel (3.8.10,
 QUESTIONS.md). Pas de nouveau choix technique : même image, même port, même isolation réseau que l'instance
 qui tournait déjà ailleurs.
+
+## D98 — 908, étape 4, point 7/7 (09/11/2026, 5.2) — étape 4/6 complète
+
+Commit `e3fe8c4` : Scrapling complet — voir le message de commit. Choix de conception notable : la tuile
+ENRICHIR (5.2 c) ne crée AUCUN nouveau mécanisme de câblage — elle se branche sur `pont/verification.py`
+(`fonction: enrichir`), déjà construit et déjà utilisé par RDAP et d'autres sources ENRICHIR. C'est ce qui a
+permis de la livrer réellement câblée (pas juste documentée comme non faite), contrairement à 5.2 b (source
+de secours générale) qui, elle, suppose une vraie décision d'ordonnancement DANS la boucle du moteur grappes
+— même trou d'infra et même prudence que la Boucle (D95).
+
+Étape 4/6 de l'ordre de travail de la spec 908 est maintenant complète (ses 7 points traités, deux d'entre eux
+— 9.1 et 5.2 b — documentés comme non câblés par prudence plutôt qu'inventés). Reste : étape 5 (inventaire +
+son test de complétude, puis fusion Aide/IA) et étape 6 (niveaux d'IA, puis portage Lancement/Tri/suppression
+de l'ancienne UI).
