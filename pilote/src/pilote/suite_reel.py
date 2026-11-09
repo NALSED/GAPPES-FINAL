@@ -138,6 +138,7 @@ def vue_source(
         # 909, point 1.1.b : les rôles RÉELLEMENT déclarés (une source peut en avoir plusieurs) — la fiche en fait des cases indépendantes, plus un seul rôle qui en masque les autres.
         "roles_declares": [r.upper() for r in d.roles],
         "emoji": "emoji" in d.consomme, "acces": acces, "machine": machine, "copie": copie, "peut_chercher": "chercher" in d.roles, "verifie_sur": d.verifie_sur if "adaptateur" in d.moteur else "", "avertissement": d.avertissement, "adaptateur_manquant": manquant,
+        "operateurs": list(d.operateurs),  # 909 §3 : qualificatifs de Requête avancée que cette source comprend, pour que le plan sache à qui les envoyer
         "en_pause": {"raison": pause["raison"], "reprise_dans_s": disjoncteur.reprise_dans_s(pause)} if pause else None,
     }  # fmt: skip
 

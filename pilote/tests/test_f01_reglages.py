@@ -126,6 +126,29 @@ def test_fichier_de_source_casse_est_signale_sans_arreter_les_autres(cfg):
     assert any(s["id"] == "tavily" for s in d["parties"]["recherche"])  # les autres sources sont là
 
 
+# --- 909 §3 : « operateurs » (Requête avancée) ne vaut que pour une source qui cherche via un adaptateur
+def test_operateurs_sans_adaptateur_est_refuse(cfg):
+    from pilote.sources import charger_sources
+
+    (cfg.dossier_sources / "sans-adaptateur.yaml").write_text(
+        yaml.safe_dump({"id": "sans-adaptateur", "nom": "X", "genres": ["page"], "pays": ["FR"], "usages": ["web"], "main": "seconde",
+                        "famille": "api", "roles": ["chercher"], "moteur": {"prise": "x"}, "operateurs": ["site"]}), encoding="utf-8")  # fmt: skip
+    _, problemes = charger_sources(cfg)
+    raisons = {p["fichier"]: p["raison"] for p in problemes}
+    assert "via un adaptateur" in raisons["sans-adaptateur.yaml"]
+
+
+def test_operateurs_vocabulaire_ferme(cfg):
+    from pilote.sources import charger_sources
+
+    (cfg.dossier_sources / "mauvais-operateur.yaml").write_text(
+        yaml.safe_dump({"id": "mauvais-operateur", "nom": "X", "genres": ["page"], "pays": ["FR"], "usages": ["web"], "main": "seconde",
+                        "famille": "api", "roles": ["chercher"], "moteur": {"adaptateur": "x"}, "operateurs": ["bidon"]}), encoding="utf-8")  # fmt: skip
+    _, problemes = charger_sources(cfg)
+    raisons = {p["fichier"]: p["raison"] for p in problemes}
+    assert "operateurs" in raisons["mauvais-operateur.yaml"]
+
+
 def test_reglages_yaml_casse_ne_fait_pas_tomber_la_page(cfg):
     cfg.fichier_reglages.write_text("budget: [ceci n'est pas\n", encoding="utf-8")
     with TestClient(app_de(cfg)) as c:

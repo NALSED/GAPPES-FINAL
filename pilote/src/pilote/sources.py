@@ -22,11 +22,12 @@ MAINS = {"premiere": "première main", "seconde": "seconde main"}
 ROLES = ("chercher", "verifier")  # les rôles par défaut d'une source
 ROLES_VALIDES = (*ROLES, "enrichir")  # « enrichir » doit être demandé : il n'est jamais un rôle par défaut
 ORIGINES = ("registre", "presse", "encyclo", "web", "texte")  # d'où vient un nom : du plus solide au plus fragile
+OPERATEURS = ("site", "filetype", "titre", "phrase", "exclure")  # 909 §3 : qualificatifs de Requête avancée, vocabulaire fermé
 MOTEURS = ("prise", "definition", "registre_grappes", "adaptateur", "script", "flux_rss")  # comment une source est interrogée
 CHAMPS_CONNUS = {
     "id", "nom", "description", "trouve", "genres", "pays", "consomme", "produit", "usages", "main", "famille", "cle", "cout", "confiance",
     "defaut", "roles", "avertissement", "mode", "exemple_reponse", "test_connexion", "moteur", "verifie_le", "prestataire", "note", "origine",
-    "parametres", "cle_prefixe", "attribution", "verifie_sur", "fiabilite",
+    "parametres", "cle_prefixe", "attribution", "verifie_sur", "fiabilite", "operateurs",
 }  # fmt: skip
 
 
@@ -63,6 +64,7 @@ class Declaration:
     verifie_sur: str = ""  # « site » (adresse du candidat) ou « nom » (son nom) : la source vérifie chaque candidat après la recherche, elle ne cherche pas ; vide = elle cherche seulement
     fiabilite: str = ""  # lettre A–F (code Admiralty) donnée par la déclaration quand l'origine ne suffit pas à la deviner (ex. A : registre officiel de première main) ; vide = défaut selon la classe
     attribution: dict[str, str] = field(default_factory=dict)  # mention OBLIGATOIRE de la source dans les sorties et le README : {texte, url} (ex. GDELT)
+    operateurs: list[str] = field(default_factory=list)  # 909 §3 : qualificatifs de Requête avancée qu'une source chercher comprend ; vide = aucun (jamais inventé — ignoré proprement)
 
     @property
     def payant(self) -> bool:
@@ -169,6 +171,14 @@ def valider_declaration(d: dict[str, Any], cfg: Config, fichier: str = "") -> De
     verifie_sur = str(d.get("verifie_sur") or "")
     if verifie_sur and (verifie_sur not in ("site", "nom", "ville") or not ({"verifier", "enrichir"} & set(roles)) or "adaptateur" not in moteur or (verifie_sur == "ville" and "enrichir" not in roles)):
         raise ConfigRefusee(f"{nom_f} : « verifie_sur » vaut « site » ou « nom » (rôle « verifier » ou « enrichir » avec un adaptateur), ou « ville » (rôle « enrichir »).")
+    operateurs = [str(x) for x in (d.get("operateurs") or [])]
+    if not isinstance(d.get("operateurs") or [], list) or set(operateurs) - set(OPERATEURS):
+        raise ConfigRefusee(f"{nom_f} : « operateurs » ne contient que : {', '.join(OPERATEURS)}.")
+    if operateurs and ("chercher" not in roles or "adaptateur" not in moteur):
+        # 909 §3 : seule une source « adaptateur » passe par `pont.executer.entree_de()`, le seul endroit où le
+        # qualificatif est ajouté à la requête — une source « definition »/« prise »/« registre_grappes » (le
+        # moteur grappes l'interroge lui-même, avec une phrase commune à toutes) ne peut rien en faire aujourd'hui.
+        raise ConfigRefusee(f"{nom_f} : « operateurs » (Requête avancée) ne vaut que pour une source qui cherche via un adaptateur.")
     return Declaration(
         id=ident, nom=nom.strip(), description=str(d.get("description", "")).strip(), trouve=str(d.get("trouve", "")).strip(), genres=genres, pays=pays,
         consomme=_liste(d, "consomme", nom_f, requis=False), produit=_liste(d, "produit", nom_f, requis=False), usages=_liste(d, "usages", nom_f),
@@ -181,6 +191,7 @@ def valider_declaration(d: dict[str, Any], cfg: Config, fichier: str = "") -> De
         mode={"en_ligne": bool(mode.get("en_ligne", True)), "local": bool(mode.get("local", False)), "auto_heberge": bool(mode.get("auto_heberge", False))},
         moteur=moteur, cles=liste_cles, cle_prefixe=str(d.get("cle_prefixe") or ""), origine=origine, parametres=params, exemple_reponse=str(d.get("exemple_reponse") or ""), test_connexion=dict(d.get("test_connexion") or {}),
         verifie_le=str(d.get("verifie_le") or ""), prestataire=bool(d.get("prestataire", False)), note=str(d.get("note") or "").strip(), attribution=attribution, verifie_sur=verifie_sur, fiabilite=fiabilite,
+        operateurs=operateurs,
     )  # fmt: skip
 
 

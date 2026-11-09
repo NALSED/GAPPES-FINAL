@@ -205,10 +205,22 @@ def main(dossier: str) -> int:
 
         emoji_ok = set((spec.get("emoji") or {}).get("ok") or [])
 
+        # 909 §3 : la Requête avancée agit AVANT la collecte — elle ajoute un qualificatif au texte de la requête,
+        # APRÈS la traduction (jamais traduire une syntaxe « site: »/« filetype: », qui n'existe dans aucune langue).
+        _SIGLES_DORKING = {"site": "site:", "filetype": "filetype:", "titre": "intitle:", "exclure": "-"}
+
+        def _qualifiee(e: dict, source: str) -> dict:
+            qualifs = (plan.get("requetes") or {}).get(source) or []
+            if not qualifs:
+                return e
+            ajout = " ".join(f'"{q["valeur"]}"' if q["type"] == "phrase" else f"{_SIGLES_DORKING[q['type']]}{q['valeur']}" for q in qualifs)
+            return {**e, **{champ: f"{e[champ]} {ajout}" for champ in ("sujet", "quoi") if e.get(champ)}}
+
         def entree_de(source: str) -> dict:
-            """La requête que reçoit cette source : traduite vers sa langue si le plan place une Traduction avant elle (l'original reste dans le journal), et privée de ses
-            emoji si la source ne déclare pas les chercher (`consomme: emoji`) : un service qui découpe en mots perd l'emoji sans le dire et rendrait zéro résultat."""
-            return requete_pour(entree_traduite(source), source in emoji_ok)
+            """La requête que reçoit cette source : traduite vers sa langue si le plan place une Traduction avant elle (l'original reste dans le journal), privée de ses
+            emoji si la source ne déclare pas les chercher (`consomme: emoji`) : un service qui découpe en mots perd l'emoji sans le dire et rendrait zéro résultat ; et
+            enfin qualifiée par une éventuelle Requête avancée (seule une source déclarée `operateurs` l'a reçue dans `plan.requetes`, voir suite_plan.py)."""
+            return _qualifiee(requete_pour(entree_traduite(source), source in emoji_ok), source)
 
         def emoji_seul(source: str) -> bool:
             """La saisie n'est faite que d'emoji que cette source ne cherche pas : une fois retirés il ne reste rien à lui demander (on ne l'appelle pas, et on le dit)."""

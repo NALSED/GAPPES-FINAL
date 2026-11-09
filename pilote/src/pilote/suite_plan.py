@@ -258,6 +258,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     ia: dict[str, Any] | None = None
     rsshub: list[dict[str, Any]] = []  # 3.8.10 : un site par tuile ; son flux est trouvé au lancement (réseau), pas ici
     budget_alerte: dict[str, Any] | None = None  # 2.3 : le seuil/l'action du Compteur budget, pour l'alerte du Tableau de bord
+    requetes: dict[str, list[dict[str, Any]]] = {}  # 909 §3 : qualificatifs ajoutés par source, pour les sources qui les comprennent
     effets: dict[str, str] = {}  # tuile -> effet dans le Tableau de bord (1.1 §5) : lu par ExecuteurGrappes pour « tuile_passee »
     for i in chemin_outils:
         node, o = nodes[i], par_outil[ref(i)]
@@ -321,6 +322,8 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
                 langue_saisie,
                 traduction_disponible,
             )
+        elif genre == "requete_avancee":
+            _requete_avancee(i, node, opts, nodes, par_source, pred, requetes, appliques, dire_non)
         elif genre == "boucle":
             dire_non(i, _raison_boucle(node["nom"], opts))
         elif genre == "ia":
@@ -406,7 +409,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
     ordre = {i: k for k, i in enumerate(nodes)}
     return {
         "sources": sorted(dict.fromkeys(cherchent), key=lambda s: min(ordre[i] for i in chemin_sources if ref(i) == s)), "verificateurs": [{"id": v["id"], "en_amont": v["en_amont"], "fonction": v["fonction"]} for v in verifient],
-        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "attente": attente, "ia": ia, "rsshub": rsshub, "budget_alerte": budget_alerte, "effets": effets, "appliques": appliques, "non_appliques": non_appliques,
+        "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "attente": attente, "ia": ia, "rsshub": rsshub, "budget_alerte": budget_alerte, "requetes": requetes, "effets": effets, "appliques": appliques, "non_appliques": non_appliques,
         "pays_equiv": pays_equiv or {},
     }  # fmt: skip
 
@@ -543,6 +546,55 @@ def _traduction(
 
 
 # ---------------------------------------------------------------- jouer les étapes
+
+
+OPERATEURS_DORKING = {
+    "limiter a un site domaine": "site", "limiter a un type de fichier": "filetype", "mot dans le titre": "titre",
+    "phrase exacte": "phrase", "exclure un mot": "exclure",
+}  # fmt: skip
+
+
+def _requete_avancee(i, node, opts, nodes, par_source, pred, requetes, appliques, dire_non) -> None:
+    """909 §3 : une tuile AVANT une source ajoute un qualificatif à sa requête (site, type de fichier, phrase
+    exacte, mot exclu). Posée après les sources, elle n'a rien à enrichir : jamais branché (cohérent avec
+    Traduction, 3.8.02). Chaque source décide elle-même si elle comprend ce qualificatif (`Declaration.operateurs`) ;
+    une source qui ne le comprend pas reçoit la requête sans lui — jamais une syntaxe inventée pour elle."""
+    descendants = set()
+    pile = [i]
+    succ_de: dict[str, list[str]] = {}
+    for n_id in nodes:
+        for p in pred[n_id]:
+            succ_de.setdefault(p, []).append(n_id)
+    while pile:
+        for m in succ_de.get(pile.pop(), []):
+            if m not in descendants:
+                descendants.add(m)
+                pile.append(m)
+    sources_apres = [m for m in descendants if nodes[m].get("ref") in par_source and par_source[nodes[m]["ref"]]["role"] not in ("VERIFIER", "ENRICHIR")]
+    if not sources_apres:
+        dire_non(i, "placée après les sources, elle n'a rien à enrichir : ce n'est pas encore branché")
+        return
+    type_txt = norme(_option(opts, 0, "type de qualificatif"))
+    qtype = OPERATEURS_DORKING.get(type_txt)
+    valeur_q = _option(opts, 1, "valeur").strip()
+    if qtype is None:
+        raise ConfigRefusee(f"« {node['nom']} » : le type de qualificatif « {type_txt or '(vide)'} » n'existe pas. Types : {', '.join(OPERATEURS_DORKING)}.")
+    if not valeur_q:
+        dire_non(i, "aucune valeur n'est donnée au qualificatif : la tuile ne fait rien")
+        return
+    comprises, ignorees = [], []
+    for m in sources_apres:
+        s = par_source[nodes[m]["ref"]]
+        if qtype in (s.get("operateurs") or []):
+            requetes.setdefault(s["id"], []).append({"type": qtype, "valeur": valeur_q})
+            comprises.append(s["nom"])
+        else:
+            ignorees.append(s["nom"])
+    appliques.append({
+        "tuile": i, "nom": node["nom"],
+        "texte": (f"qualificatif « {qtype} : {valeur_q} » ajouté pour : {', '.join(comprises)}" if comprises else f"« {qtype} : {valeur_q} » : aucune source après elle ne comprend ce qualificatif")
+        + (f" (ignoré, non compris, par : {', '.join(ignorees)})" if ignorees else ""),
+    })  # fmt: skip
 
 
 def valeur(ligne: dict[str, Any], champ: str) -> str:

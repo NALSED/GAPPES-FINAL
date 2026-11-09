@@ -66,6 +66,14 @@ _OUTILS: list[tuple[Any, ...]] = [
      "3 articles + un résumé marqué « IA »\nAucun fait ajouté"),
     ("rsshub", "RSSHub", "OUTIL", "off", "Transforme un site sans flux en flux RSS lisible.", "L'adresse d'un site", "Un flux RSS", "rien",
      [["Site à transformer", "adresse du site"], ["Rafraîchir toutes les", "30 minutes"]], "Un site sans flux", "Un flux RSS avec 20 articles"),
+    # 909 §3 (retour du 09/11/2026) : 11e outil, « peut-on ajouter le google dorking ? » — seulement les deux
+    # familles qui servent à trouver des organisations/personnes (document/texte, présence ciblée) ; la famille
+    # reconnaissance de sécurité est écartée, même limite que bbot (908). Agit AVANT la collecte (enrichit la
+    # requête), à la différence de Filtre (après). Chaque source chercher déclare elle-même les qualificatifs
+    # qu'elle comprend (`Declaration.operateurs`) ; un qualificatif qu'elle ne comprend pas est ignoré pour elle.
+    ("requete_avancee", "Requête avancée", "OUTIL", "off", "Ajoute un qualificatif à la requête avant qu'elle parte vers les sources (site, type de fichier, phrase exacte…).",
+     "Le texte de la recherche", "La même requête, avec le qualificatif ajouté pour les sources qui le comprennent", "journal",
+     [["Type de qualificatif", "Limiter à un site/domaine"], ["Valeur", ""]], "club de judo", 'club de judo site:linkedin.com/in/'),
 ]  # fmt: skip
 
 

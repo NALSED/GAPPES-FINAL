@@ -418,4 +418,25 @@ function rendreOptionsIa(n, refresh, guarder) {
   );
 }
 
-export const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true), boucle: rendreOptionsBoucle, attente: rendreOptionsAttente, budget: rendreOptionsBudget, ia: rendreOptionsIa, fusion: rendreOptionsFusion, rsshub: rendreOptionsRsshub };
+// 909 §3 (retour du 09/11/2026) : la tuile agit AVANT la collecte — elle enrichit la requête envoyée aux
+// sources chercher, qualificatif par qualificatif. Vocabulaire fermé de deux familles seulement (document/texte
+// et présence ciblée) ; la famille reconnaissance de sécurité (inurl:admin, filetype:env…) est écartée, comme
+// bbot (908). « Valeur » reste du texte libre : le qualificatif lui-même ne se fermable pas (un domaine, un mot…).
+const TYPES_QUALIFICATIF = [
+  "Limiter à un site/domaine", "Limiter à un type de fichier", "Mot dans le titre", "Phrase exacte", "Exclure un mot",
+];
+
+function rendreOptionsRequeteAvancee(n, refresh, guarder) {
+  const type = optLabel(n, "Type de qualificatif") || TYPES_QUALIFICATIF[0];
+  const valeur = champ({ libelle: "Valeur", valeur: optLabel(n, "Valeur"), placeholder: "ex. linkedin.com/in/, pdf, « association loi 1901 »" });
+  valeur.saisie.addEventListener("change", () => { optDefinir(n, "Valeur", valeur.valeur()); guarder(); });
+  return h(
+    "div", { class: "options-grille" },
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Type de qualificatif"),
+      menu(TYPES_QUALIFICATIF.map((l) => [l, l]), type, (v) => { optDefinir(n, "Type de qualificatif", v); guarder(); refresh(); })),
+    valeur.el,
+    h("span", { class: "aide-champ" }, "Envoyé seulement aux sources qui déclarent comprendre ce qualificatif ; ignoré proprement par les autres."),
+  );
+}
+
+export const RENDUS_OPTIONS = { format: rendreOptionsFormat, traduction: rendreOptionsTraduction, si: rendreOptionsConditions(false), filtre: rendreOptionsConditions(true), boucle: rendreOptionsBoucle, attente: rendreOptionsAttente, budget: rendreOptionsBudget, ia: rendreOptionsIa, fusion: rendreOptionsFusion, rsshub: rendreOptionsRsshub, requete_avancee: rendreOptionsRequeteAvancee };

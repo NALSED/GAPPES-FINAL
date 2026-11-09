@@ -12,8 +12,8 @@ from pilote.suite_plan import appliquer, compiler
 PAYS = {"fr": ["fr", "france"], "france": ["fr", "france"]}
 
 
-def src(i, role="CHERCHER", langue="fr", etat="warn"):
-    return {"id": i, "nom": i.upper(), "role": role, "langue": langue, "etat": etat}
+def src(i, role="CHERCHER", langue="fr", etat="warn", operateurs=()):
+    return {"id": i, "nom": i.upper(), "role": role, "langue": langue, "etat": etat, "operateurs": list(operateurs)}
 
 
 def outil(i, nature="modele", modele=None, etat="ok", options=(), code=""):
@@ -28,13 +28,14 @@ def outil(i, nature="modele", modele=None, etat="ok", options=(), code=""):
     }
 
 
-SOURCES = [src("a"), src("b"), src("c", langue="en"), src("v", role="VERIFIER")]
+SOURCES = [src("a"), src("b"), src("c", langue="en"), src("v", role="VERIFIER"), src("d", operateurs=["site", "filetype"])]
 OUTILS = [
     outil("filtre", options=[("Garder si le champ", "ville"), ("est égal à", "Lyon")]),
     outil("si", options=[("Si le champ", "catégorie"), ("est égal à", "association")]),
     outil("fusion"), outil("format", options=[("Format de sortie", "CSV"), ("Séparateur", ";")]),
     outil("traduction", options=[("Langue d'entrée", "détecter"), ("Traduire vers", "français, anglais"), ("Ne pas traduire", "rien")]),
     outil("boucle"), outil("ia", etat="off"), outil("attente"), outil("rsshub"), outil("budget"),
+    outil("requete_avancee", options=[("Type de qualificatif", "Limiter à un site/domaine"), ("Valeur", "")]),
 ]  # fmt: skip
 
 
@@ -340,6 +341,43 @@ def test_format_inconnu_refuse_avec_la_liste_reelle():
              [lien("saisie", "n1"), lien("n1", "fo"), lien("fo", "grappes")])  # fmt: skip
     with pytest.raises(ConfigRefusee, match="Excel"):
         comp(p)
+
+
+def plan_requete_avancee(opts, apres=False):
+    noeuds = [("saisie",), ("grappes",), ("r", "requete_avancee", None, opts), ("nd", "d"), ("na", "a")]
+    liens = (
+        [lien("saisie", "nd"), lien("saisie", "na"), lien("nd", "r"), lien("na", "r"), lien("r", "grappes")]
+        if apres
+        else [lien("saisie", "r"), lien("r", "nd"), lien("r", "na"), lien("nd", "grappes"), lien("na", "grappes")]
+    )
+    return plan(noeuds, liens)
+
+
+# --- 909 §3 : la Requête avancée qualifie la requête des sources placées après elle, et seulement celles qui déclarent comprendre le qualificatif
+def test_requete_avancee_qualifie_seulement_les_sources_qui_le_comprennent():
+    opts = [("Type de qualificatif", "Limiter à un site/domaine"), ("Valeur", "linkedin.com/in/")]
+    c = comp(plan_requete_avancee(opts))
+    assert c["requetes"] == {"d": [{"type": "site", "valeur": "linkedin.com/in/"}]}  # « a » ne déclare aucun opérateur
+    texte = c["appliques"][0]["texte"]
+    assert "D" in texte and "ignoré" in texte and "A" in texte
+
+
+def test_requete_avancee_posee_apres_les_sources_non_appliquee():
+    opts = [("Type de qualificatif", "Limiter à un site/domaine"), ("Valeur", "linkedin.com/in/")]
+    c = comp(plan_requete_avancee(opts, apres=True))
+    assert c["requetes"] == {} and "après les sources" in c["non_appliques"][0]["raison"]
+
+
+def test_requete_avancee_sans_valeur_non_appliquee():
+    opts = [("Type de qualificatif", "Limiter à un site/domaine"), ("Valeur", "")]
+    c = comp(plan_requete_avancee(opts))
+    assert c["requetes"] == {} and "aucune valeur" in c["non_appliques"][0]["raison"]
+
+
+def test_requete_avancee_type_inconnu_est_refuse():
+    opts = [("Type de qualificatif", "Bidon"), ("Valeur", "x")]
+    with pytest.raises(ConfigRefusee, match="qualificatif"):
+        comp(plan_requete_avancee(opts))
 
 
 def plan_traduction(opts):

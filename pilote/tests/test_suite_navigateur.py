@@ -339,15 +339,15 @@ def test_boucle_montre_un_apercu_sans_rien_lancer(page):
     page.click(".fenetre button:has-text('Fermer')")
 
 
-def test_les_dix_fiches_outils_s_ouvrent_sans_erreur(page):
-    """3.8.0X : chaque modèle livré pose sa tuile et ouvre sa fenêtre sans planter — la revue la plus large
-    possible des dix éditeurs d'options, faute de mieux (aucun test dédié par tuile côté navigateur).
-    Quatre outils (Attente, Compteur budget, Assistant IA, RSSHub) sont éteints d'origine : on les allume
-    d'abord dans Réglages, sinon la palette refuse de poser leur tuile (muette)."""
+def test_les_onze_fiches_outils_s_ouvrent_sans_erreur(page):
+    """3.8.0X et 909 §3 : chaque modèle livré pose sa tuile et ouvre sa fenêtre sans planter — la revue la plus
+    large possible des onze éditeurs d'options, faute de mieux (aucun test dédié par tuile côté navigateur).
+    Cinq outils (Attente, Compteur budget, Assistant IA, RSSHub, Requête avancée) sont éteints d'origine : on
+    les allume d'abord dans Réglages, sinon la palette refuse de poser leur tuile (muette)."""
     page.click("button[aria-label=Replier]")  # l'Aide est posée par-dessus le coin de chaque page
     page.click(".onglet:has-text('Réglages')")
     page.click(".sous button:has-text('Outils')")
-    for outil in ("attente", "budget", "ia", "rsshub"):
+    for outil in ("attente", "budget", "ia", "rsshub", "requete_avancee"):
         page.click(f"[data-outil={outil}] button[aria-label*=Allumer]")
         if page.locator(".fenetre").count():  # l'Assistant IA seul redemande une confirmation
             page.click(".fenetre button:has-text('Allumer')")
@@ -357,7 +357,7 @@ def test_les_dix_fiches_outils_s_ouvrent_sans_erreur(page):
     # « Outils » est le groupe de palette ouvert par défaut (app.recherche.palette) : pas besoin de cliquer son en-tête
     noms = [
         "Format de sortie", "Traduction", "Condition « si »", "Boucle", "Fusion / doublons", "Filtre",
-        "Quand une source est à court", "Compteur budget", "Assistant IA", "RSSHub",
+        "Quand une source est à court", "Compteur budget", "Assistant IA", "RSSHub", "Requête avancée",
     ]
     for nom in noms:
         page.click(f".palette-entree:has-text('{nom}')")

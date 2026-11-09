@@ -52,7 +52,7 @@ NOUVELLE = {
 }
 
 
-# --- l'état de départ est celui de la maquette : 8 catégories, 48 sources, 10 outils dont l'Assistant IA éteint
+# --- l'état de départ est celui de la maquette : 8 catégories, 48 sources, 11 outils dont l'Assistant IA éteint
 def test_etat_de_depart(c, cfg):
     e = etat(c)
     assert [x["nom"] for x in e["categories"]][:3] == ["Web", "Organisations officielles", "Associations"]
@@ -63,8 +63,8 @@ def test_etat_de_depart(c, cfg):
         reelles
     ) >= 40  # la liste de la suite EST celle des déclarations de pilote
     assert (
-        len(e["outils"]) == 10 and outil(c, "ia")["etat"] == "off"
-    )  # l'Assistant IA est éteint à la livraison (spécification 10)
+        len(e["outils"]) == 11 and outil(c, "ia")["etat"] == "off"
+    )  # l'Assistant IA est éteint à la livraison (spécification 10) ; 11e outil : Requête avancée (909 §3)
     assert all("langue" in s for s in e["sources"])  # le champ Langue existe sur toute source (spécification 05)
     assert src(c, "registre-associations")["langue"] == "fr" and src(c, "wikipedia")["langue"] == ""  # une source multilingue n'a pas de langue inventée
     assert e["recherches"] == [] and e["plan"]["nodes"] == []  # aucune recherche inventée

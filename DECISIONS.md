@@ -666,3 +666,44 @@ en tête : seconde main, fiabilité basse, jamais utilisable comme source de pre
 
 Reste dans 909 : 1.3 (découverte OSINT Framework), §3 (Requête avancée), le volet comparaison systématique
 ancienne UI/`/suite`. §4 toujours en attente (décidé par la spec elle-même).
+
+## D110 — 909, §3 : nouvel outil « Requête avancée » (11e outil) (09/11/2026)
+
+11e outil livré, idée de Sednal (« peut-on ajouter le google dorking ? »). Décidé par la spec : seulement les
+deux familles qui servent à trouver des organisations/personnes (document/texte : `site:`, `filetype:`,
+`intitle:`, phrase exacte, exclusion ; présence ciblée : `site:linkedin.com/in/`, domaines officiels) — la
+famille reconnaissance de sécurité (`inurl:admin`, `filetype:env`…) est écartée, même limite que bbot (908).
+
+Point technique laissé à momo par la spec : toutes les sources ne comprennent pas ces opérateurs pareillement.
+Mécanisme choisi : un nouveau champ de déclaration `Declaration.operateurs` (vocabulaire fermé : site,
+filetype, titre, phrase, exclure), même esprit que `parametres_attendus` réutilisé pour les adresses (908 §4) —
+une source qui ne le déclare pas reçoit la requête sans le qualificatif, jamais une syntaxe inventée pour elle.
+
+**Découverte en cours de route, qui a changé le périmètre** : la spec cite `serper` comme la source qui
+« comprend tous les opérateurs » (vraies pages Google). Vérifié avant de l'écrire dans sa déclaration : `serper`
+(comme `brave`/`searxng`/`tavily`) est une source `moteur.definition`/`prise`, PAS `moteur.adaptateur` — le seul
+point où `pont/executer.py` (`entree_de()`) peut ajouter un qualificatif à la requête d'UNE source précise. Les
+sources `definition`/`prise`/`registre_grappes` sont interrogées par le moteur grappes lui-même avec une phrase
+commune à toutes ; pilote n'a aujourd'hui aucune prise pour les différencier. Plutôt que déclarer `operateurs`
+sur `serper` et le laisser silencieusement sans effet (exactement ce que la spec interdit — « jamais un échec
+silencieux, jamais une requête cassée »), `sources.py` REFUSE désormais toute déclaration `operateurs` sur une
+source qui n'est pas `moteur.adaptateur` (même garde-fou que `verifie_sur`). Résultat : le mécanisme est
+construit et testé de bout en bout (tuile → `suite_plan.compiler()` → `pont/executer.py`), mais **aucune
+source réelle ne le déclare encore** — serper/brave/searxng/tavily ne peuvent pas aujourd'hui, et je n'ai pas
+audité les ~55 sources `adaptateur` restantes pour trouver laquelle accepte réellement une syntaxe de ce genre
+(travail d'audit, pas deviné). Noté pour une prochaine session.
+
+Câblage : `sources.py` (`Declaration.operateurs`, vocabulaire `OPERATEURS`, validation) ; `suite_graine.py`
+(11e tuple `_OUTILS`, éteinte par défaut comme Attente/Budget/IA/RSSHub) ; `options_outils.js`
+(`rendreOptionsRequeteAvancee`, menu fermé règle 3.10) ; `suite_reel.py` (`operateurs` exposé par source) ;
+`suite_plan.py` (`_requete_avancee()`, calque de `_traduction()` : descendants du graphe, dispatch, résultat
+dans `requetes`) ; `pont/executer.py` (`entree_de()` ajoute le qualificatif APRÈS la traduction — jamais
+traduire une syntaxe `site:`, qui n'existe dans aucune langue).
+
+Tests : 4 dans `test_suite_plan.py` (qualifie/ignore, posée après les sources, valeur vide, type inconnu), 2
+dans `test_f01_reglages.py` (`operateurs` sans adaptateur refusé, vocabulaire fermé), `test_suite_api.py`
+(compte d'outils 10→11) et un test navigateur réel étendu (onze fiches ouvertes sans erreur). Lint propre ;
+suite complète hors réseau relancée en arrière-plan (résultat à suivre).
+
+Reste dans 909 : 1.3 (découverte OSINT Framework), le volet comparaison systématique ancienne UI/`/suite`. §4
+toujours en attente (décidé par la spec elle-même).
