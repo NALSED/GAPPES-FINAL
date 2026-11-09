@@ -645,3 +645,24 @@ par défaut). Deux assertions-dict exactes de `test_f02_assistant.py` mises à j
 
 Reste dans 909 : 1.2 (e, f), 1.3 (découverte OSINT Framework), §3 (Requête avancée), le volet comparaison
 systématique ancienne UI/`/suite`. §4 toujours en attente (décidé par la spec elle-même).
+
+## D109 — 909, points 1.2.e et 1.2.f : non câblés, raisons vérifiées et tracées (09/11/2026)
+
+1.2.f (chaîne de repli gratuit→payant entre prestataires de collecte, en recherche simple) : même famille de
+risque que la Boucle (3.8.04) et le mécanisme général de secours entre sources, décliné plus tôt dans cette
+même session 909 — un ordonnancement séquentiel entre sources touche `pont/executer.py`/`materialiser()`, et
+une erreur de câblage facturerait une source payante en silence. Détail dans `pilote/QUESTIONS.md`.
+
+1.2.e (vérification par co-occurrence nom+ville/numéro dans le texte d'une page, extrait cité, comptage des
+domaines confirmants indépendants) : le plus gros chantier restant de 909, pas improvisé après vérification
+concrète de deux inconnues plutôt qu'une supposition — ni `trafilatura` ni `readability-lxml` (bibliothèque de
+lecture de page demandée par la spec) n'est installée dans `/opt/pilote/.venv` (vérifié : `ModuleNotFoundError`
+sur les deux) ; et la voie gratuite « pages déjà collectées » n'a pas d'infrastructure accessible depuis
+`pilote` (cherché un cache de pages brutes posé par une source qui cherche, rien trouvé — le moteur grappes
+gère ses requêtes HTTP lui-même, `pilote` ne voit jamais le HTML brut). La voie dynamique seule (recherche web
+scoping sur le nom exact, sans cache) reste faisable sans ces inconnues, avec le garde-fou de la spec toujours
+en tête : seconde main, fiabilité basse, jamais utilisable comme source de première main pour le niveau 4 IA
+(908 §13). Détail et chemin pour une prochaine session dans `pilote/QUESTIONS.md`.
+
+Reste dans 909 : 1.3 (découverte OSINT Framework), §3 (Requête avancée), le volet comparaison systématique
+ancienne UI/`/suite`. §4 toujours en attente (décidé par la spec elle-même).

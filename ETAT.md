@@ -2,16 +2,16 @@
 
 Phase en cours : 909 (« Vérifier et enrichir », demande explicite de Sednal le 09/11/2026 de commencer malgré
 l'état « en cours de rédaction » du document — 905 et 903 traités plus tard dans la journée) — §1.1 fait
-(D104), §2.1 complet (a/b/c, D104+D105), 1.2.a fait (D106), 1.2.b déjà acquis (D92, test réel déjà universel
-par source), 1.2.c fait (D108), 1.2.d fait (D107). Reste : 1.2 (e, f), 1.3, §3 (Requête avancée), le volet
-comparaison ancienne UI/`/suite`. §4 mis en attente par la spec elle-même.
+(D104), §2.1 complet (a/b/c, D104+D105), 1.2 (a/b/c/d) faits (D106/D92/D108/D107), 1.2 (e/f) déclinés avec
+raisons vérifiées et tracées (D109, détail dans `pilote/QUESTIONS.md`). Reste : 1.3, §3 (Requête avancée), le
+volet comparaison ancienne UI/`/suite`. §4 mis en attente par la spec elle-même.
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-09 (D108 : 1.2.c — la restriction « en_amont » (ne vérifier que les résultats de
-certaines sources de recherche), qui existait déjà en plan avancé via la topologie du graphe, se règle
-désormais aussi en recherche simple : réglage transverse `verification.en_amont` dans Réglages (une case par
-source de recherche active), un plan avancé gardant toujours la priorité quand il décide lui-même. Tests
-ciblés + test navigateur réel verts ; suite complète hors réseau : 632 passés, 1 échec pré-existant.
+Dernière mise à jour : 2026-11-09 (D109 : 1.2.e (vérification par texte de page) et 1.2.f (chaîne de repli
+prestataires) non câblés — raisons vérifiées concrètement (dépendances absentes des deux côtés, pas
+d'infrastructure de cache de pages, même risque pont que la Boucle/secours déjà déclinés) plutôt que supposées,
+détaillées dans `pilote/QUESTIONS.md` pour une session dédiée. §1.2 est donc clos pour ce qui est câblable
+maintenant ; je passe à §3 (Requête avancée).
 
 D104 (précédent) : Sednal a demandé explicitement de commencer 909 malgré son état « en cours de rédaction »
 — instruction directe qui prévaut sur la règle d'attente de validation écrite de `POUR_MOMO.md`. §1.1 fait :

@@ -214,3 +214,56 @@ Pas fait, et pas inventé à l'aveugle :
   mécanique, sans jugement — candidat à `outils/appeler_gratuit.sh` plutôt qu'au compte Pro, comme le préfère
   CLAUDE.md), pas fait dans ce pavé.
 
+
+## 909, point 1.2.f — chaîne de repli entre prestataires de collecte, pas câblée (09/11/2026)
+
+La spec demande, en recherche simple seulement, qu'une prestataire-collecte gratuite (Scrapling, 906) tombe
+en repli sur des prestataires payantes (Apify, Bright Data, ZenRows) quand elle échoue ou ne trouve rien — même
+famille de risque que la Boucle (3.8.04, ci-dessus) et le mécanisme général de « secours » entre sources
+décliné plus tôt dans cette même session (909 §1.2.e n'en dépend pas, voir plus bas, mais le refus initial de
+909 pour la chaîne générale de secours vaut ici de la même façon) :
+
+* Chaîner des sources (appeler B seulement si A échoue/ne trouve rien, dans cet ordre précis) est une décision
+  d'ORDONNANCEMENT qui touche `pont/executer.py`/`moteur_sources.materialiser()` — les deux ne connaissent
+  aujourd'hui qu'un ensemble de sources actives, jamais de dépendance séquentielle entre deux d'entre elles.
+  Une chaîne mal câblée pourrait appeler une source payante alors que la gratuite a répondu correctement
+  (facturation inutile, silencieuse) ou l'inverse (jamais appeler la payante alors qu'elle était nécessaire) —
+  risque direct sur l'argent de Sednal, jamais testable sans un vrai compte Apify/Bright Data/ZenRows à côté.
+* La frontière « a échoué » vs « n'a rien trouvé » existe déjà pour une source (hors_service / 0 résultat,
+  `pont/executer.py`) mais jamais vérifiée pour une CHAÎNE : il faudrait décider si un repli se déclenche sur
+  les deux cas ou seulement l'un, question non tranchée par la spec (elle dit « tombe en repli », sans préciser).
+
+Pas inventé. §4.2 (Switch/Jonction, branches parallèles explicites en plan avancé) répond au même besoin côté
+plan avancé et est lui-même mis en attente par la spec jusqu'à la fin de vérifier/enrichir — cohérent de ne
+pas câbler la version « simple » de la même idée avant. Prêt pour une session dédiée avec les clés
+Apify/Bright Data/ZenRows de Sednal pour vérifier pour de vrai.
+
+## 909, point 1.2.e — nouveau mécanisme de vérification par texte de page, pas commencé (09/11/2026)
+
+Le plus gros chantier restant de 909 (confirmer un candidat par co-occurrence nom+ville ou nom+numéro dans le
+texte d'une page, jamais nom seul ; extrait cité comme preuve ; compter les pages/domaines CONFIRMANTS
+indépendants plutôt qu'un binaire). Pas improvisé faute d'une base suffisante, pour deux raisons concrètes,
+vérifiées avant d'écrire quoi que ce soit :
+
+* **Brique technique (lecture de page) absente** : la spec demande de passer chaque page par une bibliothèque
+  d'extraction de texte lisible (type Mozilla Readability — `trafilatura` ou `readability-lxml` côté Python)
+  avant la comparaison. Vérifié : ni l'une ni l'autre n'est installée dans `/opt/pilote/.venv` (`ModuleNotFoundError`
+  sur les deux). Ajouter une dépendance touche DEUX installations séparées (`/opt/grappes/pilote` pour écrire
+  le code, `/opt/pilote` qui tourne réellement, voir `POUR_MOMO.md`) — jamais fait sans vérifier l'installation
+  réelle des deux côtés, pas seulement `pyproject.toml`.
+* **« Pages déjà collectées » (voie gratuite) n'a pas d'infrastructure accessible depuis `pilote`** : cherché
+  un cache de pages brutes posé par une source qui cherche (ex. celle que searxng/brave ont visitée) — rien
+  trouvé. `_dossier_copies`/`cfg.dossier_copies` est un mécanisme différent (copies locales de BASES pour
+  `base_exterieure`/`fichier_local`, pas des pages web visitées). Le moteur grappes gère lui-même ses requêtes
+  HTTP par adaptateur ; `pilote` ne voit jamais le HTML brut aujourd'hui. Construire cette voie gratuite
+  demanderait une vraie exploration du moteur grappes (hors `pilote`, autre dépôt de spécifications, jamais de
+  code) pour savoir si une page visitée peut raisonnablement être réexposée, ou s'il faut s'en passer et ne
+  garder QUE la voie payante (recherche web dynamique scoping sur le nom exact).
+
+Ce qui RESTE faisable sans ces deux inconnues, pour une prochaine session : la voie dynamique seule (nouvelle
+requête SearXNG/brave/tavily/serper scoping sur le nom exact du candidat, sans dépendre d'un cache de pages),
+avec un garde-fou absolu déjà clair dans la spec et à ne jamais relâcher : seconde main, fiabilité basse,
+JAMAIS utilisable comme la source de première main exigée par le garde-fou IA niveau 4 (908 §13). Compter les
+domaines confirmants indépendants (même esprit que `SEUILS_FUSION` de `suite_plan.py`, à relire avant d'écrire
+le compteur) plutôt qu'un binaire est la seule partie de la demande qui ne dépend d'aucune des deux inconnues
+ci-dessus et peut se concevoir dès maintenant si une session s'y attaque.
