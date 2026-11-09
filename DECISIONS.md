@@ -446,3 +446,12 @@ Commit `71fc5d3` : l'effet « alerte » du Compteur budget rejoint le Tableau de
 commit). Évalué une seule fois, à la fin de la recherche (son propre coût n'est connu qu'alors) — pas en
 continu pendant la collecte, ce qui resterait à faire si une alerte « en direct » était un jour demandée ;
 non demandé par ce point précis, pas inventé.
+
+## D95 — 908, étape 4, point 4/7 (09/11/2026, 9.1/9.2/9.3)
+
+Commit `c85e5d5` : voir le message de commit. Point important : 9.1 décrit un état du code (« Liste collée
+branchée ») qui ne correspond pas à ce que le code fait réellement aujourd'hui — vérifié en le relisant, pas
+supposé. Je n'ai pas branché l'exécution (risque de régression silencieuse déjà écarté le 02/11/2026,
+QUESTIONS.md 3.8.04, faute d'un moteur grappes accessible pour vérifier) ; j'ai seulement corrigé le message
+affiché pour qu'il dise la même chose, honnêtement, pour les trois origines. 9.2 et 9.3 avancent sans toucher
+à l'exécuteur.
