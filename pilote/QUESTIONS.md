@@ -30,6 +30,17 @@ tests qui ne dépendent d'aucun service extérieur)** : repérer tous les endroi
 recherche unique, décider où isoler les tours (un sous-dossier chacun, candidats accumulés dans la même
 `Recherche`), puis trancher le calcul du garde-fou budget avec Sednal.
 
+**Addendum (908, point 9.1, 09/11/2026)** : le retour de Sednal du 08/11 décrit « seule l'origine Liste
+collée est branchée ; les deux autres ne font rien » et demande de brancher les deux manquantes. Relu le code
+le même jour : **aucune des trois origines ne relance réellement la recherche** — `_raison_boucle()` répond
+« pas encore branché dans le moteur » pour les trois, « Liste collée » comprise (seule la validation du
+réglage et le compte des éléments collés fonctionnent). Le premier correctif ci-dessus (dossier par recherche
+unique, pas de moteur grappes accessible pour vérifier) s'applique donc identiquement aux trois origines,
+pas à deux. Je n'ai pas branché l'exécution pour cette raison — ce serait recréer exactement le risque déjà
+écarté le 02/11. Fait à la place, sans toucher à l'exécuteur : le libellé qui dit le remplacement (9.2) et un
+aperçu des recherches que la boucle produirait, affiché sans rien lancer (9.3) — les deux utiles même une fois
+le branchement fait, et sans risque de régression silencieuse.
+
 ## 3.8.09 — Assistant IA : câblé pour de vrai, testé sur .250 (clos le 03/11/2026)
 
 `suite_ia.py` (appel silencieux à l'agent Claude Code, `claude -p … --model …`) et le registre

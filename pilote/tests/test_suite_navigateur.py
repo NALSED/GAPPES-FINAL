@@ -280,6 +280,21 @@ def test_les_sorties_d_une_condition_se_nomment_oui_ou_non(page):
     assert cond.count() == 1 and fus.count() == 1
 
 
+def test_boucle_montre_un_apercu_sans_rien_lancer(page):
+    """9.2/9.3 (retour du 08/11/2026) : le libellé dit le remplacement, et coller une liste montre un aperçu des
+    premières recherches produites — sans qu'aucune recherche ne soit lancée."""
+    page.click(".palette-entree:has-text('Boucle')")
+    page.click("[data-tuile^='boucle:'] .tuile")
+    page.wait_for_selector(".fenetre.w1040")
+    assert page.locator(".fenetre :text('Chaque élément de la liste remplace')").count() == 1
+    page.fill(".fenetre textarea", "Lyon\nGrenoble\nAnnecy")
+    page.locator(".fenetre textarea").dispatch_event("change")
+    aper = page.locator(".fenetre .legende:has-text('éléments')")
+    aper.wait_for()
+    assert "3 éléments" in aper.inner_text() and "Lyon" in aper.inner_text() and "Grenoble" in aper.inner_text()
+    page.click(".fenetre button:has-text('Fermer')")
+
+
 def test_les_dix_fiches_outils_s_ouvrent_sans_erreur(page):
     """3.8.0X : chaque modèle livré pose sa tuile et ouvre sa fenêtre sans planter — la revue la plus large
     possible des dix éditeurs d'options, faute de mieux (aucun test dédié par tuile côté navigateur).

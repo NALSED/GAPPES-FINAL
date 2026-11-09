@@ -8,6 +8,7 @@
 // persiste qu'au clic sur Enregistrer).
 import { api, apiAssistant, Refus } from "./api.js";
 import { h } from "./dom.js";
+import { app } from "./etat.js";
 import { EFFORTS_IA, VERBES } from "./mots.js";
 import { bouton, boutonIcone, carteRepliable, champ, groupePuces, menu, menuMultiple, puce } from "./ui.js";
 
@@ -240,8 +241,11 @@ function rendreOptionsConditions(filtre) {
   };
 }
 
-// 3.8.04 : seule l'origine « Liste collée » est prête à être branchée dans le moteur ; les deux autres restent
-// choisissables (le réglage se garde), avec une note honnête plutôt qu'un geste qui ne ferait rien en silence.
+// 3.8.04 : AUCUNE des trois origines ne relance encore réellement la recherche (QUESTIONS.md, addendum du
+// 09/11/2026 : relu le 08/11, « Liste collée » n'est pas davantage branchée que les deux autres — le dossier
+// de travail unique par recherche, que plusieurs modules supposent, doit être revu dans une session dédiée
+// avec un moteur grappes accessible). Les trois restent choisissables (le réglage se garde), avec la même
+// note honnête pour les trois plutôt qu'un geste qui ne ferait rien en silence pour une seule d'entre elles.
 const ORIGINES_BOUCLE = ["Liste collée", "Fichier importé", "Résultat d'une tuile précédente"];
 const REMPLACE_BOUCLE = ["le lieu cherché", "le nom cherché", "un mot-clé ajouté"];
 
@@ -249,16 +253,29 @@ function rendreOptionsBoucle(n, refresh, guarder) {
   const origine = optLabel(n, "Origine de la liste") || ORIGINES_BOUCLE[0];
   const remplace = optLabel(n, "Répéter pour chaque") || REMPLACE_BOUCLE[0];
   const liste = champ({ libelle: "Liste (un élément par ligne)", valeur: optLabel(n, "Liste"), lignes: 4 });
-  liste.saisie.addEventListener("change", () => { optDefinir(n, "Liste", liste.valeur()); guarder(); });
+  liste.saisie.addEventListener("change", () => { optDefinir(n, "Liste", liste.valeur()); guarder(); refresh(); });
   const maximum = champ({ libelle: "Maximum de tours", valeur: optLabel(n, "Maximum de tours") || "50" });
   maximum.saisie.addEventListener("change", () => { optDefinir(n, "Maximum de tours", maximum.valeur()); guarder(); });
+  // 9.3 (retour du 08/11/2026) : rien ne montrait ce que la boucle produirait. Aperçu des premières recherches,
+  // construit à partir de la liste et de la saisie courante — sans rien lancer (toujours vrai, 9.1 ci-dessus).
+  const elements = (origine === "Liste collée" ? liste.valeur() : "").split("\n").map((v) => v.trim()).filter(Boolean);
+  const saisieBase = (app.data?.plan?.saisie || "").trim();
+  const apercu = elements.length
+    ? h("p", { class: "legende" },
+        `${elements.length} élément${elements.length > 1 ? "s" : ""} → ` +
+        elements.slice(0, 5).map((e) => `« ${[saisieBase, e].filter(Boolean).join(" ")} »`).join(", ") +
+        (elements.length > 5 ? "…" : ""))
+    : null;
   return h(
     "div", { class: "options-grille" },
     h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Origine de la liste"),
       groupePuces(ORIGINES_BOUCLE.map((o) => [o, o]), origine, (v) => { optDefinir(n, "Origine de la liste", v); guarder(); refresh(); })),
-    origine === "Liste collée" ? liste.el : h("p", { class: "legende" }, "Pas encore branché dans le moteur : le réglage se garde, mais la recherche ne se relance pas encore pour chaque élément."),
-    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Répéter pour chaque"),
+    origine === "Liste collée" ? liste.el : null,
+    h("p", { class: "legende" }, "Pas encore branché dans le moteur : le réglage se garde, mais la recherche ne se relance pas encore pour chaque élément."),
+    // 9.2 : le libellé dit maintenant le remplacement (le code interne le nomme déjà REMPLACE_BOUCLE).
+    h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Chaque élément de la liste remplace"),
       groupePuces(REMPLACE_BOUCLE.map((r) => [r, r]), remplace, (v) => { optDefinir(n, "Répéter pour chaque", v); guarder(); refresh(); })),
+    apercu,
     maximum.el,
   );
 }
