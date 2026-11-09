@@ -25,6 +25,7 @@ roles:
 mode:
   en_ligne: true
   local: false
+  auto_heberge: true
 verifie_le: '2026-10-13'
 cle: ''
 cout:

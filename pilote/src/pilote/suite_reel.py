@@ -134,7 +134,7 @@ def vue_source(
         "langue": sur.get("langue") or LANGUE_DU_PAYS.get(pays[0], ""), "etat": etat, "quota": _quota(d, e, unites), "description": d.description,
         "retiree": bool(sur.get("retiree")), "test_reussi": teste, "tests": tests, "declaree": True, "cle_requise": bool(d.cles), "cles_noms": d.cles,
         "parametres_attendus": d.parametres, "parametres": rg.parametres_donnes(reg, d.id),
-        "cle": bool(d.cles) and cles.toutes_presentes(cfg, d.cles), "voyant": mot, "domaine": domaine_source(d), "chercher": ch["chercher"], "verifier": ch["verifier"],
+        "cle": bool(d.cles) and cles.toutes_presentes(cfg, d.cles), "voyant": mot, "domaine": domaine_source(d), "auto_heberge": d.mode.get("auto_heberge", False), "chercher": ch["chercher"], "verifier": ch["verifier"],
         "emoji": "emoji" in d.consomme, "acces": acces, "machine": machine, "copie": copie, "peut_chercher": "chercher" in d.roles, "verifie_sur": d.verifie_sur if "adaptateur" in d.moteur else "", "avertissement": d.avertissement, "adaptateur_manquant": manquant,
         "en_pause": {"raison": pause["raison"], "reprise_dans_s": disjoncteur.reprise_dans_s(pause)} if pause else None,
     }  # fmt: skip

@@ -151,11 +151,20 @@ export function ficheSource(id) {
   // source reste « à vérifier » ; absents des deux interfaces jusqu'au 02/11/2026 (retour de Sednal : « je mets ça où ? »)
   const attendus = s.parametres_attendus || {};
   const fParams = {};
+  const manqueParams = {};
   Object.keys(attendus).forEach((nom) => {
     const spec = attendus[nom] || {};
     fParams[nom] = champ({ libelle: spec.libelle || nom, valeur: (s.parametres || {})[nom] || "", type: spec.type === "url" ? "url" : "text", obligatoire: !!spec.requis, placeholder: spec.exemple || "" });
+    // 4.2 (retour du 08/11/2026) : un message rouge quand un paramètre requis est vide — sans lui, la source
+    // reste muette sur la raison de son état « à vérifier ». Mis à jour à chaque frappe, pas seulement à l'ouverture.
+    manqueParams[nom] = spec.requis ? h("div", { class: "alerte-ligne" }, icone("attention", 20), h("span", {}, `Donne ${spec.type === "url" ? "une adresse" : "une valeur"} : sans elle, cette source ne peut pas fonctionner.`)) : null;
+    if (manqueParams[nom]) {
+      const maj = () => manqueParams[nom].classList.toggle("cache", !!fParams[nom].valeur().trim());
+      fParams[nom].saisie.addEventListener("input", maj);
+      maj();
+    }
   });
-  const champsParametres = Object.keys(fParams).map((nom) => fParams[nom].el);
+  const champsParametres = Object.keys(fParams).flatMap((nom) => [fParams[nom].el, manqueParams[nom]].filter(Boolean));
   // Édition : un champ par nom de variable de la déclaration (3.6) — Reddit en déclare deux (REDDIT_CLIENT_ID,
   // REDDIT_CLIENT_SECRET). Le libellé est le nom de variable lui-même, pas un mot inventé : c'est lui qu'on
   // retrouve dans la documentation du service pour savoir quoi coller où.
@@ -308,7 +317,10 @@ export function ficheSource(id) {
       h("div", { class: "deux-col" }, f.langue.el, h("div", {})),
       // 3.4/4.1 (retour du 08/11/2026) : une source payante sans quota n'est pas « illimitée » — chaque appel coûte,
       // seul le budget mensuel la borne. « Illimité » reste réservé à ce qui l'est vraiment : une source gratuite sans quota.
-      h("div", { class: "deux-col" }, lecture("Quota", s.acces === "base_exterieure" ? "Base extérieure" : s.copie ? "Copie locale" : s.quota ? `${s.quota.utilise} / ${s.quota.plafond} · ${s.quota.unite}` : s.cout === "payant" ? "payante, bornée par le budget du mois" : "illimité"), lecture("Adresse", s.domaine)),
+      // 4.2 : « Adresse » seul n'apprenait rien — le libellé dit maintenant qu'il s'agit du serveur contacté, et
+      // précise quand c'est une machine auto-hébergée (celle de Sednal, pas une fuite vers un tiers).
+      h("div", { class: "deux-col" }, lecture("Quota", s.acces === "base_exterieure" ? "Base extérieure" : s.copie ? "Copie locale" : s.quota ? `${s.quota.utilise} / ${s.quota.plafond} · ${s.quota.unite}` : s.cout === "payant" ? "payante, bornée par le budget du mois" : "illimité"),
+        lecture("Serveur contacté", s.domaine ? `${s.domaine}${s.auto_heberge ? " (auto-hébergé)" : ""}` : "")),
       s.description && h("p", { class: "douce" }, s.description),
       lecture("Accès", s.acces === "base_exterieure" ? "Base extérieure" : s.copie ? "Copie locale" : "API"),
       s.acces === "base_exterieure" && lecture("Machine", s.machine), // une adresse et des identifiants, ni clé d'API, ni quota, ni date de copie

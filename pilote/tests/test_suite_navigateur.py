@@ -137,6 +137,20 @@ def test_retirer_une_source_se_defait_sans_fenetre(page):
     page.wait_for_selector("[data-source=tavily]")
 
 
+def test_parametre_requis_vide_affiche_un_message_rouge(page):
+    """4.2 (retour du 08/11/2026) : un paramètre requis (ex. CKAN, « Adresse du portail ») vide montre un
+    message rouge, qui disparaît dès qu'une valeur est saisie."""
+    aller(page, "#/reglages")
+    page.click(".carte-tete:has-text('Organisations officielles')")
+    page.click("[data-source=ckan] button[aria-label*=Modifier]")
+    page.wait_for_selector(".panneau")
+    alerte = page.locator(".panneau .alerte-ligne")
+    assert alerte.count() == 1 and alerte.is_visible()
+    page.fill(".panneau input[type=url]", "https://open.canada.ca/data")
+    assert not alerte.is_visible()
+    page.click(".panneau button[aria-label='Fermer']")
+
+
 def test_assistant_ia_passe_par_l_avertissement(page):
     aller(page, "#/reglages")
     page.click(".sous button:has-text('Outils')")

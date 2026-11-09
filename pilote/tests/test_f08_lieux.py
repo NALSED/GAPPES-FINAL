@@ -41,7 +41,8 @@ def du_preset(cfg):
 
 def overpass_reel(entree, parametres=None):
     """Appel RÉEL d'Overpass. Si les serveurs publics sont en panne ce jour-là, le test est SAUTÉ (et le dit) : il ne prouve alors rien."""
-    serveurs = yaml.safe_load((RACINE / "config/sources/osm-overpass.yaml").read_text(encoding="utf-8"))["moteur"]["parametres"]["serveurs"]  # ceux de la configuration : le local d'abord
+    moteur_params = yaml.safe_load((RACINE / "config/sources/osm-overpass.yaml").read_text(encoding="utf-8"))["moteur"]["parametres"]
+    serveurs = [moteur_params["serveur_auto_heberge"], *moteur_params["serveurs"]]  # ceux de la configuration : le local d'abord
     if not any(en_ligne(u.replace("/interpreter", "/status")) for u in serveurs):
         pytest.skip("aucun serveur Overpass ne répond")
     parametres = {"serveurs": serveurs, **(parametres or {})}

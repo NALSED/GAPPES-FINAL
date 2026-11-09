@@ -40,17 +40,24 @@ defaut:
 mode:
   en_ligne: true
   local: false
+  auto_heberge: true
 exemple_reponse: exemples/osm-overpass.json
 verifie_le: '2026-10-13'
 note: 'OpenStreetMap est rempli par des bénévoles : un grand club y figure presque toujours, un petit
   groupe informel rarement. Le type de lieu se choisit dans la page Recherches ; sans choix, il dépend
   du genre (club, association, lieu). Un appel à la fois, un délai d''une seconde, le serveur Overpass auto-hébergé
   (France) d''abord, des serveurs publics en secours.'
+parametres:
+  serveur_auto_heberge:
+    libelle: Adresse de ton serveur Overpass auto-hébergé (laisse vide pour n'utiliser que les serveurs publics)
+    type: url
+    requis: false
+    exemple: http://127.0.0.1:12345/api/interpreter
 moteur:
   adaptateur: osm_lieux
   parametres:
-    serveurs:  # dans l'ordre : le serveur auto-hébergé (France seule, outils/installer_overpass.sh), puis les serveurs publics en secours
-    - http://127.0.0.1:12345/api/interpreter
+    serveur_auto_heberge: http://127.0.0.1:12345/api/interpreter  # France seule, outils/installer_overpass.sh
+    serveurs:  # serveurs publics en secours, essayés après le serveur auto-hébergé (4.2, retour du 08/11/2026)
     - https://overpass-api.de/api/interpreter
     - https://overpass.kumi.systems/api/interpreter
     - https://overpass.private.coffee/api/interpreter

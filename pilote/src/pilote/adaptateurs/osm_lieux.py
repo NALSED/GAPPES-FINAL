@@ -156,7 +156,12 @@ def chercher(entree: dict[str, Any], client: Client, parametres: dict[str, Any])
     reponse_vide = False
     client.tentatives_429 = 1  # Overpass a ses propres essais et son serveur de secours : pas de double attente
     essais, pause = int(parametres.get("essais", ESSAIS)), float(parametres.get("pause_s", PAUSE_S))
-    for url in parametres.get("serveurs") or SERVEURS:
+    # 4.2 (retour du 08/11/2026) : l'adresse du serveur auto-hébergé est maintenant un réglage nommé
+    # (`parametres_attendus`, modèle CKAN), modifiable depuis la fiche de la source — plus enfouie, seule, dans
+    # la liste `serveurs` (qui ne porte plus que les serveurs publics de secours).
+    auto_heberge = str(parametres.get("serveur_auto_heberge") or "").strip()
+    serveurs = ([auto_heberge] if auto_heberge else []) + list(parametres.get("serveurs") or SERVEURS)
+    for url in serveurs:
         for preambule, cadre, approchee in zones:
             for essai in range(essais):
                 try:

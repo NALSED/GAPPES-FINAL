@@ -144,6 +144,8 @@ def valider_declaration(d: dict[str, Any], cfg: Config, fichier: str = "") -> De
     mode = d.get("mode") or {"en_ligne": True, "local": False}
     if not isinstance(mode, dict) or any(not isinstance(v, bool) for v in mode.values()):
         raise ConfigRefusee(f"{nom_f} : « mode » dit si la source tourne en ligne et/ou en copie locale (oui ou non).")
+    if set(mode) - {"en_ligne", "local", "auto_heberge"}:
+        raise ConfigRefusee(f"{nom_f} : « mode » ne connaît que « en_ligne », « local » et « auto_heberge ».")
     moteur = d.get("moteur")
     if not isinstance(moteur, dict) or not moteur:
         raise ConfigRefusee(f"{nom_f} : il manque « moteur », qui dit comment interroger la source.")
@@ -170,7 +172,11 @@ def valider_declaration(d: dict[str, Any], cfg: Config, fichier: str = "") -> De
         consomme=_liste(d, "consomme", nom_f, requis=False), produit=_liste(d, "produit", nom_f, requis=False), usages=_liste(d, "usages", nom_f),
         main=main, famille=famille or "", cle=cle, cout=cout, confiance=confiance,
         defaut={"chercher": bool(defaut.get("chercher", False)), "verifier": bool(defaut.get("verifier", False))}, roles=roles,
-        avertissement=str(d.get("avertissement") or "").strip(), mode={"en_ligne": bool(mode.get("en_ligne", True)), "local": bool(mode.get("local", False))},
+        avertissement=str(d.get("avertissement") or "").strip(),
+        # « auto_heberge » (4.2, retour du 08/11/2026) : un serveur tiers ou l'ordinateur de Sednal, distinction qui
+        # donne son sens à l'affichage de l'adresse (3 : savoir où partent les mots cherchés) — absent de « local »
+        # (qui dit copie hors ligne/en ligne, pas qui héberge le service contacté).
+        mode={"en_ligne": bool(mode.get("en_ligne", True)), "local": bool(mode.get("local", False)), "auto_heberge": bool(mode.get("auto_heberge", False))},
         moteur=moteur, cles=liste_cles, cle_prefixe=str(d.get("cle_prefixe") or ""), origine=origine, parametres=params, exemple_reponse=str(d.get("exemple_reponse") or ""), test_connexion=dict(d.get("test_connexion") or {}),
         verifie_le=str(d.get("verifie_le") or ""), prestataire=bool(d.get("prestataire", False)), note=str(d.get("note") or "").strip(), attribution=attribution, verifie_sur=verifie_sur, fiabilite=fiabilite,
     )  # fmt: skip

@@ -142,3 +142,28 @@ régression de ce travail.
 * `test_suite_plan.py::test_la_tuile_jouee_ne_depend_pas_du_hasard_du_processus` : le sous-processus lancé avec
   `PYTHONHASHSEED` et `PATH=""` échoue (`CalledProcessError`) — sent la dérive d'environnement déjà vue côté
   `grappes` (Q36 de `QUESTIONS.md` racine), pas une régression de code.
+
+## 908, point 4.2 — mapper les adresses serveur : fait pour Overpass et le code à constante, pas pour tout (09/11/2026)
+
+Fait : le domaine d'une source fixée par adaptateur se lit désormais depuis une constante de module
+(`ADRESSE`/`URL`/`BASE`/`API`, déjà présente dans ~18 adaptateurs) ; Overpass (`osm-overpass.yaml`) a son
+adresse auto-hébergée sortie de la liste `serveurs` vers un réglage nommé `parametres.serveur_auto_heberge`,
+modifiable depuis la fiche (modèle CKAN) ; le message rouge sur un paramètre `requis` vide est branché
+(`reglages.js`) ; le libellé dit maintenant « Serveur contacté » et précise « (auto-hébergé) » (`mode.auto_heberge`,
+nouveau champ de déclaration).
+
+Pas fait, et pas inventé à l'aveugle :
+
+* **SearXNG** (`moteur.definition.url`) : affiché en lecture seule (le correctif `domaine_source()` le lit
+  désormais), mais PAS rendu modifiable comme Overpass — son URL est portée par le moteur « definition »
+  (un mécanisme de grappes, pas de l'adaptateur `pilote`), et je ne l'ai pas assez vérifié pour savoir si le
+  merge `parametres` + réglages utilisateur s'y applique de la même façon que pour un adaptateur. Risquer une
+  mauvaise supposition là casserait la recherche en silence (même prudence que 9.1/Boucle).
+* **RSSHub et LibreTranslate** ne sont pas des sources (`Declaration`) : leur adresse auto-hébergée vit dans
+  `pilote.yaml` (`suite.rsshub_url`, `suite.traduction_url`), un réglage d'OUTIL, pas de source. Leur donner le
+  même mécanisme `parametres_attendus` demanderait de les modeler en pseudo-sources — une vraie décision de
+  conception, pas un mappage d'adresse.
+* Les adaptateurs restants sans constante `ADRESSE`/`URL`/`BASE`/`API` (sur les ~50 cités par le retour) gardent
+  « — » : je n'ai pas parcouru les ~30 fichiers restants pour en extraire l'adresse une par une (travail
+  mécanique, sans jugement — candidat à `outils/appeler_gratuit.sh` plutôt qu'au compte Pro, comme le préfère
+  CLAUDE.md), pas fait dans ce pavé.

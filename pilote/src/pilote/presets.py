@@ -206,13 +206,26 @@ def source_locale(d: Declaration) -> bool:
 
 
 def domaine_source(d: Declaration) -> str:
-    """Le domaine vers lequel une source écrit, quand il est DANS SA DÉCLARATION (type « api » : `moteur.parametres.url` ; type « mcp » :
-    `moteur.parametres.mcp`). Pour une source du catalogue (adaptateur dédié, « prise » grappes), l'adresse est dans du code revu, pas
-    dans la déclaration : rendre « » plutôt que deviner (F17-4a — savoir où une source écrit avant de l'allumer)."""
+    """Le domaine vers lequel une source écrit. D'abord DANS SA DÉCLARATION (type « api » : `moteur.parametres.url` ;
+    type « mcp » : `moteur.parametres.mcp`) ; sinon, pour une source du catalogue (adaptateur dédié, « prise »
+    grappes), dans le code revu de son adaptateur — une constante `ADRESSE`/`URL`/`BASE`/`API` au niveau du
+    module (4.2, retour du 08/11/2026 : fixée par l'adaptateur, donc affichée en LECTURE SEULE par l'appelant,
+    jamais modifiable d'ici — la saisir ne changerait rien à ce que la source appelle réellement). Si ni l'une
+    ni l'autre ne le sait, rendre « » plutôt que deviner (F17-4a — savoir où une source écrit avant de l'allumer)."""
     import urllib.parse
 
     p = (d.moteur or {}).get("parametres") or {}
-    url = p.get("url") or p.get("mcp") or ""
+    url = p.get("url") or p.get("mcp") or (d.moteur or {}).get("definition", {}).get("url") or ""
+    if not url:
+        adaptateur = (d.moteur or {}).get("adaptateur")
+        if adaptateur:
+            from pilote import adaptateurs
+
+            try:
+                m = adaptateurs.charger(adaptateur)
+                url = next((v for nom in ("ADRESSE", "URL", "BASE", "API") if isinstance(v := getattr(m, nom, ""), str) and v), "")
+            except adaptateurs.ErreurSource:  # un adaptateur inconnu (ex. source de test synthétique) : pas une adresse à deviner
+                url = ""
     if not url:
         return ""
     try:
