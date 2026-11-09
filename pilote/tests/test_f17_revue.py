@@ -232,6 +232,24 @@ def test_une_verification_coupee_est_dite(cfg, monkeypatch):
     assert ctx2.notes == []
 
 
+# --- 909, point 1.2.a (retour du 09/11/2026) : une alerte de vérification rejoint le Tableau de bord.
+def test_une_alerte_de_verification_rejoint_le_tableau_de_bord(cfg):
+    from pilote.executeur_grappes import ExecuteurGrappes
+
+    lignes = [
+        {"nom": "Club A", "faits": {"verifications": [{"source": "opensanctions", "origine": "OpenSanctions", "preuve": "entrée du 12/03", "signal": "alerte"}]}},
+        {"nom": "Club B", "faits": {"verifications": [{"source": "wayback", "origine": "Wayback", "signal": "confirmation"}]}},  # pas une alerte : ignorée
+    ]
+    ctx = FauxContexte()
+    ExecuteurGrappes(cfg).dire_les_alertes_verification(ctx, lignes)
+    assert ctx.avances["alertes_verification"] == ["« Club A » : OpenSanctions signale une alerte (entrée du 12/03)."]
+    assert ctx.notes == [("verification_alerte", {"n": 1})]
+    # aucune alerte : rien n'est posé (pas de clé « alertes_verification » à faux ou vide)
+    ctx2 = FauxContexte()
+    ExecuteurGrappes(cfg).dire_les_alertes_verification(ctx2, [{"nom": "Club B", "faits": {}}])
+    assert ctx2.avances == {} and ctx2.notes == []
+
+
 # --- [ ] Le bilan de vérification arrive jusqu'à la page Tri.
 def test_la_page_tri_dit_la_verification_incomplete(cfg):
     from sqlalchemy import select

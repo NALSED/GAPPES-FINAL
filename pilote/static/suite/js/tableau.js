@@ -172,6 +172,9 @@ function sectionAlertes(r, reglages) {
   // 2.3 (retour du 08/11/2026) : l'effet « alerte » du Compteur budget (seuil « À partir de … %», action « Prévenir »)
   // n'avait aucun chemin jusqu'ici — calculé par l'exécuteur (executeur_grappes.verifier_alerte_budget), affiché ici.
   if (r.avancement?.alerte_budget) alertes.push(r.avancement.alerte_budget);
+  // 909, point 1.2.a : une alerte de vérification (ex. liste de sanctions) n'apparaissait que dans la fiche
+  // du candidat en Tri — visible ici aussi, sans attendre qu'une personne l'ouvre.
+  (r.avancement?.alertes_verification || []).forEach((a) => alertes.push(a));
   if (!alertes.length) return null;
   return h("div", { class: "champ" }, alertes.map((texte) => h("div", { class: "alerte-ligne" }, icone("attention", 20), h("span", {}, texte))));
 }

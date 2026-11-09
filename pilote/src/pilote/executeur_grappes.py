@@ -236,6 +236,7 @@ class ExecuteurGrappes:
         self.dire_le_plan(ctx, spec, res.get("plan"))
         self.dire_la_verification(ctx, res.get("verifications") or [])
         lignes = json.loads((ctx.dossier / "candidats.json").read_text(encoding="utf-8")) if (ctx.dossier / "candidats.json").exists() else []
+        self.dire_les_alertes_verification(ctx, lignes)
         ctx.ajouter_candidats(lignes)
         self.proposer_les_rapprochements(ctx)
         self.compter_couts(ctx, spec, suivi_fichier)
@@ -323,6 +324,20 @@ class ExecuteurGrappes:
         for b in bilans:
             if not b.get("complete"):
                 ctx.noter("verification_incomplete", source=b["source"], examines=b["examines"], a_verifier=b["a_verifier"], raison=b.get("raison", ""))
+
+    def dire_les_alertes_verification(self, ctx: ContexteRecherche, lignes: list[dict[str, Any]]) -> None:
+        """909, point 1.2.a (retour du 09/11/2026) : une alerte de vérification (ex. liste de sanctions)
+        n'apparaissait que dans la fiche du candidat en Tri — jamais dans le Tableau de bord, comme l'alerte
+        budget (908 §2.3). Rendue visible dès la fin de la recherche, sans attendre qu'une personne l'ouvre."""
+        alertes = []
+        for ligne in lignes:
+            for v in (ligne.get("faits") or {}).get("verifications") or []:
+                if isinstance(v, dict) and v.get("signal") == "alerte":
+                    preuve = str(v.get("preuve") or "").strip()
+                    alertes.append(f"« {ligne.get('nom', '')} » : {v.get('origine', '')} signale une alerte" + (f" ({preuve})" if preuve else "") + ".")
+        if alertes:
+            ctx.avancer(alertes_verification=alertes[:50])  # un plafond d'affichage, jamais un plafond de détection
+            ctx.noter("verification_alerte", n=len(alertes))
 
     def faire_le_bilan(self, ctx: ContexteRecherche, spec: dict[str, Any], suivi_fichier: Path) -> None:
         """Combien de sources ont répondu sur combien ont été utilisées ; met à jour le disjoncteur de chacune."""
