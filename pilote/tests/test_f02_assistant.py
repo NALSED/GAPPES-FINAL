@@ -58,7 +58,7 @@ def test_apres_l_etape_3_la_configuration_est_ecrite_et_lisible(cfg):
     assert y["sources"]["tavily"]["chercher"] is True and y["sources"]["tavily"]["verifier"] is False
     assert y["sources"]["wikipedia"] == {"chercher": True, "verifier": True}
     assert y["sources"]["bnf_organisations"]["chercher"] is False  # pas cochée : éteinte
-    assert y["verification"] == {"active": True, "mode": "memes"} and y["sortie"]["actifs"] == ["csv", "json"] and y["sortie"]["dossier"] == "mes-resultats"
+    assert y["verification"] == {"active": True, "mode": "memes", "en_amont": []} and y["sortie"]["actifs"] == ["csv", "json"] and y["sortie"]["dossier"] == "mes-resultats"
     assert y["assistant"]["termine"] is True
 
 
@@ -108,7 +108,7 @@ def test_rejouer_l_etape_2_ne_touche_pas_les_etapes_1_et_3(cfg):
         assert r.status_code == 200
         assert c.post("/api/assistant/etape/9", json={"donnees": {}}).status_code == 422
     apres = yaml.safe_load(cfg.fichier_reglages.read_text(encoding="utf-8"))
-    assert apres["verification"] == {"active": False, "mode": "plus"}  # l'étape 2 a changé
+    assert apres["verification"] == {"active": False, "mode": "plus", "en_amont": []}  # l'étape 2 a changé
     for cle in ("pays", "presets_coches", "budget", "sortie"):
         assert apres[cle] == avant[cle], cle  # étapes 1 et 3 intactes
     assert {k: v.get("chercher") for k, v in apres["sources"].items()} == {k: v.get("chercher") for k, v in avant["sources"].items()}

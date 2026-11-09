@@ -57,6 +57,29 @@ def test_rdap_enrichir_seule_est_prise_en_recherche_simple(cfg, tmp_path):
         assert [v["fonction"] for v in res.verificateurs if v["source"] == "rdap"] == ["enrichir"]  # jamais « verifier » par défaut
 
 
+# --- 909, point 1.2.c (retour du 09/11/2026) : en recherche simple, « en_amont » se règle globalement (Réglages)
+def test_en_amont_global_restreint_la_verification_en_recherche_simple(cfg, tmp_path):
+    with TestClient(creer_app(cfg, lambda c: None)) as c:
+        assert c.put("/api/reglages/source/wayback", json={"verifier": True}).status_code == 200
+        c.put("/api/reglages/verification", json={"active": True, "mode": "plus"})
+        res = materialiser(cfg, cible(tmp_path / "a"), {"sources": ["searxng"]})
+        assert res.verificateurs[0]["en_amont"] is None  # rien de réglé : tous les résultats, comme avant
+        r = c.put("/api/reglages/verification", json={"active": True, "mode": "plus", "en_amont": ["searxng"]})
+        assert r.status_code == 200 and r.json()["en_amont"] == ["searxng"]
+        res = materialiser(cfg, cible(tmp_path / "b"), {"sources": ["searxng"]})
+        assert res.verificateurs[0]["en_amont"] == ["searxng"]
+        # un plan avancé qui pose sa PROPRE restriction (même vide) garde la priorité sur le réglage global
+        plan = {"verificateurs": [{"id": "wayback", "en_amont": [], "fonction": "verifier"}]}
+        res = materialiser(cfg, cible(tmp_path / "c"), {"sources": ["searxng"], "plan": plan})
+        assert res.verificateurs[0]["en_amont"] == []
+
+
+def test_en_amont_mal_ecrit_est_refuse(cfg):
+    with TestClient(creer_app(cfg, lambda c: None)) as c:
+        r = c.put("/api/reglages/verification", json={"active": True, "en_amont": "searxng"})
+        assert r.status_code == 422
+
+
 # --- [ ] Chaque candidat qui a un site reçoit sa vérification ; les autres sont laissés tels quels ; un défaut n'arrête rien.
 def test_verifier_candidats_ajoute_la_preuve_sans_toucher_aux_endroits(monkeypatch):
     class Faux:

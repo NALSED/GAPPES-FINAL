@@ -620,3 +620,28 @@ possible (noté dans `pilote/QUESTIONS.md` si la session s'arrête avant).
 
 Reste dans 909 : 1.2 (c, e, f), 1.3 (découverte OSINT Framework), §3 (Requête avancée), le volet comparaison
 systématique ancienne UI/`/suite`. §4 toujours en attente (décidé par la spec elle-même).
+
+## D108 — 909, point 1.2.c (09/11/2026)
+
+En plan avancé, `en_amont` restreint une tuile de vérification aux résultats des sources de recherche posées
+avant elle sur le plan (calculé par `suite_plan.py` depuis la topologie du graphe). En recherche simple il
+n'y a pas de plan, donc pas de topologie à lire : la spec demande d'exposer la même restriction là aussi.
+
+Choix d'implémentation (laissé à momo par la spec) : un réglage TRANSVERSE dans `reglages.yaml` —
+`verification.en_amont` (liste d'id de sources de recherche ; vide = tous les résultats, comme en plan
+avancé sans restriction) — réglable depuis le même bloc « Réglages transverse » de `/suite` que 1.1.a
+(vérification active/mode). Une case par source de recherche active (`caseSource`, même mécanisme que les
+« Rôles actifs » posés pour 1.1.b). `moteur_sources.materialiser()` applique ce réglage global UNIQUEMENT
+quand une tuile de plan avancé n'a PAS elle-même décidé de `en_amont` pour cette source de vérification (même
+une restriction vide posée par le plan garde la priorité) — aucune des deux voies ne piétine l'autre.
+
+Backend : `reglages.py` (DEFAUT + `verifier()`), `api_reglages.py` (`CorpsVerification.en_amont`, route PUT
+`/reglages/verification`, réponse GET `/reglages`), `moteur_sources.materialiser()`. Frontend :
+`reglages.js::blocEnAmont()`. Tests : deux tests ciblés (`test_f16_verification.py`, dont le cas « le plan
+garde la priorité »), un test navigateur réel (`test_suite_navigateur.py`,
+`test_restreindre_la_verification_a_une_source_de_recherche` — Wikipédia, déjà « chercher » par sa déclaration
+par défaut). Deux assertions-dict exactes de `test_f02_assistant.py` mises à jour pour la nouvelle clé
+`en_amont`. Lint propre ; suite complète hors réseau relancée en arrière-plan (résultat à suivre).
+
+Reste dans 909 : 1.2 (e, f), 1.3 (découverte OSINT Framework), §3 (Requête avancée), le volet comparaison
+systématique ancienne UI/`/suite`. §4 toujours en attente (décidé par la spec elle-même).

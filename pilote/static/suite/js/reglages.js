@@ -13,7 +13,10 @@ import { RENDUS_OPTIONS, genreDeOutil } from "./options_outils.js";
 const CHOIX_MODE_VERIFICATION = [["memes", "les mêmes sources que la recherche"], ["plus", "ajouter des sources de vérification seules"]];
 let VERIFICATION_CACHE = null;
 async function chargerVerification() {
-  if (!VERIFICATION_CACHE) VERIFICATION_CACHE = (await apiAssistant.reglages()).verification || { active: false, mode: "memes" };
+  if (!VERIFICATION_CACHE) {
+    const v = (await apiAssistant.reglages()).verification || { active: false, mode: "memes" };
+    VERIFICATION_CACHE = { ...v, enAmont: v.en_amont || [] };
+  }
   return VERIFICATION_CACHE;
 }
 
@@ -36,8 +39,27 @@ function blocReglagesTransverse() {
         groupePuces(CHOIX_MODE_VERIFICATION, VERIFICATION_CACHE.mode, async (v) => {
           const r = await agir(() => apiAssistant.definirVerification({ active: true, mode: v }), { rechargerApres: false });
           if (r) { VERIFICATION_CACHE.mode = r.mode; app.rendre(); }
-        }))),
+        })),
+      VERIFICATION_CACHE.active && blocEnAmont()),
   });
+}
+
+// 909, point 1.2.c (retour du 09/11/2026) : en plan avancé, une tuile de vérification ne regarde que les
+// résultats des sources posées avant elle sur le plan ; en recherche simple il n'y a pas de plan — ce réglage
+// transverse restreint, faute de mieux, TOUTES les vérifications à certaines sources de recherche choisies.
+function blocEnAmont() {
+  const chercheuses = (app.data.sources || []).filter((s) => s.chercher);
+  if (!chercheuses.length) return null;
+  return h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Restreindre à certaines sources de recherche"),
+    h("div", { class: "liste-liens" }, chercheuses.map((s) => caseSource({
+      nom: s.nom, actif: VERIFICATION_CACHE.enAmont.includes(s.id),
+      onclick: async () => {
+        const liste = VERIFICATION_CACHE.enAmont.includes(s.id) ? VERIFICATION_CACHE.enAmont.filter((x) => x !== s.id) : [...VERIFICATION_CACHE.enAmont, s.id];
+        const r = await agir(() => apiAssistant.definirVerification({ active: true, mode: VERIFICATION_CACHE.mode, en_amont: liste }), { rechargerApres: false });
+        if (r) { VERIFICATION_CACHE.enAmont = r.en_amont; app.rendre(); }
+      },
+    }))),
+    h("span", { class: "aide-champ" }, "Aucune case cochée : toutes les sources de recherche actives alimentent la vérification, comme avant."));
 }
 
 export function pageSources() {

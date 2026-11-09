@@ -231,7 +231,14 @@ def materialiser(cfg: Config, cible: Path, params: dict[str, Any]) -> Materialis
     for d in verif:
         donnes = {**(d.moteur.get("parametres") or {}), **rg.parametres_donnes(reg, d.id), "_dossier_copies": str(cfg.dossier_copies)}
         du_plan = {v["id"]: v for v in (params.get("plan") or {}).get("verificateurs", [])}.get(d.id) or {}
-        en_amont = du_plan.get("en_amont")  # None = tous les résultats
+        # 909, point 1.2.c (retour du 09/11/2026) : en recherche simple (pas de tuile de vérification posée pour
+        # cette source dans un plan avancé), la restriction globale de Réglages s'applique ; un plan avancé qui a
+        # SA PROPRE restriction pour cette source (même "tous les résultats", None) garde toujours la priorité.
+        if du_plan:
+            en_amont = du_plan.get("en_amont")
+        else:
+            globale = rg.ids_de_liste(reg.get("verification", {}).get("en_amont"))
+            en_amont = sorted(globale) if globale else None
         # 909, point 1.1.b/c (retour du 09/11/2026) : sans fonction donnée par le plan (recherche simple), la
         # fonction vient des rôles RÉELLEMENT actifs de la source, pas d'un « verifier » par défaut qui
         # ignorait enrichir — une source chercher+verifier+enrichir avec les deux cases cochées fait les deux.

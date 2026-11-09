@@ -58,6 +58,7 @@ class CorpsBudget(BaseModel):
 class CorpsVerification(BaseModel):
     active: bool
     mode: str | None = None  # « memes » (recoupement entre les sources de recherche) ou « plus » (avec les sources qui ne font que vérifier)
+    en_amont: list[str] | None = None  # 909, point 1.2.c : restreint la vérification aux candidats trouvés par ces sources de recherche (vide/absent = toutes)
     qui: str | None = None
 
 
@@ -310,6 +311,7 @@ def construire(cfg: Config, fabrique: sessionmaker[Session]) -> APIRouter:
             "familles": list(cfg.ordre_familles), "genres": list(cfg.genres), "pays_proposes": dict(cfg.pays_proposes), "problemes": problemes,
             "presets": presets.cartes(cfg, decls), "presets_coches": reg["presets_coches"], "budget": budget.vue(cfg, fabrique),
             "verification": {"active": reg["verification"]["active"] is True, "mode": str(reg["verification"].get("mode") or "memes"),
+                             "en_amont": sorted(rg.ids_de_liste(reg["verification"].get("en_amont"))),
                              "verificatrices_seules": sorted(d.nom for d in decls.values() if "verifier" in d.roles and "chercher" not in d.roles and d.verifie_sur in ("site", "nom"))}, "sortie": {"dossier": so.get("dossier", ""), "webhook_url": so.get("webhook_url", "")}, "pays": reg["pays"],
             "regle8": {"global_actif": bool((reg.get("regle8") or {}).get("global_actif"))},
             "modeles_ia": list(reg.get("modeles_ia") or []),
@@ -360,8 +362,13 @@ def construire(cfg: Config, fabrique: sessionmaker[Session]) -> APIRouter:
         patch: dict[str, Any] = {"active": corps.active}
         if corps.mode is not None:
             patch["mode"] = corps.mode
-        res = appliquer({"verification": patch}, corps.qui, "verification_activee" if corps.active else "verification_coupee", corps.mode or "")
-        return {"active": corps.active, "mode": res["verification"].get("mode", "memes")}
+        if corps.en_amont is not None:
+            patch["en_amont"] = corps.en_amont
+        try:
+            res = appliquer({"verification": patch}, corps.qui, "verification_activee" if corps.active else "verification_coupee", corps.mode or "")
+        except ConfigRefusee as exc:
+            raise HTTPException(422, str(exc)) from exc
+        return {"active": corps.active, "mode": res["verification"].get("mode", "memes"), "en_amont": list(res["verification"].get("en_amont") or [])}
 
     @r.put("/reglages/regle8")
     def regle8_global(corps: CorpsRegle8) -> dict[str, Any]:

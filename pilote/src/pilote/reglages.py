@@ -13,7 +13,10 @@ from pilote.sources import Declaration
 DEFAUT: dict[str, Any] = {
     "version": 1,
     "budget": {"plafond_mensuel_usd": 10.0},
-    "verification": {"active": True, "mode": "memes"},  # mode : « memes » = vérifier avec les sources cochées en recherche ; « plus » = ajouter des sources de vérification seules
+    "verification": {"active": True, "mode": "memes", "en_amont": []},  # mode : « memes » = vérifier avec les sources cochées en recherche ; « plus » = ajouter des sources de vérification seules
+    # en_amont (909, point 1.2.c) : restreint, en recherche simple, la vérification aux candidats trouvés par ces sources de recherche
+    # (liste d'id ; vide = tous les résultats, comme en plan avancé sans restriction). Un plan avancé qui pose sa propre restriction
+    # sur une tuile de vérification garde la priorité (voir moteur_sources.materialiser) : ce réglage ne vaut qu'en son absence.
     "sortie": {"actifs": ["csv"], "dossier": "", "contenus": {}, "webhook_url": ""},  # contenus : par format, ce qu'on écrit (nom, tsites, detail) ; sinon celui que le format propose
     "pays": "",
     "presets_coches": [],
@@ -152,6 +155,9 @@ def verifier(r: dict[str, Any], decls: dict[str, Declaration], presets_connus: s
         raise ConfigRefusee("L'interrupteur global de la règle n° 8 doit être activé ou désactivé (oui ou non).")
     if (r.get("verification") or {}).get("mode", "memes") not in ("memes", "plus"):
         raise ConfigRefusee("Le mode de vérification doit être « memes » (les sources de recherche) ou « plus » (avec des sources de vérification en plus).")
+    ea = (r.get("verification") or {}).get("en_amont", [])
+    if not isinstance(ea, list) or not all(isinstance(x, str) for x in ea):
+        raise ConfigRefusee("La restriction « en amont » de la vérification doit être une liste d'identifiants de sources.")
     so = r.get("sortie") or {}
     if not isinstance(so.get("actifs", []), list) or not all(isinstance(x, str) for x in so.get("actifs", [])):
         raise ConfigRefusee("Les formats de sortie doivent être une liste de noms de formats.")

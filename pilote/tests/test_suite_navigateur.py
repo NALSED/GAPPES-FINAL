@@ -151,6 +151,17 @@ def test_parametre_requis_vide_affiche_un_message_rouge(page):
     page.click(".panneau button[aria-label='Fermer']")
 
 
+def test_restreindre_la_verification_a_une_source_de_recherche(page):
+    """909, point 1.2.c (retour du 09/11/2026) : la restriction « en_amont » se règle depuis Réglages transverse,
+    puisqu'il n'y a pas de plan en recherche simple."""
+    aller(page, "#/reglages")
+    page.click(".carte-tete:has-text('Réglages transverse')")  # Wikipédia cherche par défaut (sa déclaration) : déjà dans la liste
+    page.wait_for_selector(".carte:has-text('Réglages transverse') .case:has-text('Wikipédia')")
+    assert "Aucune case cochée" in page.inner_text(".carte:has-text('Réglages transverse')")
+    page.click(".carte:has-text('Réglages transverse') .case:has-text('Wikipédia')")
+    page.wait_for_selector(".carte:has-text('Réglages transverse') .case[aria-pressed=true]:has-text('Wikipédia')")
+
+
 def test_assistant_ia_passe_par_l_avertissement(page):
     aller(page, "#/reglages")
     page.click(".sous button:has-text('Outils')")
