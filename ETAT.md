@@ -1,19 +1,24 @@
 # ETAT — grappes
 
-Phase en cours : aucune — 908 a épuisé tout ce qui est actionnable sans Sednal (voir ci-dessous).
+Phase en cours : 909 (« Vérifier et enrichir », demande explicite de Sednal le 09/11/2026 de commencer malgré
+l'état « en cours de rédaction » du document — 905 et 903 traités plus tard dans la journée) — §1.1/§2.1
+faits (commit `9a1809a`/D104). Reste : 1.2 (a-f), 1.3, 2.1 (b,c restants), §3 (Requête avancée), le volet
+comparaison ancienne UI/`/suite`. §4 mis en attente par la spec elle-même.
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-09 (D103 : lu sur `NALSED/GRAPPES` (commit `da89dd0`) que Sednal a revu le
-calendrier — **la suppression de l'ancienne UI n'a plus lieu qu'à la toute fin du projet entier** (plus
-seulement Tri/Lancement portés), et **Tri attend la fin de toute la tuyauterie outils/sources** (909 et ce
-qui en découlera) — une dépendance structurelle, pas juste une spec non écrite. Conséquence : 908 est
-désormais complète pour tout ce qui était à ma main (son seul reste, le point 1 de l'étape 6, est fait —
-D102 — et la spec le confirme). Détail : D103. 909 reste « en cours de rédaction avec Sednal » dans
-`000-INDEX.md` : par la règle permanente de `POUR_MOMO.md`, pas implémenté tant qu'il n'est pas validé.
+Dernière mise à jour : 2026-11-09 (D104 : Sednal a demandé explicitement de commencer 909 malgré son état
+« en cours de rédaction » — instruction directe qui prévaut sur la règle d'attente de validation écrite de
+`POUR_MOMO.md`. §1.1/§2.1 faits : bug critique corrigé (`allumer()` perdait « verifier » sur une source
+chercher+verifier rallumée), enrichir devient un rôle indépendant (case par rôle dans la fiche source,
+réglage global « Vérification active » exposé dans /suite). Détail : D104. Suite relancée hors réseau (627
+passés, 1 échec pré-existant) ; navigateur (18 passés).
 
-En attente de Sednal : 905 §2 (vérification `.60`), 903 pièce 2/2 (décision Q27), 909 (validation), fin du
-projet (suppression ancienne UI). Phase en cours à « aucune » : rien à faire seul tant qu'aucune de ces
-réponses n'arrive.
+D103 (précédent) : lu sur `NALSED/GRAPPES` (commit `da89dd0`) que Sednal a revu le calendrier — la
+suppression de l'ancienne UI n'a plus lieu qu'à la toute fin du projet entier, et Tri attend la fin de toute
+la tuyauterie outils/sources (909 et ce qui en découlera). 908 confirmée complète pour tout ce qui était à
+ma main.
+
+En attente de Sednal (plus tard dans la journée) : 905 §2 (vérification `.60`), 903 pièce 2/2 (décision Q27).
 
 D102 (précédent) : 908 étape 6, point 1 — profondeur, limites de temps/d'appels et pause/reprise d'une
 recherche en cours, portés dans `/suite` (pur portage, le moteur avait déjà tout). Suite relancée hors

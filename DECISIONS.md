@@ -551,3 +551,24 @@ structurelle désormais claire (909 pas fini, fin de projet pas atteinte), pas u
 permanente de `POUR_MOMO.md` (« une spec ne part au code que lorsque Sednal l'a validée... tant qu'elle est
 'à valider' ou 'à traiter', c'est une note de travail : ne l'implémente pas »), je ne l'implémente pas,
 quel que soit le nombre de commits déjà écrits dessus (ces commits sont la RÉDACTION, pas une validation).
+
+## D104 — 909, §1.1 et §2.1 (09/11/2026) — début des travaux sur 909
+
+Sednal m'a explicitement demandé de commencer 909 malgré son état « en cours de rédaction » dans
+`000-INDEX.md` (instruction directe du 09/11/2026, prévaut sur la règle générale d'attente de validation
+écrite — 905 et 903 seront traités plus tard dans la même journée).
+
+Commit `9a1809a` : voir le message de commit pour le détail (1.1.a/b/c, 2.1.a). Choix de conception notable :
+une source qui déclare À LA FOIS verifier et enrichir, avec les deux cases cochées, produit DEUX entrées
+`verificateurs` (une par fonction active) plutôt qu'une seule devinée — j'ai préféré étendre `materialiser()`
+pour le permettre proprement (la structure `list[dict]` le permettait déjà, pas de clé unique par source)
+plutôt que de choisir arbitrairement laquelle des deux fonctions l'emporte.
+
+Nouvelle route `POST /sources/{id}/role/{role}` (indépendante de `allumer`/`eteindre`, qui restent le
+raccourci « tous les rôles à la fois ») : chaque rôle se règle sans toucher aux autres, `reglages.appliquer()`
+fusionnant déjà par clé.
+
+Reste dans 909 : 1.2 (a-f, améliorations vérifier — dont d, « le point le plus important », et e, le nouveau
+mécanisme de vérification par texte de page), 1.3 (découverte de sources OSINT Framework), 2.1 (b, c restants),
+§3 (nouvel outil Requête avancée), §2 volet comparaison systématique ancienne UI / /suite. §4 (zones du plan,
+Switch/Jonction) explicitement mis en attente par la spec elle-même — pas commencé, conforme à la spec.
