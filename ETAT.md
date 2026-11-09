@@ -3,17 +3,19 @@
 Phase en cours : 908 (retour de Sednal du 08/11/2026, autonomie complète — momo tranche, trace dans
 DECISIONS.md) — étapes 1 à 3/6 faites (commits `d4b2f0f`/D89, `d7d46fb`/D90, `f349566`/D91) ; étape 4/6 en
 cours (chantiers de taille moyenne, 7 points, dans n'importe quel ordre) — points 1/7 (3.3, `5f3cd0f`/D92),
-2/7 (6.3, `f94aefd`/D93), 3/7 (2.3, `71fc5d3`/D94), 4/7 (9.1/9.2/9.3, `c85e5d5`/D95) et 5/7 (4.2, `a5dc5fe`/D96
-— partiel par prudence, détail dans pilote/QUESTIONS.md) faits ; 2 points restants dans l'étape 4 (5.2
-Scrapling complet, point 15 installeur RSSHub), puis étapes 5 et 6. En parallèle : 905 §2 (vérification `.60`
-par Sednal), 905 §3 et 903 pièce 2/2 en attente.
+2/7 (6.3, `f94aefd`/D93), 3/7 (2.3, `71fc5d3`/D94), 4/7 (9.1/9.2/9.3, `c85e5d5`/D95), 5/7 (4.2, `a5dc5fe`/D96
+— partiel par prudence, détail dans pilote/QUESTIONS.md) et 6/7 (point 15, `3c08e92`/D97) faits ; 1 point
+restant dans l'étape 4 (5.2, Scrapling complet — navigateur furtif, secours, tuile ENRICHIR), puis étapes 5
+et 6. En parallèle : 905 §2 (vérification `.60` par Sednal), 905 §3 et 903 pièce 2/2 en attente.
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-09 (D96 : 908 étape 4, point 4.2 — adresse fixée par l'adaptateur affichée en
-lecture seule (nouvelle constante de module, ~18 adaptateurs déjà prêts) ; Overpass rendu modifiable (modèle
-CKAN) ; message rouge sur un paramètre requis vide ; marqueur « auto-hébergé ». SearXNG, RSSHub/LibreTranslate
-et les adaptateurs restants documentés comme non touchés, par prudence — détail dans pilote/QUESTIONS.md.
-Suite relancée hors réseau (605 passés, 1 échec pré-existant) + navigateur (17 passés).
+Dernière mise à jour : 2026-11-09 (D97 : 908 étape 4, point 15 — installeur RSSHub (`outils/installer_rsshub.sh`),
+rejouant la commande Docker déjà vérifiée en réel sur .250/.115 (3.8.10). Détail : D97.
+
+D96 (précédent) : 908 étape 4, point 4.2 — adresse fixée par l'adaptateur affichée en lecture seule (nouvelle
+constante de module, ~18 adaptateurs déjà prêts) ; Overpass rendu modifiable (modèle CKAN) ; message rouge
+sur un paramètre requis vide ; marqueur « auto-hébergé ». SearXNG, RSSHub/LibreTranslate et les adaptateurs
+restants documentés comme non touchés, par prudence — détail dans pilote/QUESTIONS.md.
 
 D95 (précédent) : 908 étape 4, point 9 — libellé « remplace » et aperçu de la Boucle sans rien lancer
 (9.2/9.3) ; 9.1 (brancher les origines manquantes) NON fait : le code montre qu'aucune des trois origines ne

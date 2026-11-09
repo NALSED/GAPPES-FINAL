@@ -464,3 +464,9 @@ RSSHub/LibreTranslate pas des sources, ~30 adaptateurs restants sans constante d
 Overpass est le seul exemple « auto-hébergé rendu modifiable » fait de bout en bout : je l'ai choisi parce que
 j'ai un contrôle complet et déjà vérifié sur son adaptateur (`osm_lieux.py`), contrairement à SearXNG dont
 l'adresse passe par le moteur « definition » de grappes, hors de ma zone de changement sûre pour ce pavé.
+
+## D97 — 908, étape 4, point 6/7 (09/11/2026, point 15)
+
+Commit `3c08e92` : `outils/installer_rsshub.sh`, rejouant la commande Docker déjà vérifiée en réel (3.8.10,
+QUESTIONS.md). Pas de nouveau choix technique : même image, même port, même isolation réseau que l'instance
+qui tournait déjà ailleurs.
