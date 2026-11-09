@@ -1,13 +1,20 @@
 # ETAT — grappes
 
-Phase en cours : 909 (« Vérifier et enrichir », demande explicite de Sednal le 09/11/2026 de commencer malgré
-l'état « en cours de rédaction » du document — 905 et 903 traités plus tard dans la journée) — §1.1 fait
+Phase en cours : aucune.
+
+909 (« Vérifier et enrichir ») clos pour tout ce qui est câblable sans Sednal ni infra manquante : §1.1 fait
 (D104), §2.1 complet (a/b/c, D104+D105), 1.2 (a/b/c/d) faits (D106/D92/D108/D107), 1.2 (e/f) déclinés avec
 raisons vérifiées et tracées (D109, détail dans `pilote/QUESTIONS.md`), §3 (Requête avancée, 11e outil) fait
-(D110), 1.3.d fait (D111). 909 est clos pour tout ce qui est câblable sans Sednal ni infra manquante. Reste :
-1.3 (a/b/c, process — revue OSINT Framework, filet honnête, agent `.60`, pas du code pilote), le volet
-comparaison systématique ancienne UI/`/suite` (second volet de 909, plus large, pas commencé). §4 mis en
-attente par la spec elle-même.
+(D110), 1.3.d fait (D111). Confirmé par la spec elle-même (`fae02c6`, lu le 09/11) : sections 1/2/3 marquées
+« prêtes pour momo », volet 2 (comparaison systématique ancienne UI/`/suite`) et §4 encore « pas actionnables ».
+Reste dans 909 : 1.3 (a/b/c, process — revue OSINT Framework, filet honnête, agent `.60`, pas du code pilote),
+le volet comparaison (second volet, plus large, pas détaillé point par point par la spec). §4 mis en attente
+par la spec elle-même.
+
+Prochain point « prêt pour momo » de `000-INDEX.md` : 903 pièce 2/2 (Cible de recherche) — mais touche le
+moteur (`src/grappes/decouverte/verification_type.py`, `config/ner/*.yaml`), pas `pilote/`, et son
+type-vérificateur est mesuré par la mission autocalibration/certification (critères gelés, jamais à modifier
+sans décision explicite). Pas commencé sans instruction explicite — seul « commence 909 » avait été demandé.
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
 Dernière mise à jour : 2026-11-09 (D111 : §1.3.d — bug pré-existant découvert et corrigé, `ckan.yaml` déclarait
