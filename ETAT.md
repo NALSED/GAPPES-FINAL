@@ -1,18 +1,20 @@
 # ETAT — grappes
 
-Phase en cours : 908 (retour de Sednal du 08/11/2026, autonomie complète — momo tranche, trace dans
-DECISIONS.md) — étapes 1 à 5/6 faites (D89 à D101, détail dans les entrées précédentes de DECISIONS.md) ;
-étape 6/6 en cours — point 1/3 fait (Lancement porté dans `/suite`, commit `ac1cb5a`/D102). **Bloqué pour les
-2 points restants de l'étape 6** (Tri, puis suppression de l'ancienne UI 905 §3, qui dépend de Tri) : la spec
-de Tri n'est pas encore écrite par Sednal (000-INDEX.md : « en cours de rédaction »). En parallèle : 905 §2
-(vérification `.60` par Sednal), 903 pièce 2/2 en attente. Note : spec 909 (« Vérifier et enrichir... ») vue
-sur `NALSED/GRAPPES` mais encore « en cours de rédaction avec Sednal » — pas actionnable, pas touchée.
+Phase en cours : aucune — 908 a épuisé tout ce qui est actionnable sans Sednal (voir ci-dessous).
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-09 (D102 : 908 étape 6, point 1 — profondeur, limites de temps/d'appels et
-pause/reprise d'une recherche en cours, portés dans `/suite` (pur portage, le moteur avait déjà tout).
-**Bloqué ensuite** : Tri et la suppression de l'ancienne UI (905 §3) attendent la spec de Tri, pas encore
-écrite par Sednal. Détail : D102. Suite relancée hors réseau (624 passés, 1 échec pré-existant) ; navigateur
+Dernière mise à jour : 2026-11-09 (908 étapes 1 à 6/6 : tout l'actionnable est fait (D89 à D102, détail dans
+les entrées précédentes de DECISIONS.md) — étape 6/6 à son point 1/3 (Lancement porté dans `/suite`, commit
+`ac1cb5a`/D102). **Bloqué pour les 2 points restants de l'étape 6** (Tri, puis suppression de l'ancienne UI
+905 §3, qui dépend de Tri) : la spec de Tri n'est pas encore écrite par Sednal (000-INDEX.md : « en cours de
+rédaction »). En parallèle, en attente de Sednal : 905 §2 (vérification `.60`), 903 pièce 2/2 (décision Q27).
+Note : spec 909 (« Vérifier et enrichir... ») vue sur `NALSED/GRAPPES` mais encore « en cours de rédaction
+avec Sednal » — pas actionnable, pas touchée. Phase en cours remise à « aucune » : rien à faire seul tant
+qu'aucune de ces réponses n'arrive.
+
+D102 : 908 étape 6, point 1 — profondeur, limites de temps/d'appels et pause/reprise d'une recherche en
+cours, portés dans `/suite` (pur portage, le moteur avait déjà tout). Suite relancée hors réseau (624
+passés, 1 échec pré-existant) ; navigateur
 (18 passés).
 
 D101 (précédent) : 908 étape 5, point 13 — le curseur à quatre niveaux de l'Assistant IA ; seul le niveau 1 a
