@@ -371,6 +371,22 @@ def main(dossier: str) -> int:
 
         # la vérification des candidats appartient à l'étape « vérification » : la jauge doit couvrir le travail qu'elle annonce.
         bilans = verifier_candidats(lignes, spec, secrets, doit_s_arreter, limite_source, avancement.signaler, arret_local)
+        # 909, point 1.2.d (retour du 09/11/2026, « le point le plus important ») : une confirmation par une
+        # source de PREMIÈRE MAIN fait remonter la fiabilité effective du candidat au-dessus de celle de sa
+        # seule source de recherche — jusqu'ici, `faits.verifications` restait un simple affichage, sans
+        # conséquence automatique. Calculé APRÈS la vérification (ses résultats n'existent pas avant), jamais
+        # en reprenant l'ordre Filtre/vérification (déjà voulu ainsi : inutile de vérifier ce que Filtre retire).
+        mains = spec.get("mains_sources") or {}
+        fiabilites_v = spec.get("fiabilites_sources") or {}
+        for ligne in lignes:
+            meilleure = None
+            for v in (ligne.get("faits") or {}).get("verifications") or []:
+                if v.get("signal") == "confirmation" and mains.get(v.get("source"), "") == "premiere":
+                    f = fiabilites_v.get(v.get("source"), "F")
+                    if meilleure is None or f < meilleure:
+                        meilleure = f
+            if meilleure is not None:
+                ligne.setdefault("faits", {})["fiabilite_effective"] = meilleure
         avancement.signaler("etape", etape="sortie")
         Path("candidats.json").write_text(json.dumps(lignes, ensure_ascii=False, indent=1), encoding="utf-8")
         resultat["verifications"] = bilans

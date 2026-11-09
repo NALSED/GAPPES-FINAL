@@ -3,15 +3,16 @@
 Phase en cours : 909 (« Vérifier et enrichir », demande explicite de Sednal le 09/11/2026 de commencer malgré
 l'état « en cours de rédaction » du document — 905 et 903 traités plus tard dans la journée) — §1.1 fait
 (D104), §2.1 complet (a/b/c, D104+D105), 1.2.a fait (D106), 1.2.b déjà acquis (D92, test réel déjà universel
-par source). Reste : 1.2 (c, d, e, f), 1.3, §3 (Requête avancée), le volet comparaison ancienne UI/`/suite`.
-§4 mis en attente par la spec elle-même.
+par source), 1.2.d fait (D107). Reste : 1.2 (c, e, f), 1.3, §3 (Requête avancée), le volet comparaison ancienne
+UI/`/suite`. §4 mis en attente par la spec elle-même.
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-09 (D105/D106 : §2.1 complet — enrichir ajouté en plus de verifier sur 13
-sources première main (bodacc, companies-house, gleif, opencorporates, pappers, recherche-entreprises,
-registre-associations, ror, rna-local, sirene-local, datagouv-organisations, ckan, charity-commission),
-sa propre section dans l'assistant de première installation ; une alerte de vérification rejoint le Tableau
-de bord (1.2.a). Détail : D105, D106. Suite relancée hors réseau (629 passés, 1 échec pré-existant).
+Dernière mise à jour : 2026-11-09 (D107 : 1.2.d — une confirmation de première main (`faits.verifications`,
+signal confirmation, source `mains_sources: premiere`) fait remonter `faits.fiabilite_effective` dans le pont,
+après la vérification ; `sortie._fiabilite_candidat()` en tient compte pour la colonne fiabilité des fiches,
+sans jamais l'abaisser. Calculé après Filtre/Fusion, sans toucher à leur ordre. Lint propre ; tests ciblés
+(test_f14_sortie, test_f16_verification, test_f17_revue) verts ; suite complète hors réseau non encore relancée
+(à faire). Pas encore de test dédié pour `_fiabilite_candidat`/`fiabilite_effective` — à ajouter.
 
 D104 (précédent) : Sednal a demandé explicitement de commencer 909 malgré son état « en cours de rédaction »
 — instruction directe qui prévaut sur la règle d'attente de validation écrite de `POUR_MOMO.md`. §1.1 fait :

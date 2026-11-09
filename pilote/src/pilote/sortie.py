@@ -114,6 +114,14 @@ def _meilleure_fiabilite(ids_sources: set[str], fiabilites: dict[str, str]) -> s
     return min(lettres) if lettres else "F"  # A est la meilleure, alphabétique (code Admiralty)
 
 
+def _fiabilite_candidat(ids_sources: set[str], fiabilites: dict[str, str], faits: dict[str, Any]) -> str:
+    """909, point 1.2.d : la fiabilité de ses sources de recherche, ou celle (meilleure) d'une confirmation de
+    première main si elle y en a une — jamais l'inverse (une vérification n'abaisse jamais la fiabilité)."""
+    base = _meilleure_fiabilite(ids_sources, fiabilites)
+    effective = faits.get("fiabilite_effective")
+    return min(base, effective) if effective else base
+
+
 def _fusionner_doublons(rows: list[dict[str, Any]], confirmes: list[tuple[int, int]], garder: str) -> list[dict[str, Any]]:
     """Les lignes liées par un rapprochement CONFIRMÉ (onglet Tri) deviennent une seule ligne, au lieu de deux
     avec un lien en commentaire (3.8.05). La fiche gagnante (selon `garder`) fournit les valeurs ; rien n'est
@@ -183,7 +191,9 @@ def jeu_de_donnees(cfg: Config, fabrique: sessionmaker[Session], rid: str, decis
             "numero_officiel": l.numero_officiel, "decision": l.decision, "motif_rejet": l.motif if l.decision == "rejeter" else "",
             "sources": [nom_source(t) for t in ids_sources], "relations": [x for x in (c.relations or []) if isinstance(x, dict)],
             "coordonnees": faits.get("coordonnees") if isinstance(faits.get("coordonnees"), dict) else None,
-            "fiabilite": _meilleure_fiabilite(set(ids_sources), fiabilites), "sources_fusionnees": "",
+            # 909, point 1.2.d : une confirmation de première main (`faits.fiabilite_effective`, posée par le pont
+            # après vérification) peut faire remonter la fiabilité au-dessus de celle de la seule source de recherche.
+            "fiabilite": _fiabilite_candidat(set(ids_sources), fiabilites, faits), "sources_fusionnees": "",
             # Règle 8 : le constat de la collecte et la levée éventuelle, pour les formats qui ont à les distinguer (voir `formats/ftm.py`)
             "regle8_personne": bool(faits.get("regle8_personne")), "regle8_leve": bool(faits.get("regle8_leve")),
             "ia": _texte_ia(faits),

@@ -586,3 +586,37 @@ par la spec elle-même).
 Commit `08e8c4e` (fait avant D105, entrée de suivi oubliée sur le moment) : une alerte de vérification
 rejoint le Tableau de bord (`executeur_grappes.dire_les_alertes_verification`), même mécanisme que l'alerte
 budget (908 §2.3). Voir le message de ce commit pour le détail.
+
+## D107 — 909, point 1.2.d (09/11/2026)
+
+« Le point le plus important » de la spec 909 : jusqu'ici une vérification ne servait qu'à afficher une
+alerte/confirmation à côté de la fiche (`faits.verifications`), sans jamais influer sur la fiabilité
+affichée — celle-ci ne regardait que la ou les sources de recherche (`sortie._meilleure_fiabilite`).
+
+Décision : une confirmation de première main (`signal == "confirmation"` ET la source est déclarée
+`mains_sources: premiere`) fait remonter la fiabilité effective du candidat au-dessus de celle de sa seule
+source de recherche, jamais l'inverse (une vérification ne peut pas abaisser la fiabilité — seule la
+meilleure confirmation trouvée est retenue, comparateur alphabétique du code Admiralty : A est la meilleure).
+
+Choix d'implémentation, délibérément SANS toucher à l'ordre `pont/executer.py` (Filtre/Fusion puis
+vérification) : ce choix est le même que pour la plupart des sujets refusés plus tôt dans la session (Boucle
+secours, chaîne de repli prestataire) — ici il est acceptable parce que le calcul se fait APRÈS la
+vérification, en aval, sans réordonner ni dupliquer le passage Filtre : dans `pont/executer.py`, juste après
+`verifier_candidats(...)` et avant l'écriture de `candidats.json`, une boucle pose
+`faits["fiabilite_effective"]` (la meilleure lettre trouvée) sur chaque ligne concernée. `sortie.py` gagne
+`_fiabilite_candidat(ids_sources, fiabilites, faits)` qui vaut `min(fiabilite_des_sources, fiabilite_effective)`
+si elle existe, sinon la fiabilité habituelle ; `jeu_de_donnees()` l'utilise à la place de l'appel direct à
+`_meilleure_fiabilite()`.
+
+Le comparateur Filtre « Fiabilité minimale » (en amont, avant vérification) n'est PAS rendu conscient de la
+vérification : le rendre conscient exigerait de réordonner `pont/executer.py` ou d'ajouter un second passage
+de filtre — hors scope ici, risque pont déjà documenté toute la session. Seule la fiabilité AFFICHÉE dans
+Tri/export change ; Tri lui-même n'avait aucun affichage de fiabilité par candidat avant ce commit (vérifié,
+rien à casser côté Tri).
+
+Tests ciblés verts (`test_f14_sortie`, `test_f16_verification`, `test_f17_revue`, 59 passés), lint propre.
+Pas encore de test dédié écrit pour `_fiabilite_candidat`/`fiabilite_effective` eux-mêmes — à ajouter dès que
+possible (noté dans `pilote/QUESTIONS.md` si la session s'arrête avant).
+
+Reste dans 909 : 1.2 (c, e, f), 1.3 (découverte OSINT Framework), §3 (Requête avancée), le volet comparaison
+systématique ancienne UI/`/suite`. §4 toujours en attente (décidé par la spec elle-même).
