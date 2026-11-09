@@ -484,3 +484,12 @@ de secours générale) qui, elle, suppose une vraie décision d'ordonnancement D
 — 9.1 et 5.2 b — documentés comme non câblés par prudence plutôt qu'inventés). Reste : étape 5 (inventaire +
 son test de complétude, puis fusion Aide/IA) et étape 6 (niveaux d'IA, puis portage Lancement/Tri/suppression
 de l'ancienne UI).
+
+## D99 — 908, étape 5, point 1/2 (09/11/2026, 14.3/14.4)
+
+Commit `7cbdb50` : l'inventaire du programme et son test de complétude (voir le message de commit). Choix
+notable : les « vocabulaires fermés connus » de l'inventaire backend sont dérivés des constantes Python de
+`suite_plan`/`suite_ia` (champs de condition, comparateurs, niveaux de fusion, efforts IA) — PAS du registre
+JS `RENDUS_OPTIONS` d'`options_outils.js`, qui reste côté affichage (il régit comment chaque genre se RENDS à
+l'écran, question différente de ce que l'inventaire décrit : ce que le moteur accepte réellement). Les deux
+dérivent des mêmes faits réels, chacun à sa couche, sans dupliquer une troisième liste pour les relier.
