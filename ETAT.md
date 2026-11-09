@@ -3,19 +3,21 @@
 Phase en cours : aucune — 908 a épuisé tout ce qui est actionnable sans Sednal (voir ci-dessous).
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-09 (908 étapes 1 à 6/6 : tout l'actionnable est fait (D89 à D102, détail dans
-les entrées précédentes de DECISIONS.md) — étape 6/6 à son point 1/3 (Lancement porté dans `/suite`, commit
-`ac1cb5a`/D102). **Bloqué pour les 2 points restants de l'étape 6** (Tri, puis suppression de l'ancienne UI
-905 §3, qui dépend de Tri) : la spec de Tri n'est pas encore écrite par Sednal (000-INDEX.md : « en cours de
-rédaction »). En parallèle, en attente de Sednal : 905 §2 (vérification `.60`), 903 pièce 2/2 (décision Q27).
-Note : spec 909 (« Vérifier et enrichir... ») vue sur `NALSED/GRAPPES` mais encore « en cours de rédaction
-avec Sednal » — pas actionnable, pas touchée. Phase en cours remise à « aucune » : rien à faire seul tant
-qu'aucune de ces réponses n'arrive.
+Dernière mise à jour : 2026-11-09 (D103 : lu sur `NALSED/GRAPPES` (commit `da89dd0`) que Sednal a revu le
+calendrier — **la suppression de l'ancienne UI n'a plus lieu qu'à la toute fin du projet entier** (plus
+seulement Tri/Lancement portés), et **Tri attend la fin de toute la tuyauterie outils/sources** (909 et ce
+qui en découlera) — une dépendance structurelle, pas juste une spec non écrite. Conséquence : 908 est
+désormais complète pour tout ce qui était à ma main (son seul reste, le point 1 de l'étape 6, est fait —
+D102 — et la spec le confirme). Détail : D103. 909 reste « en cours de rédaction avec Sednal » dans
+`000-INDEX.md` : par la règle permanente de `POUR_MOMO.md`, pas implémenté tant qu'il n'est pas validé.
 
-D102 : 908 étape 6, point 1 — profondeur, limites de temps/d'appels et pause/reprise d'une recherche en
-cours, portés dans `/suite` (pur portage, le moteur avait déjà tout). Suite relancée hors réseau (624
-passés, 1 échec pré-existant) ; navigateur
-(18 passés).
+En attente de Sednal : 905 §2 (vérification `.60`), 903 pièce 2/2 (décision Q27), 909 (validation), fin du
+projet (suppression ancienne UI). Phase en cours à « aucune » : rien à faire seul tant qu'aucune de ces
+réponses n'arrive.
+
+D102 (précédent) : 908 étape 6, point 1 — profondeur, limites de temps/d'appels et pause/reprise d'une
+recherche en cours, portés dans `/suite` (pur portage, le moteur avait déjà tout). Suite relancée hors
+réseau (624 passés, 1 échec pré-existant) ; navigateur (18 passés).
 
 D101 (précédent) : 908 étape 5, point 13 — le curseur à quatre niveaux de l'Assistant IA ; seul le niveau 1 a
 un mécanisme réel, les niveaux 2 à 4 sont refusés par le moteur avec une raison claire.

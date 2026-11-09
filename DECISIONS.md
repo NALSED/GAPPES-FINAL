@@ -526,3 +526,28 @@ avec leur raison (demandé par le même point de la spec) était déjà fait au 
 Reste, dans cet ordre strict : Tri (spec à venir de Sednal, pas encore écrite — 000-INDEX.md la dit « en
 cours de rédaction »), puis la suppression de l'ancienne UI (905 §3), qui dépend de Tri. Les deux sont donc
 bloqués en attendant la spec de Tri, pas par moi.
+
+## D103 — 908/905 : calendrier de suppression de l'ancienne UI revu par Sednal (09/11/2026)
+
+Lu sur `NALSED/GRAPPES` (commit `da89dd0`, `POUR_MOMO.md` + `000-INDEX.md` + `905` + `908` tous mis à jour) :
+
+* **La suppression de l'ancienne UI (905 §3) n'a plus lieu à la fin de Tri/Lancement, mais à la toute fin du
+  projet entier.** D'ici là, l'ancienne UI est adaptée en continu (câblage, fonctionnalités), jamais figée ni
+  retirée en cours de route. Rien à faire de plus de mon côté sur ce point avant la fin du projet.
+- **Tri attend la fin de « toute la tuyauterie outils/sources »** (909 et ce qui en découlera) — pas
+  seulement « la spec n'est pas écrite » : c'est une dépendance structurelle (les outils et sources
+  influencent comment Tri doit traiter les résultats), décidée par Sednal, pas un simple retard de rédaction.
+* **Nouvelle règle permanente** (`POUR_MOMO.md`) : relire `000-INDEX.md` et les specs modifiées à la fin de
+  CHAQUE tâche, pas seulement en séance groupée — ce que je fais déjà en pratique, maintenant explicite.
+* **Nouvelle liberté** : l'ordre donné par une spec est l'ordre par défaut, pas une obligation rigide — je
+  peux réordonner si plus logique, en traçant le choix ici.
+
+Conséquence pour 908 : le point 1 de l'étape 6 (Lancement, `ac1cb5a`/D102) est le SEUL point de l'étape 6 qui
+restait vraiment à ma main — la spec elle-même le confirme désormais fait. 908 est donc complète pour tout
+ce qui est actionnable ; Tri et la suppression de l'ancienne UI restent bloqués, mais pour une raison
+structurelle désormais claire (909 pas fini, fin de projet pas atteinte), pas une simple absence de spec.
+
+909 (« Vérifier et enrichir ») reste « en cours de rédaction avec Sednal » dans `000-INDEX.md` : par la règle
+permanente de `POUR_MOMO.md` (« une spec ne part au code que lorsque Sednal l'a validée... tant qu'elle est
+'à valider' ou 'à traiter', c'est une note de travail : ne l'implémente pas »), je ne l'implémente pas,
+quel que soit le nombre de commits déjà écrits dessus (ces commits sont la RÉDACTION, pas une validation).
