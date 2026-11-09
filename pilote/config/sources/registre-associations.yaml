@@ -26,6 +26,7 @@ famille: api
 roles:
 - chercher
 - verifier
+- enrichir
 cle: ''
 cout:
   unite: appel

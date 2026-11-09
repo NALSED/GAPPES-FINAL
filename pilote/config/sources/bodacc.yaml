@@ -22,6 +22,7 @@ origine: registre
 famille: api
 roles:
 - verifier
+- enrichir
 verifie_sur: nom
 cle: ''
 cout:

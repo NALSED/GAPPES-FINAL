@@ -62,6 +62,16 @@ def test_apres_l_etape_3_la_configuration_est_ecrite_et_lisible(cfg):
     assert y["assistant"]["termine"] is True
 
 
+# --- 909, point 2.1.c (retour du 09/11/2026) : enrichir a sa propre case dans l'assistant, comme verifier.
+def test_enrichir_a_sa_propre_case_dans_l_assistant(cfg):
+    with TestClient(app_de(cfg)) as c:
+        r = c.post("/api/assistant/terminer", json={"etape1": E1, "etape2": {**E2, "enrichir": ["rdap"]}, "etape3": E3})
+        assert r.status_code == 200, r.text
+    y = yaml.safe_load(cfg.fichier_reglages.read_text(encoding="utf-8"))
+    assert y["sources"]["rdap"] == {"enrichir": True}  # rdap ne déclare pas « verifier » : pas de clé pour lui
+    assert y["sources"]["wikipedia"] == {"chercher": True, "verifier": True}  # inchangé : wikipedia ne déclare pas « enrichir »
+
+
 def test_etape_invalide_refusee_et_rien_n_est_ecrit(cfg):
     with TestClient(app_de(cfg)) as c:
         r = c.post("/api/assistant/terminer", json={"etape1": {**E1, "pays": "France"}, "etape2": E2, "etape3": E3})

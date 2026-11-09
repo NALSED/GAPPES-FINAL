@@ -24,7 +24,10 @@ def patch_etape(etape: int, p: dict[str, Any], decls: dict[str, Declaration]) ->
         return patch
     if etape == 2:
         verifier = set(p.get("verifier") or [])
-        inconnues = [s for s in verifier if s not in decls]
+        # 909, point 2.1.c (retour du 09/11/2026) : enrichir a sa propre place dans l'assistant, comme verifier
+        # — une source enrichir SEULE (rdap, intelligencex) n'y apparaissait jamais avant ce point.
+        enrichir = set(p.get("enrichir") or [])
+        inconnues = [s for s in (verifier | enrichir) if s not in decls]
         if inconnues:
             raise ConfigRefusee(f"La source « {inconnues[0]} » n'existe pas.")
         actif = bool(p.get("active", True))
@@ -33,10 +36,11 @@ def patch_etape(etape: int, p: dict[str, Any], decls: dict[str, Declaration]) ->
         verif: dict[str, Any] = {"active": actif}
         if p.get("mode") is not None:
             verif["mode"] = str(p["mode"])
-        return {
-            "verification": verif,
-            "sources": {sid: {"verifier": actif and sid in verifier} for sid in decls if "verifier" in decls[sid].roles},
-        }  # fmt: skip
+        sources: dict[str, Any] = {sid: {"verifier": actif and sid in verifier} for sid in decls if "verifier" in decls[sid].roles}
+        for sid, d in decls.items():
+            if "enrichir" in d.roles:
+                sources[sid] = {**sources.get(sid, {}), "enrichir": actif and sid in enrichir}
+        return {"verification": verif, "sources": sources}
     if etape == 3:
         return {"sortie": {"actifs": list(p.get("actifs") or []), "dossier": str(p.get("dossier", "")).strip()}}
     raise ConfigRefusee("Cette étape n'existe pas (1, 2 ou 3).")

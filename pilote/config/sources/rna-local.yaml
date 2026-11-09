@@ -25,6 +25,7 @@ famille: fichier
 roles:
 - chercher
 - verifier
+- enrichir
 verifie_sur: nom
 cle: ''
 cout:

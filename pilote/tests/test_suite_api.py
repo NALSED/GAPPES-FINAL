@@ -267,8 +267,8 @@ def test_role_independant_ne_touche_pas_aux_autres(c):
     assert src(c, "ror")["chercher"] and not src(c, "ror")["verifier"]  # chercher intact
     assert c.post("/api/suite/sources/ror/role/verifier", json={"actif": True}).status_code == 200
     assert src(c, "ror")["chercher"] and src(c, "ror")["verifier"]
-    r = c.post("/api/suite/sources/ror/role/enrichir", json={"actif": True})
-    assert r.status_code == 422 and "ne peut pas servir" in r.json()["detail"]  # ror ne déclare pas enrichir
+    r = c.post("/api/suite/sources/searxng/role/enrichir", json={"actif": True})
+    assert r.status_code == 422 and "ne peut pas servir" in r.json()["detail"]  # searxng ne déclare pas enrichir
     assert c.post("/api/suite/sources/rdap/role/enrichir", json={"actif": True}).status_code == 200
     assert src(c, "rdap")["enrichir"] and not src(c, "rdap")["chercher"]
     assert c.post("/api/suite/sources/inconnue/role/chercher", json={"actif": True}).status_code == 422

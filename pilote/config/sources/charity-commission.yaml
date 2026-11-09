@@ -22,6 +22,7 @@ famille: api
 roles:
 - chercher
 - verifier
+- enrichir
 cle: CHARITY_COMMISSION_API_KEY
 cout:
   unite: appel

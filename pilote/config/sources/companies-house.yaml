@@ -24,6 +24,7 @@ famille: api
 roles:
 - chercher
 - verifier
+- enrichir
 mode:
   en_ligne: true
   local: false

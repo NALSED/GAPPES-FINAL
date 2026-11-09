@@ -48,7 +48,7 @@ export async function demarrerInstallation() {
   S = {
     etape: 1,
     e1: { pays: D.pays || "", coches: new Set(D.presets_coches || []), chercher: new Set(), plafond: D.budget.plafond_mensuel_usd },
-    e2: { active: D.verification.active, mode: D.verification.mode || "memes", verifier: new Set(), initialise: false },
+    e2: { active: D.verification.active, mode: D.verification.mode || "memes", verifier: new Set(), enrichir: new Set(), initialise: false },
     e3: { actifs: new Set(D.parties.sortie.filter((f) => f.actif).map((f) => f.id)), dossier: "" },
     testResultats: {},
   };
@@ -294,8 +294,12 @@ function etape1() {
 function etape2() {
   const capables = D.parties.recherche.filter((s) => s.roles.includes("verifier"));
   const eligibles = S.e2.mode === "memes" ? capables.filter((s) => S.e1.chercher.has(s.id)) : capables;
+  // 909, point 2.1.c (retour du 09/11/2026) : enrichir a sa propre place ici, comme verifier — sans elle, une
+  // source enrichir SEULE (rdap, intelligencex) n'apparaissait jamais dans cet assistant.
+  const capablesEnrichir = D.parties.recherche.filter((s) => s.roles.includes("enrichir"));
   if (!S.e2.initialise) {
     eligibles.forEach((s) => { if (s.defaut.verifier || S.e2.mode === "memes") S.e2.verifier.add(s.id); });
+    capablesEnrichir.forEach((s) => { if (s.defaut.enrichir) S.e2.enrichir.add(s.id); });
     S.e2.initialise = true;
   }
   return [
@@ -331,6 +335,20 @@ function etape2() {
                   }),
                 )
               : h("p", { class: "legende pale" }, "Aucune source ne peut vérifier avec ce choix."),
+          ),
+        S.e2.active && capablesEnrichir.length > 0 &&
+          h(
+            "div",
+            { class: "options-grille" },
+            h("p", { class: "legende" }, "Enrichir ajoute de vrais champs (ville, site, numéro...) à une fiche déjà trouvée, sans jamais en écraser un."),
+            capablesEnrichir.map((s) =>
+              caseSource({
+                nom: `Utiliser « ${s.nom} » pour enrichir`,
+                sous: s.main_phrase,
+                actif: S.e2.enrichir.has(s.id),
+                onclick: () => { if (S.e2.enrichir.has(s.id)) S.e2.enrichir.delete(s.id); else S.e2.enrichir.add(s.id); dessiner(); },
+              }),
+            ),
           ),
       ),
     ),
@@ -437,7 +455,7 @@ function etape4() {
 
 function donneesEtape(n) {
   if (n === 1) return { pays: S.e1.pays, presets_coches: [...S.e1.coches], chercher: [...S.e1.chercher], plafond: Number.isNaN(S.e1.plafond) ? undefined : S.e1.plafond };
-  if (n === 2) return { active: S.e2.active, mode: S.e2.mode, verifier: [...S.e2.verifier] };
+  if (n === 2) return { active: S.e2.active, mode: S.e2.mode, verifier: [...S.e2.verifier], enrichir: [...S.e2.enrichir] };
   return { actifs: [...S.e3.actifs], dossier: S.e3.dossier };
 }
 
