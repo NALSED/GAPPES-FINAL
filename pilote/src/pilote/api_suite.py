@@ -162,6 +162,18 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
         noter(corps, "suite_source_eteinte", ident)
         return {"etat": "off"}
 
+    @r.post("/sources/{ident}/role/{role}")
+    def source_role(ident: str, role: str, corps: dict[str, Any] = Corps) -> dict[str, Any]:
+        """909, point 1.1.b : une case par rôle déclaré (chercher/verifier/enrichir), indépendante des autres."""
+        try:
+            s = suite.changer_role_source(cfg, ident, role, bool(corps.get("actif", True)), bool(corps.get("confirme")))
+        except suite_reel.AvertissementRequis as exc:
+            raise HTTPException(409, {"avertissements": exc.avertissements}) from exc
+        except ConfigRefusee as exc:
+            raise _refus(exc) from exc
+        noter(corps, "suite_source_role", f"{ident} {role}={bool(corps.get('actif', True))}")
+        return {"chercher": s["chercher"], "verifier": s["verifier"], "enrichir": s["enrichir"], "etat": s["etat"]}
+
     @r.post("/sources/{ident}/retirer")
     def source_retirer(ident: str, corps: dict[str, Any] = Corps) -> dict[str, Any]:
         appeler(suite.retirer_source, cfg, ident)

@@ -2,11 +2,43 @@
 import { h, icone } from "./dom.js";
 import { agir, app, outilParId, recharger, sourceParId, sourcesDe } from "./etat.js";
 import { AVERTISSEMENT_IA, COUTS, EFFETS, ETATS_OUTIL, ETATS_SOURCE, FIABILITES, ROLES, ROLES_ORDRE, ROLES_OUTIL, VERBES, aPluriel, fiabiliteParDefaut } from "./mots.js";
-import { api, Refus } from "./api.js";
-import { annoncer, avertissement, bouton, boutonIcone, champ, etiquetteRole, groupePuces, ouvrirCouche, pastilleEtat, quotaVue, carteRepliable } from "./ui.js";
+import { api, apiAssistant, Refus } from "./api.js";
+import { annoncer, avertissement, bouton, boutonIcone, caseSource, champ, etiquetteRole, groupePuces, ouvrirCouche, pastilleEtat, quotaVue, carteRepliable } from "./ui.js";
 import { RENDUS_OPTIONS, genreDeOutil } from "./options_outils.js";
 
 // ================================================================ Sources
+
+// 909, point 1.1.a (retour du 09/11/2026) : « Vérification active » et son mode (« memes »/« plus ») ne se
+// réglaient qu'à l'installation ou depuis l'ancienne page — portés ici, même route déjà existante.
+const CHOIX_MODE_VERIFICATION = [["memes", "les mêmes sources que la recherche"], ["plus", "ajouter des sources de vérification seules"]];
+let VERIFICATION_CACHE = null;
+async function chargerVerification() {
+  if (!VERIFICATION_CACHE) VERIFICATION_CACHE = (await apiAssistant.reglages()).verification || { active: false, mode: "memes" };
+  return VERIFICATION_CACHE;
+}
+
+function blocReglagesTransverse() {
+  if (!VERIFICATION_CACHE) {
+    chargerVerification().then(() => app.rendre());
+    return null;
+  }
+  return carteRepliable({
+    titre: "Réglages transverse", icon: "outil", ouverte: app.reglages.ouverteTransverse,
+    onbascule: () => { app.reglages.ouverteTransverse = !app.reglages.ouverteTransverse; app.rendre(); },
+    corps: h("div", { class: "carte-corps options-grille" },
+      h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Vérification et enrichissement"),
+        groupePuces([["oui", "oui"], ["non", "non"]], VERIFICATION_CACHE.active ? "oui" : "non", async (v) => {
+          const r = await agir(() => apiAssistant.definirVerification({ active: v === "oui", mode: VERIFICATION_CACHE.mode }), { rechargerApres: false });
+          if (r) { VERIFICATION_CACHE.active = r.active; app.rendre(); }
+        }),
+        h("span", { class: "aide-champ" }, "Repasse chaque fiche trouvée par une autre source pour en vérifier la fiabilité, ou en enrichir les champs.")),
+      VERIFICATION_CACHE.active && h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Sources appelées"),
+        groupePuces(CHOIX_MODE_VERIFICATION, VERIFICATION_CACHE.mode, async (v) => {
+          const r = await agir(() => apiAssistant.definirVerification({ active: true, mode: v }), { rechargerApres: false });
+          if (r) { VERIFICATION_CACHE.mode = r.mode; app.rendre(); }
+        }))),
+  });
+}
 
 export function pageSources() {
   const filtre = app.reglages.filtre.trim().toLowerCase();
@@ -34,7 +66,7 @@ export function pageSources() {
       });
     });
   if (!cartes.length) return h("p", { class: "vide" }, "Aucune source ne porte ce nom.");
-  return h("div", { class: "cartes" }, cartes);
+  return h("div", { class: "cartes" }, blocReglagesTransverse(), ...cartes);
 }
 
 function enteteColonnes() {
@@ -92,6 +124,24 @@ async function allumerSource(s) {
       avertissement({
         titre: `${VERBES.allumer} « ${s.nom} » ?`, points: e.corps.avertissements.map((a) => a.texte), verbe: VERBES.allumer,
         onconfirmer: () => agir(() => api.post(`/sources/${s.id}/allumer`, { confirme: true }), { succes: `« ${s.nom} » est allumée.` }),
+      });
+    } else annoncer(e instanceof Refus ? e.message : "Quelque chose a échoué.", true);
+  }
+}
+
+// 909, point 1.1.b (retour du 09/11/2026) : une case par rôle déclaré, indépendante des autres — pas
+// l'interrupteur unique (qui reste le raccourci « tous les rôles à la fois », déjà corrigé au point 1.1.c).
+const NOMS_ROLE = { CHERCHER: "chercher", VERIFIER: "vérifier", ENRICHIR: "enrichir" };
+async function basculerRole(s, role, actif) {
+  try {
+    await api.post(`/sources/${s.id}/role/${role.toLowerCase()}`, { actif });
+    await recharger();
+    annoncer(`« ${s.nom} » ${actif ? "sert maintenant" : "ne sert plus"} à ${NOMS_ROLE[role]}.`);
+  } catch (e) {
+    if (e instanceof Refus && e.statut === 409 && e.corps && e.corps.avertissements) {
+      avertissement({
+        titre: `Faire ${NOMS_ROLE[role]} « ${s.nom} » ?`, points: e.corps.avertissements.map((a) => a.texte), verbe: VERBES.allumer,
+        onconfirmer: () => agir(() => api.post(`/sources/${s.id}/role/${role.toLowerCase()}`, { actif, confirme: true }), { succes: `« ${s.nom} » sert maintenant à ${NOMS_ROLE[role]}.` }),
       });
     } else annoncer(e instanceof Refus ? e.message : "Quelque chose a échoué.", true);
   }
@@ -330,6 +380,10 @@ export function ficheSource(id) {
       !s.copie && s.acces !== "base_exterieure" && s.cle_requise && champsCle.map((c) => c.el), !s.copie && s.acces !== "base_exterieure" && s.cle_requise && s.cle && h("span", { class: "legende" }, "clé enregistrée"),
       champsParametres.length > 0 && champsParametres,
       h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "État"), h("div", { class: "pied-boutons" }, pastilleEtat(s.etat, ETATS_SOURCE), interrupteur)),
+      h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Rôles actifs"),
+        h("div", { class: "liste-liens" }, s.roles_declares.map((role) =>
+          caseSource({ nom: NOMS_ROLE[role] ? NOMS_ROLE[role].replace(/^./, (c) => c.toUpperCase()) : role, actif: s[role.toLowerCase()], onclick: () => basculerRole(s, role, !s[role.toLowerCase()]) }))),
+        h("span", { class: "aide-champ" }, "Une source peut servir à plusieurs rôles à la fois (ex. chercher et vérifier) : chacun se règle sans toucher aux autres.")),
       tests, zones.testReel,
     ]
     : [

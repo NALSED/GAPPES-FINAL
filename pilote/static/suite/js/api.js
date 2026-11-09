@@ -59,11 +59,14 @@ export const api = {
  *  (D-assistant-suite : on réutilise les routes éprouvées ce matin plutôt que d'en recréer sous `/api/suite`). */
 export const apiAssistant = {
   reglages: () => requete("GET", "/api/reglages"),
+  // 909, point 1.1.a (retour du 09/11/2026) : « Vérification active » et son mode ne se réglaient qu'à
+  // l'installation ou depuis l'ancienne page — la route `PUT /api/reglages/verification` existait déjà.
   presetsPersonnaliser: (corps) => requete("POST", "/api/presets/personnaliser", corps),
   definirCle: (nom, corps) => requete("PUT", `/api/cles/${nom}`, corps),
   modifierSource: (id, corps) => requete("PUT", `/api/reglages/source/${id}`, corps),
   definirSortie: (corps) => requete("PUT", "/api/reglages/sortie", corps),
   lancementOptions: () => requete("GET", "/api/lancement/options"),
+  definirVerification: (corps) => requete("PUT", "/api/reglages/verification", corps),
   pauseRecherche: (rid) => requete("POST", `/api/recherches/${rid}/pause`),
   repriseRecherche: (rid) => requete("POST", `/api/recherches/${rid}/reprise`),
   testerSource: (id) => requete("POST", `/api/sources/${id}/tester`, {}),

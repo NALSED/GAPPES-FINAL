@@ -183,12 +183,14 @@ def verifier(r: dict[str, Any], decls: dict[str, Declaration], presets_connus: s
         d = decls[sid]
         if not isinstance(s, dict):
             raise ConfigRefusee(f"Les réglages de la source « {d.nom} » sont mal écrits.")
-        for role in ("chercher", "verifier"):
+        # 909, point 1.1.b/2.1.b : enrichir devient un rôle indépendant de chercher/verifier, comme eux
+        for role in ("chercher", "verifier", "enrichir"):
             if role in s:
                 if not isinstance(s[role], bool):
                     raise ConfigRefusee(f"« {role} » pour la source « {d.nom} » doit être oui ou non.")
                 if s[role] and role not in d.roles:
-                    raise ConfigRefusee(f"La source « {d.nom} » ne peut pas servir à {'chercher' if role == 'chercher' else 'vérifier'}.")
+                    verbe = "chercher" if role == "chercher" else "vérifier" if role == "verifier" else "enrichir"
+                    raise ConfigRefusee(f"La source « {d.nom} » ne peut pas servir à {verbe}.")
         if "confiance" in s:
             _nombre(s["confiance"], f"Le niveau de confiance de « {d.nom} »", 0.0, 1.0)
         donnes = s.get("parametres") or {}
@@ -199,7 +201,7 @@ def verifier(r: dict[str, Any], decls: dict[str, Declaration], presets_connus: s
             v = str(donnes.get(nom_p, "")).strip()
             if v and spec.get("type") == "url" and not v.startswith(("http://", "https://")):
                 raise ConfigRefusee(f"{str(spec.get('libelle', nom_p)).capitalize()} doit commencer par https:// (ou http://).")
-            if not v and spec.get("requis") and (s.get("chercher") or s.get("verifier")):
+            if not v and spec.get("requis") and (s.get("chercher") or s.get("verifier") or s.get("enrichir")):
                 raise ConfigRefusee(f"Pour activer « {d.nom} », donne d'abord : {str(spec.get('libelle', nom_p)).lower()}.")
         if "cout" in s:
             c = s["cout"]
@@ -213,10 +215,10 @@ def verifier(r: dict[str, Any], decls: dict[str, Declaration], presets_connus: s
 def avertissements_requis(r: dict[str, Any], decls: dict[str, Declaration], patch: dict[str, Any]) -> list[dict[str, str]]:
     """Sources que ce changement ALLUME et dont l'avertissement n'a jamais été accepté (prestataires payants, services à risque)."""
     allumees: list[str] = []
-    if "source" in patch and (patch["source"].get("chercher") or patch["source"].get("verifier")):
+    if "source" in patch and (patch["source"].get("chercher") or patch["source"].get("verifier") or patch["source"].get("enrichir")):
         allumees.append(patch["source"]["id"])
     for sid, ch in (patch.get("sources") or {}).items():
-        if ch.get("chercher") or ch.get("verifier"):
+        if ch.get("chercher") or ch.get("verifier") or ch.get("enrichir"):
             allumees.append(sid)
     vus = set(r.get("avertissements_vus") or [])
     return [{"source": sid, "nom": decls[sid].nom, "texte": decls[sid].avertissement}
@@ -300,10 +302,11 @@ def choix_source(r: dict[str, Any], d: Declaration) -> dict[str, Any]:
     cout = {**d.cout}
     for k, v in (donne or {}).items():
         cout[k] = str(v) if k == "unite" else _nombre_tolerant(v, float(d.cout.get(k, 0) or 0), 0.0)
-    coche = {role: (s[role] if isinstance(s.get(role), bool) else d.defaut[role]) for role in ("chercher", "verifier")}  # autre chose qu'un oui/non : on reprend la déclaration
+    coche = {role: (s[role] if isinstance(s.get(role), bool) else d.defaut.get(role, False)) for role in ("chercher", "verifier", "enrichir")}  # autre chose qu'un oui/non : on reprend la déclaration
     return {
         "chercher": coche["chercher"] and "chercher" in d.roles,
         "verifier": coche["verifier"] and "verifier" in d.roles,
+        "enrichir": coche["enrichir"] and "enrichir" in d.roles,  # 909, point 1.1.b/2.1.b : rôle indépendant, pas masqué par les deux autres
         "confiance": _nombre_tolerant(s.get("confiance", d.confiance), d.confiance, 0.0, 1.0),
         "cout": cout,
     }

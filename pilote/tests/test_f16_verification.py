@@ -46,6 +46,17 @@ def test_wayback_est_une_verificatrice_pas_une_source_de_recherche(cfg, tmp_path
         assert {d.id for d in verificatrices(cfg, {})} == {"wayback"}  # ROR, data.gouv... ont le rôle « vérifier » mais cherchent par nom : jamais appelées sur un candidat  # l'interrupteur de Réglages éteint tout
 
 
+# --- 909, point 1.1.b/c, 2.1.a (retour du 09/11/2026) : enrichir suit le même chemin que verifier, pas masqué
+def test_rdap_enrichir_seule_est_prise_en_recherche_simple(cfg, tmp_path):
+    with TestClient(creer_app(cfg, lambda c: None)) as c:
+        assert [d.id for d in verificatrices(cfg, {})] == []  # case décochée : rdap n'est pas encore atteignable
+        assert c.post("/api/suite/sources/rdap/allumer").status_code == 200
+        c.put("/api/reglages/verification", json={"active": True, "mode": "plus"})  # rdap ne cherche pas : mode « plus »
+        assert [d.id for d in verificatrices(cfg, {})] == ["rdap"]
+        res = materialiser(cfg, cible(tmp_path), {"sources": []})
+        assert [v["fonction"] for v in res.verificateurs if v["source"] == "rdap"] == ["enrichir"]  # jamais « verifier » par défaut
+
+
 # --- [ ] Chaque candidat qui a un site reçoit sa vérification ; les autres sont laissés tels quels ; un défaut n'arrête rien.
 def test_verifier_candidats_ajoute_la_preuve_sans_toucher_aux_endroits(monkeypatch):
     class Faux:

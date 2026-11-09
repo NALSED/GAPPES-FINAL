@@ -101,7 +101,7 @@ def vue_source(
     pause: dict[str, Any] | None = None,  # 1.1 §3.2 : la raison, pour le Tableau de bord — None si la source n'est pas en pause
 ) -> dict[str, Any]:
     ch = rg.choix_source(reg, d)
-    allumee = bool(ch["chercher"] or ch["verifier"])
+    allumee = bool(ch["chercher"] or ch["verifier"] or ch["enrichir"])
     manquant = adaptateur_manquant(d)
     couleur, mot = voyant(cfg, d, e, manquant, rg.parametres_donnes(reg, d.id))
     teste = e.get("statut") == "ok"
@@ -134,7 +134,9 @@ def vue_source(
         "langue": sur.get("langue") or LANGUE_DU_PAYS.get(pays[0], ""), "etat": etat, "quota": _quota(d, e, unites), "description": d.description,
         "retiree": bool(sur.get("retiree")), "test_reussi": teste, "tests": tests, "declaree": True, "cle_requise": bool(d.cles), "cles_noms": d.cles,
         "parametres_attendus": d.parametres, "parametres": rg.parametres_donnes(reg, d.id),
-        "cle": bool(d.cles) and cles.toutes_presentes(cfg, d.cles), "voyant": mot, "domaine": domaine_source(d), "auto_heberge": d.mode.get("auto_heberge", False), "chercher": ch["chercher"], "verifier": ch["verifier"],
+        "cle": bool(d.cles) and cles.toutes_presentes(cfg, d.cles), "voyant": mot, "domaine": domaine_source(d), "auto_heberge": d.mode.get("auto_heberge", False), "chercher": ch["chercher"], "verifier": ch["verifier"], "enrichir": ch["enrichir"],
+        # 909, point 1.1.b : les rôles RÉELLEMENT déclarés (une source peut en avoir plusieurs) — la fiche en fait des cases indépendantes, plus un seul rôle qui en masque les autres.
+        "roles_declares": [r.upper() for r in d.roles],
         "emoji": "emoji" in d.consomme, "acces": acces, "machine": machine, "copie": copie, "peut_chercher": "chercher" in d.roles, "verifie_sur": d.verifie_sur if "adaptateur" in d.moteur else "", "avertissement": d.avertissement, "adaptateur_manquant": manquant,
         "en_pause": {"raison": pause["raison"], "reprise_dans_s": disjoncteur.reprise_dans_s(pause)} if pause else None,
     }  # fmt: skip
@@ -182,13 +184,56 @@ def allumer(cfg: Config, ident: str, allumee: bool, confirme: bool = False) -> N
             raise ConfigRefusee(
                 f"La source « {d.nom} » a échoué à son test ({e.get('raison', 'raison inconnue')}) : elle ne peut pas être allumée tant que le test ne passe pas."
             )
+    # 909, point 1.1.c (retour du 09/11/2026) : BUG — l'exclusion « verifier seulement si chercher est absent »
+    # remettait silencieusement « verifier » à faux, pour toujours, sur une source chercher+verifier (36 sur
+    # 79 : wikidata, ror...) rallumée depuis ce bouton. Chaque rôle déclaré suit maintenant « allumee » pour
+    # lui-même, indépendamment des autres — plus d'exclusion mutuelle inventée.
     patch: dict[str, Any] = {
         "id": ident,
         "chercher": allumee and "chercher" in d.roles,
-        "verifier": allumee and "verifier" in d.roles and "chercher" not in d.roles,
+        "verifier": allumee and "verifier" in d.roles,
+        "enrichir": allumee and "enrichir" in d.roles,
     }
     if not allumee:
-        patch.update(chercher=False, verifier=False)
+        patch.update(chercher=False, verifier=False, enrichir=False)
+    requis = rg.avertissements_requis(rg.charger(cfg), decls, {"source": patch})
+    if requis and not confirme:
+        raise AvertissementRequis(requis)
+    if requis:
+        patch_global = {
+            "source": patch,
+            "avertissements_vus": sorted(
+                {*rg.charger(cfg).get("avertissements_vus", []), *(a["source"] for a in requis)}
+            ),
+        }
+    else:
+        patch_global = {"source": patch}
+    rg.appliquer(cfg, decls, presets.ids_connus(cfg), patch_global)
+
+
+def definir_role(cfg: Config, ident: str, role: str, actif: bool, confirme: bool = False) -> None:
+    """909, point 1.1.b (retour du 09/11/2026) : une case INDÉPENDANTE par rôle déclaré (chercher, verifier,
+    enrichir) — contrairement à `allumer()`/`eteindre()`, qui restent le raccourci « tous les rôles à la
+    fois », celle-ci n'en touche qu'un, sans modifier les autres (`reglages.appliquer` fusionne par clé,
+    jamais un remplacement complet). Mêmes refus et même avertissement que `allumer()` pour « chercher »."""
+    from pilote import presets
+
+    if role not in ("chercher", "verifier", "enrichir"):
+        raise ConfigRefusee("Le rôle est chercher, verifier ou enrichir.")
+    d = declaration(cfg, ident)
+    decls, _ = charger_sources(cfg)
+    if actif:
+        if role not in d.roles:
+            verbe = "chercher" if role == "chercher" else "vérifier" if role == "verifier" else "enrichir"
+            raise ConfigRefusee(f"La source « {d.nom} » ne peut pas servir à {verbe}.")
+        if role == "chercher" and adaptateur_manquant(d):
+            raise ConfigRefusee(f"La source « {d.nom} » demande un adaptateur : elle ne peut pas être allumée.")
+        e = lire_etat(cfg).get(ident) or {}
+        if e.get("statut") == "echec":
+            raise ConfigRefusee(
+                f"La source « {d.nom} » a échoué à son test ({e.get('raison', 'raison inconnue')}) : elle ne peut pas être allumée tant que le test ne passe pas."
+            )
+    patch: dict[str, Any] = {"id": ident, role: actif}
     requis = rg.avertissements_requis(rg.charger(cfg), decls, {"source": patch})
     if requis and not confirme:
         raise AvertissementRequis(requis)

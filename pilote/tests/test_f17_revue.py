@@ -329,7 +329,7 @@ def test_le_prix_du_test_reel_compte_le_quota_deja_consomme():
 
     cout = {"unite": "requete", "vers_dollar": 0.008, "par_appel": 1, "gratuit_par_mois": 1000}
     d = Declaration("x", "X", "", "", ["club"], ["monde"], [], [], ["web"], "seconde", "api", "", cout, 0.3,
-                    {"chercher": False, "verifier": False}, ["chercher"], "", {"en_ligne": True, "local": False}, {})  # fmt: skip
+                    {"chercher": False, "verifier": False, "enrichir": False}, ["chercher"], "", {"en_ligne": True, "local": False}, {})  # fmt: skip
     assert tests_source.prix_du_test(d, cout, 0.0)["gratuit"] is True  # quota intact
     paye = tests_source.prix_du_test(d, cout, 1000.0)  # quota épuisé
     assert paye["gratuit"] is False and paye["dollars"] > 0 and "plafond" in paye["phrase"]
@@ -394,7 +394,7 @@ def test_companies_house_se_lit_comme_une_source_de_registre(cfg):
     from pilote.sources import charger_sources
 
     d = charger_sources(cfg)[0]["companies-house"]
-    assert d.cles == ["COMPANIES_HOUSE_API_KEY"] and d.defaut == {"chercher": False, "verifier": False} and "entreprises" in d.usages and d.pays == ["GB"]
+    assert d.cles == ["COMPANIES_HOUSE_API_KEY"] and d.defaut == {"chercher": False, "verifier": False, "enrichir": False} and "entreprises" in d.usages and d.pays == ["GB"]
     assert d.moteur["parametres"]["auth"]["type"] == "basic" and d.main == "premiere" and d.origine == "registre"
     noms = api_json.convertir(exemple("companies-house"), d.moteur["parametres"])
     assert len(noms) == 2 and all(n["pays"] == "GB" and n["genre"] == "entreprise" and n["numero"] for n in noms)

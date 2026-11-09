@@ -56,7 +56,7 @@ def test_le_preset_web_livre_marche_sans_cle_payante(cfg):
 def test_les_trois_sources_payantes_sont_eteintes(cfg):
     web = declarations_web(cfg)
     for sid in ("brave", "linkup", "exa"):
-        assert web[sid].defaut == {"chercher": False, "verifier": False} and web[sid].payant and web[sid].cle
+        assert web[sid].defaut == {"chercher": False, "verifier": False, "enrichir": False} and web[sid].payant and web[sid].cle
     with TestClient(creer_app(cfg, lambda c: None)) as c:
         lignes = {s["id"]: s for s in c.get("/api/reglages").json()["parties"]["recherche"]}
     assert not any(lignes[s]["chercher"] or lignes[s]["verifier"] for s in ("brave", "linkup", "exa"))

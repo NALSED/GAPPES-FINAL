@@ -280,7 +280,7 @@ def test_les_coordonnees_arrivent_jusqu_au_candidat(tmp_path):
 def test_google_maps_et_google_places_sont_eteints_dans_la_configuration_livree(cfg):
     d = du_preset(cfg)
     for sid in ("google-maps-apify", "google-places"):
-        assert d[sid].defaut == {"chercher": False, "verifier": False} and d[sid].avertissement and d[sid].payant and d[sid].cle, sid
+        assert d[sid].defaut == {"chercher": False, "verifier": False, "enrichir": False} and d[sid].avertissement and d[sid].payant and d[sid].cle, sid
     assert d["google-maps-apify"].prestataire is True
     with TestClient(creer_app(cfg, lambda c: None)) as c:
         carte = next(p for p in c.get("/api/reglages").json()["presets"] if p["id"] == "lieux")

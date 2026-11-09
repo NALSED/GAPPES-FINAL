@@ -17,11 +17,11 @@ from typing import Any
 import yaml
 
 from pilote import budget, cles, disjoncteur, flux_rss
-from pilote.suite_reel import fiabilite_par_defaut
 from pilote import reglages as rg
 from pilote.config import Config
 from pilote.refus import ConfigRefusee, lire_yaml
 from pilote.sources import Declaration, charger_sources
+from pilote.suite_reel import fiabilite_par_defaut
 
 
 def choisies(cfg: Config, params: dict[str, Any]) -> list[Declaration]:
@@ -64,12 +64,16 @@ def verificatrices(cfg: Config, params: dict[str, Any]) -> list[Declaration]:
     mode = str((reg.get("verification") or {}).get("mode") or "memes")
     decls, _ = charger_sources(cfg)
     out = []
+    # 909, point 1.1.b/c, 2.1.a (retour du 09/11/2026) : enrichir suit désormais le même chemin que verifier
+    # (rôle déclaré + case cochée dans Réglages, chacun indépendant) — avant, une source enrichir seule
+    # (rdap, intelligencex) ne passait jamais ce filtre, qui ne connaissait que « verifier ».
     for d in decls.values():
-        if "verifier" not in d.roles or "adaptateur" not in d.moteur or d.verifie_sur not in ("site", "nom"):
+        if not ({"verifier", "enrichir"} & set(d.roles)) or "adaptateur" not in d.moteur or d.verifie_sur not in ("site", "nom", "ville"):
             continue
-        if not rg.choix_source(reg, d)["verifier"] or (d.cles and not cles.toutes_presentes(cfg, d.cles)):
+        choix = rg.choix_source(reg, d)
+        if not ((choix["verifier"] and "verifier" in d.roles) or (choix["enrichir"] and "enrichir" in d.roles)) or (d.cles and not cles.toutes_presentes(cfg, d.cles)):
             continue
-        if "chercher" not in d.roles and mode != "plus":  # source de vérification SEULE : réservée au mode « plus »
+        if "chercher" not in d.roles and mode != "plus":  # source de vérification/enrichissement SEULE : réservée au mode « plus »
             continue
         out.append(d)
     return out
@@ -228,8 +232,13 @@ def materialiser(cfg: Config, cible: Path, params: dict[str, Any]) -> Materialis
         donnes = {**(d.moteur.get("parametres") or {}), **rg.parametres_donnes(reg, d.id), "_dossier_copies": str(cfg.dossier_copies)}
         du_plan = {v["id"]: v for v in (params.get("plan") or {}).get("verificateurs", [])}.get(d.id) or {}
         en_amont = du_plan.get("en_amont")  # None = tous les résultats
-        res.verificateurs.append({"source": d.id, "fonction": du_plan.get("fonction") or "verifier", "verifie_sur": d.verifie_sur, "module": str(d.moteur["adaptateur"]), "parametres": donnes, "cles_noms": d.cles, "en_amont": en_amont, "local": not d.mode.get("en_ligne", True),
-                                **_delai(donnes)})  # `parametres.delai_s` : la pause minimale entre deux appels, quand le service limite son débit
+        # 909, point 1.1.b/c (retour du 09/11/2026) : sans fonction donnée par le plan (recherche simple), la
+        # fonction vient des rôles RÉELLEMENT actifs de la source, pas d'un « verifier » par défaut qui
+        # ignorait enrichir — une source chercher+verifier+enrichir avec les deux cases cochées fait les deux.
+        fonctions = [du_plan["fonction"]] if du_plan.get("fonction") else [f for f in ("verifier", "enrichir") if f in d.roles and rg.choix_source(reg, d)[f]] or ["verifier"]
+        for fonction in fonctions:
+            res.verificateurs.append({"source": d.id, "fonction": fonction, "verifie_sur": d.verifie_sur, "module": str(d.moteur["adaptateur"]), "parametres": donnes, "cles_noms": d.cles, "en_amont": en_amont, "local": not d.mode.get("en_ligne", True),
+                                    **_delai(donnes)})  # `parametres.delai_s` : la pause minimale entre deux appels, quand le service limite son débit
         res.jetons[d.id] = d.id
         res.origines[d.id], res.mains[d.id] = d.origine, d.main
         res.fiabilites[d.id] = fiabilite_par_defaut(d)

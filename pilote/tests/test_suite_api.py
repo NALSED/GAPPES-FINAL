@@ -252,6 +252,29 @@ def test_allumer_et_eteindre_ecrivent_dans_reglages(c, cfg):
     )  # allumée mais jamais testée : « à vérifier », jamais « opérationnelle » sans test
 
 
+# --- 909, point 1.1.c (retour du 09/11/2026) : bug — éteindre puis rallumer une source chercher+verifier
+# perdait « verifier » pour toujours (exclusion mutuelle inventée, jamais demandée).
+def test_eteindre_puis_rallumer_une_source_double_role_garde_verifier(c):
+    assert src(c, "ror")["chercher"] and src(c, "ror")["verifier"]  # par défaut : les deux
+    assert c.post("/api/suite/sources/ror/eteindre").status_code == 200
+    assert not src(c, "ror")["chercher"] and not src(c, "ror")["verifier"]
+    assert c.post("/api/suite/sources/ror/allumer").status_code == 200
+    assert src(c, "ror")["chercher"] and src(c, "ror")["verifier"]  # les deux reviennent, pas seulement chercher
+
+
+def test_role_independant_ne_touche_pas_aux_autres(c):
+    assert c.post("/api/suite/sources/ror/role/verifier", json={"actif": False}).status_code == 200
+    assert src(c, "ror")["chercher"] and not src(c, "ror")["verifier"]  # chercher intact
+    assert c.post("/api/suite/sources/ror/role/verifier", json={"actif": True}).status_code == 200
+    assert src(c, "ror")["chercher"] and src(c, "ror")["verifier"]
+    r = c.post("/api/suite/sources/ror/role/enrichir", json={"actif": True})
+    assert r.status_code == 422 and "ne peut pas servir" in r.json()["detail"]  # ror ne déclare pas enrichir
+    assert c.post("/api/suite/sources/rdap/role/enrichir", json={"actif": True}).status_code == 200
+    assert src(c, "rdap")["enrichir"] and not src(c, "rdap")["chercher"]
+    assert c.post("/api/suite/sources/inconnue/role/chercher", json={"actif": True}).status_code == 422
+    assert c.post("/api/suite/sources/ror/role/n_importe_quoi", json={"actif": True}).status_code == 422
+
+
 def test_un_avertissement_de_source_se_lit_avant_d_allumer(c):
     r = c.post("/api/suite/sources/apify-facebook/allumer", json={})
     assert (

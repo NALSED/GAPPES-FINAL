@@ -104,7 +104,7 @@ def test_une_source_peut_verifier_sans_chercher(cfg):
 def test_les_sources_payantes_sont_eteintes(cfg):
     d = sources_du_preset(cfg)
     for sid in ("opencorporates", "pappers"):
-        assert d[sid].payant and d[sid].defaut == {"chercher": False, "verifier": False} and d[sid].cle, sid
+        assert d[sid].payant and d[sid].defaut == {"chercher": False, "verifier": False, "enrichir": False} and d[sid].cle, sid
     assert "très cher" in d["opencorporates"].note.lower() and "gratuit pour la recherche sur demande" in d["opencorporates"].note.lower()
     assert {s for s, x in d.items() if x.defaut["chercher"]} == {"recherche-entreprises", "gleif", "wikidata"}  # les trois allumées de la fiche
 

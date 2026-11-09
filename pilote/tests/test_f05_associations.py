@@ -104,7 +104,7 @@ def test_charity_commission_sans_cle_ou_avec_une_fausse_cle_le_dit_en_clair(faux
 
 def test_charity_commission_est_eteinte_sans_cle(cfg):
     d = sources_du_preset(cfg)["charity-commission"]
-    assert d.cle == "CHARITY_COMMISSION_API_KEY" and d.defaut == {"chercher": False, "verifier": False}
+    assert d.cle == "CHARITY_COMMISSION_API_KEY" and d.defaut == {"chercher": False, "verifier": False, "enrichir": False}
     with TestClient(creer_app(cfg, lambda c: None)) as c:
         c.put("/api/reglages/source/charity-commission", json={"chercher": True})  # même cochée par l'utilisateur…
         ligne = next(s for s in c.get("/api/reglages").json()["parties"]["recherche"] if s["id"] == "charity-commission")

@@ -5,7 +5,7 @@ import { annoncer } from "./ui.js";
 export const app = {
   data: null, // la réponse de /api/suite/etat
   onglet: "recherche",
-  reglages: { sous: "sources", ouverte: "entreprises", filtre: "" },
+  reglages: { sous: "sources", ouverte: "entreprises", filtre: "", ouverteTransverse: false },
   tri: { donnees: null, ouvert: false },
   recherche: { ouvert: { simple: true, adv: true, sauvees: true, lancement: false }, palette: "outils", message: "", selection: null, lien: null, lienChoisi: null },
   rendre: () => {},

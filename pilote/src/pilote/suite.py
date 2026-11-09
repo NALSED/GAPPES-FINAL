@@ -236,6 +236,13 @@ def changer_etat_source(cfg: Config, ident: str, allumee: bool, confirme: bool =
     return s
 
 
+def changer_role_source(cfg: Config, ident: str, role: str, actif: bool, confirme: bool = False) -> dict[str, Any]:
+    """909, point 1.1.b : une case par rôle déclaré, indépendante des autres."""
+    suite_reel.definir_role(cfg, ident, role, actif, confirme)
+    s = next(x for x in charger(cfg)["sources"] if x["id"] == ident)
+    return s
+
+
 def _drapeau_retiree(cfg: Config, ident: str, retiree: bool) -> dict[str, Any]:
     suite_reel.declaration(cfg, ident)
 

@@ -166,7 +166,7 @@ def test_la_mention_est_ecrite_a_cote_des_sorties_de_toute_recherche_qui_a_utili
 def test_les_api_d_actualite_a_cle_sont_eteintes(cfg):
     d = du_preset(cfg)
     for sid, cle in (("newsdata-io", "NEWSDATA_API_KEY"), ("gnews", "GNEWS_API_KEY"), ("newsapi-ai", "NEWSAPI_AI_KEY")):
-        assert d[sid].cle == cle and d[sid].defaut == {"chercher": False, "verifier": False}, sid
+        assert d[sid].cle == cle and d[sid].defaut == {"chercher": False, "verifier": False, "enrichir": False}, sid
     assert d["newsapi-ai"].payant and d["newsapi-ai"].avertissement
     assert "NewsAPI.org".lower() not in " ".join(d).lower() and not [k for k in d if "feedly" in k or "inoreader" in k]  # non retenus
     with TestClient(creer_app(cfg, lambda c: None)) as c:

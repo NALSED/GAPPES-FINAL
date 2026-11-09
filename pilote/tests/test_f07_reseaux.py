@@ -150,7 +150,7 @@ def test_meetup_n_est_pas_payant(cfg):
 def test_bluesky_et_mastodon_sont_gratuits_sans_cle(cfg):
     for sid in ("bluesky", "mastodon"):
         d = du_preset(cfg)[sid]
-        assert d.cle == "" and not d.payant and d.defaut == {"chercher": False, "verifier": False}
+        assert d.cle == "" and not d.payant and d.defaut == {"chercher": False, "verifier": False, "enrichir": False}
 
 
 @pytest.mark.reseau
@@ -331,7 +331,7 @@ def test_aucun_prestataire_n_est_active_dans_la_configuration_livree(cfg):
     prestataires = [d for d in decls.values() if d.prestataire]
     assert {d.id for d in prestataires} >= set(PRESTATAIRES)
     for d in prestataires:
-        assert d.defaut == {"chercher": False, "verifier": False} and d.avertissement, d.id
+        assert d.defaut == {"chercher": False, "verifier": False, "enrichir": False} and d.avertissement, d.id
     with TestClient(creer_app(cfg, lambda c: None)) as c:
         parties = c.get("/api/reglages").json()["parties"]
         for ligne in parties["recherche"] + parties["verification"]:

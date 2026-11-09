@@ -136,8 +136,10 @@ def valider_declaration(d: dict[str, Any], cfg: Config, fichier: str = "") -> De
             "gratuit_par_mois": _nombre(cout.get("gratuit_par_mois", 0), f"{nom_f} : le quota gratuit mensuel")}  # fmt: skip
     confiance = _nombre(d.get("confiance", 0.5), f"{nom_f} : le niveau de confiance", 0.0, 1.0)
     defaut = d.get("defaut") or {}
-    if not isinstance(defaut, dict) or any(not isinstance(v, bool) for v in defaut.values()) or set(defaut) - set(ROLES):
-        raise ConfigRefusee(f"{nom_f} : « defaut » donne seulement chercher et verifier, chacun à oui ou non.")
+    # 909, point 1.1.b/2.1.b (retour du 09/11/2026) : « defaut » accepte aussi enrichir, au même titre que
+    # chercher/verifier — une source enrichir seule (rdap, intelligencex) doit pouvoir démarrer allumée.
+    if not isinstance(defaut, dict) or any(not isinstance(v, bool) for v in defaut.values()) or set(defaut) - set(ROLES_VALIDES):
+        raise ConfigRefusee(f"{nom_f} : « defaut » donne seulement chercher, verifier et enrichir, chacun à oui ou non.")
     roles = _liste(d, "roles", nom_f) if d.get("roles") is not None else list(ROLES)
     if set(roles) - set(ROLES_VALIDES):
         raise ConfigRefusee(f"{nom_f} : un rôle ne peut être que « chercher », « verifier » ou « enrichir ».")
@@ -171,7 +173,7 @@ def valider_declaration(d: dict[str, Any], cfg: Config, fichier: str = "") -> De
         id=ident, nom=nom.strip(), description=str(d.get("description", "")).strip(), trouve=str(d.get("trouve", "")).strip(), genres=genres, pays=pays,
         consomme=_liste(d, "consomme", nom_f, requis=False), produit=_liste(d, "produit", nom_f, requis=False), usages=_liste(d, "usages", nom_f),
         main=main, famille=famille or "", cle=cle, cout=cout, confiance=confiance,
-        defaut={"chercher": bool(defaut.get("chercher", False)), "verifier": bool(defaut.get("verifier", False))}, roles=roles,
+        defaut={"chercher": bool(defaut.get("chercher", False)), "verifier": bool(defaut.get("verifier", False)), "enrichir": bool(defaut.get("enrichir", False))}, roles=roles,
         avertissement=str(d.get("avertissement") or "").strip(),
         # « auto_heberge » (4.2, retour du 08/11/2026) : un serveur tiers ou l'ordinateur de Sednal, distinction qui
         # donne son sens à l'affichage de l'adresse (3 : savoir où partent les mots cherchés) — absent de « local »
