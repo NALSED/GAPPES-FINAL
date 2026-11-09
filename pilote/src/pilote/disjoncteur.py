@@ -49,52 +49,70 @@ def phrase_raison(raison: str) -> str:
     return raison
 
 
+def _issue_de_la_source(prises: dict[str, dict[str, str]]) -> dict[str, str]:
+    """Une source peut avoir plusieurs prises (un flux RSS par adresse) : elle a répondu si l'une d'elles a répondu, sinon un seul flux mort mettait toute la liste en pause.
+    La panne d'une partie des prises reste dite (`partiel`)."""
+    valeurs = list(prises.values())
+    echecs = [v for v in valeurs if v["issue"] == "echec"]
+    reponse = next((v for v in valeurs if v["issue"] == "ok"), None)
+    if reponse and echecs:
+        return {**reponse, "partiel": f"{len(echecs)} prise{'s' if len(echecs) > 1 else ''} sur {len(valeurs)} en panne : {echecs[-1]['raison']}"}
+    return echecs[-1] if echecs else reponse or valeurs[0]
+
+
 def issues(fichier: Path, jetons: dict[str, str]) -> dict[str, dict[str, str]]:
-    """source -> {ok|echec, raison}, d'après le fichier d'avancement. Une source dont aucune prise n'a dit ni oui ni non n'y figure pas."""
-    par_source: dict[str, dict[str, str]] = {}
+    """source -> {ok|echec|non_appelee, raison}, d'après le fichier d'avancement. Une source dont aucune prise n'a dit ni oui ni non n'y figure pas."""
+    par_source: dict[str, dict[str, dict[str, str]]] = {}
     if not fichier.exists():
-        return par_source
+        return {}
     for ligne in fichier.read_text(encoding="utf-8").splitlines():
         try:
             e = json.loads(ligne)
         except ValueError:
             continue
-        sid = jetons.get(str(e.get("prise", "")))
+        prise = str(e.get("prise", ""))
+        sid = jetons.get(prise)
         if not sid:
             continue
+        prises = par_source.setdefault(sid, {})
         ev = e.get("evenement")
         if ev == "source_ok":
-            par_source[sid] = {"issue": "ok", "raison": ""}
+            if prises.get(prise, {}).get("issue") != "echec":  # une prise qui a échoué le reste : sa vérification réussie n'efface pas sa recherche en panne
+                prises[prise] = {"issue": "ok", "raison": ""}
         elif ev == "source_echec":
-            par_source[sid] = {"issue": "echec", "raison": phrase_raison(str(e.get("raison", "")) or "la source n'a pas répondu")}
+            prises[prise] = {"issue": "echec", "raison": phrase_raison(str(e.get("raison", "")) or "la source n'a pas répondu")}
+        elif ev == "source_non_appelee":  # limite atteinte avant son tour, ou arrêt demandé : dit, mais ce n'est pas une panne de la source
+            prises.setdefault(prise, {"issue": "non_appelee", "raison": str(e.get("raison", ""))})
         elif ev == "prise_fin":
             st = str(e.get("statut", ""))
             if st == "ok":
-                if par_source.get(sid, {}).get("issue") != "echec":
-                    par_source[sid] = {"issue": "ok", "raison": ""}
+                if prises.get(prise, {}).get("issue") != "echec":
+                    prises[prise] = {"issue": "ok", "raison": ""}
             elif st.startswith("non appelée"):  # on ne l'a pas interrogée (ex. saisie faite d'emoji qu'elle ne cherche pas) : ni répondu, ni en échec
-                par_source.setdefault(sid, {"issue": "non_appelee", "raison": st})
+                prises.setdefault(prise, {"issue": "non_appelee", "raison": st})
             elif st.startswith(("erreur", "quota")) or (st.startswith("arrêté") and re.search(r"HTTP (401|403)", st)):  # une clé refusée arrête la source pour le cycle : c'est un échec, pas un succès
-                par_source[sid] = {"issue": "echec", "raison": phrase_raison(st.partition(" : ")[2] or st)}
-    return par_source
+                prises[prise] = {"issue": "echec", "raison": phrase_raison(st.partition(" : ")[2] or st)}
+    return {sid: _issue_de_la_source(prises) for sid, prises in par_source.items() if prises}
 
 
 def bilan(cfg: Config, fichier: Path, jetons: dict[str, str], utilisees: list[str], noms: dict[str, str]) -> dict[str, Any]:
     """Met à jour les compteurs et le disjoncteur de chaque source utilisée, et rend le bilan de la recherche."""
     resultat = issues(fichier, jetons)
     etats = etat_sources.lire(cfg)
-    repondu, echecs, nouvelles_pauses, non_appelees = 0, [], [], 0
+    repondu, echecs, nouvelles_pauses, non_appelees, partielles = 0, [], [], [], []
     for sid in utilisees:
         r = resultat.get(sid)
         if r is None:
             repondu += 1  # aucune panne signalée : comptée comme ayant répondu
             continue
         if r["issue"] == "non_appelee":
-            non_appelees += 1
+            non_appelees.append({"source": sid, "nom": noms.get(sid, sid), "raison": r["raison"]})
             continue
         e = etats.get(sid, {})
         if r["issue"] == "ok":
             repondu += 1
+            if r.get("partiel"):
+                partielles.append({"source": sid, "nom": noms.get(sid, sid), "raison": r["partiel"]})
             if e.get("erreurs_de_suite") or e.get("disjoncteur"):  # une source rappelée après reprise automatique qui répond lève sa pause
                 etat_sources.noter(cfg, sid, erreurs_de_suite=0, disjoncteur=None)
             continue
@@ -106,9 +124,11 @@ def bilan(cfg: Config, fichier: Path, jetons: dict[str, str], utilisees: list[st
             nouvelles_pauses.append({"source": sid, "nom": noms.get(sid, sid), "raison": f"{n} erreurs de suite"})
         etat_sources.noter(cfg, sid, **champs)
         echecs.append({"source": sid, "nom": noms.get(sid, sid), "raison": r["raison"]})
-    total = len(utilisees) - non_appelees  # une source qu'on n'a pas interrogée n'a ni répondu ni manqué à répondre
+    total = len(utilisees) - len(non_appelees)  # une source qu'on n'a pas interrogée n'a ni répondu ni manqué à répondre
     phrase = f"{repondu} source{'s' if repondu > 1 else ''} sur {total} {'ont' if repondu > 1 else 'a'} répondu" if total else "Aucune source n'a été utilisée"
-    return {"repondu": repondu, "total": total, "phrase": phrase, "echecs": echecs, "nouvelles_pauses": nouvelles_pauses}
+    if non_appelees:  # jamais confondue avec un résultat complet
+        phrase += f" ; {len(non_appelees)} non appelée{'s' if len(non_appelees) > 1 else ''}"
+    return {"repondu": repondu, "total": total, "phrase": phrase, "echecs": echecs, "nouvelles_pauses": nouvelles_pauses, "non_appelees": non_appelees, "partielles": partielles}
 
 
 def en_pause(cfg: Config, ids: list[str]) -> dict[str, dict[str, Any]]:

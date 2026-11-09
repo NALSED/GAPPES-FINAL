@@ -658,12 +658,20 @@ def _entree_script(ligne: dict[str, Any]) -> dict[str, Any]:
 
 
 def appliquer(
-    lignes: list[dict[str, Any]], consignes: dict[str, Any], lancer_script=None, fiabilites_sources: dict[str, str] | None = None
+    lignes: list[dict[str, Any]], consignes: dict[str, Any], lancer_script=None, fiabilites_sources: dict[str, str] | None = None, jetons: dict[str, str] | None = None
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:  # fmt: skip
     """Garde les noms que le plan laisse passer. `lancer_script(code, entree_json) -> {ok, sortie, erreur}` joue un script d'outil dans son bac à sable.
     `fiabilites_sources` (identifiant de source -> lettre A-F) sert au comparateur « Fiabilité minimale » de Filtre (3.8.06).
+    `jetons` (étiquette de prise -> identifiant de source) : `trouve_par` garde l'étiquette d'une prise (un flux RSS y est « rss-… »), le plan parle en sources déclarées.
     Rend (noms gardés, bilan) ; le bilan dit, par tuile, combien de noms elle a retirés (et lesquels, en partie), et ce qui n'a pas pu être jugé."""
     import json
+
+    jetons = jetons or {}
+    if fiabilites_sources:  # « Fiabilité minimale » lit `trouve_par` : la lettre d'une source vaut aussi pour ses prises
+        fiabilites_sources = {**{j: fiabilites_sources[s] for j, s in jetons.items() if s in fiabilites_sources}, **fiabilites_sources}
+
+    def sources_de(ligne: dict[str, Any]) -> set[str]:
+        return {jetons.get(t, t) for t in ligne.get("trouve_par") or []}
 
     equiv = consignes.get("pays_equiv") or {}
     plan_sources = set(consignes.get("sources") or [])
@@ -677,7 +685,7 @@ def appliquer(
     tuile_ia = (consignes.get("ia") or {}).get("tuile")
     atteint_ia: set[int] = set()  # noms qui atteignent la tuile Assistant IA jouée (3.8.09)
     for ch in consignes.get("chemins", []):
-        courant = [k for k, ligne in enumerate(lignes) if ch["source"] in (ligne.get("trouve_par") or [])]
+        courant = [k for k, ligne in enumerate(lignes) if ch["source"] in sources_de(ligne)]
         for etape in ch["etapes"]:
             pt = par_tuile.setdefault(etape["tuile"], {"nom": etape["nom"], "entrees": set(), "sorties": set()})
             pt["entrees"] |= set(courant)
@@ -701,20 +709,26 @@ def appliquer(
                     if lancer_script
                     else {"ok": False, "erreur": "aucun bac à sable"}
                 )
+                rendu = None
+                if res["ok"]:
+                    try:
+                        rendu = json.loads(res["sortie"])
+                    except ValueError:  # une sortie illisible ne juge aucun nom : elle ne doit pas faire perdre toute la recherche
+                        res = {"ok": False, "erreur": "sa sortie n'est pas un JSON lisible"}
                 if not res["ok"]:
                     erreurs.append(
                         f"« {etape['nom']} » : {res.get('erreur', 'le script a échoué')}. Les noms n'ont pas été jugés par ce script."
                     )
                     passe = courant
                 else:
-                    gardes_noms = {norme(x.get("nom")) for x in json.loads(res["sortie"]) if isinstance(x, dict)}
+                    gardes_noms = {norme(x.get("nom")) for x in rendu if isinstance(x, dict)}
                     passe = [k for k in courant if norme(lignes[k]["nom"]) in gardes_noms]
             pt["sorties"] |= set(passe)
             for k in set(courant) - set(passe):
                 tombes.setdefault(k, []).append((etape["tuile"], etape["nom"]))
             courant = passe
         gardes |= set(courant)
-    non_attribues = [k for k, ligne in enumerate(lignes) if not (set(ligne.get("trouve_par") or []) & plan_sources)]
+    non_attribues = [k for k, ligne in enumerate(lignes) if not (sources_de(ligne) & plan_sources)]
     gardes |= set(non_attribues)
     for k, etapes_tombees in tombes.items():
         if k in gardes:

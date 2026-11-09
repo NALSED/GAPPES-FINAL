@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from sqlalchemy.exc import OperationalError
 
 from pilote import budget
 from pilote import reglages as rg
@@ -124,7 +125,7 @@ def preparer(cfg: Config, ctx: ContexteRecherche) -> dict[str, Any]:
         "phrase": phrase, "limites": {"appels": lim["appels"], "temps_s": lim["temps_s"]},
         "mots_a_inclure": list(sujet.get("inclure") or []), "mots_a_exclure": list(sujet.get("exclure") or []),
         "combien": int(sujet.get("combien") or 200), "pays_code": code_pays(cfg, sujet, rg.charger_tolerant(cfg)[0]), "sources": mat.ids, "adaptateurs": mat.adaptateurs, "verificateurs": mat.verificateurs, "scripts": mat.scripts, "jetons": mat.jetons,
-        "exclues_budget": mat.exclues_budget, "origines_sources": mat.origines, "mains_sources": mat.mains, "fiabilites_sources": mat.fiabilites, "entree": entree,
+        "exclues_budget": mat.exclues_budget, "origines_sources": mat.origines, "mains_sources": mat.mains, "fiabilites_sources": mat.fiabilites, "couts_sources": mat.couts, "entree": entree,
         "emoji": {"saisie": contient(" ".join([phrase, str(sujet.get("lieu", "")), *map(str, sujet.get("inclure") or [])])), "ok": mat.emoji_ok, "moteur_recoit": emoji_seul},
         "plafond_atteint": depense >= plafond, "limite_source_s": min(float(lim["temps_s"]), 180.0) if lim.get("temps_s") else 180.0, "en_pause": mat.en_pause, "reserve_sources": reserve, "reserve_verification": reserve_verif,
         # Lever 3 (27-leviers-regle8-a-faire-par-sednal.md), validé dans lancement.valider_options. Son défaut, quand cette recherche ne le
@@ -218,28 +219,42 @@ class ExecuteurGrappes:
             proc = subprocess.Popen([str(py), str(PONT), str(ctx.dossier)], cwd=ctx.dossier, env=env, stdout=log, stderr=subprocess.STDOUT)
         suivi = Suivi(suivi_fichier, spec["limites"]["appels"])
         arret_demande = False
-        while proc.poll() is None:
-            ctx.avancer(**suivi.lire())
-            if ctx.doit_s_arreter() and not arret_demande:
-                (ctx.dossier / "ARRET").write_text("arrêt demandé\n", encoding="utf-8")  # le pont arrête la collecte proprement
-                arret_demande = True
-            time.sleep(self.intervalle)
-        ctx.avancer(**suivi.lire())
+
+        def montrer_l_avancement() -> None:
+            try:
+                ctx.avancer(**suivi.lire())
+            except OperationalError:  # base occupée un instant : l'avancement n'est qu'un affichage, jamais une raison d'abandonner une recherche qui dépense
+                pass
+
+        try:
+            while proc.poll() is None:
+                montrer_l_avancement()
+                if ctx.doit_s_arreter() and not arret_demande:
+                    (ctx.dossier / "ARRET").write_text("arrêt demandé\n", encoding="utf-8")  # le pont arrête la collecte proprement
+                    arret_demande = True
+                time.sleep(self.intervalle)
+        finally:
+            if proc.poll() is None:  # sortie anormale de la boucle : jamais un pont orphelin qui continue d'appeler des sources payantes
+                proc.kill()
+                proc.wait()
+        montrer_l_avancement()
         res_f = ctx.dossier / "resultat_pont.json"
         res = json.loads(res_f.read_text(encoding="utf-8")) if res_f.exists() else {"statut": "erreur", "message": "le pont n'a rien rendu"}
         if res["statut"] == "erreur":
+            self.compter_couts(ctx, spec, suivi_fichier)  # les appels faits avant la panne sont facturés : ils comptent dans le plafond du mois
             raise RuntimeError(res.get("message") or "le pont a échoué")
         if res["statut"] == "simulation":
             raise RuntimeError(res.get("message", "simulation"))
+        # Les noms d'abord : ils sont le produit de la recherche, et ce qui suit n'en est que le compte rendu. Une panne du compte rendu ne doit pas les faire perdre.
+        lignes = json.loads((ctx.dossier / "candidats.json").read_text(encoding="utf-8")) if (ctx.dossier / "candidats.json").exists() else []
+        ctx.ajouter_candidats(lignes)
+        self.compter_couts(ctx, spec, suivi_fichier)
         self.faire_le_bilan(ctx, spec, suivi_fichier)
         self.dire_l_emoji(ctx, spec)
         self.dire_le_plan(ctx, spec, res.get("plan"))
         self.dire_la_verification(ctx, res.get("verifications") or [])
-        lignes = json.loads((ctx.dossier / "candidats.json").read_text(encoding="utf-8")) if (ctx.dossier / "candidats.json").exists() else []
         self.dire_les_alertes_verification(ctx, lignes)
-        ctx.ajouter_candidats(lignes)
         self.proposer_les_rapprochements(ctx)
-        self.compter_couts(ctx, spec, suivi_fichier)
         ctx.avancer(noms=len(lignes), arret=res.get("arret", ""), duree_s=res.get("duree_s"))
         if res.get("arret") in ("demande",):
             raise Arret()
@@ -351,23 +366,26 @@ class ExecuteurGrappes:
         decls, _ = charger_sources(self.cfg)
         # les sources de vérification comptent dans le bilan comme les autres : sinon leur panne n'augmentait aucun compteur,
         # le disjoncteur ne les arrêtait jamais, et « 1 source sur 1 a répondu » cachait une vérification en échec.
-        utilisees = [*spec.get("sources", []), *(v["source"] for v in spec.get("verificateurs", []))]
+        # sans doublon : une source qui cherche et vérifie, ou qui vérifie et enrichit, reste UNE source (elle comptait pour deux dans « n sur m »)
+        utilisees = list(dict.fromkeys([*spec.get("sources", []), *(v["source"] for v in spec.get("verificateurs", []))]))
         b = disjoncteur.bilan(self.cfg, suivi_fichier, spec.get("jetons", {}), utilisees, {i: d.nom for i, d in decls.items()})
         ctx.avancer(sources_bilan=b)
         if b["echecs"]:
             ctx.noter("sources_en_echec", sources=b["echecs"], bilan=b["phrase"])
+        if b["non_appelees"]:
+            ctx.noter("sources_non_appelees", sources=b["non_appelees"])
+        if b["partielles"]:
+            ctx.noter("sources_en_partie_en_panne", sources=b["partielles"])
         for p in b["nouvelles_pauses"]:
             ctx.noter("source_mise_en_pause", **p)
 
     def compter_couts(self, ctx: ContexteRecherche, spec: dict[str, Any], suivi_fichier: Path) -> None:
-        """Garde ce que la recherche a coûté (sources payantes seulement) : c'est la dépense du mois, comparée au plafond."""
-        from pilote.moteur_sources import choisies, verificatrices
-
+        """Garde ce que la recherche a coûté (sources payantes seulement) : c'est la dépense du mois, comparée au plafond. Au tarif et sur la liste du LANCEMENT :
+        relus à la fin, une source éteinte ou une clé retirée pendant la recherche faisait disparaître des appels déjà facturés."""
         n = appels_par_source(suivi_fichier, spec.get("jetons", {}))
         if not n:
             return
-        reg, _ = rg.charger_tolerant(self.cfg)
-        sources = {d.id: (d, rg.choix_source(reg, d)["cout"]) for d in [*choisies(self.cfg, ctx.parametres), *verificatrices(self.cfg, ctx.parametres)]}
+        sources: dict[str, tuple[None, dict[str, Any]]] = {sid: (None, cout) for sid, cout in (spec.get("couts_sources") or {}).items()}
         _, unites = ctx.depense_du_mois()
         couts = budget.couts_de_la_recherche(sources, n, unites)
         ctx.enregistrer_couts(couts)

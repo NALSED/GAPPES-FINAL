@@ -312,7 +312,8 @@ def importer(cfg: Config, decls: dict[str, Declaration], texte: str) -> dict[str
             # (F17-4b — une source déclarée peut envoyer cette clé à l'adresse de son choix ; voir le domaine, Réglages > Détails)
             cles_deja_presentes.append({"source": s, "cle": noms_cle[0] if len(noms_cle) == 1 else noms_cle})
         ex = str(b.get("exemple_reponse") or "")
-        if ex and (Path(ex).is_absolute() or ".." in Path(ex).parts):
+        # Seulement `exemples/<fichier>` : un exemple nommé « x.yaml » s'écrivait à côté des déclarations, sans contrôle, et devenait une source (programme local compris).
+        if ex and (Path(ex).parent != Path("exemples") or Path(ex).name == ".."):
             raise ConfigRefusee(f"{s} : le chemin de l'exemple de réponse est refusé.")
         valider_declaration(b, cfg, f"{s}.yaml")
         a_ecrire.append((s, b))

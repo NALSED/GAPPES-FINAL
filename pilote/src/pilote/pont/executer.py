@@ -23,6 +23,8 @@ from pathlib import Path
 
 from grappes import avancement
 
+ABANDON = "arrêt demandé : source abandonnée"
+
 
 def main(dossier: str) -> int:
     os.chdir(dossier)
@@ -270,7 +272,7 @@ def main(dossier: str) -> int:
             while t.is_alive():
                 t.join(0.5)
                 if t.is_alive() and arret_fichier.exists():  # l'arrêt demandé n'attend pas une source lente (son processus finit par son propre délai)
-                    return None, "arrêt demandé : source abandonnée"
+                    return None, ABANDON
                 if t.is_alive() and time.time() - debut - (temps_en_pause() - pause0) > limite_source:
                     return None, f"délai dépassé ({limite_source:g} s)"
             if "exc" in sortie:
@@ -288,9 +290,10 @@ def main(dossier: str) -> int:
         for n, (source, executer_) in enumerate(executions):
             if arret_quota[0] or (arret_local() if source in locales else doit_s_arreter()):
                 # une source choisie qui n'est PAS appelée doit être dite : sans cela, « n sources sur n ont répondu » comptait
-                # des sources jamais interrogées, et leur silence ressemblait à une absence de résultat.
+                # des sources jamais interrogées, et leur silence ressemblait à une absence de résultat. Dite, mais pas comme une
+                # panne : le disjoncteur mettait en pause une source qu'on n'avait jamais interrogée.
                 for reste, _ in executions[n:]:
-                    avancement.signaler("source_echec", prise=reste, raison=f"non appelée : {resultat['arret'] or 'limite'} atteint avant son tour")
+                    avancement.signaler("source_non_appelee", prise=reste, raison=f"non appelée : {resultat['arret'] or 'limite'} atteint avant son tour")
                 break
             if source not in emoji_ok and emoji_seul(source):
                 avancement.signaler("prise_fin", prise=source, trouves=0, noms=0, statut="non appelée : la saisie ne contient qu'un emoji, que cette source ne cherche pas")  # ni succès ni panne
@@ -299,14 +302,17 @@ def main(dossier: str) -> int:
             raison = ""
             try:
                 noms, raison = isole(executer_)
-                if noms is None:
+                if noms is None and raison == ABANDON:  # c'est la personne qui a arrêté la recherche : la source n'y est pour rien
+                    noms, statut = [], "arrêté"
+                    avancement.signaler("source_non_appelee", prise=source, raison=raison)
+                elif noms is None:
                     noms, statut = [], f"erreur : {raison}"
                 else:
                     statut = "ok"
             except adaptateurs.LimiteAtteinte:
                 doit_s_arreter()
                 noms, statut = [], "arrêté"
-                avancement.signaler("source_echec", prise=source, raison="arrêtée : la part d'appels de la recherche (hors vérification) est épuisée")  # dit, jamais en silence
+                avancement.signaler("source_non_appelee", prise=source, raison="arrêtée : la part d'appels de la recherche (hors vérification) est épuisée")  # dit, jamais en silence, et pas comme une panne
             except adaptateurs.ErreurSource as exc:
                 noms, statut, raison = [], f"erreur : {exc}", str(exc)
                 if attente_action == "arreter" and getattr(exc, "code", None) in (429, 503):
@@ -330,7 +336,7 @@ def main(dossier: str) -> int:
         par_nom: dict[str, list] = {}
         for d in ctx.decouverts:
             par_nom.setdefault(fusion.norm_name(d.nom), []).append(d)
-        from pilote.pont.faits import Provenance, faits_candidat
+        from pilote.pont.faits import Provenance, est_exclu, faits_candidat
 
         eco_par_site: dict[str, str] = {}
         for o in db.load_observations():
@@ -347,11 +353,11 @@ def main(dossier: str) -> int:
                 eco, _, ident = e["cle"].partition(":")
                 fournisseurs_par_site.setdefault(site_key(ident) if eco in ("web", "rss") else e["cle"], set()).add(e["prise"])
         prov = Provenance(spec.get("jetons", {}), spec.get("origines_sources", {}), spec.get("mains_sources", {}), eco_par_site, fournisseurs_par_site)
-        exclus = [fusion.norm_name(m) for m in spec.get("mots_a_exclure", []) if m.strip()]
+        exclus = [n for m in spec.get("mots_a_exclure", []) if (n := fusion.norm_name(m))]  # un mot réduit à rien (« !!! ») n'exclut rien
         lignes, vus = [], set()
         for c, _lg, p in classes:
             nn = fusion.norm_name(c.nom or "")
-            if not nn or nn in vus or any(m in nn.split() or m in nn for m in exclus):
+            if not nn or nn in vus or est_exclu(nn, exclus):
                 continue
             vus.add(nn)
             # Règle 8 (904/Q31) : un compte marqué « personne » mais qui matche directement la recherche (probabilité
@@ -367,7 +373,7 @@ def main(dossier: str) -> int:
         if plan.get("chemins") is not None:  # le plan de travail : on ne garde que les noms que ses branches laissent passer, AVANT de vérifier (inutile de vérifier ce qu'on retire)
             from pilote import suite_plan, suite_script
 
-            lignes, bilan_plan = suite_plan.appliquer(lignes, plan, suite_script.executer, fiabilites_sources=spec.get("fiabilites_sources"))
+            lignes, bilan_plan = suite_plan.appliquer(lignes, plan, lambda code, entree: suite_script.executer(code, entree, sortie_max=None), fiabilites_sources=spec.get("fiabilites_sources"), jetons=spec.get("jetons"))
             resultat["plan"] = {**bilan_plan, "traductions": effets_traduction}
             ia_spec = plan.get("ia")
             if ia_spec:  # Assistant IA (3.8.09) : après les chemins, avant la vérification, sur les noms qui atteignent la tuile

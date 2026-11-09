@@ -510,3 +510,282 @@ def test_une_verificatrice_n_est_retenue_qu_avec_sa_cle_et_le_mode_plus(cfg):
         assert "courtlistener" in [d.id for d in verificatrices(cfg, {})]
         verif_active(c, "memes")
         assert "courtlistener" not in [d.id for d in verificatrices(cfg, {})]  # source de vérification seule : réservée au mode « plus »
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Revue de tout le paquet (après D112) : un test par défaut corrigé.
+
+
+def _avancement(tmp_path, evenements):
+    f = tmp_path / "avancement.jsonl"
+    f.write_text("\n".join(json.dumps(x) for x in evenements) + "\n", encoding="utf-8")
+    return f
+
+
+# --- [ ] La sortie d'un script de plan, longue ou illisible, ne fait plus perdre toute la recherche.
+def test_la_sortie_d_un_script_de_plan_n_est_ni_coupee_ni_fatale():
+    from pilote import suite_plan, suite_script
+
+    lignes = [{"nom": f"Association sportive numero {i}", "trouve_par": ["s"], "faits": {}} for i in range(1500)]
+    consignes = {"sources": ["s"], "chemins": [{"source": "s", "etapes": [{"op": "script", "code": "x", "tuile": "t", "nom": "S"}]}]}
+    gardees, bilan = suite_plan.appliquer(lignes, consignes, lambda code, entree: {"ok": True, "sortie": entree[:20_000]})
+    assert len(gardees) == 1500 and "pas un JSON lisible" in bilan["erreurs"][0]  # non jugés : les noms restent, et c'est dit
+    entree = json.dumps([{"nom": "x" * 50} for _ in range(1000)])
+    assert len(suite_script.executer("def run(resultats):\n    return resultats\n", entree, sortie_max=None)["sortie"]) > suite_script.SORTIE_MAX
+
+
+# --- [ ] Une source qu'on n'a jamais appelée (limite atteinte, arrêt demandé) n'augmente pas son compteur de pannes, et c'est dit.
+def test_une_source_jamais_appelee_n_est_pas_une_panne(cfg, tmp_path):
+    f = _avancement(tmp_path, [{"evenement": "source_non_appelee", "prise": "a", "raison": "non appelée : appels atteint avant son tour"}, {"evenement": "source_ok", "prise": "b"}])
+    b = disjoncteur.bilan(cfg, f, {"a": "a", "b": "b"}, ["a", "b"], {"a": "A", "b": "B"})
+    assert b["echecs"] == [] and b["total"] == 1 and b["phrase"] == "1 source sur 1 a répondu ; 1 non appelée" and b["non_appelees"][0]["source"] == "a"
+    assert "erreurs_de_suite" not in etat_sources.lire(cfg).get("a", {})
+
+
+# --- [ ] Un flux mort ne condamne pas toute la liste de flux ; une vérification réussie n'efface pas la panne d'une recherche.
+def test_le_disjoncteur_ne_confond_pas_les_prises_d_une_source(tmp_path):
+    f = _avancement(tmp_path, [
+        {"evenement": "prise_fin", "prise": "flux-1", "statut": "ok"},
+        {"evenement": "prise_fin", "prise": "flux-2", "statut": "erreur : HTTP 500"},
+        {"evenement": "source_echec", "prise": "v", "raison": "panne"},
+        {"evenement": "source_ok", "prise": "v"},
+    ])  # fmt: skip
+    r = disjoncteur.issues(f, {"flux-1": "rss", "flux-2": "rss", "v": "v"})
+    assert r["rss"]["issue"] == "ok" and "1 prise sur 2 en panne" in r["rss"]["partiel"]
+    assert r["v"]["issue"] == "echec"
+
+
+# --- [ ] Une vérification qui n'a examiné aucun nom n'a pas répondu : elle ne lève pas une pause.
+def test_une_verification_sans_nom_examine_ne_dit_pas_que_la_source_a_repondu():
+    evenements = []
+    verifier_candidats([{"nom": "Sans site", "site": ""}], {"verificateurs": [{"source": "v", "module": "wayback", "verifie_sur": "site"}]}, {}, lambda: False, 60.0, lambda ev, **d: evenements.append((ev, d)))
+    assert not any(ev == "source_ok" for ev, _ in evenements)
+    assert next(d for ev, d in evenements if ev == "prise_fin")["statut"].startswith("non appelée")
+
+
+# --- [ ] Une alerte n'est jamais masquée par un homonyme que la source a rangé devant elle.
+def test_une_alerte_n_est_pas_masquee_par_un_homonyme_range_devant(monkeypatch):
+    from pilote import adaptateurs
+
+    rendus = [{"nom": "X", "signal": "information", "origine": "registre"}, {"nom": "X", "signal": "alerte", "origine": "sanctions", "numero": "id"}]
+    monkeypatch.setattr(adaptateurs, "charger", lambda nom: type("M", (), {"chercher": staticmethod(lambda e, c, p: rendus)}))
+    lignes = [{"nom": "X", "site": "x.example"}]
+    verifier_candidats(lignes, {"verificateurs": [{"source": "v", "module": "m"}]}, {}, lambda: False, 60.0, lambda *a, **k: None)
+    assert lignes[0]["faits"]["verifications"][0]["signal"] == "alerte"
+
+
+# --- [ ] Un filtre du plan juge aussi les noms d'un flux RSS, connus par leur prise et non par leur source.
+def test_un_filtre_du_plan_juge_aussi_les_noms_trouves_par_une_prise():
+    from pilote import suite_plan
+
+    filtre = {"op": "garder", "mode": "et", "lignes": [{"champ": "pays", "comparateur": "egal", "valeurs": ["FR"]}], "tuile": "f", "nom": "Filtre"}
+    lignes = [{"nom": "Hors zone", "pays": "UK", "trouve_par": ["rss-a-1"], "faits": {}}, {"nom": "Ici", "pays": "FR", "trouve_par": ["rss-a-1"], "faits": {}}]
+    gardees, bilan = suite_plan.appliquer(lignes, {"sources": ["flux"], "chemins": [{"source": "flux", "etapes": [filtre]}]}, jetons={"rss-a-1": "flux"})
+    assert [x["nom"] for x in gardees] == ["Ici"] and bilan["non_attribues"] == 0
+    fiable = {**filtre, "lignes": [{"champ": "_fiabilite", "comparateur": "min", "valeurs": ["B"]}]}
+    gardees, _ = suite_plan.appliquer(lignes[:1], {"sources": ["flux"], "chemins": [{"source": "flux", "etapes": [fiable]}]}, fiabilites_sources={"flux": "A"}, jetons={"rss-a-1": "flux"})
+    assert len(gardees) == 1  # la lettre de la source vaut pour sa prise
+
+
+# --- [ ] Un preset importé n'écrit rien hors du dossier des exemples : sinon un « exemple » devenait une source.
+def test_un_preset_importe_n_ecrit_pas_hors_du_dossier_des_exemples(cfg):
+    from pilote import presets
+    from pilote.refus import ConfigRefusee
+    from pilote.sources import charger_sources
+    from pilote.tests_source import _brut
+
+    declaration = {**_brut(next(iter(charger_sources(cfg)[0].values()))), "id": "piege", "exemple_reponse": "programme.yaml"}  # valide : c'est bien le chemin qui est refusé
+    texte = yaml.safe_dump({"format": presets.FORMAT_EXPORT, "preset": {"nom": "Piège", "sources": ["piege"]}, "declarations": [declaration], "exemples": {"programme.yaml": "id: programme\n"}})
+    with pytest.raises(ConfigRefusee, match="exemple de réponse"):
+        presets.importer(cfg, {}, texte)
+    assert not (cfg.dossier_sources / "programme.yaml").exists()
+
+
+# --- [ ] Le lieu reste dans la requête de l'annuaire des entreprises à toutes les pages.
+def test_l_annuaire_des_entreprises_garde_le_lieu_sur_toutes_les_pages():
+    from pilote.adaptateurs import recherche_entreprises as m
+
+    vues = []
+
+    class Faux:
+        def get_json(self, url, params):
+            vues.append(params["q"])
+            return {"results": [], "total_pages": 3}
+
+    m.chercher({"quoi": "handball", "lieu": "Lyon", "limite": 200}, Faux(), {})
+    assert vues == ["handball Lyon"] * 3
+
+
+# --- [ ] Plusieurs mots cherchés dans OpenStreetMap restent une alternative.
+def test_plusieurs_mots_restent_une_alternative_dans_overpass():
+    from pilote.adaptateurs import osm_lieux
+
+    assert '"handball|basket"' in osm_lieux.requete("", "area.z", [("leisure", "pitch")], ["handball", "basket"], 10)
+
+
+# --- [ ] Un mot à exclure est un mot entier.
+def test_un_mot_exclu_est_un_mot_entier():
+    from pilote.pont.faits import est_exclu
+
+    assert not est_exclu("marteau pilon", ["art"]) and est_exclu("club art moderne", ["art"]) and est_exclu("club art moderne", ["art moderne"])
+
+
+# --- [ ] Une source disparue ou un preset supprimé, déjà écrits dans les réglages, ne bloquent pas les autres changements ; rien n'est effacé.
+def test_une_entree_orpheline_ne_bloque_pas_les_autres_reglages(cfg):
+    from pilote import presets
+    from pilote import reglages as rg
+    from pilote.refus import ConfigRefusee
+    from pilote.sources import charger_sources
+
+    decls, _ = charger_sources(cfg)
+    cfg.fichier_reglages.write_text(yaml.safe_dump({"presets_coches": ["preset-supprime"], "sources": {"source-disparue": {"chercher": True}}}), encoding="utf-8")
+    r = rg.appliquer(cfg, decls, presets.ids_connus(cfg), {"budget": {"plafond_mensuel_usd": 3.0}})
+    assert r["budget"]["plafond_mensuel_usd"] == 3.0 and r["presets_coches"] == ["preset-supprime"] and "source-disparue" in r["sources"]
+    with pytest.raises(ConfigRefusee):  # ce qu'on demande MAINTENANT reste contrôlé
+        rg.appliquer(cfg, decls, presets.ids_connus(cfg), {"source": {"id": "source-disparue", "chercher": True}})
+    with pytest.raises(ConfigRefusee):
+        rg.appliquer(cfg, decls, presets.ids_connus(cfg), {"presets_coches": ["preset-inconnu"]})
+
+
+# --- [ ] L'agent de l'Assistant IA ne reçoit aucun outil et ne tourne pas là où se trouve la copie des clés.
+def test_l_agent_ia_tourne_sans_outil_et_hors_du_dossier_de_la_recherche(monkeypatch, tmp_path):
+    import os
+    import subprocess
+    from types import SimpleNamespace
+
+    from pilote import suite_ia
+
+    vu = {}
+
+    def faux_run(cmd, **k):
+        vu.update(cmd=cmd, cwd=k.get("cwd"))
+        return SimpleNamespace(stdout=json.dumps({"result": "ok", "usage": {}}), stderr="", returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", faux_run)
+    monkeypatch.chdir(tmp_path)
+    assert suite_ia.demander("", "x")[0] == "ok"
+    assert vu["cwd"] and vu["cwd"] != os.getcwd() and vu["cmd"][vu["cmd"].index("--tools") + 1] == ""
+
+
+# --- [ ] Une source qui cherche et vérifie compte pour une seule source dans le bilan.
+def test_une_source_a_plusieurs_roles_ne_compte_qu_une_fois_dans_le_bilan(cfg, tmp_path):
+    from pilote.executeur_grappes import ExecuteurGrappes
+
+    ctx = FauxContexte()
+    ExecuteurGrappes(cfg).faire_le_bilan(ctx, {"sources": ["a"], "verificateurs": [{"source": "a"}, {"source": "a"}], "jetons": {"a": "a"}}, _avancement(tmp_path, [{"evenement": "source_ok", "prise": "a"}]))
+    assert ctx.avances["sources_bilan"]["total"] == 1 and ctx.avances["sources_bilan"]["repondu"] == 1
+
+
+class _FauxPont:
+    """Un pont sans processus réel : déjà fini, ou qui tourne tant qu'on ne l'a pas tué."""
+
+    def __init__(self, tours_avant_la_fin=0):
+        self.tours, self.tue = tours_avant_la_fin, False
+
+    def poll(self):
+        if self.tue or self.tours == 0:
+            return 0
+        self.tours -= 1
+        return None
+
+    def kill(self):
+        self.tue = True
+
+    def wait(self):
+        return 0
+
+
+class _ContexteComplet(FauxContexte):
+    def __init__(self, dossier):
+        super().__init__()
+        self.dossier, self.parametres, self.recherche_id, self._fabrique = dossier, {}, "r", None
+        self.candidats, self.couts = [], None
+
+    def ajouter_candidats(self, lignes):
+        self.candidats.extend(lignes)
+        return len(lignes)
+
+    def depense_du_mois(self):
+        return 0.0, {}
+
+    def enregistrer_couts(self, couts):
+        self.couts = couts
+
+    def doit_s_arreter(self):
+        return False
+
+
+def _executeur(monkeypatch, cfg, pont, au_lancement=lambda: None):
+    import pilote.executeur_grappes as eg
+
+    spec = {"exclues_budget": [], "en_pause": [], "limites": {"appels": 5}, "sources": ["payante"], "verificateurs": [], "adaptateurs": [], "scripts": [], "jetons": {"payante": "payante"},
+            "couts_sources": {"payante": {"unite": "appel", "vers_dollar": 0.5, "par_appel": 1, "gratuit_par_mois": 0}}}  # fmt: skip
+
+    def popen(*a, **k):
+        au_lancement()
+        return pont
+
+    monkeypatch.setattr(eg, "preparer", lambda c, ctx: spec)
+    monkeypatch.setattr(eg.subprocess, "Popen", popen)
+    monkeypatch.setattr(eg.ExecuteurGrappes, "proposer_les_rapprochements", lambda self, ctx: None)
+    return eg.ExecuteurGrappes(cfg, intervalle=0)
+
+
+# --- [ ] Les noms sont écrits avant le compte rendu : une panne du compte rendu ne les fait pas perdre.
+def test_les_noms_sont_gardes_meme_si_le_compte_rendu_tombe_en_panne(monkeypatch, cfg, tmp_path):
+    ctx = _ContexteComplet(tmp_path)
+
+    def fini():
+        (tmp_path / "resultat_pont.json").write_text('{"statut": "ok"}', encoding="utf-8")
+        (tmp_path / "candidats.json").write_text('[{"nom": "A"}]', encoding="utf-8")
+
+    ex = _executeur(monkeypatch, cfg, _FauxPont(), fini)
+
+    def panne(*a):
+        raise RuntimeError("panne du compte rendu")
+
+    monkeypatch.setattr(type(ex), "faire_le_bilan", panne)
+    with pytest.raises(RuntimeError):
+        ex(ctx)
+    assert ctx.candidats == [{"nom": "A"}]
+
+
+# --- [ ] Une recherche en panne compte ce qu'elle a dépensé, au tarif de son lancement.
+def test_une_recherche_en_panne_compte_ce_qu_elle_a_depense(monkeypatch, cfg, tmp_path):
+    ctx = _ContexteComplet(tmp_path)
+
+    def fini():
+        (tmp_path / "resultat_pont.json").write_text('{"statut": "erreur", "message": "panne du pont"}', encoding="utf-8")
+        (tmp_path / "avancement.jsonl").write_text(json.dumps({"evenement": "appel", "prise": "payante"}) + "\n", encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="panne du pont"):
+        _executeur(monkeypatch, cfg, _FauxPont(), fini)(ctx)
+    assert ctx.couts["payante"]["dollars"] == 0.5
+
+
+# --- [ ] Une base occupée n'abandonne pas la recherche ; toute autre sortie de la boucle ne laisse jamais un pont orphelin.
+def test_le_suivi_du_pont_tolere_une_base_occupee_et_ne_laisse_pas_d_orphelin(monkeypatch, cfg, tmp_path):
+    from sqlalchemy.exc import OperationalError
+
+    class Occupee(_ContexteComplet):
+        def avancer(self, **champs):
+            if "appels_faits" in champs:
+                raise OperationalError("x", {}, Exception("database is locked"))
+            super().avancer(**champs)
+
+    (tmp_path / "ok").mkdir()
+
+    def fini():
+        (tmp_path / "ok" / "resultat_pont.json").write_text('{"statut": "ok"}', encoding="utf-8")
+
+    _executeur(monkeypatch, cfg, _FauxPont(tours_avant_la_fin=2), fini)(Occupee(tmp_path / "ok"))
+
+    class Cassee(_ContexteComplet):
+        def avancer(self, **champs):
+            raise ValueError("panne")
+
+    pont = _FauxPont(tours_avant_la_fin=1000)
+    (tmp_path / "ko").mkdir()
+    with pytest.raises(ValueError):
+        _executeur(monkeypatch, cfg, pont)(Cassee(tmp_path / "ko"))
+    assert pont.tue

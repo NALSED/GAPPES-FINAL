@@ -70,7 +70,7 @@ def requete(preambule: str, cadre: str, filtres: list[tuple[str, str]], mots: li
         if mots and etendue:
             lignes += [f'nwr({cadre}){f}["sport"="{_echapper(m)}"];' for m in mots]
         elif mots:
-            motif = _echapper("|".join(mots))
+            motif = "|".join(_echapper(m) for m in mots)  # chaque mot à part : échappé après coup, « | » devenait un caractère à chercher et deux mots ne trouvaient plus rien
             lignes += [f'nwr({cadre}){f}["sport"~"{motif}",i];', f'nwr({cadre}){f}["name"~"{motif}",i];']
         else:
             lignes.append(f'nwr({cadre}){f}["name"];')

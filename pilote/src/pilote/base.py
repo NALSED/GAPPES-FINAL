@@ -106,7 +106,7 @@ def creer_moteur(url: str) -> Engine:
         chemin = url.split("///", 1)[-1]
         if chemin and chemin != ":memory:":
             Path(chemin).parent.mkdir(parents=True, exist_ok=True)
-        return create_engine(url, connect_args={"check_same_thread": False})
+        return create_engine(url, connect_args={"check_same_thread": False, "timeout": 30})  # deux recherches écrivent leur avancement deux fois par seconde : les 5 s par défaut sont courtes
     return create_engine(url)
 
 

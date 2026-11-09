@@ -30,8 +30,9 @@ sys.stdout.write(json.dumps(resultat, ensure_ascii=False))
 """
 
 
-def executer(code: str, entree: str) -> dict:
-    """{ok, sortie, erreur?}. L'entrée est une liste JSON de dictionnaires."""
+def executer(code: str, entree: str, sortie_max: int | None = SORTIE_MAX) -> dict:
+    """{ok, sortie, erreur?}. L'entrée est une liste JSON de dictionnaires. `sortie_max` borne ce qu'affiche le test d'un outil ;
+    une recherche passe None : sa sortie est relue en JSON, et une coupure au milieu la rendrait illisible."""
     try:
         donnees = json.loads(entree)
     except ValueError:
@@ -86,4 +87,4 @@ def executer(code: str, entree: str) -> dict:
     if p.returncode != 0:
         derniere = (p.stderr.strip().splitlines() or ["le script a échoué"])[-1]
         return {"ok": False, "sortie": "", "erreur": derniere[:300]}
-    return {"ok": True, "sortie": p.stdout[:SORTIE_MAX]}
+    return {"ok": True, "sortie": p.stdout if sortie_max is None else p.stdout[:sortie_max]}

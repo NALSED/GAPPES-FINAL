@@ -148,8 +148,9 @@ def _nombre(v: Any, nom: str, minimum: float, maximum: float | None = None) -> f
     return float(v)
 
 
-def verifier(r: dict[str, Any], decls: dict[str, Declaration], presets_connus: set[str]) -> None:
-    """Lève ConfigRefusee, en français, si les réglages ne tiennent pas."""
+def verifier(r: dict[str, Any], decls: dict[str, Declaration], presets_connus: set[str], orphelines: set[str] | frozenset[str] = frozenset()) -> None:
+    """Lève ConfigRefusee, en français, si les réglages ne tiennent pas. `orphelines` : des entrées de sources déjà écrites dont la déclaration a disparu ; elles restent
+    dans le fichier et ne sont pas jugées."""
     b = r.get("budget") or {}
     _nombre(b.get("plafond_mensuel_usd"), "Le plafond de dépense mensuel", 0.0, 100000.0)
     if not isinstance((r.get("verification") or {}).get("active"), bool):
@@ -187,6 +188,8 @@ def verifier(r: dict[str, Any], decls: dict[str, Declaration], presets_connus: s
         mauvais = [c for c in (coches if isinstance(coches, list) else []) if c not in presets_connus]
         raise ConfigRefusee(f"Le preset « {mauvais[0] if mauvais else '?'} » n'existe pas.")
     for sid, s in (r.get("sources") or {}).items():
+        if sid in orphelines:
+            continue
         if sid not in decls:
             raise ConfigRefusee(f"La source « {sid} » n'existe pas : aucune déclaration à ce nom.")
         d = decls[sid]
@@ -245,6 +248,12 @@ def appliquer(cfg: Config, decls: dict[str, Declaration], presets_connus: set[st
 
 def _appliquer(cfg: Config, decls: dict[str, Declaration], presets_connus: set[str], patch: dict[str, Any]) -> dict[str, Any]:
     r = charger(cfg)
+    # Une source dont la déclaration a disparu, un preset personnalisé supprimé alors qu'il était coché : ce qui est DÉJÀ écrit reste, sans bloquer les autres réglages.
+    # Sans cela, plus aucun changement n'était accepté. Ce que ce changement-ci demande reste contrôlé.
+    touchees = {*(patch.get("sources") or {}), *([patch["source"]["id"]] if "source" in patch else [])}
+    orphelines = {sid for sid in r["sources"] if sid not in decls} - touchees
+    if "presets_coches" not in patch:
+        presets_connus = presets_connus | {c for c in r["presets_coches"] if isinstance(c, str)}
     for k, v in patch.items():
         if k == "source":
             sid = v["id"]
@@ -259,7 +268,7 @@ def _appliquer(cfg: Config, decls: dict[str, Declaration], presets_connus: set[s
         else:
             r[k] = v
     _rendre_visibles_les_sources_allumees(r, decls)
-    verifier(r, decls, presets_connus)
+    verifier(r, decls, presets_connus, orphelines)
     ecrire_atomique(cfg.fichier_reglages, yaml_texte(r, ENTETE))
     return r
 

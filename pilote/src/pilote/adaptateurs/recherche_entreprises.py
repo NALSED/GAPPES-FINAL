@@ -85,10 +85,10 @@ def chercher(entree: dict[str, Any], client: Client, parametres: dict[str, Any])
     limite = int(entree.get("limite") or 25)
     extra: dict[str, Any] = {"est_association": "true"} if filtre == "association" else {}
     if entree.get("lieu"):
-        extra["q"] = f"{q} {entree['lieu']}"
+        q = f"{q} {entree['lieu']}"  # sur TOUTES les pages : à partir de la deuxième, le lieu disparaissait et la liste se remplissait de noms d'ailleurs
     out: list[dict[str, Any]] = []
     for page in range(1, 5):
-        rep = client.get_json(URL, {"q": extra.pop("q", q), "page": page, "per_page": PAR_PAGE, "etat_administratif": "A", **extra})
+        rep = client.get_json(URL, {"q": q, "page": page, "per_page": PAR_PAGE, "etat_administratif": "A", **extra})
         out += convertir(rep, filtre, int(parametres.get("etablissements", 0)))
         if len(out) >= limite or page >= int(rep.get("total_pages") or 1):
             break

@@ -73,8 +73,8 @@ def test_route_api_operations_ia(cfg):
 
 def test_commande_silencieuse_demande_du_json_passe_le_modele_et_l_effort(monkeypatch):
     monkeypatch.setattr(suite_ia, "chemin_agent", lambda: "/x/claude")
-    assert suite_ia.commande("", "fais ceci") == ["/x/claude", "-p", "fais ceci", "--output-format", "json"]
-    assert suite_ia.commande("haiku", "fais ceci") == ["/x/claude", "-p", "fais ceci", "--output-format", "json", "--model", "haiku"]
+    assert suite_ia.commande("", "fais ceci") == ["/x/claude", "-p", "fais ceci", "--output-format", "json", "--tools", ""]
+    assert suite_ia.commande("haiku", "fais ceci") == ["/x/claude", "-p", "fais ceci", "--output-format", "json", "--tools", "", "--model", "haiku"]
     assert suite_ia.commande("", "fais ceci", "low")[-2:] == ["--effort", "low"]
 
 

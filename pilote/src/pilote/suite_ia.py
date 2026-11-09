@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -51,7 +52,8 @@ def commande(modele: str, prompt: str, effort: str = "") -> list[str]:
     """La ligne de commande silencieuse (`claude -p "…" --model <modèle> --effort <niveau> --output-format json`),
     isolée pour être testée sans lancer de processus réel. Le JSON porte `result` (le texte) et `usage` (les
     tokens, Q33) — sans lui il n'y aurait qu'un texte brut, sans aucun moyen de compter la consommation réelle."""
-    cmd = [chemin_agent() or "claude", "-p", prompt, "--output-format", "json"]
+    # Aucun outil : l'agent ne fait que transformer du texte, et ce texte vient de pages web (un nom peut y porter une consigne cachée).
+    cmd = [chemin_agent() or "claude", "-p", prompt, "--output-format", "json", "--tools", ""]
     if modele:
         cmd += ["--model", modele]
     if effort:
@@ -69,7 +71,8 @@ def demander(modele: str, prompt: str, effort: str = "") -> tuple[str, int]:
     installé, ne répond pas ou signale lui-même une erreur (`is_error`) ; ValueError si sa réponse n'est pas le
     JSON attendu ou que le texte est vide — jamais un fait inventé en silence."""
     try:
-        p = subprocess.run(commande(modele, prompt, effort), capture_output=True, text=True, timeout=DELAI_S, check=False)
+        with tempfile.TemporaryDirectory(prefix="pilote-ia-") as vide:  # jamais dans le dossier de la recherche : la copie des clés s'y trouve
+            p = subprocess.run(commande(modele, prompt, effort), capture_output=True, text=True, timeout=DELAI_S, check=False, cwd=vide)
     except FileNotFoundError as exc:
         raise OSError("l'agent Claude Code n'est pas installé sur cette machine (introuvable sur le PATH)") from exc
     except subprocess.TimeoutExpired as exc:
@@ -81,6 +84,8 @@ def demander(modele: str, prompt: str, effort: str = "") -> tuple[str, int]:
             derniere = (p.stderr.strip().splitlines() or ["il s'est arrêté sans message"])[-1][:200]
             raise OSError(f"l'agent Claude Code n'a pas pu répondre : {derniere}") from exc
         raise ValueError("l'agent Claude Code n'a pas rendu une réponse JSON lisible") from exc
+    if not isinstance(d, dict):
+        d = {}  # un JSON qui n'est pas un objet ne porte aucune réponse : traité plus bas comme une réponse vide
     if p.returncode != 0 or d.get("is_error"):
         raise OSError(f"l'agent Claude Code a signalé une erreur : {str(d.get('result') or '').strip()[:200] or 'sans message'}")
     sortie = str(d.get("result") or "").strip()

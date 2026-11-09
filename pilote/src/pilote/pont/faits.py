@@ -32,6 +32,11 @@ class Provenance:
     fournisseurs_par_site: dict[str, set[str]] = field(default_factory=dict)  # site -> identifiants des sources qui ont trouvé cette page
 
 
+def est_exclu(nom_norme: str, exclus: list[str]) -> bool:
+    """Vrai si le nom (déjà mis à plat) contient un mot à exclure, ou une suite de mots, ENTIER : exclure « art » ne retire pas « Marteau »."""
+    return any(f" {m} " in f" {nom_norme} " for m in exclus)
+
+
 def _ecosysteme(ref: str) -> str:
     return ref.partition(":")[0]
 

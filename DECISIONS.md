@@ -783,3 +783,23 @@ Rectifications d'entrées de ce même jour (le journal reste en ajout seul, les 
 * **D110, « construit et testé de bout en bout » : exagéré.** L'ajout du qualificatif au texte de la requête
   (`_qualifiee`, `pont/executer.py`) n'est exécuté par aucun test, et aucune source réelle ne déclare `operateurs` :
   la tuile n'a aujourd'hui aucun effet sur une requête.
+
+## D113 — Revue de tout le paquet `pilote/src/pilote` : quinze défauts corrigés (09/11/2026)
+
+Revue limitée à quinze points par sa consigne. Chaque point a son test dans `test_f17_revue.py`, contrôlé en échec sur `a1b427e`.
+
+* **Recherche perdue :** la sortie d'un script de plan était coupée à 20 000 caractères puis relue en JSON. Une recherche ne la coupe plus, et une sortie illisible ne juge aucun nom sans faire tomber la recherche.
+* **Noms d'abord :** ils sont écrits avant le bilan et les comptes rendus, dont une panne ne les fait plus perdre.
+* **Disjoncteur :** une source non appelée (limite atteinte, arrêt demandé) n'est plus une panne : nouvel événement `source_non_appelee`, dit dans la phrase du bilan. Une vérification qui n'a examiné aucun nom n'est plus une réponse. Une prise en échec le reste même si sa vérification réussit. **Choix :** une source à plusieurs prises (liste de flux) a répondu si l'une d'elles a répondu ; la panne partielle est notée au journal (`sources_en_partie_en_panne`).
+* **Bilan :** une source à plusieurs rôles compte pour une.
+* **Plan :** Filtre et « Fiabilité minimale » lisent `trouve_par` à travers les jetons (même défaut qu'`en_amont` en D112) : un nom de flux RSS passait sans être jugé.
+* **Vérification :** une alerte n'est plus masquée par un homonyme rendu avant elle.
+* **Dépense :** comptée aussi quand le pont échoue, au tarif et sur la liste du lancement (`couts_sources`).
+* **Suivi du pont :** une base occupée n'abandonne plus la recherche (attente SQLite portée à 30 s) ; toute sortie anormale de la boucle tue le pont.
+* **Réglages :** **choix :** une source disparue ou un preset supprimé déjà écrits restent dans le fichier sans bloquer les autres changements ; ce que le changement demande reste contrôlé.
+* **Sécurité :** l'import d'un preset n'écrit d'exemple que dans `exemples/` (un exemple `x.yaml` devenait une source, programme local compris). L'agent de l'Assistant IA tourne sans outil et hors du dossier de la recherche, où se trouve la copie des clés.
+* **Requêtes :** l'annuaire des entreprises garde le lieu à toutes les pages ; plusieurs mots restent une alternative dans Overpass ; un mot à exclure est un mot entier.
+
+Trouvé mais non corrigé (au-delà des quinze points) : deux recherches simultanées dépensent le même reste du plafond ; une source posée sur deux tuiles vérifie deux fois et perd la première restriction ; `tests_source._brut` perd `origine`, `attribution`, `verifie_sur`, `fiabilite`, `operateurs` et `parametres` à l'export d'un preset ; le cache de `tri.lignes_de` ignore `relations` ; `secrets.env` de grappes reste dans la copie si `materialiser` échoue ; le jeton `sirene` manque, ses pannes sont invisibles ; `mentions` ignore les sources de vérification ; `/tri/proposer` ignore le seuil de Fusion ; `definir_role` allume vérifier/enrichir sans adaptateur ; `charger_sources` ne rattrape que `ConfigRefusee` ; le nombre de personnes écartées de FollowTheMoney est perdu ; `lancer` laisse une recherche en attente si la sauvegarde échoue ; `_executer` crée le dossier hors de son `try` ; `appels_faits` relit tout le fichier à chaque contrôle ; `noms_de_sources` est recalculé par recherche sauvegardée ; caractères illégaux en xlsx ; JSON précédé d'un espace lu comme CSV ; `_adopter_sqlite` non atomique ; `/reglages/sortie` lit et réécrit hors verrou ; un dossier d'export commun écrase `resultat.csv` d'une recherche à l'autre (à trancher, le nom du fichier est attendu par la suite de la chaîne).
+
+Le point des neuf sources `enrichir` sans `verifie_sur` reste dans `pilote/QUESTIONS.md`.

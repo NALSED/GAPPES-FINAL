@@ -66,13 +66,15 @@ def verifier_candidats(lignes: list[dict], spec: dict, secrets: dict[str, str], 
                     ligne.setdefault("faits", {}).setdefault("enrichissements", []).append({"source": source, "origine": str(trouves[0].get("origine", "")), "champs": champs})
             elif trouves:
                 faits_ok += 1
+                retenu = next((t for t in trouves if t.get("signal") == "alerte"), trouves[0])  # une alerte n'est jamais masquée par un homonyme rangé devant elle
                 ligne.setdefault("faits", {}).setdefault("verifications", []).append(
-                    {"source": source, "origine": str(trouves[0].get("origine", "")), "preuve": str(trouves[0].get("numero", "")), "signal": str(trouves[0].get("signal") or "confirmation")})  # fmt: skip
-        if not hors_service:
+                    {"source": source, "origine": str(retenu.get("origine", "")), "preuve": str(retenu.get("numero", "")), "signal": str(retenu.get("signal") or "confirmation")})  # fmt: skip
+        # Aucun nom examiné = la source n'a pas été interrogée : ce n'est pas une réponse. Sans cela, le « ok » levait sa pause et effaçait une panne de la phase de recherche.
+        if not hors_service and examines:
             signaler("source_ok", prise=source)
         complete = not hors_service and not coupee
         signaler("prise_fin", prise=source, trouves=faits_ok, noms=0, examines=examines, a_verifier=len(a_verifier),
-                 statut="erreur : défaut" if hors_service else "ok" if complete else "partielle")  # fmt: skip
+                 statut="erreur : défaut" if hors_service else f"non appelée : {coupee or 'aucun nom à examiner'}" if not examines else "ok" if complete else "partielle")  # fmt: skip
         bilans.append({"source": source, "fonction": v.get("fonction", "verifier"), "examines": examines, "a_verifier": len(a_verifier), "trouves": faits_ok,
                        "complete": complete, "raison": hors_service or coupee})  # fmt: skip
     return bilans

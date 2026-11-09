@@ -96,7 +96,7 @@ def autoriser(sources: list[tuple[Declaration, dict[str, Any]]], appels_max: int
     return ok, refusees
 
 
-def couts_de_la_recherche(sources: dict[str, tuple[Declaration, dict[str, Any]]], appels_par_source: dict[str, int], unites_deja: dict[str, float]) -> dict[str, dict[str, float]]:
+def couts_de_la_recherche(sources: dict[str, tuple[Declaration | None, dict[str, Any]]], appels_par_source: dict[str, int], unites_deja: dict[str, float]) -> dict[str, dict[str, float]]:
     """Ce que la recherche a RÉELLEMENT coûté, source par source (seulement les sources payantes), d'après le nombre exact d'appels."""
     out: dict[str, dict[str, float]] = {}
     for sid, n in appels_par_source.items():
