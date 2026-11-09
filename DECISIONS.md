@@ -707,3 +707,39 @@ suite complète hors réseau relancée en arrière-plan (résultat à suivre).
 
 Reste dans 909 : 1.3 (découverte OSINT Framework), le volet comparaison systématique ancienne UI/`/suite`. §4
 toujours en attente (décidé par la spec elle-même).
+
+## D111 — 909, §1.3.d (09/11/2026)
+
+En préparant « les trois sources de 907 gagnent le rôle verifier », constat : seules deux des trois existent
+réellement (`hdx.yaml`, `un-civil-society.yaml` — « Company Registry Atlas » n'a jamais été construit, mis de
+côté explicitement par la spec elle-même le 13/10/2026, rien à faire ici). En les examinant, découverte d'un
+bug PRÉ-EXISTANT (depuis l'import initial, avant cette session) : `ckan.yaml` déclare déjà les rôles
+`verifier`/`enrichir` depuis l'origine, mais sans jamais poser `verifie_sur` — `moteur_sources.verificatrices()`
+exige `verifie_sur in (site, nom, ville)`, donc ces deux rôles n'ont jamais été réellement appelés malgré leur
+déclaration (y compris pendant 909 §2.1.b de cette même session, où j'ai ajouté `enrichir` à `ckan.yaml` sans
+remarquer l'absence de `verifie_sur` — l'ajout restait donc muet lui aussi). Corrigé : `verifie_sur: nom` posé
+sur `ckan.yaml` (son adaptateur cherche déjà par nom, `organization_list?q=...`) ; même correctif + rôle
+`verifier` ajouté sur `hdx.yaml` et `un-civil-society.yaml`, qui partagent la même capacité de recherche par
+nom (adaptateurs `ckan`/`scrapling`). Vérifié avec un test direct (`test_f16_verification.py`) que les trois
+sont désormais prises par `verificatrices()`/`materialiser()` avec `verifie_sur: nom`.
+
+Dossier `config/sources_candidates/` créé (même forme YAML que `config/sources/`, plus `statut`), avec les
+trois candidats nommés explicitement par la spec : ICIJ Offshore Leaks Database (`verifier`, famille risque —
+même nature qu'opensanctions, un signal jamais une confirmation d'identité), entreprises exclues par les
+bailleurs internationaux (`verifier`, même famille risque), Open Ownership Register (`enrichir` — une
+relation de possession, pas une confirmation d'identité). Les trois sont `statut: a_evaluer`, avec une note
+disant explicitement que l'adresse réelle de chaque API n'a pas été vérifiée — rien de deviné, juste la
+candidature elle-même, prête pour la revue de Sednal/Claude que la spec décrit.
+
+Pas fait (1.3.a/b/c — process, pas du code pilote) : la revue périodique des branches OSINT Framework par
+Claude est une tâche récurrente, pas un livrable de code ; le « filet honnête » (lien vers la branche OSINT
+Framework quand aucune source ne couvre un pays/thème) demanderait de décider une correspondance genre/pays →
+branche, pas tranchée ici ; l'agent dédié sur `.60` avec sa mémoire propre est une décision d'assignation de
+rôle que la spec dit elle-même « viendra plus tard » — pas à moi de l'assigner depuis `.250`.
+
+Tests : nouveau test ciblé dans `test_f16_verification.py`. Lint propre ; suite complète hors réseau : 639
+passés, 1 échec pré-existant (flake déjà documenté).
+
+909 est maintenant clos pour tout ce qui est câblable sans Sednal/sans infra manquante : reste 1.3.a/b/c
+(process), le volet comparaison systématique ancienne UI/`/suite` (second volet, plus large, pas commencé),
+et §4 (mis en attente par la spec elle-même).

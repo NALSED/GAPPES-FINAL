@@ -26,6 +26,10 @@ main: premiere
 origine: registre
 roles:
 - chercher
+# 909 §1.3.d (retour du 09/11/2026) : registre de première main, cherche déjà par nom (même adaptateur que
+# ckan.yaml, qui le confirme) — verifier a du sens pour confirmer qu'une organisation publie bien sur HDX.
+- verifier
+verifie_sur: nom
 cle: ''
 cout:
   unite: appel

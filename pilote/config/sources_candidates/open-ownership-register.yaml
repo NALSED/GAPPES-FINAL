@@ -1,0 +1,24 @@
+# Candidate de source (909 §1.3.c/d) : MÊME FORME qu'une déclaration de config/sources/, plus « statut ». Ce fichier n'est
+# lu par aucun code — Sednal et Claude le relisent à la main et promeuvent ce qui est bon vers config/sources/.
+statut: a_evaluer
+motif: ''
+id: open-ownership-register
+nom: Open Ownership Register
+description: Bénéficiaires effectifs des entreprises (qui possède réellement l'entreprise derrière le nom
+  trouvé), plusieurs pays.
+trouve: bénéficiaires effectifs d'une entreprise
+genres:
+- entreprise
+pays:
+- monde
+usages:
+- organisations
+main: premiere
+origine: registre
+famille: api
+# 909 §1.3.d : relation de possession, pas une confirmation d'identité de l'entreprise elle-même — enrichir
+# (un champ en plus, jamais une substitution) plutôt que verifier.
+roles:
+- enrichir
+note: 'Candidate non vérifiée en réel (09/11/2026) : adresse exacte de l''API publique, couverture réelle par
+  pays et format des réponses à confirmer avant toute déclaration réelle dans config/sources/.'

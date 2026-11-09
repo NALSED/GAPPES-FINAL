@@ -36,6 +36,10 @@ cout:
 mode:
   en_ligne: true
   local: false
+# 909 §1.3.d (retour du 09/11/2026) : « verifier »/« enrichir » étaient déclarés sans `verifie_sur` depuis
+# l'import — jamais réellement appelés comme vérificatrice (moteur_sources.verificatrices() l'exige). Corrigé :
+# l'adaptateur cherche déjà par nom (`entree.quoi`, organization_list?q=...), donc « nom » est le bon champ.
+verifie_sur: nom
 verifie_le: '2026-10-13'
 defaut:
   chercher: false

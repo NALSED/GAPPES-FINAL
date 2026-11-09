@@ -26,6 +26,10 @@ main: premiere
 origine: registre
 roles:
 - chercher
+# 909 §1.3.d (retour du 09/11/2026) : registre de première main, cherche déjà par nom (`organizationNamee`) —
+# verifier a du sens pour confirmer qu'une organisation est bien accréditée ECOSOC sous ce nom.
+- verifier
+verifie_sur: nom
 cle: ''
 cout:
   unite: appel

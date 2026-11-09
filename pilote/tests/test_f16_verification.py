@@ -57,6 +57,19 @@ def test_rdap_enrichir_seule_est_prise_en_recherche_simple(cfg, tmp_path):
         assert [v["fonction"] for v in res.verificateurs if v["source"] == "rdap"] == ["enrichir"]  # jamais « verifier » par défaut
 
 
+# --- 909 §1.3.d (retour du 09/11/2026) : ckan/hdx/un-civil-society cherchaient déjà par nom (adaptateur), mais
+# « verifier »/« enrichir » n'avaient pas de `verifie_sur` — jamais réellement appelées. Corrigé, vérifié ici.
+def test_ckan_hdx_un_civil_society_sont_verificatrices_par_nom(cfg, tmp_path):
+    with TestClient(creer_app(cfg, lambda c: None)) as c:
+        c.put("/api/reglages/source/ckan", json={"verifier": True, "parametres": {"portail": "https://open.canada.ca/data"}}).raise_for_status()
+        for sid in ("hdx", "un-civil-society"):
+            c.put(f"/api/reglages/source/{sid}", json={"verifier": True}).raise_for_status()
+        c.put("/api/reglages/verification", json={"active": True, "mode": "plus"})
+        assert {d.id for d in verificatrices(cfg, {})} == {"ckan", "hdx", "un-civil-society"}
+        res = materialiser(cfg, cible(tmp_path), {"sources": []})
+        assert {v["source"]: v["verifie_sur"] for v in res.verificateurs} == {"ckan": "nom", "hdx": "nom", "un-civil-society": "nom"}
+
+
 # --- 909, point 1.2.c (retour du 09/11/2026) : en recherche simple, « en_amont » se règle globalement (Réglages)
 def test_en_amont_global_restreint_la_verification_en_recherche_simple(cfg, tmp_path):
     with TestClient(creer_app(cfg, lambda c: None)) as c:

@@ -1,0 +1,25 @@
+# Candidate de source (909 §1.3.c/d) : MÊME FORME qu'une déclaration de config/sources/, plus « statut ». Ce fichier n'est
+# lu par aucun code — Sednal et Claude le relisent à la main et promeuvent ce qui est bon vers config/sources/.
+statut: a_evaluer
+motif: ''
+id: icij-offshore-leaks
+nom: ICIJ Offshore Leaks Database
+description: Structures offshore citées dans les enquêtes de l'ICIJ (Panama Papers, Pandora Papers, Paradise
+  Papers...), consultable par nom.
+trouve: structures offshore citées dans une enquête ICIJ
+genres:
+- entreprise
+- personne
+pays:
+- monde
+usages:
+- organisations
+main: seconde
+origine: presse
+famille: api
+# 909 §1.3.d : même nature qu'opensanctions — un RISQUE signalé, jamais une confirmation d'identité. À ranger
+# dans la famille vérification « sanctions/risque », pas chercher ni confirmation.
+roles:
+- verifier
+note: 'Candidate non vérifiée en réel (09/11/2026) : adresse exacte de l''API publique, format des réponses
+  et éventuelle clé à confirmer avant toute déclaration réelle dans config/sources/.'

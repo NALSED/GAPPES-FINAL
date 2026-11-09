@@ -1,0 +1,24 @@
+# Candidate de source (909 §1.3.c/d) : MÊME FORME qu'une déclaration de config/sources/, plus « statut ». Ce fichier n'est
+# lu par aucun code — Sednal et Claude le relisent à la main et promeuvent ce qui est bon vers config/sources/.
+statut: a_evaluer
+motif: ''
+id: bailleurs-entreprises-exclues
+nom: Entreprises exclues par les bailleurs internationaux (Banque mondiale, BEI...)
+description: Entreprises radiées des marchés publics internationaux pour fraude ou corruption, listées par
+  la Banque mondiale, la BEI et d'autres bailleurs.
+trouve: entreprises exclues des marchés publics internationaux pour fraude/corruption
+genres:
+- entreprise
+pays:
+- monde
+usages:
+- organisations
+main: seconde
+origine: registre
+famille: api
+# 909 §1.3.d : même famille « risque » qu'opensanctions/ICIJ — un signal, jamais une confirmation d'identité.
+roles:
+- verifier
+note: 'Candidate non vérifiée en réel (09/11/2026) : plusieurs bailleurs (Banque mondiale, BEI, et d''autres
+  cités par la spec) tiennent chacun leur propre liste — à décider si une seule déclaration suffit ou s''il en
+  faut plusieurs, et à confirmer l''adresse exacte de chaque API avant toute déclaration réelle.'
