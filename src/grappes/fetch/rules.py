@@ -47,7 +47,10 @@ class Rules:
 
     def check_url(self, url: str) -> str | None:
         """`None` si l'URL peut être visitée ; sinon le motif du refus."""
-        parts = urlsplit(url)
+        try:
+            parts = urlsplit(url)
+        except ValueError:  # IPv6 cassé (`http://[x`) : une adresse reçue d'ailleurs ne doit jamais lever
+            return "URL invalide"
         if parts.scheme not in ("http", "https"):
             return f"schéma non autorisé ({parts.scheme or 'aucun'})"
         host = (parts.hostname or "").casefold().removeprefix("www.")

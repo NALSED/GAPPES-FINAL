@@ -31,6 +31,15 @@ _CAPTCHA = re.compile(
 )
 
 
+def _url_sure(value: object) -> str:
+    """`clean_url` sans exception : une adresse mal formée lue dans une page (port non numérique, IPv6 cassé) est une
+    donnée non fiable, on l'écarte ; elle ne doit jamais faire échouer, donc annuler, le cycle entier."""
+    try:
+        return clean_url(value)
+    except ValueError:
+        return ""
+
+
 @dataclass(slots=True)
 class FetchResult:
     url: str
@@ -145,7 +154,12 @@ class PageFetcher:
                     return FetchResult(
                         url, False, str(resp.status), "redirection invalide ou trop longue"
                     )
-                current = urljoin(current, target)
+                try:
+                    current = urljoin(current, target)
+                except ValueError:  # en-tête `Location` mal formé, envoyé par un serveur non fiable
+                    return FetchResult(
+                        url, False, str(resp.status), "redirection invalide ou trop longue"
+                    )
                 continue
             if resp.status == 401:
                 return FetchResult(
@@ -202,15 +216,15 @@ class PageFetcher:
         links: list[str] = []
         anchors: list[dict] = []
         for href, anchor in page.links:
-            u = clean_url(href)
+            u = _url_sure(href)
             if u and u not in links and len(links) < MAX_LINKS:
                 links.append(u)
                 anchors.append({"href": u, "anchor": clean_text(anchor, 100)})
-        canonical = clean_url(page.canonical) or clean_url(final)
+        canonical = _url_sure(page.canonical) or _url_sure(final)
         lang = re.sub(r"[^A-Za-z-]", "", page.lang)[:10]
         stamp = self.now().strftime("%Y-%m-%dT%H:%M:%SZ")
         record = {
-            "url": clean_url(final) or final,
+            "url": _url_sure(final) or final,
             "canonical_url": canonical,
             "fetched_at": stamp,
             "title": title,

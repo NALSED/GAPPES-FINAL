@@ -132,10 +132,27 @@ def _write(path: Path, names: list[str]) -> Path:
 A_TRANCHER_HEADER = ["NOM", "GRAPPE", "REF", "DECISION"]
 
 
+def _decisions_saisies(path: Path) -> dict[tuple[str, str], str]:
+    """(référence, grappe) -> décision déjà remplie à la main dans `resultat_a_trancher.csv`, vide si fichier absent ou illisible."""
+    if not path.exists():
+        return {}
+    try:
+        with path.open(encoding="utf-8", newline="") as f:
+            return {
+                (row["REF"], row["GRAPPE"]): (row.get("DECISION") or "").strip()
+                for row in csv.DictReader(f)
+                if (row.get("DECISION") or "").strip()
+            }
+    except (OSError, UnicodeDecodeError, KeyError, csv.Error):
+        return {}
+
+
 def _write_a_trancher(path: Path, rows: list[tuple[str, float, str, str]]) -> Path:
     """`resultat_a_trancher.csv` (décision 901/Q21) : une ligne par (référence, grappe) en doute, triée par nom.
     Pas de fusion de variantes ici (chaque ligne doit rester identifiable par référence pour `ancrage.py`,
-    décision 901/Q28) ; `DECISION` vide, à remplir « garder » ou « exclure » à la main."""
+    décision 901/Q28) ; `DECISION` à remplir « garder » ou « exclure » à la main : une décision déjà saisie est
+    conservée, un cycle lancé avant `grappes ancrer` ne l'efface pas."""
+    saisies = _decisions_saisies(path)
     vues: dict[tuple[str, str], tuple[str, str, str]] = {}
     for name, _conf, ref, grappe in rows:
         vues[(ref, grappe)] = (name, grappe, ref)
@@ -143,7 +160,7 @@ def _write_a_trancher(path: Path, rows: list[tuple[str, float, str, str]]) -> Pa
         w = csv.writer(f, lineterminator="\n")
         w.writerow(A_TRANCHER_HEADER)
         for name, grappe, ref in sorted(vues.values(), key=lambda v: sort_key(v[0])):
-            w.writerow([safe_cell(name), grappe, ref, ""])
+            w.writerow([safe_cell(name), grappe, ref, safe_cell(saisies.get((ref, grappe), ""))])
     return path
 
 

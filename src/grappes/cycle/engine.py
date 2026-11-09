@@ -26,7 +26,7 @@ from grappes.clustering.export import export_csv
 from grappes.classement.production import appliquer as appliquer_classement
 from grappes.clustering.resultat import write_resultat
 from grappes.config import Config, load_config
-from grappes.cycle.collect import collect
+from grappes.cycle.collect import collect, merge_statuses
 from grappes.cycle.learn import (
     adjust_ingestion,
     confirmed_by_grappe,
@@ -173,7 +173,7 @@ def _seed_subjects(
             **search_kwargs,
         )
         used += res.requests
-        statuses.update(res.status)
+        merge_statuses(statuses, res.status)
         seed = amorcer(
             g.grappe_id, g.subject, paths.config, [c.text for c in res.raw],
             auto.amorcage_max_termes, auto.amorcage_poids, n,
@@ -301,7 +301,7 @@ def _execute(
             search_kwargs=search_kwargs,
         )
         data.collect.requests += used
-        data.collect.providers.update(seed_status)
+        merge_statuses(data.collect.providers, seed_status)
         if data.collect.stopped:
             raise StopRequested
         avancement.signaler("etape", etape="verification")

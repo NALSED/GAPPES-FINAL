@@ -813,3 +813,22 @@ Code de premier niveau revu, `vendor/` exclu. Corrigé : raccourcis du navigateu
 Aucun test de non-régression ajouté pour ces quinze points : la suite montre seulement que rien d'autre n'a cassé.
 
 Trouvé mais non corrigé (au-delà des quinze points) : `commun.js` affiche `[object Object]` pour un refus 422 en liste ; l'Aide perd le texte en cours de frappe à chaque redessin ; Échap ferme toutes les couches ; `tableau.js` lit `localStorage` sans garde au chargement ; palette restant sur « posée » après retrait d'une tuile ; refus de `lancer()` non affichés dans `recherche.js` ; recherche de Tri pouvant écraser la frappe ; presets cochés perdus au retour sur l'onglet dans `lancement.js`.
+
+## D115 — Revue du moteur `src/grappes` : six défauts corrigés, le reste signalé sans y toucher (09/11/2026)
+
+Corrigé : une URL mal formée lue dans une page ne fait plus annuler le cycle ; `autonome: non` ne vaut plus vrai (il ouvrait les appels réels, c'est désormais une erreur de configuration) ; un domaine interdit écrit avec `www.` ou un schéma bloque enfin ; `resultat_a_trancher.csv` garde les décisions déjà saisies (format inchangé) ; `grappes rollback` fonctionne avec une configuration abîmée ; un « ok » ne fait plus disparaître un incident de fournisseur du rapport.
+
+**Signalé et non corrigé, volontairement** (résultats de recherche, classement, données ou personnes : à trancher par Sednal) :
+
+* `inclure_personnes: non` vaut vrai (`config.py:233`) : même défaut que `autonome`, mais il met des noms de personnes en clair dans `resultat.csv`.
+* `grappes export` lance le classement, donc des appels Wikidata/SIRENE, sans vérifier `autonome` ni STOP (`pipeline.py:181`) ; dormant avec la configuration actuelle.
+* `Crawl-delay` sans plafond : un robots.txt peut faire dormir un cycle 24 h, verrou tenu (`fetch/pages.py:129`).
+* Une redirection de robots.txt vaut interdiction (`fetch/robots.py:27`), aggravé par l'URL sans `www.` qui sert aussi à la visite (`search/safe.py:46`).
+* `rel=canonical` d'un autre domaine décide de la source de l'observation, sans contrôle (`fetch/pages.py:223`).
+* L'arrêt sur 403/429 ne dure qu'une recherche au lieu du cycle (`search/engine.py:112`) ; une page suivante en échec jette les pages déjà payées (`search/engine.py:104`).
+* La purge ignore le `now` injecté (`cycle/engine.py:288`) : c'est la cause des 4 échecs de `tests/test_cycle.py`, dont le corpus daté du 30/09/2026 vieillit.
+* `min_ecosystemes` accepte 1 alors que FINAL § 8 exige au moins 2.
+
+Vus aussi, non corrigés : `search_entities` (MCP) permet de confirmer une personne masquée par son identifiant ; un lexique réduit après une panne au premier cycle reste définitif ; une panne d'une source CSV arrête toute la découverte (`sources_yaml.py:143`) ; `refresh_domaines` remplace le cache complet par une lecture partielle ; `juger.py:156` lève IndexError si Wikidata ne rend aucune entité.
+
+Aucun test de non-régression ajouté pour ces six corrections. `tests/` : 613 réussis, 4 échecs, identiques avant et après.

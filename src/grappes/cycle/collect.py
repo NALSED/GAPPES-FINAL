@@ -62,6 +62,14 @@ class CollectReport:
         return [i.domain for i in self.ingested if i.new_source]
 
 
+def merge_statuses(into: dict[str, str], new: dict[str, str]) -> None:
+    """Cumule les issues des fournisseurs de plusieurs recherches : un « ok » ultérieur n'efface jamais un incident
+    (403/429, clé absente, quota), que le rapport doit signaler."""
+    for pid, status in new.items():
+        if into.get(pid, "ok").startswith(("ok", "dry-run")):
+            into[pid] = status
+
+
 def lexicon_terms(g: Grappe) -> dict[str, float]:
     return {**g.lexicon.terms, **{k: -v for k, v in g.lexicon.negative.items()}}
 
@@ -156,7 +164,7 @@ def collect(
             **(search_kwargs or {}),
         )
         used += res.requests
-        rep.providers.update(res.status)
+        merge_statuses(rep.providers, res.status)
         for m in res.raw:  # un candidat par résultat (URL), pas par entité fusionnée
             rep.candidates += 1
             reason = (

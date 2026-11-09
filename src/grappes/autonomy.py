@@ -17,6 +17,7 @@ from typing import Any
 
 import yaml
 
+from grappes.canon import canonical_domain
 from grappes.config import ConfigError
 
 MIN_DOMAIN_DELAY_S = 1.0  # plancher imposé par les règles générales
@@ -132,6 +133,21 @@ def _strs(d: dict[str, Any], key: str, default: tuple[str, ...], path: Path) -> 
     return tuple(dict.fromkeys(x.strip().casefold() for x in raw))
 
 
+def _domains(d: dict[str, Any], key: str, path: Path) -> tuple[str, ...]:
+    """Domaines interdits, ramenés à la forme que comparent les règles (hôte sans schéma ni `www.`) : écrits
+    `www.exemple.org` ou `https://exemple.org`, ils ne bloquaient rien."""
+    out: list[str] = []
+    for entry in _strs(d, key, (), path):
+        try:
+            host = canonical_domain(entry)
+        except ValueError as exc:
+            raise ConfigError(f"{path}: {key} : domaine invalide {entry!r}") from exc
+        if not host:
+            raise ConfigError(f"{path}: {key} : domaine invalide {entry!r}")
+        out.append(host)
+    return tuple(dict.fromkeys(out))
+
+
 def _bounds(d: dict[str, Any], key: str, default: tuple[float, float], path: Path):
     raw = d.get(key)
     if raw is None:
@@ -245,8 +261,12 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
     ua = d.get("user_agent", base.user_agent)
     if not isinstance(ua, str) or not ua.strip():
         raise ConfigError(f"{path}: user_agent doit être un texte (identifiable)")
+    # `autonome: non` est un texte pour YAML : `bool()` l'aurait lu vrai et aurait ouvert les appels réels
+    autonome = False if d.get("autonome") is None else d["autonome"]
+    if not isinstance(autonome, bool):
+        raise ConfigError(f"{path}: autonome doit être true ou false (reçu {autonome!r})")
     return Autonomy(
-        autonome=bool(d.get("autonome", False)),
+        autonome=autonome,
         stop_file=Path(str(d.get("stop_file", base.stop_file))),
         requetes_par_cycle=int(_num(d, "requetes_par_cycle", base.requetes_par_cycle, path)),
         pages_par_cycle=int(_num(d, "pages_par_cycle", base.pages_par_cycle, path)),
@@ -262,7 +282,7 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
         ingestion_termes_min=int(
             _num(d, "ingestion_termes_min", base.ingestion_termes_min, path, 1)
         ),
-        interdits_domaines=_strs(interdits, "domaines", (), path),
+        interdits_domaines=_domains(interdits, "domaines", path),
         interdits_motifs=_strs(interdits, "motifs", (), path),
         delai_domaine_s=max(
             MIN_DOMAIN_DELAY_S, _num(d, "delai_domaine_s", MIN_DOMAIN_DELAY_S, path)

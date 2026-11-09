@@ -166,6 +166,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     an.add_argument("--fichier", default="sorties/resultat_a_trancher.csv")
     args = p.parse_args(argv)
+    if args.cmd == "rollback":  # avant `load_config` : un fichier appris abîmé est justement ce que cette commande répare
+        return _cycle(args)
     try:
         cfg = load_config(args.config)
     except ConfigError as exc:
@@ -180,7 +182,7 @@ def main(argv: list[str] | None = None) -> int:
         load_secrets(Path(args.config) / "secrets.env")
     if args.cmd == "search":
         return _search(args, cfg)
-    if args.cmd in ("cycle", "rollback"):
+    if args.cmd == "cycle":
         return _cycle(args)
     if args.cmd == "mcp":
         from grappes.mcp.server import create_server
