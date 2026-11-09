@@ -120,6 +120,11 @@ pas de route pour ce site », dit clairement.
 par recherche ; l'option reste affichée, sans effet. Les motifs Radar avec requête (`/cherche?q=:q`) ne sont pas
 pris en charge (ignorés, jamais une fausse correspondance).
 
+**Addendum (908, point 15, 09/11/2026)** : l'instance ci-dessus avait été posée à la main sur .250/.115, sans
+installeur réutilisable — c'est le manque que le point 15 du retour du 08/11 demande de combler. Fait :
+`outils/installer_rsshub.sh`, qui rejoue la même commande Docker (vérifiée en réel ci-dessus) de façon
+idempotente, sur le modèle des autres installeurs (`installer_overpass.sh`).
+
 ## Trou d'infra pré-existant, hors de ce pavé
 
 `grappes.racine` dans la configuration livrée de `pilote/` pointe vers un dossier `grappes/` voisin
