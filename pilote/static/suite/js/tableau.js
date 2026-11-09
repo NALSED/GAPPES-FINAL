@@ -144,7 +144,7 @@ function sectionResultats(r) {
   if (!av.noms && av.noms !== 0) return null;
   return h(
     "div", { class: "champ" }, h("span", { class: "titre-champ" }, "Ce que la recherche a trouvé"),
-    h("p", { class: "chiffres fort" }, `${fmtNombre(av.noms)} ${aPluriel(av.noms, "nom trouvé", "noms trouvés")}`),
+    h("p", { class: "chiffres fort" }, `${fmtNombre(av.noms)} ${av.noms > 1 ? "noms trouvés" : "nom trouvé"}`),
   );
 }
 

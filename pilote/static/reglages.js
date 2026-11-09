@@ -264,7 +264,8 @@
     });
     [1,2].forEach(function(p){
       var zone=el("list"+p);
-      function msg(id,t){var m=zone.querySelector('[data-msg="'+id+'"]');if(m)m.textContent=t}
+      function msg(id,t){messagesTest[id]=t;poserMessagesTest(zone)}
+      poserMessagesTest(zone);
       zone.querySelectorAll("button[data-tester]").forEach(function(b){b.onclick=function(){
         msg(b.dataset.tester,"Test en cours…");
         envoyer("/api/sources/"+encodeURIComponent(b.dataset.tester)+"/tester","POST",{}).then(function(r){msg(b.dataset.tester,r.etat_phrase||"");return charger()}).catch(function(e){msg(b.dataset.tester,e.message)})}});
@@ -303,6 +304,16 @@
     el("verif-mode").checked=D.verification.mode==="plus";
     el("verif-mode-txt").innerHTML="Vérifier aussi avec les sources qui ne font que <b>vérifier</b> ("+esc(seules.join(", "))
       +") : elles sont appelées une fois par nom trouvé, après la recherche, et ajoutent une preuve sans changer le nombre d'endroits.";
+  }
+
+  /* Le résultat d'un test survit au redessin qui le suit : sans cela il s'effaçait aussitôt écrit, y compris celui d'un test réel payant, et « Détails » se repliait. */
+  var messagesTest={};
+  function poserMessagesTest(zone){
+    Object.keys(messagesTest).forEach(function(id){
+      var m=zone.querySelector('[data-msg="'+id+'"]');if(!m)return;
+      m.textContent=messagesTest[id];
+      var d=m.closest&&m.closest("details");if(d)d.open=true;
+    });
   }
 
   function charger(){

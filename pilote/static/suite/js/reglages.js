@@ -155,18 +155,24 @@ async function allumerSource(s) {
 // 909, point 1.1.b (retour du 09/11/2026) : une case par rôle déclaré, indépendante des autres — pas
 // l'interrupteur unique (qui reste le raccourci « tous les rôles à la fois », déjà corrigé au point 1.1.c).
 const NOMS_ROLE = { CHERCHER: "chercher", VERIFIER: "vérifier", ENRICHIR: "enrichir" };
+/** Rend vrai si le rôle a réellement changé : la fiche ouverte n'est pas redessinée par `recharger`, elle met sa case à jour elle-même. */
 async function basculerRole(s, role, actif) {
   try {
     await api.post(`/sources/${s.id}/role/${role.toLowerCase()}`, { actif });
     await recharger();
     annoncer(`« ${s.nom} » ${actif ? "sert maintenant" : "ne sert plus"} à ${NOMS_ROLE[role]}.`);
+    return true;
   } catch (e) {
     if (e instanceof Refus && e.statut === 409 && e.corps && e.corps.avertissements) {
-      avertissement({
-        titre: `Faire ${NOMS_ROLE[role]} « ${s.nom} » ?`, points: e.corps.avertissements.map((a) => a.texte), verbe: VERBES.allumer,
-        onconfirmer: () => agir(() => api.post(`/sources/${s.id}/role/${role.toLowerCase()}`, { actif, confirme: true }), { succes: `« ${s.nom} » sert maintenant à ${NOMS_ROLE[role]}.` }),
+      return new Promise((resolve) => {
+        avertissement({
+          titre: `Faire ${NOMS_ROLE[role]} « ${s.nom} » ?`, points: e.corps.avertissements.map((a) => a.texte), verbe: VERBES.allumer,
+          onconfirmer: async () => resolve(!!(await agir(() => api.post(`/sources/${s.id}/role/${role.toLowerCase()}`, { actif, confirme: true }), { succes: `« ${s.nom} » sert maintenant à ${NOMS_ROLE[role]}.` }))),
+        });
       });
-    } else annoncer(e instanceof Refus ? e.message : "Quelque chose a échoué.", true);
+    }
+    annoncer(e instanceof Refus ? e.message : "Quelque chose a échoué.", true);
+    return false;
   }
 }
 
@@ -182,7 +188,7 @@ const TYPES_SOURCE = [
 export function ficheSource(id) {
   const edition = !!id;
   const s = edition ? sourceParId(id) : { nom: "", cat: null, role: null, cout: "gratuit", fiabilite: null, pays: "", langue: "", etat: "warn", quota: null, description: "", cle: false, cle_requise: false, tests: [], voyant: "" };
-  const val = { cat: s.cat, role: s.role, cout: s.cout, fiabilite: edition ? s.fiabilite : null, auth: "bearer", type: "api", format: "csv", systeme: "postgresql" };
+  const val = { cat: s.cat, role: s.role, cout: s.cout, fiabilite: edition ? s.fiabilite : null, auth: "bearer", type: "api", format: "csv", systeme: "postgresql", roles: Object.fromEntries((s.roles_declares || []).map((r) => [r, !!s[r.toLowerCase()]])) };
   const fiabiliteVoulue = () => val.fiabilite || fiabiliteParDefaut(val.cat); // à la création : B pour une source officielle, D pour le web ou la presse, à ajuster une fois testée
   const lecture = (libelle, valeur) => h("div", { class: "champ" }, h("span", { class: "titre-champ" }, libelle), h("span", {}, valeur || "—"));
   const f = {
@@ -243,7 +249,7 @@ export function ficheSource(id) {
   // retrouve dans la documentation du service pour savoir quoi coller où.
   const nomsCle = edition ? (s.cles_noms && s.cles_noms.length ? s.cles_noms : [s.cle]).filter(Boolean) : [];
   const champsCle = nomsCle.map((nomVar) => champ({ libelle: nomVar, type: "password", autocomplete: "new-password", aide: "Elle ne s'affiche plus une fois enregistrée." }));
-  const zones = { cat: h("div", { class: "champ" }), role: h("div", { class: "champ" }), cout: h("div", { class: "champ" }), fiab: h("div", { class: "champ" }), auth: h("div", { class: "champ" }), type: h("div", { class: "champ" }), testReel: h("div", { class: "champ" }) };
+  const zones = { cat: h("div", { class: "champ" }), role: h("div", { class: "champ" }), cout: h("div", { class: "champ" }), fiab: h("div", { class: "champ" }), auth: h("div", { class: "champ" }), type: h("div", { class: "champ" }), testReel: h("div", { class: "champ" }), roles: h("div", { class: "champ" }) };
   // 3.3 (retour du 08/11/2026) : le test RÉEL existait déjà côté moteur (une vraie requête, le prix dit avant le
   // clic) mais n'était exposé que par l'ancienne page — portage ici, pas une écriture.
   const motEssaiReel = champ({ libelle: "Mot d'essai", placeholder: "ex. handball" });
@@ -323,6 +329,16 @@ export function ficheSource(id) {
     const pret = val.cat && val.role;
     principal.disabled = !edition && !pret;
     manque.textContent = !edition && !pret ? `Il manque ${!val.cat && !val.role ? "la catégorie et le rôle" : !val.cat ? "la catégorie" : "le rôle"}.` : "";
+    if (edition) {
+      zones.roles.replaceChildren(
+        h("span", { class: "titre-champ" }, "Rôles actifs"),
+        h("div", { class: "liste-liens" }, s.roles_declares.map((role) => caseSource({
+          nom: NOMS_ROLE[role] ? NOMS_ROLE[role].replace(/^./, (c) => c.toUpperCase()) : role, actif: val.roles[role],
+          onclick: async () => { if (await basculerRole(s, role, !val.roles[role])) { val.roles[role] = !val.roles[role]; dessiner(); } },
+        }))),
+        h("span", { class: "aide-champ" }, "Une source peut servir à plusieurs rôles à la fois (ex. chercher et vérifier) : chacun se règle sans toucher aux autres."),
+      );
+    }
     if (edition && !s.copie && s.acces !== "base_exterieure") {
       zones.testReel.replaceChildren(
         h("span", { class: "titre-champ" }, "Test réel"),
@@ -403,10 +419,7 @@ export function ficheSource(id) {
       !s.copie && s.acces !== "base_exterieure" && s.cle_requise && champsCle.map((c) => c.el), !s.copie && s.acces !== "base_exterieure" && s.cle_requise && s.cle && h("span", { class: "legende" }, "clé enregistrée"),
       champsParametres.length > 0 && champsParametres,
       h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "État"), h("div", { class: "pied-boutons" }, pastilleEtat(s.etat, ETATS_SOURCE), interrupteur)),
-      h("div", { class: "champ" }, h("span", { class: "titre-champ" }, "Rôles actifs"),
-        h("div", { class: "liste-liens" }, s.roles_declares.map((role) =>
-          caseSource({ nom: NOMS_ROLE[role] ? NOMS_ROLE[role].replace(/^./, (c) => c.toUpperCase()) : role, actif: s[role.toLowerCase()], onclick: () => basculerRole(s, role, !s[role.toLowerCase()]) }))),
-        h("span", { class: "aide-champ" }, "Une source peut servir à plusieurs rôles à la fois (ex. chercher et vérifier) : chacun se règle sans toucher aux autres.")),
+      zones.roles,
       tests, zones.testReel,
     ]
     : [

@@ -16,10 +16,6 @@ function couvre(x, pays) {
   return !pays || x.pays.includes("monde") || x.pays.map((p) => p.toUpperCase()).includes(pays.toUpperCase());
 }
 
-function slugueur(nom) {
-  return nom.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48);
-}
-
 /** Les trois états de la suite (jamais un quatrième) : un test en échec ou une source non testée restent « à vérifier ». */
 function etatSuite(v) {
   return v === "ok" ? "ok" : v === "off" ? "off" : "warn";
@@ -47,7 +43,7 @@ export async function demarrerInstallation() {
   }
   S = {
     etape: 1,
-    e1: { pays: D.pays || "", coches: new Set(D.presets_coches || []), chercher: new Set(), plafond: D.budget.plafond_mensuel_usd },
+    e1: { pays: D.pays || "", paysAutre: false, coches: new Set(D.presets_coches || []), chercher: new Set(), plafond: D.budget.plafond_mensuel_usd },
     e2: { active: D.verification.active, mode: D.verification.mode || "memes", verifier: new Set(), enrichir: new Set(), initialise: false },
     e3: { actifs: new Set(D.parties.sortie.filter((f) => f.actif).map((f) => f.id)), dossier: "" },
     testResultats: {},
@@ -96,7 +92,7 @@ function corpsEtape() {
 
 function champPays() {
   const pp = D.pays_proposes || {};
-  const autre = !!S.e1.pays && !pp[S.e1.pays];
+  const autre = S.e1.paysAutre || (!!S.e1.pays && !pp[S.e1.pays]);
   const sel = h(
     "select",
     { id: "inst-pays" },
@@ -106,7 +102,9 @@ function champPays() {
   );
   sel.value = autre ? "__autre" : S.e1.pays;
   sel.addEventListener("change", () => {
-    if (sel.value !== "__autre") S.e1.pays = sel.value;
+    // le choix « Un autre pays… » se garde à part : déduit du seul pays déjà connu, il retombait sur ce pays au redessin et le champ n'apparaissait jamais
+    S.e1.paysAutre = sel.value === "__autre";
+    S.e1.pays = S.e1.paysAutre ? "" : sel.value;
     dessiner();
   });
   const champs = [h("div", { class: "champ" }, h("label", { for: "inst-pays" }, "Ton pays"), sel)];
@@ -158,10 +156,10 @@ function personnaliser(p) {
           const nom = f.valeur().trim();
           if (!nom) return;
           try {
-            await apiAssistant.presetsPersonnaliser({ depuis: p.id, nom });
+            const cree = await apiAssistant.presetsPersonnaliser({ depuis: p.id, nom });
             couche.fermer();
             await recharger();
-            S.e1.coches.add(slugueur(nom));
+            S.e1.coches.add(cree.id); // l'identifiant que rend le serveur : refait ici, il différait pour « Cœur » ou « Straße » et « Terminer » était refusé
             dessiner();
           } catch (e) {
             echoue(e);
@@ -291,19 +289,29 @@ function etape1() {
 
 // ---------------------------------------------------------------- étape 2 : vérification
 
-function etape2() {
-  const capables = D.parties.recherche.filter((s) => s.roles.includes("verifier"));
-  const eligibles = S.e2.mode === "memes" ? capables.filter((s) => S.e1.chercher.has(s.id)) : capables;
+function eligiblesEtape2() {
+  // Même règle pour verifier et enrichir : en mode « memes », une source qui ne cherche pas n'est jamais appelée (moteur_sources.verificatrices) ; la proposer serait une case sans effet.
+  const selon = (role) => {
+    const capables = D.parties.recherche.filter((s) => s.roles.includes(role));
+    return S.e2.mode === "memes" ? capables.filter((s) => S.e1.chercher.has(s.id)) : capables;
+  };
   // 909, point 2.1.c (retour du 09/11/2026) : enrichir a sa propre place ici, comme verifier — sans elle, une
   // source enrichir SEULE (rdap, intelligencex) n'apparaissait jamais dans cet assistant.
-  // Même règle que verifier : en mode « memes », une source qui ne cherche pas n'est jamais appelée (moteur_sources.verificatrices) ; la proposer serait une case sans effet.
-  const capablesEnrichir = D.parties.recherche.filter((s) => s.roles.includes("enrichir"));
-  const eligiblesEnrichir = S.e2.mode === "memes" ? capablesEnrichir.filter((s) => S.e1.chercher.has(s.id)) : capablesEnrichir;
-  if (!S.e2.initialise) {
-    eligibles.forEach((s) => { if (s.defaut.verifier || S.e2.mode === "memes") S.e2.verifier.add(s.id); });
-    eligiblesEnrichir.forEach((s) => { if (s.defaut.enrichir) S.e2.enrichir.add(s.id); });
-    S.e2.initialise = true;
-  }
+  return { eligibles: selon("verifier"), eligiblesEnrichir: selon("enrichir") };
+}
+
+/** Les cases par défaut. Calculées seulement en affichant l'étape ②, elles manquaient quand on sautait de ① à ④ : la vérification partait active, sans aucune source pour vérifier. */
+function preparerEtape2() {
+  if (S.e2.initialise) return;
+  const { eligibles, eligiblesEnrichir } = eligiblesEtape2();
+  eligibles.forEach((s) => { if (s.defaut.verifier || S.e2.mode === "memes") S.e2.verifier.add(s.id); });
+  eligiblesEnrichir.forEach((s) => { if (s.defaut.enrichir) S.e2.enrichir.add(s.id); });
+  S.e2.initialise = true;
+}
+
+function etape2() {
+  const { eligibles, eligiblesEnrichir } = eligiblesEtape2();
+  preparerEtape2();
   return [
     h(
       "section",
@@ -438,6 +446,7 @@ function ligneRecap(s) {
 }
 
 function etape4() {
+  preparerEtape2();
   const chois = D.parties.recherche.filter((s) => S.e1.chercher.has(s.id) || (S.e2.active && S.e2.verifier.has(s.id)));
   const sansCle = chois.filter((s) => s.cle_requise && s.cle !== "presente");
   if (!chois.length) return [h("p", { class: "vide" }, "Aucune source choisie : retourne à l'étape ① Sources.")];

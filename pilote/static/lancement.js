@@ -32,7 +32,7 @@
     el("depth").innerHTML=OPTIONS.profondeurs.map(function(d){
       return '<button class="'+(d.id===depthSel?"on":"")+'" data-id="'+esc(d.id)+'"><span class="dn">'+esc(d.nom)+'</span>'
         +'<span class="dd">'+esc(d.description)+'</span><span class="dc">jusqu\'à '+d.appels+' appels</span></button>'}).join("");
-    el("depth").querySelectorAll("button").forEach(function(b){b.onclick=function(){depthSel=b.dataset.id;rendreProfondeur()}});
+    el("depth").querySelectorAll("button").forEach(function(b){b.onclick=function(){depthSel=b.dataset.id;rendreProfondeur();estimer()}});
   }
 
   /* ---- lancement ---- */
@@ -177,11 +177,13 @@
   function suivre(){
     if(minuteur){clearInterval(minuteur);minuteur=null}
     if(!courante)return;
+    var suivie=courante;
     function tour(){
-      api("/api/recherches/"+courante).then(function(r){
+      api("/api/recherches/"+suivie).then(function(r){
+        if(suivie!==courante)return;  /* réponse d'une recherche qu'on ne suit plus : ni dessinée, ni le droit de couper le suivi de la nouvelle */
         dessiner(r);
         if(ETAT_FIN[r.etat]){clearInterval(minuteur);minuteur=null;charger_listes()}
-      }).catch(function(){clearInterval(minuteur);minuteur=null});
+      }).catch(function(){if(suivie===courante){clearInterval(minuteur);minuteur=null}});
     }
     tour();minuteur=setInterval(tour,1500);
   }

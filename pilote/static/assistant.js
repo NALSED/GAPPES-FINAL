@@ -23,7 +23,7 @@
     S={mode:mode,etape:etape,
        e1:{pays:D.pays||"",coches:coches,chercher:chercher,plafond:D.budget.plafond_mensuel_usd},
        e2:{active:D.verification.active,mode:D.verification.mode||"memes",verifier:verifier,initialise:!premiere}  /* le mode choisi dans Réglages est repris, jamais écrasé */,
-       e3:{actifs:new Set(D.parties.sortie.filter(function(f){return f.actif}).map(function(f){return f.id})),dossier:""}};
+       e3:{actifs:new Set(D.parties.sortie.filter(function(f){return f.actif}).map(function(f){return f.id})),dossier:(D.sortie||{}).dossier||""}};  /* rejouer l'étape 3 ne doit pas effacer le dossier déjà réglé */
   }
 
   /* ---------------- affichage des étapes ---------------- */
@@ -72,7 +72,8 @@
     el("as-presets").querySelectorAll("input[data-src]").forEach(function(i){i.onchange=function(){if(i.checked)S.e1.chercher.add(i.dataset.src);else S.e1.chercher.delete(i.dataset.src);etape1()}});
     el("as-presets").querySelectorAll("button[data-perso]").forEach(function(b){b.onclick=function(){
       var nom=window.prompt("Nom de ta copie modifiable de ce preset :");if(!nom)return;
-      envoyer("/api/presets/personnaliser","POST",{depuis:b.dataset.perso,nom:nom}).then(function(){return recharger()}).then(function(){S.e1.coches.add(slugueur(nom));montrer()}).catch(function(e){erreur(e.message)})}});
+      /* l'identifiant est celui que rend le serveur : refait ici, il différait pour « Cœur » ou « Straße », et « Terminer » était refusé sur un preset invisible */
+      envoyer("/api/presets/personnaliser","POST",{depuis:b.dataset.perso,nom:nom}).then(function(cree){return recharger().then(function(){S.e1.coches.add(cree.id);montrer()})}).catch(function(e){erreur(e.message)})}});
     el("as-tout-selectionner").onclick=function(){
       D.presets.forEach(function(p){S.e1.coches.add(p.id);p.sources.forEach(function(x){S.e1.chercher.add(x.id)})});etape1()};
     el("as-tout-deselectionner").onclick=function(){S.e1.coches.clear();S.e1.chercher.clear();etape1()};
@@ -102,18 +103,26 @@
     var payant=ids(S.e1.chercher).map(parId).some(function(s){return s&&s.payant});
     el("as-plafond-w").style.display=payant?"block":"none";el("as-plafond").value=S.e1.plafond;el("as-plafond").oninput=function(){S.e1.plafond=parseFloat(this.value)};
   }
-  function slugueur(nom){return nom.normalize("NFKD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,48)}
 
   /* ---------------- étape 2 ---------------- */
+  function verifEligibles(){
+    var capables=sources().filter(function(s){return s.roles.indexOf("verifier")>=0});
+    return S.e2.mode==="memes"?capables.filter(function(s){return S.e1.chercher.has(s.id)}):capables;
+  }
+  /* Les cases par défaut. Calculées seulement en affichant l'étape 2, elles manquaient quand on sautait de ① à ④ : la vérification partait active, sans aucune source pour vérifier. */
+  function preparerVerif(){
+    if(S.e2.initialise)return;
+    verifEligibles().forEach(function(s){if(s.defaut.verifier||S.e2.mode==="memes")S.e2.verifier.add(s.id)});
+    S.e2.initialise=true;
+  }
   function etape2(){
     var sw=el("as-verif");sw.checked=S.e2.active;
     el("as-verif-txt").textContent=S.e2.active?"Vérification activée.":"Vérification désactivée : le résultat sort brut, sans confirmation.";
     sw.onchange=function(){S.e2.active=sw.checked;etape2()};
     el("as-verif-detail").style.display=S.e2.active?"block":"none";
     document.querySelectorAll('input[name="as-mode-verif"]').forEach(function(r){r.checked=r.value===S.e2.mode;r.onchange=function(){S.e2.mode=r.value;etape2()}});
-    var capables=sources().filter(function(s){return s.roles.indexOf("verifier")>=0});
-    var eligibles=S.e2.mode==="memes"?capables.filter(function(s){return S.e1.chercher.has(s.id)}):capables;
-    if(!S.e2.initialise){eligibles.forEach(function(s){if(s.defaut.verifier||S.e2.mode==="memes")S.e2.verifier.add(s.id)});S.e2.initialise=true}
+    var eligibles=verifEligibles();
+    preparerVerif();
     el("as-verif-sources").innerHTML=eligibles.length?eligibles.map(function(s){
       return '<label style="display:block;font-size:12.5px;margin:3px 0"><input type="checkbox" data-ver="'+esc(s.id)+'"'+(S.e2.verifier.has(s.id)?" checked":"")+"> Utiliser <b>"+esc(s.nom)+"</b> pour vérifier <span style=\"color:var(--faint)\">— "+esc(s.main_phrase)+"</span></label>"}).join(""):'<span style="color:var(--faint)">Aucune source ne peut vérifier avec ce choix.</span>';
     el("as-verif-sources").querySelectorAll("input").forEach(function(i){i.onchange=function(){if(i.checked)S.e2.verifier.add(i.dataset.ver);else S.e2.verifier.delete(i.dataset.ver)}});
@@ -137,6 +146,7 @@
     }).catch(function(e){cible.textContent="✕ "+e.message;dot.className="dot err";return false});
   }
   function etape4(){
+    preparerVerif();
     var chois=sources().filter(function(s){return S.e1.chercher.has(s.id)||(S.e2.active&&S.e2.verifier.has(s.id))});
     el("as-recap").innerHTML=chois.length?chois.map(function(s){
       var roles=[S.e1.chercher.has(s.id)?"cherche":"",S.e2.active&&S.e2.verifier.has(s.id)?"vérifie":""].filter(Boolean).join(" et ");

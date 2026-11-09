@@ -402,10 +402,13 @@
     var r=d.querySelector("#motifs-regler");if(r)r.onclick=reglerMotifs;
   }
   function reglerMotifs(){
-    var courant=(T.motifs||[]).map(function(m){return m.touche+" = "+m.libelle}).join("\n");
-    var t=window.prompt("Motifs de rejet : une ligne par motif, « touche = libellé ». Les touches G, R, P, Z et / sont prises.\n\n",courant);
+    /* window.prompt n'a qu'UNE ligne (Entrée valide, les sauts de ligne sont perdus) : les motifs y sont séparés par un point-virgule */
+    var courant=(T.motifs||[]).map(function(m){return m.touche+" = "+m.libelle}).join(" ; ");
+    var t=window.prompt("Motifs de rejet, séparés par un point-virgule : « touche = libellé ». Les touches G, R, P, Z et / sont prises.\n\n",courant);
     if(t===null)return;
-    var motifs=t.split("\n").map(function(x){return x.trim()}).filter(Boolean).map(function(x){
+    var saisies=t.split(/[\n;]/).map(function(x){return x.trim()}).filter(Boolean);
+    if(saisies.some(function(x){return x.indexOf("=")<1})){message("Chaque motif s'écrit « touche = libellé ». Rien n'a été changé.");return}
+    var motifs=saisies.map(function(x){
       var i=x.indexOf("=");var touche=x.slice(0,i).trim(),libelle=x.slice(i+1).trim();
       var ancien=(T.motifs||[]).find(function(m){return m.libelle===libelle});
       return {id:ancien?ancien.id:libelle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,""),libelle:libelle,touche:touche}});
@@ -436,14 +439,17 @@
   }
   function groupe(cle,valeur){
     var p=T.paquets.find(function(x){return x.cle===cle});if(!p)return;
-    fileDecisions.then(function(){return envoyer("/api/recherches/"+rid+"/decisions","POST",{valeur:valeur,classement:clActif,cle:cle,filtres:filtres,q:texte,nouveaux:nouveaux})}).then(function(r){
+    /* lus au clic, pas quand la file se vide : entre-temps on a pu changer de recherche ou de filtre, et le lot partirait sur d'autres noms */
+    var cible=rid, corps={valeur:valeur,classement:clActif,cle:cle,filtres:filtres.slice(),q:texte,nouveaux:nouveaux};
+    fileDecisions.then(function(){return envoyer("/api/recherches/"+cible+"/decisions","POST",corps)}).then(function(r){
       message(plur(r.touches.length,"nom")+" "+(valeur==="garder"?"gardés":"rejetés")+" dans « "+p.phrase+" ».",true);
       return charger(true);
     }).catch(function(e){message("L'action n'a pas pu être faite : "+e.message)});
   }
   function annulerDernier(){
     if(!T||!T.peut_annuler)return;
-    fileDecisions.then(function(){return envoyer("/api/recherches/"+rid+"/annuler","POST",{})}).then(function(r){
+    var cible=rid;  /* lue au clic, comme pour un lot */
+    fileDecisions.then(function(){return envoyer("/api/recherches/"+cible+"/annuler","POST",{})}).then(function(r){
       message(r.touches.length?"Annulé : "+plur(r.touches.length,"décision")+" retirée"+(r.touches.length>1?"s":"")+".":"Rien à annuler.");
       return charger(true);
     }).catch(function(e){message(e.message)});
@@ -509,7 +515,8 @@
   function tout(){
     if(!T)return;
     ensemble();classements();dessinerFacettes();
-    if(vue==="liste")vueListe();else if(vue==="colonnes")vueColonnes();else if(vue==="tableau"){if(tabulateur&&jeuTableau===T)majTableau();else vueTableau()}else if(vue==="carte")vueCarte();else vueFiches();
+    /* « #tbl » absent : on revient d'une autre vue, le tableau n'est plus dans la page et doit être reconstruit même si les données n'ont pas changé */
+    if(vue==="liste")vueListe();else if(vue==="colonnes")vueColonnes();else if(vue==="tableau"){if(tabulateur&&jeuTableau===T&&el("tbl"))majTableau();else vueTableau()}else if(vue==="carte")vueCarte();else vueFiches();
     detail();
     montrerSelection();
     if(dernierMessage)message(dernierMessage,dernierAnnulable&&T.peut_annuler);
@@ -530,6 +537,7 @@
     var page=el("pg-tri");
     if(!page||!page.classList||!page.classList.contains("on"))return;
     if(e.target&&(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.target.tagName==="TEXTAREA"))return;
+    if(e.ctrlKey||e.metaKey||e.altKey)return;  /* Ctrl+R, Ctrl+P, Cmd+G… sont ceux du navigateur : ils ne tranchent jamais un nom */
     var k=(e.key||"").toLowerCase();
     if(k==="arrowdown"){deplacer(1);e.preventDefault()}
     else if(k==="arrowup"){deplacer(-1);e.preventDefault()}
@@ -537,7 +545,7 @@
     else if(k==="r"&&sel)decider(sel,"rejeter");
     else if(k==="p"&&sel)decider(sel,"plus_tard");
     else if(k==="z")annulerDernier();
-    else if(sel&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+    else if(sel){
       var m=(T&&T.motifs||[]).find(function(x){return x.touche.toLowerCase()===k});
       if(m)decider(sel,"rejeter",m.id);  /* une touche = un rejet motivé */
     }

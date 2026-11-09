@@ -175,7 +175,6 @@
     <div id="t-api" class="form" style="margin-top:9px">
       <div class="full"><label class="fl" for="t-url">Adresse</label><input class="inp" id="t-url" placeholder="https://…"></div>
       <div><label class="fl" for="t-param">Paramètre qui reçoit les mots cherchés</label><input class="inp" id="t-param" placeholder="q"></div>
-      <div><label class="fl" for="t-liste">Où est la liste des résultats</label><input class="inp" id="t-liste" placeholder="items"></div>
       <div><label class="fl" for="t-auth">Envoi de la clé</label><select class="inp" id="t-auth"><option value="">aucune clé</option><option value="header">en-tête (nom à donner)</option><option value="bearer">Bearer</option><option value="basic">Basic (clé en identifiant)</option><option value="query">dans l'adresse (nom à donner)</option></select></div>
       <div><label class="fl" for="t-authnom">Nom de l'en-tête ou du paramètre</label><input class="inp" id="t-authnom" placeholder="X-Api-Key"></div>
     </div>
@@ -221,6 +220,7 @@
       <div><label class="fl" for="t-cnom">Champ du NOM</label><input class="inp" id="t-cnom" placeholder="title"></div>
       <div><label class="fl" for="t-cville">Champ de la ville</label><input class="inp" id="t-cville"></div>
       <div><label class="fl" for="t-cnum">Champ de l'identifiant officiel</label><input class="inp" id="t-cnum"></div>
+      <div><label class="fl" for="t-liste">Où est la liste des résultats</label><input class="inp" id="t-liste" placeholder="items"></div>
     </div>
     <div id="t-exemple" style="margin-top:9px"><label class="fl" for="t-ex">Exemple de réponse du service (collez ce que vous avez vu : il sert à vérifier la sortie sans jamais appeler le service)</label><textarea class="inp" id="t-ex" rows="5" style="font-family:var(--mono)"></textarea></div>
     <div style="display:flex;gap:7px;margin-top:11px;align-items:center;flex-wrap:wrap"><button class="btn primary" id="t-go">Enregistrer (éteinte) et tester</button><span id="t-msg" style="font-size:12px;color:var(--dim)"></span></div>
