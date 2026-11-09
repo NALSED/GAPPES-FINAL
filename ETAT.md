@@ -3,15 +3,19 @@
 Phase en cours : 909 (« Vérifier et enrichir », demande explicite de Sednal le 09/11/2026 de commencer malgré
 l'état « en cours de rédaction » du document — 905 et 903 traités plus tard dans la journée) — §1.1 fait
 (D104), §2.1 complet (a/b/c, D104+D105), 1.2 (a/b/c/d) faits (D106/D92/D108/D107), 1.2 (e/f) déclinés avec
-raisons vérifiées et tracées (D109, détail dans `pilote/QUESTIONS.md`). Reste : 1.3, §3 (Requête avancée), le
-volet comparaison ancienne UI/`/suite`. §4 mis en attente par la spec elle-même.
+raisons vérifiées et tracées (D109, détail dans `pilote/QUESTIONS.md`), §3 (Requête avancée, 11e outil) fait
+(D110). Reste : 1.3 (découverte OSINT Framework), le volet comparaison ancienne UI/`/suite`. §4 mis en attente
+par la spec elle-même.
 (Ligne lue par le hook d'arrêt `outils/continuer.sh` : écrire « Phase en cours : <nom> » au début d'une phase, « aucune » à la fin.)
 
-Dernière mise à jour : 2026-11-09 (D109 : 1.2.e (vérification par texte de page) et 1.2.f (chaîne de repli
-prestataires) non câblés — raisons vérifiées concrètement (dépendances absentes des deux côtés, pas
-d'infrastructure de cache de pages, même risque pont que la Boucle/secours déjà déclinés) plutôt que supposées,
-détaillées dans `pilote/QUESTIONS.md` pour une session dédiée. §1.2 est donc clos pour ce qui est câblable
-maintenant ; je passe à §3 (Requête avancée).
+Dernière mise à jour : 2026-11-09 (D110 : §3, nouvel outil « Requête avancée » — qualifie la requête des sources
+chercher (site, type de fichier, titre, phrase exacte, exclusion) avant la collecte ; chaque source déclare
+elle-même les opérateurs qu'elle comprend (`Declaration.operateurs`). Découverte en cours de route : serper/
+brave/searxng/tavily sont des sources `definition`/`prise`, pas `adaptateur` — le seul point où le pont peut
+différencier une requête par source — donc `operateurs` leur est refusé (même garde-fou que `verifie_sur`) ;
+le mécanisme est construit et testé de bout en bout, mais aucune source réelle ne le déclare encore (audit
+laissé à une prochaine session, voir D110). Tests ciblés + navigateur réel verts ; suite complète : 638
+passés, 1 échec pré-existant.
 
 D104 (précédent) : Sednal a demandé explicitement de commencer 909 malgré son état « en cours de rédaction »
 — instruction directe qui prévaut sur la règle d'attente de validation écrite de `POUR_MOMO.md`. §1.1 fait :
