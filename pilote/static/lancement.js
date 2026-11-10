@@ -75,19 +75,25 @@
   ["f-appels","f-temps","f-explo","f-page","f-verif","f-typelieu","f-pays"].forEach(function(id){el(id).onchange=estimer;el(id).oninput=estimer});
 
   /* ---- presets cochés, formats de sortie, types de lieu ---- */
+  var signatureChoix="";
   function chargerChoix(){
     api("/api/reglages").then(function(d){
-      var coches=d.presets_coches||[];
+      var coches=d.presets_coches||[], actifs=((d.parties||{}).sortie||[]);
+      /* rien n'a changé dans Réglages : on ne touche pas aux cases choisies pour cette recherche (revenir sur l'onglet les remettait au défaut) */
+      var signature=JSON.stringify([d.presets.map(function(p){return [p.id,p.nom]}),coches,actifs.map(function(f){return [f.id,f.nom,f.actif]})]);
+      if(signature===signatureChoix){estimer();return}
+      signatureChoix=signature;
       el("f-presets").innerHTML=d.presets.map(function(p){
         return '<label style="display:inline-block;margin:0 14px 4px 0"><input type="checkbox" data-id="'+esc(p.id)+'"'+(coches.indexOf(p.id)>=0?" checked":"")+"> "+esc(p.nom)+"</label>"}).join("");
       el("f-presets").querySelectorAll("input").forEach(function(i){i.onchange=estimer});
-      var actifs=((d.parties||{}).sortie||[]);
       el("f-sortie").innerHTML=actifs.length?actifs.map(function(f){
         return '<label style="display:inline-block;margin:0 14px 4px 0"><input type="checkbox" data-id="'+esc(f.id)+'"'+(f.actif?" checked":"")+"> "+esc(f.nom)+"</label>"}).join("")+'<div class="smeta">Décoché partout = comme dans Réglages.</div>':"";
       estimer();
     }).catch(function(){});
     api("/api/types-de-lieu").then(function(t){
+      var choisi=el("f-typelieu").value;
       el("f-typelieu").innerHTML='<option value="">tous</option>'+t.types.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.libelle)+"</option>"}).join("");
+      el("f-typelieu").value=choisi;
     }).catch(function(){});
   }
 

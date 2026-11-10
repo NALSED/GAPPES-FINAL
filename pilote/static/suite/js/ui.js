@@ -158,6 +158,7 @@ export function ouvrirCouche({ cote = false, largeur = "", titre, sous, contenu,
     if (surFermeture) surFermeture(annule);
   }
   function touche(ev) {
+    if (couches().lastElementChild !== boite) return; // seule la couche du dessus répond : chaque couche écoute `document`, et `stopPropagation` n'arrête pas les autres
     if (ev.key === "Escape") {
       ev.stopPropagation();
       fermer(true);

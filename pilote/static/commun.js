@@ -5,7 +5,8 @@ async function api(chemin,options){
   var r=await fetch(chemin,options);
   if(!r.ok){
     var m="",av=null;
-    try{var d=(await r.json()).detail;if(d&&typeof d==="object"&&!Array.isArray(d)){av=d.avertissements||null;m="Confirmation demandée."}else m=d}catch(e){}
+    /* un détail en LISTE est un refus de validation de FastAPI (en anglais, pour un développeur) : même phrase que la suite (suite/js/api.js) */
+    try{var d=(await r.json()).detail;if(Array.isArray(d))m="La demande a été refusée.";else if(d&&typeof d==="object"){av=d.avertissements||null;m="Confirmation demandée."}else m=d}catch(e){}
     var er=new Error(m||("Erreur "+r.status));er.avertissements=av;throw er;
   }
   return r.json();

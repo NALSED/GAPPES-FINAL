@@ -12,8 +12,9 @@ const INTRO = "Je connais tes sources, tes outils et ton plan de travail. Je ne 
 const PUCES = ["Comment je fais…", "Pourquoi ça n'a rien donné ?", "Ça veut dire quoi…"];
 const cle = "grappes.aide.ouverte";
 
-const etatAide = { ouverte: lireOuverte(), messages: [] };
+const etatAide = { ouverte: lireOuverte(), messages: [], brouillon: "" };
 let racine = null;
+let modeleDessine = null; // la présence du modèle au dernier dessin : c'est tout ce que l'Aide lit de la page
 
 function lireOuverte() {
   try { return localStorage.getItem(cle) !== "non"; } catch { return true; }
@@ -26,7 +27,8 @@ export function monterAide() {
   racine = document.getElementById("aide");
   dessiner();
 }
-export const redessinerAide = () => racine && dessiner();
+// La page se redessine souvent (toutes les 2 s pendant le sondage du Tableau de bord) : l'Aide ne suit que si le modèle a changé.
+export const redessinerAide = () => { if (racine && !!app.data?.modele !== modeleDessine) dessiner(); };
 
 const pousser = (m) => { etatAide.messages.push(m); dessiner(); const fil = racine.querySelector(".aide-fil"); if (fil) fil.scrollTop = fil.scrollHeight; };
 const dire = (texte) => pousser({ type: "r", texte });
@@ -128,14 +130,20 @@ function message(m, i) {
 function dessiner() {
   if (!racine) return;
   const modele = !!app.data?.modele;
+  modeleDessine = modele;
+  // Un redessin de l'Aide elle-même (une réponse qui arrive) ne fait perdre ni la question en cours, ni le curseur, ni la place dans le fil.
+  const avant = racine.querySelector(".aide-saisie input");
+  const curseur = avant && document.activeElement === avant ? [avant.selectionStart, avant.selectionEnd] : null;
+  const haut = racine.querySelector(".aide-fil")?.scrollTop;
   racine.replaceChildren();
   if (!etatAide.ouverte) {
     racine.append(h("button", { type: "button", class: "aide-replie", "aria-label": `${VERBES.deplier} l'Aide`, onclick: () => { etatAide.ouverte = true; noterOuverte(); dessiner(); } },
       h("span", { class: "picto aide-picto" }, icone("aide")), h("span", { class: "titre" }, "Aide"), h("span", { class: "chev" }, icone("deplier"))));
     return;
   }
-  const saisie = h("input", { type: "text", placeholder: "Pose ta question…", disabled: !modele, "aria-label": "Pose ta question", title: modele ? "" : "La phrase libre demande un modèle, qui n'est pas disponible. Les trois boutons marchent sans lui." });
-  const envoyer = () => { const t = saisie.value.trim(); if (t) { saisie.value = ""; phrase(t); } };
+  const saisie = h("input", { type: "text", value: etatAide.brouillon, placeholder: "Pose ta question…", disabled: !modele, "aria-label": "Pose ta question", title: modele ? "" : "La phrase libre demande un modèle, qui n'est pas disponible. Les trois boutons marchent sans lui." });
+  saisie.addEventListener("input", () => { etatAide.brouillon = saisie.value; });
+  const envoyer = () => { const t = saisie.value.trim(); if (t) { saisie.value = ""; etatAide.brouillon = ""; phrase(t); } };
   saisie.addEventListener("keydown", (ev) => { if (ev.key === "Enter") envoyer(); });
   const envoi = boutonIcone({ icon: "lancer", etiquette: "Envoyer", onclick: envoyer, classe: "envoyer" });
   envoi.disabled = !modele;
@@ -146,4 +154,6 @@ function dessiner() {
     h("div", { class: "aide-pied" },
       h("div", { class: "aide-puces" }, [[PUCES[0], comment], [PUCES[1], pourquoi], [PUCES[2], definirChoix]].map(([l, f]) => h("button", { type: "button", class: "aide-puce", onclick: f }, l))),
       h("div", { class: "aide-saisie" }, saisie, envoi))));
+  if (haut !== undefined) racine.querySelector(".aide-fil").scrollTop = haut;
+  if (curseur) { saisie.focus(); saisie.setSelectionRange(...curseur); }
 }

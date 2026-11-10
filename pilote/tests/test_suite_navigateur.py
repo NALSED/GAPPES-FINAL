@@ -405,3 +405,150 @@ def test_onglet_tri_confirmer_et_separer(tmp_path, chromium, serveur_vivant):
     p.wait_for_function("document.querySelector('.sauvee .mode').innerText === 'Séparé'")
     assert not erreurs, erreurs
     p.close()
+
+
+# --- D114 : les huit défauts restés hors du plafond de la revue de pilote/static
+
+
+def test_aide_garde_le_texte_en_cours_quand_la_page_se_redessine(page, monkeypatch):
+    """Le sondage du Tableau de bord redessine la page toutes les 2 s : sans garde, la question en cours disparaissait à chaque fois."""
+    from pilote import suite_ia
+
+    monkeypatch.setattr(suite_ia, "disponible", lambda: True)  # sans modèle, le champ est grisé : rien à perdre
+    page.reload()
+    page.wait_for_selector(".carte")
+    champ = page.locator(".aide-saisie input")
+    champ.fill("ma question en cours")
+    page.evaluate("import('/static/suite/js/etat.js').then((m) => m.app.rendre())")
+    assert champ.input_value() == "ma question en cours"
+    assert page.evaluate("document.activeElement === document.querySelector('.aide-saisie input')")
+    # son propre redessin (une réponse qui arrive) ne le perd pas non plus
+    page.click(".aide-puce:has-text('Ça veut dire quoi')")
+    page.wait_for_selector(".aide-choix")
+    assert champ.input_value() == "ma question en cours"
+
+
+def test_echap_ne_ferme_que_la_couche_du_dessus(page):
+    """Un avertissement posé sur une fiche ouverte : deux écoutes sur `document`, et `stopPropagation` n'arrête pas la seconde."""
+    page.evaluate(
+        """import('/static/suite/js/ui.js').then(({ ouvrirCouche, avertissement }) => {
+            ouvrirCouche({ cote: true, titre: 'Dessous', contenu: [] });
+            avertissement({ titre: 'Dessus', points: ['un point'], verbe: 'Confirmer', onconfirmer: () => {} });
+        })"""
+    )
+    assert page.locator(".panneau").count() == 1 and page.locator(".avert-titre").count() == 1
+    page.keyboard.press("Escape")
+    assert page.locator(".avert-titre").count() == 0 and page.locator(".panneau").count() == 1
+    page.keyboard.press("Escape")
+    assert page.locator(".panneau").count() == 0
+
+
+def test_une_preference_abimee_ne_casse_pas_la_page(page):
+    """Lue au chargement du module : une valeur illisible faisait tomber toute l'application, page blanche."""
+    page.evaluate("localStorage.setItem('tableau-cartes-repliees', '{pas du json')")
+    page.reload()
+    page.wait_for_selector(".carte", timeout=5000)
+
+
+def test_retirer_une_tuile_rend_sa_source_a_la_palette(page):
+    page.click("button[aria-label=Replier]")
+    page.click(".palette-groupe-tete:has-text('Associations')")
+    entree = page.locator(".palette-entree:has-text('Registre des associations (France)')")
+    entree.click()
+    assert "posée" in entree.inner_text()
+    page.click("[data-tuile='assos:registre-associations'] .tuile")
+    page.click(".fenetre button:has-text('Retirer la tuile')")
+    assert page.locator("[data-tuile]").count() == 2
+    assert "posée" not in entree.inner_text() and entree.get_attribute("aria-disabled") == "false"
+    entree.click()  # et elle se repose tout de suite
+    assert page.locator("[data-tuile]").count() == 3
+
+
+def test_recherche_avancee_dit_pourquoi_elle_ne_part_pas(page):
+    page.click("button[aria-label=Replier]")
+    page.click(".palette-groupe-tete:has-text('Associations')")
+    page.click(".palette-entree:has-text('Registre des associations (France)')")
+    page.route(
+        "**/api/suite/aide/verifier_plan",
+        lambda r: r.fulfill(status=503, content_type="application/json", body='{"detail": "Le serveur refuse cet essai."}'),
+    )
+    page.fill(".plan-barre input", "club de judo")
+    page.click(".plan-barre button:has-text('Lancer la recherche')")
+    page.wait_for_selector(".message-refus:has-text('Le serveur refuse cet essai.')", timeout=5000)
+
+
+@pytest.fixture
+def page_classique(tmp_path, chromium, serveur_vivant):
+    """L'ancienne page (`/`, les fichiers static/*.js hors de la suite), avec une recherche de 40 noms à trier."""
+    from test_f13_tri import peupler
+
+    cfg = _installee(charger(copier_config(tmp_path)))
+    peupler(cfg, 40)
+    url = serveur_vivant(creer_app(cfg))
+    p = chromium.new_page(viewport={"width": 1400, "height": 900})
+    erreurs = []
+    p.on("pageerror", lambda e: erreurs.append(str(e)))
+    p.goto(f"{url}/")
+    p.evaluate("localStorage.setItem('g_tri_recherche', 'r13')")
+    p.reload()
+    yield p
+    assert not erreurs, erreurs
+    p.close()
+
+
+def test_classique_un_refus_de_validation_ne_s_affiche_pas_en_objet(page_classique):
+    """FastAPI rend le détail d'un 422 de validation sous forme de LISTE : passé tel quel à `Error`, il donnait « [object Object] »."""
+    message = page_classique.evaluate(
+        "envoyer('/api/reglages/budget', 'PUT', {plafond_mensuel_usd: 'pas un nombre'}).then(() => '', (e) => e.message)"
+    )
+    assert message == "La demande a été refusée."
+
+
+def test_classique_la_frappe_dans_le_filtre_de_tri_n_est_pas_ecrasee(page_classique):
+    """La réponse d'une recherche antérieure arrive pendant qu'on tape encore : le champ ne doit pas revenir au texte déjà envoyé."""
+    p = page_classique
+    p.click('.tab[data-p="tri"]')
+    p.wait_for_selector(".grp", timeout=15000)
+    retenues = []
+
+    def retenir(route):
+        if route.request.url.endswith("q=ab"):
+            retenues.append((route, route.fetch()))  # la réponse est déjà là : la rendre ne dépend plus du temps de calcul du serveur
+        else:
+            route.continue_()
+
+    p.route("**/api/recherches/*/tri?*", retenir)
+    champ = p.locator("#tri-q")
+    champ.press_sequentially("ab")
+    p.wait_for_timeout(500)  # le délai de frappe (250 ms) passe : la requête pour « ab » part, et reste retenue
+    assert len(retenues) == 1
+    champ.press_sequentially("c")
+    route, reponse = retenues[0]
+    route.fulfill(response=reponse)
+    p.wait_for_timeout(60)  # la réponse pour « ab » se dessine, avant que le délai de frappe de « abc » n'expire (au-delà, elle serait ignorée)
+    assert champ.input_value() == "abc"
+
+
+def test_classique_les_cases_de_presets_survivent_a_un_changement_d_onglet(page_classique):
+    p = page_classique
+    p.click('.tab[data-p="lancement"]')
+    case = p.locator("#f-presets input").first
+    case.wait_for()
+    voulu = not case.is_checked()
+    case.set_checked(voulu)
+    with p.expect_response("**/api/reglages"):
+        p.click('.tab[data-p="reglages"]')
+    with p.expect_response("**/api/reglages"):  # revenir sur « Recherches » relit les réglages
+        p.click('.tab[data-p="lancement"]')
+    p.wait_for_timeout(100)  # le temps que la réponse soit dessinée
+    assert case.is_checked() is voulu
+
+
+def test_la_croix_d_une_tuile_la_retire_sans_ouvrir_sa_fenetre(page):
+    page.click("button[aria-label=Replier]")  # l'Aide est posée par-dessus le coin du plan
+    page.click(".palette-groupe-tete:has-text('Associations')")
+    page.click(".palette-entree:has-text('Registre des associations (France)')")
+    assert page.locator("[data-tuile]").count() == 3
+    page.hover("[data-tuile='assos:registre-associations'] .tuile")
+    page.click("[data-tuile='assos:registre-associations'] .tuile-retrait")
+    assert page.locator("[data-tuile]").count() == 2 and page.locator(".fenetre").count() == 0

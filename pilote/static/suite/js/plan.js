@@ -14,6 +14,7 @@ let zone = null; // {toile, interieur, svg, noeuds: Map, liens: Map}
 let drag = null;
 let delaiSauvegarde = null;
 let fenetreTuile = null;
+let redessinerPalette = null; // la palette à l'écran : elle dit « posée », et doit suivre quand une tuile s'en va
 
 export const plan = () => app.data.plan;
 const noeud = (id) => plan().nodes.find((n) => n.id === id);
@@ -84,6 +85,7 @@ export function retirerTuile(id) {
   app.recherche.lien = null;
   sauvegarder();
   dessinerToile();
+  redessinerPalette?.();
 }
 
 function ajouterLien(a, b) {
@@ -256,6 +258,7 @@ function blocTuile(n) {
     bloc.setPointerCapture?.(ev.pointerId);
   });
   bloc.addEventListener("pointerup", (ev) => {
+    if (ev.target.closest(".tuile-retrait")) return; // sinon la toile est redessinée avant le « click » : la croix disparaît sans retirer, et la fenêtre s'ouvre
     const port = ev.target.closest(".port");
     const finitLeLien = port && port.classList.contains("entree") && app.recherche.lien && app.recherche.lien !== n.id; // le port d'entrée d'une AUTRE tuile est la cible naturelle du lien qu'on tire
     if (port && !finitLeLien) return; // relâcher sur un port n'ouvre rien : c'est le geste de relier qui commence
@@ -328,7 +331,7 @@ export function palette() {
         })));
     }
   };
-  racine.redessiner = dessiner;
+  redessinerPalette = dessiner;
   dessiner();
   return racine;
 }

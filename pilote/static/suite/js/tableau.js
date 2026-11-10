@@ -12,9 +12,14 @@ const T = {
   recherche: null, // la recherche regardée (en cours, sinon en attente, sinon la dernière terminée)
   autres: [], // les autres recherches en cours ou en attente, en une ligne cliquable (§2.1)
   programmes: null, journal: null, // chargés une fois par arrivée sur la page (§4, moitié basse non rafraîchie)
-  repliees: new Set(JSON.parse(localStorage.getItem("tableau-cartes-repliees") || "[]")), // mémorisées comme les blocs de Réglages
+  repliees: lireRepliees(), // mémorisées comme les blocs de Réglages
   intervalle: null,
 };
+
+/** Lu au chargement du module : une valeur illisible ou un stockage bloqué feraient tomber toute l'application. */
+function lireRepliees() {
+  try { return new Set(JSON.parse(localStorage.getItem("tableau-cartes-repliees") || "[]")); } catch { return new Set(); }
+}
 
 function memoriserRepli(id, repliee) {
   repliee ? T.repliees.add(id) : T.repliees.delete(id);

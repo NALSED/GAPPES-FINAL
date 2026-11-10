@@ -155,12 +155,15 @@ function avancee() {
     if (!texte) { annoncer("Dis ce que tu cherches.", true); saisie.saisie.focus(); return; }
     if (!sources.length) { annoncer("Pose au moins une source sur le plan.", true); return; }
     await viderSauvegarde();
-    const bloquants = (await api.aide("verifier_plan", { saisie: texte })).constats.filter((c) => c.niveau === "bloquant");
+    // par `agir`, comme le lancement lui-même : un refus se lit à l'écran, au lieu d'un bouton qui semble ne rien faire
+    const verification = await agir(() => api.aide("verifier_plan", { saisie: texte }), { rechargerApres: false });
+    if (!verification) return;
+    const bloquants = verification.constats.filter((c) => c.niveau === "bloquant");
     if (bloquants.length) { annoncer(`Le plan a ${aPluriel(bloquants.length, "point bloquant", "points bloquants")} : ${bloquants[0].nom} ${bloquants[0].texte} Demande à l'Aide « Pourquoi ça n'a rien donné ? ».`, true); return; }
     const cats = [...new Set(sources.map((n) => n.cat))];
     const noms = cats.map((c) => app.data.categories.find((x) => x.id === c).nom);
-    await api.put("/plan", { nodes: p.nodes, edges: p.edges, cats: p.cats, saisies: p.saisies, saisie: texte });
-    const ids = [...new Set(sources.filter((n) => n.ref).map((n) => n.ref))];
+    if (!(await agir(() => api.put("/plan", { nodes: p.nodes, edges: p.edges, cats: p.cats, saisies: p.saisies, saisie: texte }), { rechargerApres: false }))) return;
+    const ids =[...new Set(sources.filter((n) => n.ref).map((n) => n.ref))];
     const res = await agir(() => api.post("/lancer", { mode: "Avancée", saisie: texte, sources: ids, cats, titre: texte.slice(0, 80), detail: noms.join(" · "), plan: { nodes: p.nodes, edges: p.edges, saisie: texte }, ...corpsLancement() }));
     if (res) { annoncerLancement(texte, res); app.recherche.ouvert.sauvees = true; app.rendre(); }
   }

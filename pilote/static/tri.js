@@ -492,7 +492,8 @@
     var actif=filtres.length||texte||nouveaux;
     el("tri-effacer").style.display=actif?"inline-block":"none";
     el("tri-filtre-etat").textContent=actif?T.total+" nom"+(T.total>1?"s":"")+" sur "+T.total_tout:"";
-    el("tri-q").value=texte;el("tri-nouveaux").checked=nouveaux;
+    if(document.activeElement!==el("tri-q"))el("tri-q").value=texte;  /* pendant la frappe, le champ est plus récent que la réponse qui arrive */
+    el("tri-nouveaux").checked=nouveaux;
   }
   var delaiQ=null;
   el("tri-q").oninput=function(){var v=el("tri-q").value;if(delaiQ)clearTimeout(delaiQ);delaiQ=setTimeout(function(){texte=v.trim();ouverts={};charger(true)},250)};
