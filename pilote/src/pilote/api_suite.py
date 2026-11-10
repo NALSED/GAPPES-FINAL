@@ -71,13 +71,14 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
     def etat_complet() -> dict[str, Any]:
         e = suite.charger(cfg, unites())
         v = suite.vue(cfg, e)
+        liees = [rch for rch in v["recherches"] if rch.get("recherche_id")]
+        nom_source = tri.noms_de_sources(cfg) if liees else None  # une seule fois : elle relit toutes les déclarations, et c'était deux fois par recherche sauvegardée
         with fabrique() as s:
-            for rch in v["recherches"]:
-                if rch.get("recherche_id"):
-                    rch["resultat"] = _resultat(s, rch["recherche_id"]) or rch["resultat"]
-                    rch["verification"] = _verification(s, rch["recherche_id"])
-                    rch["ecartes"] = _ecartes(s, rch["recherche_id"])
-                    rch["emoji"] = _emoji(s, rch["recherche_id"])
+            for rch in liees:
+                rch["resultat"] = _resultat(s, rch["recherche_id"]) or rch["resultat"]
+                rch["verification"] = _verification(s, rch["recherche_id"], nom_source)
+                rch["ecartes"] = _ecartes(s, rch["recherche_id"])
+                rch["emoji"] = _emoji(s, rch["recherche_id"], nom_source)
         # 908, 14.1 (retour du 08/11/2026) : l'Aide parle maintenant au même agent que l'Assistant IA (suite_ia,
         # 3.8.09, déjà vérifié en réel), plus au serveur Ollama « pas tranché » (Q suite-4, suite_modele.py).
         v["modele"] = suite_ia.disponible()
@@ -92,12 +93,11 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
             return None
         return {"n": n, "noms": [x for e in evts for x in (e.detail or {}).get("noms", [])]}
 
-    def _emoji(s: Session, rid: str) -> str:
+    def _emoji(s: Session, rid: str, nom_source) -> str:
         """« emoji non transmis à n sources » : la saisie contenait un emoji et ces sources ne déclarent pas le chercher."""
         rch = s.get(Recherche, rid)
         bilan = ((rch.avancement if rch else None) or {}).get("emoji") or {}
         non, aveugle = [str(x) for x in bilan.get("non_transmis") or []], [str(x) for x in bilan.get("a_l_aveugle") or []]
-        nom_source = tri.noms_de_sources(cfg)
         morceaux = []
         if non:
             morceaux.append(f"emoji non transmis à {len(non)} source{'s' if len(non) > 1 else ''} : " + ", ".join(nom_source(x) for x in non))
@@ -105,11 +105,10 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
             morceaux.append(f"emoji envoyé tel quel à {len(aveugle)} source{'s' if len(aveugle) > 1 else ''} qui ne déclarent pas le chercher : " + ", ".join(nom_source(x) for x in aveugle))
         return " · ".join(morceaux)
 
-    def _verification(s: Session, rid: str) -> str:
+    def _verification(s: Session, rid: str, nom_source) -> str:
         """« X sur Y noms vérifiés » par source de vérification : une absence de signalement ne veut JAMAIS dire « vérifié » (décision du 27/10 : budget des clés gratuites, limite dite)."""
         rch = s.get(Recherche, rid)
         bilans = [b for b in ((rch.avancement if rch else None) or {}).get("verifications") or [] if isinstance(b, dict)]
-        nom_source = tri.noms_de_sources(cfg)
         return " · ".join(
             f"{nom_source(str(b.get('source', '')))} : {b.get('examines', 0)} sur {b.get('a_verifier', 0)} noms {'enrichis' if b.get('fonction') == 'enrichir' else 'vérifiés'}" for b in bilans
         )
@@ -411,6 +410,8 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
                 params.update(valider_options(cfg, reglages_lancement))
             except (LancementInvalide, ValueError) as exc:
                 raise HTTPException(422, str(exc)) from exc
+        # contrôlée AVANT de créer la recherche : refusée après, elle laissait une recherche « en attente » que rien ne lançait jamais
+        entree = appeler(suite.entree_de_recherche, {**corps, "titre": corps.get("titre") or saisie[:80], "resultat": "en cours"}) if corps.get("sauver", True) else None
         with fabrique.begin() as s:
             from pilote import reglages as rg_fichier
 
@@ -424,14 +425,9 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
                 )
             )
             rid = rch.id
-        entree = (
-            suite.sauvegarder_recherche(
-                cfg, {**corps, "titre": corps.get("titre") or saisie[:80], "resultat": "en cours", "recherche_id": rid}
-            )
-            if corps.get("sauver", True)
-            else None
-        )
-        gestionnaire.lancer(rid)
+        gestionnaire.lancer(rid)  # d'abord : une écriture ratée de la liste des recherches sauvegardées ne laisse pas la recherche sans fil de travail
+        if entree is not None:
+            entree = suite.enregistrer_entree(cfg, {**entree, "recherche_id": rid})
         return {
             "recherche_id": rid,
             "id": entree["id"] if entree else None,

@@ -75,7 +75,7 @@ def lignes_de(s: Session, rid: str) -> list[cl.Ligne]:
     mot = motifs_courants(s, rid)
     cands = list(s.scalars(select(Candidat).where(Candidat.recherche_id == rid).order_by(Candidat.id)))
     separes = {c.id for c in cands if (c.faits or {}).get("separe")}
-    empreinte = hash(tuple((c.id, c.nom, c.numero_officiel, (c.faits or {}).get("fonction", "")) for c in cands))
+    empreinte = hash(tuple((c.id, c.nom, c.numero_officiel, (c.faits or {}).get("fonction", ""), repr(c.relations or [])) for c in cands))  # les relations aussi : confirmer un rapprochement dans Tri en ajoute, et les blocs en dépendent
     cle = (rid, len(cands), len(separes), empreinte)  # les noms d'une recherche ne changent plus une fois la recherche finie ; s'ils changeaient, l'empreinte le dirait
     if cle not in _CACHE_RESSEMBLANCES:
         if len(_CACHE_RESSEMBLANCES) > 16:
@@ -104,12 +104,16 @@ def lignes_de(s: Session, rid: str) -> list[cl.Ligne]:
 def noms_de_sources(cfg: Config):
     """token de source -> nom lisible (jamais un identifiant technique), d'après les déclarations des sources."""
     from pilote import flux_rss
+    from pilote.refus import ConfigRefusee
     from pilote.sources import charger_sources
     from pilote.suite_rsshub import nom_prise
 
     decls, _ = charger_sources(cfg)
     par_id = {d.id: d.nom for d in decls.values()}
-    par_id.update({f["id"]: f["nom"] for f in flux_rss.charger(cfg)})  # un flux ajouté à la main : son nom, pas « rss-… » (revue 902)
+    try:
+        par_id.update({f["id"]: f["nom"] for f in flux_rss.charger(cfg)})  # un flux ajouté à la main : son nom, pas « rss-… » (revue 902)
+    except ConfigRefusee:  # un fichier de flux abîmé coûte le joli nom des flux, jamais l'accès au Tri ni aux exports
+        pass
     fixes = {**SOURCES_ECOSYSTEMES, "sirene_naf": "Annuaire des entreprises", "sirene_nom": "Annuaire des entreprises", "wikidata": "Wikidata (encyclopédie)"}
 
     def nom(token: str) -> str:

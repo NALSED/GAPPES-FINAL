@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections import Counter
 from pathlib import Path
 
-from pilote.formats._commun import COLONNES_DETAIL, cellule, ligne_detail, phrase_trace
+from pilote.formats._commun import COLONNES_DETAIL, cellule, ligne_detail, phrase_trace, propre_xml
 
 FORMAT = {
     "id": "xlsx",
@@ -23,7 +23,7 @@ def _onglet(wb, titre: str, entete: list[str], lignes: list[list[str]]):
     ws = wb.create_sheet(titre)
     ws.append(entete)
     for ligne in lignes:
-        ws.append([cellule(c) for c in ligne])
+        ws.append([propre_xml(cellule(c)) for c in ligne])  # un caractère de contrôle dans un nom lu sur le web faisait échouer tout le classeur
     for col in ws.columns:
         ws.column_dimensions[col[0].column_letter].width = min(60, max(10, *(len(str(c.value or "")) for c in col)) + 2)
     ws.freeze_panes = "A2"

@@ -23,9 +23,11 @@ def sources_de_la_recherche(dossier_recherche: Path) -> list[str]:
     if not f.exists():
         return []
     try:
-        return [str(s) for s in json.loads(f.read_text(encoding="utf-8")).get("sources", [])]
+        spec = json.loads(f.read_text(encoding="utf-8"))
     except ValueError:
         return []
+    # les sources de vérification et d'enrichissement aussi : une licence qui impose d'être cité vaut quel que soit le rôle de la source
+    return list(dict.fromkeys([*(str(s) for s in spec.get("sources", [])), *(str(v["source"]) for v in spec.get("verificateurs", []) if isinstance(v, dict) and v.get("source"))]))
 
 
 def ecrire(cfg: Config, dossier_recherche: Path, dossier_sortie: Path) -> Path | None:

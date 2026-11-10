@@ -39,11 +39,10 @@ def main(dossier: str) -> int:
     temps_max = float(spec["limites"]["temps_s"]) if spec["limites"].get("temps_s") else None
     resultat = {"statut": "erreur", "arret": "", "message": ""}
 
-    def appels_faits() -> int:
-        f = os.environ.get(avancement.VARIABLE)
-        if not f or not Path(f).exists():
-            return 0
-        return sum(1 for ligne in Path(f).read_text(encoding="utf-8").splitlines() if '"evenement": "appel"' in ligne)
+    # trouvé par PYTHONPATH, comme les autres modules de pilote que charge le pont
+    from pilote.pont.compteur import CompteurAppels
+
+    appels_faits = CompteurAppels(os.environ.get(avancement.VARIABLE)).total
 
     pause_fichier = Path("PAUSE")
     pause = {"depuis": None, "total": 0.0}

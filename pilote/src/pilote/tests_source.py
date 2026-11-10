@@ -285,6 +285,8 @@ def _brut(d: Declaration) -> dict[str, Any]:
         "produit": d.produit, "usages": d.usages, "main": d.main, "famille": d.famille, "cle": d.cles if len(d.cles) > 1 else d.cle, "cle_prefixe": d.cle_prefixe, "cout": d.cout, "confiance": d.confiance,
         "defaut": d.defaut, "roles": d.roles, "avertissement": d.avertissement, "mode": d.mode, "moteur": d.moteur, "exemple_reponse": d.exemple_reponse,
         "test_connexion": d.test_connexion, "verifie_le": d.verifie_le, "prestataire": d.prestataire, "note": d.note,
+        # tous les champs : ce dictionnaire sert aussi à l'export d'un preset, où une source perdait sa mention obligatoire, sa classe d'origine et ce qu'elle sait vérifier
+        "origine": d.origine, "parametres": d.parametres, "attribution": d.attribution, "verifie_sur": d.verifie_sur, "fiabilite": d.fiabilite, "operateurs": d.operateurs,
     }  # fmt: skip
 
 

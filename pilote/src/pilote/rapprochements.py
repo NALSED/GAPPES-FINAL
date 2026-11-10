@@ -24,7 +24,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from pilote import suite, tri
-from pilote.base import Candidat, Journal, Rapprochement
+from pilote.base import Candidat, Journal, Rapprochement, Recherche
 from pilote.config import Config
 
 SEUIL = 0.2  # en dessous, la paire n'est pas proposée : trop incertaine pour mériter l'attention d'une personne
@@ -75,11 +75,15 @@ def _deja_liees(cands: list[Candidat]) -> set[tuple[int, int]]:
     return out
 
 
-def proposer(cfg: Config, fabrique: sessionmaker[Session], rid: str, seuil: float = SEUIL) -> dict[str, Any]:
+def proposer(cfg: Config, fabrique: sessionmaker[Session], rid: str, seuil: float | None = None) -> dict[str, Any]:
     """Range en file les rapprochements d'une recherche. `seuil` : réglage « Même entité si » de la tuile Fusion
-    posée sur le plan (3.8.05) — le réglage par défaut (SEUIL) si aucune tuile Fusion n'est posée. Rend
+    posée sur le plan (3.8.05) ; absent, celui de la tuile Fusion de CETTE recherche, sinon le réglage par défaut (SEUIL). Rend
     {proposes, comparees}. Lève `Indisponible` si le moteur ne tourne pas."""
     with fabrique() as s:
+        if seuil is None:  # relancé depuis Tri : la tuile posée au lancement vaut toujours
+            r = s.get(Recherche, rid)
+            fusion = (((r.parametres if r else None) or {}).get("plan") or {}).get("fusion") or {}
+            seuil = float(fusion.get("seuil", SEUIL))
         # Règle 8 : une fiche de genre « personne » n'entre pas dans un rapprochement, SAUF si une personne a explicitement levé la règle sur
         # cette fiche-là (`tri.marquer_personne_morale`, trace dans `faits.regle8_leve`). Le genre n'est jamais réécrit : il dit ce que la
         # collecte a constaté, la levée dit ce qu'une personne a décidé, et les deux restent lisibles côte à côte.

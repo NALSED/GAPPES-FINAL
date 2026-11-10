@@ -832,3 +832,11 @@ Corrigé : une URL mal formée lue dans une page ne fait plus annuler le cycle ;
 Vus aussi, non corrigés : `search_entities` (MCP) permet de confirmer une personne masquée par son identifiant ; un lexique réduit après une panne au premier cycle reste définitif ; une panne d'une source CSV arrête toute la découverte (`sources_yaml.py:143`) ; `refresh_domaines` remplace le cache complet par une lecture partielle ; `juger.py:156` lève IndexError si Wikidata ne rend aucune entité.
 
 Aucun test de non-régression ajouté pour ces six corrections. `tests/` : 613 réussis, 4 échecs, identiques avant et après.
+
+## D116 — Fin de la revue totale : points restants de D113 et D114 corrigés (10/11/2026)
+
+`pilote/src` : dix-huit points de D113 (n° 2 à 19), un test de non-régression chacun (`test_f17_revue.py`). **Choix :** une source de vérification posée sur plusieurs tuiles n'est appelée qu'une fois, sur l'union de leurs restrictions, et une tuile sans restriction l'emporte. Le test `test_la_tuile_jouee_ne_depend_pas_du_hasard_du_processus` échouait parce que son sous-processus chargeait l'ancienne copie `/opt/pilote/src/pilote` : il reçoit maintenant `PYTHONPATH`, assertion inchangée.
+
+`pilote/static` : les huit points de D114, plus la croix `.tuile-retrait` qui ouvrait la fenêtre au lieu de retirer la tuile, chacun avec un test navigateur.
+
+Restent à trancher par Sednal : deux recherches simultanées et le plafond de dépense ; le fichier d'export écrasé dans un dossier commun ; les neuf sources `enrichir` sans effet (`pilote/QUESTIONS.md`) ; les points du moteur listés dans D115, dont `inclure_personnes: non` lu comme vrai. Non traités non plus : les cinq constats de fin de D115.

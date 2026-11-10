@@ -13,6 +13,7 @@ import csv
 import io
 import json
 import re
+import shutil
 import sqlite3
 import time
 import unicodedata
@@ -260,7 +261,13 @@ def _adopter_sqlite(fichier: Path, cible: Path, t0: float) -> dict[str, Any]:
         n = con.execute("SELECT count(*) FROM donnees").fetchone()[0]
     finally:
         con.close()
-    cible.write_bytes(fichier.read_bytes())
+    provisoire = cible.with_suffix(".sqlite.partiel")
+    try:
+        shutil.copyfile(fichier, provisoire)
+    except BaseException:
+        provisoire.unlink(missing_ok=True)
+        raise
+    provisoire.replace(cible)  # comme à l'import : jamais une copie à moitié écrite sous le nom définitif, et une base déjà installée reste intacte si la copie échoue
     return {"lignes": n, "ecartees": 0, "octets": cible.stat().st_size, "secondes": round(time.time() - t0, 1)}
 
 

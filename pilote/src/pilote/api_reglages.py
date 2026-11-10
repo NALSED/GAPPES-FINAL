@@ -392,20 +392,19 @@ def construire(cfg: Config, fabrique: sessionmaker[Session]) -> APIRouter:
     @r.put("/reglages/sortie")
     def sortie(corps: CorpsSortie) -> dict[str, Any]:
         connus = formats.decouvrir(cfg)
-        reg = rg.charger(cfg)
-        actuel = dict(reg.get("sortie") or {})
+        modifs: dict[str, Any] = {}  # seulement ce que cette requête change : renvoyer toute la section, lue hors du verrou, écrasait un changement fait entre-temps
         if corps.actifs is not None:
             mauvais = [f for f in corps.actifs if f not in connus]
             if mauvais:
                 raise HTTPException(422, f"Le format « {mauvais[0]} » n'existe pas.")
-            actuel["actifs"] = corps.actifs
+            modifs["actifs"] = corps.actifs
         if corps.contenus is not None:
             for fid, cs in corps.contenus.items():
                 if fid not in connus:
                     raise HTTPException(422, f"Le format « {fid} » n'existe pas.")
                 if not cs or any(c not in connus[fid]["contenus"] for c in cs):
                     raise HTTPException(422, f"Le format « {connus[fid]['nom']} » propose : {', '.join(connus[fid]['contenus'])}.")
-            actuel["contenus"] = corps.contenus
+            modifs["contenus"] = corps.contenus
         if corps.dossier is not None:
             from pilote import sortie
 
@@ -413,10 +412,10 @@ def construire(cfg: Config, fabrique: sessionmaker[Session]) -> APIRouter:
                 sortie.verifier_dossier_sortie(cfg, corps.dossier)
             except ConfigRefusee as exc:
                 raise HTTPException(422, str(exc)) from exc
-            actuel["dossier"] = corps.dossier.strip()
+            modifs["dossier"] = corps.dossier.strip()
         if corps.webhook_url is not None:
-            actuel["webhook_url"] = corps.webhook_url.strip()
-        appliquer({"sortie": actuel}, corps.qui, "sortie_modifiee", ",".join(actuel.get("actifs", [])))
+            modifs["webhook_url"] = corps.webhook_url.strip()
+        actuel = appliquer({"sortie": modifs}, corps.qui, "sortie_modifiee", ",".join(modifs.get("actifs", [])))["sortie"]
         return {k: actuel.get(k) for k in ("actifs", "contenus", "dossier", "webhook_url")}
 
     @r.put("/cles/{nom}")

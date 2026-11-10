@@ -789,3 +789,312 @@ def test_le_suivi_du_pont_tolere_une_base_occupee_et_ne_laisse_pas_d_orphelin(mo
     with pytest.raises(ValueError):
         _executeur(monkeypatch, cfg, pont)(Cassee(tmp_path / "ko"))
     assert pont.tue
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Points laissés de côté par la revue du paquet (liste de D113) : un test par défaut corrigé.
+
+
+def _base_de_test(tmp_path, *noms, **recherche):
+    """Une base neuve, une recherche « r » et ses candidats. Rend (fabrique, identifiants des candidats)."""
+    from pilote.base import Candidat, Recherche, creer_fabrique
+
+    fab = creer_fabrique(f"sqlite:///{tmp_path / 'base.db'}")
+    with fab.begin() as s:
+        s.add(Recherche(id="r", qui="t", sujet={"quoi": "x"}, **recherche))
+        s.flush()
+        cands = [Candidat(recherche_id="r", nom=n) for n in noms]
+        s.add_all(cands)
+        s.flush()
+        ids = [c.id for c in cands]
+    return fab, ids
+
+
+# --- [ ] Une source de vérification posée sur deux tuiles n'est appelée qu'une fois, sur ce que ses deux tuiles couvrent.
+def test_une_source_de_verification_posee_deux_fois_n_est_appelee_qu_une_fois():
+    from pilote import suite_plan
+
+    def src(i, role):
+        return {"id": i, "nom": i, "role": role, "langue": "fr", "etat": "warn", "operateurs": []}
+
+    def tuile(i, role, ref=None):
+        return {"id": i, "nom": i, "role": role, "ref": ref}
+
+    nodes = [tuile("s", "ENTREE"), tuile("g", "GRAPPES"), tuile("a", "CHERCHER", "a"), tuile("b", "CHERCHER", "b"), tuile("v1", "VERIFIER", "v"), tuile("v2", "VERIFIER", "v")]
+    edges = [{"from": x, "to": y} for x, y in (("s", "a"), ("s", "b"), ("a", "v1"), ("b", "v2"), ("v1", "g"), ("v2", "g"))]
+    c = suite_plan.compiler({"nodes": nodes, "edges": edges}, [src("a", "CHERCHER"), src("b", "CHERCHER"), src("v", "VERIFIER")], [])
+    assert c["verificateurs"] == [{"id": "v", "en_amont": ["a", "b"], "fonction": "verifier"}]
+    assert suite_plan._verificateurs_uniques([{"id": "v", "en_amont": ["a"], "fonction": "verifier"}, {"id": "v", "en_amont": None, "fonction": "verifier"}])[0]["en_amont"] is None  # une tuile sans restriction l'emporte
+
+
+# --- [ ] Aucun champ d'une déclaration ne se perd à l'export d'un preset (mention obligatoire, origine, ce que la source sait vérifier).
+def test_aucun_champ_d_une_declaration_ne_se_perd_a_l_export(cfg):
+    from pilote.sources import charger_sources, valider_declaration
+    from pilote.tests_source import _brut
+
+    for d in charger_sources(cfg)[0].values():
+        assert valider_declaration(_brut(d), cfg, f"{d.id}.yaml") == d, d.id
+
+
+# --- [ ] Confirmer un rapprochement se voit tout de suite dans les groupes de Tri.
+def test_confirmer_un_rapprochement_se_voit_dans_les_groupes_du_tri(cfg, tmp_path):
+    from pilote import rapprochements, tri
+    from pilote.base import Rapprochement
+
+    fab, (a, b) = _base_de_test(tmp_path, "Alpha", "Beta")
+    with fab.begin() as s:
+        rapp = Rapprochement(recherche_id="r", a=a, b=b, confiance=0.5)
+        s.add(rapp)
+        s.flush()
+        ident = rapp.id
+    with fab() as s:
+        assert not any(l.bloc for l in tri.lignes_de(s, "r"))
+    rapprochements.trancher(cfg, fab, ident, "confirme", "t")
+    with fab() as s:
+        assert all(l.bloc for l in tri.lignes_de(s, "r"))
+
+
+# --- [ ] Les clés de grappes ne sont jamais copiées dans le dossier d'une recherche, même quand la préparation échoue.
+def test_les_cles_de_grappes_ne_sont_jamais_copiees_dans_une_recherche(monkeypatch, cfg, tmp_path):
+    import dataclasses
+
+    import pilote.executeur_grappes as eg
+
+    grappes = tmp_path / "grappes"
+    (grappes / "config").mkdir(parents=True)
+    (grappes / "config" / "secrets.env").write_text("CLE=secrete\n", encoding="utf-8")
+    (tmp_path / "r").mkdir()
+    ctx = _ContexteComplet(tmp_path / "r")
+    ctx.sujet = {"quoi": "x"}
+
+    def panne(*a, **k):
+        raise RuntimeError("panne")
+
+    monkeypatch.setattr(eg, "materialiser", panne)
+    with pytest.raises(RuntimeError):
+        eg.preparer(dataclasses.replace(cfg, grappes_racine=grappes), ctx)
+    assert not (ctx.dossier / "config" / "secrets.env").exists()
+
+
+# --- [ ] La copie des clés a ses droits restreints dès sa création, pas après coup.
+def test_la_copie_des_cles_est_protegee_des_sa_creation(monkeypatch, cfg, tmp_path):
+    import os
+    import stat
+
+    monkeypatch.setattr(os, "chmod", lambda *a, **k: None)  # seuls comptent les droits posés à la création
+    cible = copie_de_config(tmp_path)
+    materialiser(cfg, cible, {"sources": []})
+    assert stat.S_IMODE((cible / "secrets.env").stat().st_mode) == 0o600
+
+
+# --- [ ] La panne d'un registre « sirene » atteint le disjoncteur : le pont la signale sous ce nom-là.
+def test_la_panne_d_un_registre_sirene_est_vue(cfg, tmp_path):
+    from pilote.sources import charger_sources
+    from pilote.tests_source import _brut
+
+    declaration = {**_brut(charger_sources(cfg)[0]["wikidata"]), "id": "annuaire-sirene", "moteur": {"registre_grappes": "sirene"}}
+    (cfg.dossier_sources / "annuaire-sirene.yaml").write_text(yaml.safe_dump(declaration, allow_unicode=True), encoding="utf-8")
+    mat = materialiser(cfg, copie_de_config(tmp_path), {"sources": ["annuaire-sirene"]})
+    r = disjoncteur.issues(_avancement(tmp_path, [{"evenement": "source_echec", "prise": "sirene", "raison": "panne"}]), mat.jetons)
+    assert r["annuaire-sirene"]["issue"] == "echec"
+
+
+# --- [ ] Une source de vérification à citation obligatoire est citée, comme une source de recherche.
+def test_une_source_de_verification_est_citee_dans_les_mentions(tmp_path):
+    from pilote import mentions
+
+    (tmp_path / "lancement.json").write_text(json.dumps({"sources": ["a"], "verificateurs": [{"source": "v"}, {"source": "a"}]}), encoding="utf-8")
+    assert mentions.sources_de_la_recherche(tmp_path) == ["a", "v"]
+
+
+# --- [ ] Relancer les rapprochements depuis Tri garde le seuil de la tuile Fusion de la recherche.
+def test_relancer_les_rapprochements_garde_le_seuil_de_la_tuile_fusion(monkeypatch, cfg, tmp_path):
+    from pilote import rapprochements
+
+    vus = []
+    monkeypatch.setattr(rapprochements, "_scorer", lambda fiches, seuil: vus.append(seuil) or [])
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    fab, _ = _base_de_test(tmp_path / "a", "Alpha", "Beta", parametres={"plan": {"fusion": {"seuil": 0.4}}})
+    rapprochements.proposer(cfg, fab, "r")
+    fab, _ = _base_de_test(tmp_path / "b", "Alpha", "Beta", parametres={"plan": None})
+    rapprochements.proposer(cfg, fab, "r")
+    assert vus == [0.4, rapprochements.SEUIL]
+
+
+# --- [ ] Aucun rôle ne s'allume sur une source dont l'adaptateur n'existe pas.
+def test_aucun_role_ne_s_allume_sans_adaptateur(monkeypatch, cfg):
+    from pilote import suite_reel
+    from pilote.refus import ConfigRefusee
+
+    monkeypatch.setattr(suite_reel, "adaptateur_manquant", lambda d: True)
+    with pytest.raises(ConfigRefusee, match="adaptateur"):
+        suite_reel.definir_role(cfg, "wayback", "verifier", True)
+
+
+# --- [ ] Une déclaration de la mauvaise forme n'emporte pas le chargement de toutes les autres.
+def test_une_declaration_de_la_mauvaise_forme_n_emporte_pas_les_autres(cfg):
+    from pilote.sources import charger_sources
+
+    n = len(charger_sources(cfg)[0])
+    (cfg.dossier_sources / "casse.yaml").write_text(yaml.safe_dump({"id": "casse", "nom": "Casse", "genres": ["club"], "pays": ["FR"], "main": ["premiere"]}), encoding="utf-8")
+    decls, problemes = charger_sources(cfg)
+    assert len(decls) == n and any(p["fichier"] == "casse.yaml" for p in problemes)
+
+
+# --- [ ] Le nombre de personnes physiques écartées de FollowTheMoney est rendu : l'absence se dit (règle 8).
+def test_le_nombre_de_personnes_ecartees_de_followthemoney_est_dit(cfg, tmp_path):
+    from pilote import sortie
+    from pilote.base import Candidat
+
+    fab, _ = _base_de_test(tmp_path, "Club Alpin")
+    with fab.begin() as s:
+        s.add(Candidat(recherche_id="r", nom="Une Personne", genre_de_chose="personne"))
+    res = sortie.exporter(cfg, fab, "r", "t", [{"format": "ftm"}], "tout", str(tmp_path / "sortie"))
+    assert res["ignorees_personnes_physiques"] == 1 and "Une Personne" not in (tmp_path / "sortie" / "resultat.ftm").read_text(encoding="utf-8")
+
+
+# --- [ ] Un lancement refusé ne laisse pas derrière lui une recherche « en attente » que rien ne lancera.
+def test_un_lancement_refuse_ne_laisse_pas_de_recherche_en_attente(cfg):
+    from sqlalchemy import func, select
+
+    from pilote.base import Recherche
+
+    app = creer_app(cfg, lambda c: None)
+    with TestClient(app) as c:
+        assert c.post("/api/suite/sources/searxng/allumer", json={"confirme": True}).status_code == 200
+        r = c.post("/api/suite/lancer", json={"saisie": "club de judo", "sources": ["searxng"]})
+        assert r.status_code == 422 and "Simple" in r.json()["detail"]
+    with app.state.fabrique() as s:
+        assert s.scalar(select(func.count()).select_from(Recherche)) == 0
+
+
+def _gestionnaire(tmp_path, dossier_de):
+    from pilote.base import creer_fabrique
+    from pilote.taches import Gestionnaire
+
+    fab = creer_fabrique(f"sqlite:///{tmp_path / 'base.db'}")
+    return fab, Gestionnaire(fab, dossier_de, lambda ctx: None, 1)
+
+
+# --- [ ] Un dossier de travail impossible à créer finit en « échec » lisible, jamais « en cours » pour toujours.
+def test_un_dossier_impossible_finit_en_echec_lisible(tmp_path):
+    from pilote.base import Recherche
+
+    (tmp_path / "un-fichier").write_text("x", encoding="utf-8")
+    fab, g = _gestionnaire(tmp_path, lambda rid: tmp_path / "un-fichier" / rid)
+    with fab.begin() as s:
+        s.add(Recherche(id="r", qui="t"))
+    g.lancer("r")
+    g.pool.shutdown(wait=True)
+    with fab() as s:
+        assert s.get(Recherche, "r").etat == "echec"
+    assert g._arrets == {} and g._futurs == {}
+
+
+# --- [ ] Une recherche déjà finie ne reste pas dans la liste de celles en cours.
+def test_une_recherche_deja_finie_ne_reste_pas_en_cours(tmp_path):
+    from pilote.base import Recherche
+
+    fab, g = _gestionnaire(tmp_path, lambda rid: tmp_path / rid)
+    with fab.begin() as s:
+        s.add(Recherche(id="r", qui="t", etat="terminee"))
+    g.lancer("r")
+    g.pool.shutdown(wait=True)
+    assert g._arrets == {} and g._futurs == {}
+
+
+# --- [ ] Le compte des appels ne relit que ce qui s'est ajouté, et ne compte que les lignes complètes.
+def test_le_compteur_d_appels_ne_relit_que_ce_qui_s_est_ajoute(tmp_path):
+    from pilote.pont.compteur import CompteurAppels
+
+    f = tmp_path / "avancement.jsonl"
+    compteur = CompteurAppels(str(f))
+    assert compteur.total() == 0
+    f.write_text('{"evenement": "appel"}\n{"evenement": "trouve"}\n{"evenement": "appel"', encoding="utf-8")
+    assert compteur.total() == 1
+    position = compteur.position
+    with f.open("a", encoding="utf-8") as h:
+        h.write('}\n{"evenement": "appel"}\n')
+    assert compteur.total() == 3 and compteur.position > position
+
+
+# --- [ ] La page de la suite relit les sources une seule fois, et tient bon avec un fichier de flux abîmé.
+def test_la_suite_relit_les_sources_une_fois_et_tient_un_fichier_de_flux_abime(monkeypatch, cfg):
+    from pilote import suite, tri
+
+    appels = []
+    reel = tri.noms_de_sources
+    with TestClient(creer_app(cfg, lambda c: None)) as c:
+        for i in range(3):
+            suite.sauvegarder_recherche(cfg, {"mode": "Simple", "titre": f"t{i}", "recherche_id": f"r{i}"})
+        monkeypatch.setattr(tri, "noms_de_sources", lambda x: appels.append(1) or reel(x))
+        assert c.get("/api/suite/etat").status_code == 200
+        assert len(appels) == 1
+        cfg.fichier_flux_rss.write_text("flux: 3\n", encoding="utf-8")
+        assert c.get("/api/suite/etat").status_code == 200
+
+
+# --- [ ] Un caractère de contrôle dans un nom ne fait pas échouer tout le classeur Excel.
+def test_un_caractere_de_controle_ne_fait_pas_echouer_le_classeur(tmp_path):
+    from openpyxl import load_workbook
+
+    from pilote.formats import xlsx
+
+    ligne = {"nom": "Club\x0b Alpin", "ville": "", "pays": "", "origine_phrase": "", "confirmations": 1, "fonction": "", "genre": "", "site": "", "numero_officiel": "", "decision": None, "motif_rejet": "", "sources": [], "relations": []}
+    trace = {"date": "2026-11-10", "sujet": "s", "recherche": "r", "nombre": 1, "filtre": "f", "sources": []}
+    f = tmp_path / "resultat.xlsx"
+    xlsx.ecrire({"lignes": [ligne], "trace": trace}, "detail", {}, f)
+    assert load_workbook(f)["Noms"]["A2"].value == "Club Alpin"
+
+
+# --- [ ] Un JSON précédé d'un espace, d'un retour à la ligne ou d'une marque d'ordre reste un JSON.
+def test_un_json_precede_d_un_espace_est_lu_comme_du_json():
+    from pilote import ajout
+
+    assert ajout._format(b'\n  {"a": 1}', "", "https://x.example/y") == "json"
+    assert ajout._format(b"\xef\xbb\xbf[1]", "", "https://x.example/y") == "json"
+    assert ajout._format(b"  <a/>", "", "https://x.example/y") == "xml" and ajout._format(b"nom;ville", "", "https://x.example/y") == "csv"
+
+
+# --- [ ] Une base SQLite adoptée n'apparaît qu'entière, et une copie ratée laisse intacte celle déjà installée.
+def test_une_base_sqlite_adoptee_n_apparait_qu_entiere(monkeypatch, tmp_path):
+    import sqlite3
+
+    from pilote import fichier_local as fl
+
+    source = tmp_path / "source.sqlite"
+    con = sqlite3.connect(source)
+    con.executescript("CREATE TABLE donnees(id INTEGER); CREATE TABLE noms(id INTEGER);")
+    con.close()
+    cible = fl.chemin_base(tmp_path / "copies", "b")
+    cible.parent.mkdir(parents=True)
+    cible.write_bytes(b"ancienne")
+
+    def coupee(de, vers):
+        with open(vers, "wb") as f:
+            f.write(b"demi")
+        raise OSError("disque plein")
+
+    monkeypatch.setattr(fl.shutil, "copyfile", coupee)
+    with pytest.raises(OSError, match="disque plein"):
+        fl.importer(source, "b", tmp_path / "copies", {"format": "sqlite"})
+    assert cible.read_bytes() == b"ancienne" and not cible.with_suffix(".sqlite.partiel").exists()
+
+
+# --- [ ] Changer une partie de la sortie n'écrase pas ce qu'un autre changement vient d'écrire.
+def test_changer_une_partie_de_la_sortie_n_ecrase_pas_le_reste(monkeypatch, cfg):
+    from pilote import reglages as rg
+
+    reel = rg.appliquer
+
+    def avec_un_autre_onglet(c, decls, connus, patch):
+        monkeypatch.setattr(rg, "appliquer", reel)
+        reel(c, decls, connus, {"sortie": {"dossier": "autre"}})
+        return reel(c, decls, connus, patch)
+
+    with TestClient(creer_app(cfg, lambda c: None)) as c:
+        monkeypatch.setattr(rg, "appliquer", avec_un_autre_onglet)
+        r = c.put("/api/reglages/sortie", json={"webhook_url": "https://x.example/h"})
+    assert r.status_code == 200 and r.json()["dossier"] == "autre" and r.json()["webhook_url"] == "https://x.example/h"
+    assert rg.charger(cfg)["sortie"]["dossier"] == "autre"

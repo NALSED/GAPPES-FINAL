@@ -125,6 +125,15 @@ class Gestionnaire:
             f.result(timeout=delai)
 
     def _executer(self, recherche_id: str, arret: threading.Event) -> None:
+        """Quelle que soit la façon dont le travail se termine, la recherche quitte la liste de celles en cours : sinon elle ne pouvait plus être relancée et restait en mémoire."""
+        try:
+            self._travailler(recherche_id, arret)
+        finally:
+            with self._verrou:
+                self._arrets.pop(recherche_id, None)
+                self._futurs.pop(recherche_id, None)  # sinon un Future par recherche restait en mémoire tant que le service tourne
+
+    def _travailler(self, recherche_id: str, arret: threading.Event) -> None:
         with self.fabrique.begin() as s:
             r = s.get(Recherche, recherche_id)
             assert r is not None
@@ -133,11 +142,11 @@ class Gestionnaire:
             r.etat, r.debut, r.message = "en_cours", maintenant(), "La recherche est en cours."
             sujet, params, qui = dict(r.sujet or {}), dict(r.parametres or {}), r.qui
             s.add(Journal(recherche_id=recherche_id, qui=qui, evenement="debut", detail={}))
-        dossier = self.dossier_de(recherche_id)
-        dossier.mkdir(parents=True, exist_ok=True)
-        ctx = ContexteRecherche(recherche_id, sujet, params, dossier, qui, arret, self.fabrique)
         etat, message = "terminee", "La recherche est terminée."
-        try:
+        try:  # le dossier aussi : un disque plein ou un dossier refusé doit finir en « échec » lisible, jamais rester « en cours » pour toujours
+            dossier = self.dossier_de(recherche_id)
+            dossier.mkdir(parents=True, exist_ok=True)
+            ctx = ContexteRecherche(recherche_id, sujet, params, dossier, qui, arret, self.fabrique)
             if arret.is_set():
                 raise Arret()
             self.executeur(ctx)
@@ -152,9 +161,6 @@ class Gestionnaire:
             assert r is not None
             r.etat, r.fin, r.message = etat, maintenant(), message
             s.add(Journal(recherche_id=recherche_id, qui=qui, evenement="fin", detail={"etat": etat}))
-        with self._verrou:
-            self._arrets.pop(recherche_id, None)
-            self._futurs.pop(recherche_id, None)  # sinon un Future par recherche restait en mémoire tant que le service tourne
 
     def fermer(self) -> None:
         self.pool.shutdown(wait=False, cancel_futures=True)

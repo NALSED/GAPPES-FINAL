@@ -106,8 +106,8 @@ def _format(corps: bytes, type_contenu: str, url: str) -> str:
         return "xml"
     if "csv" in t or ext.endswith(".csv"):
         return "csv"
-    debut = corps[:1].lstrip() or b" "
-    return "json" if debut in (b"{", b"[") else "xml" if corps.lstrip()[:1] == b"<" else "csv"
+    debut = corps.removeprefix(b"\xef\xbb\xbf").lstrip()[:1]  # le premier caractère UTILE : un retour à la ligne en tête ne fait pas d'un JSON un CSV
+    return "json" if debut in (b"{", b"[") else "xml" if debut == b"<" else "csv"
 
 
 def _delimiteur(texte: str) -> str:

@@ -178,6 +178,7 @@ def materialiser(cfg: Config, cible: Path, params: dict[str, Any]) -> Materialis
                 res.registres.append(nom_reg)
             for jeton in ({"sirene": ["sirene_naf", "sirene_nom"]}.get(nom_reg, [nom_reg])):
                 res.jetons[jeton] = d.id
+            res.jetons[nom_reg] = d.id  # le pont signale la réussite ou la panne d'un registre sous son nom (« sirene ») : sans ce jeton, le disjoncteur ne la voyait pas
             continue
         elif "adaptateur" in m:
             donnes = {**(m.get("parametres") or {}), **rg.parametres_donnes(reg, d.id)}
@@ -261,8 +262,11 @@ def materialiser(cfg: Config, cible: Path, params: dict[str, Any]) -> Materialis
     # clés : seulement celles des sources utilisées, dans un fichier à droits restreints
     lignes = sorted({f"{n}={(d.cle_prefixe if n == d.cle else '')}{cles.valeur(cfg, n)}" for d in [*utilisees, *verif] for n in d.cles if cles.presente(cfg, n)})
     sec = cible / "secrets.env"
-    sec.write_text("\n".join(lignes) + ("\n" if lignes else ""), encoding="utf-8")
-    os.chmod(sec, stat.S_IRUSR | stat.S_IWUSR)
+    droits = stat.S_IRUSR | stat.S_IWUSR
+    fd = os.open(sec, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, droits)
+    os.fchmod(fd, droits)  # avant le premier octet : les clés ne sont jamais lisibles par un autre compte, même un instant
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write("\n".join(lignes) + ("\n" if lignes else ""))
     if registres_voulus or res.adaptateurs or res.scripts:
         res.registres.append("yaml")  # prises de découverte de config/recherche/ et noms rendus par les adaptateurs et programmes
     return res

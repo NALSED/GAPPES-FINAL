@@ -216,7 +216,7 @@ def definir_role(cfg: Config, ident: str, role: str, actif: bool, confirme: bool
     """909, point 1.1.b (retour du 09/11/2026) : une case INDÉPENDANTE par rôle déclaré (chercher, verifier,
     enrichir) — contrairement à `allumer()`/`eteindre()`, qui restent le raccourci « tous les rôles à la
     fois », celle-ci n'en touche qu'un, sans modifier les autres (`reglages.appliquer` fusionne par clé,
-    jamais un remplacement complet). Mêmes refus et même avertissement que `allumer()` pour « chercher »."""
+    jamais un remplacement complet). Mêmes refus et même avertissement que `allumer()`, quel que soit le rôle."""
     from pilote import presets
 
     if role not in ("chercher", "verifier", "enrichir"):
@@ -227,7 +227,7 @@ def definir_role(cfg: Config, ident: str, role: str, actif: bool, confirme: bool
         if role not in d.roles:
             verbe = "chercher" if role == "chercher" else "vérifier" if role == "verifier" else "enrichir"
             raise ConfigRefusee(f"La source « {d.nom} » ne peut pas servir à {verbe}.")
-        if role == "chercher" and adaptateur_manquant(d):
+        if adaptateur_manquant(d):
             raise ConfigRefusee(f"La source « {d.nom} » demande un adaptateur : elle ne peut pas être allumée.")
         e = lire_etat(cfg).get(ident) or {}
         if e.get("statut") == "echec":
@@ -299,7 +299,7 @@ def definir_parametres(cfg: Config, ident: str, parametres: dict[str, Any]) -> N
     partagée avec l'ancienne page (02/11/2026, même champ manquant des deux côtés : retour de Sednal)."""
     from pilote import presets
 
-    d = declaration(cfg, ident)
+    declaration(cfg, ident)  # refuse une source inconnue
     decls, _ = charger_sources(cfg)
     rg.appliquer(cfg, decls, presets.ids_connus(cfg), {"source": {"id": ident, "parametres": parametres}})
 

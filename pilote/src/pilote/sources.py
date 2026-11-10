@@ -206,6 +206,9 @@ def charger_sources(cfg: Config) -> tuple[dict[str, Declaration], list[dict[str,
         except ConfigRefusee as exc:
             problemes.append({"fichier": f.name, "raison": str(exc)})
             continue
+        except (TypeError, ValueError, AttributeError):  # une valeur de la mauvaise forme que la validation n'a pas su nommer (`main: [x]`) : ce fichier-là, jamais toutes les sources
+            problemes.append({"fichier": f.name, "raison": f"Le fichier {f.name} contient une valeur de la mauvaise forme : cette source est ignorée."})
+            continue
         if decl.id in out:
             problemes.append({"fichier": f.name, "raison": f"Deux fichiers déclarent la source « {decl.id} »."})
             continue

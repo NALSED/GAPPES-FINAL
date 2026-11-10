@@ -408,7 +408,7 @@ def compiler(plan: dict[str, Any], sources: list[dict[str, Any]], outils: list[d
         )
     ordre = {i: k for k, i in enumerate(nodes)}
     return {
-        "sources": sorted(dict.fromkeys(cherchent), key=lambda s: min(ordre[i] for i in chemin_sources if ref(i) == s)), "verificateurs": [{"id": v["id"], "en_amont": v["en_amont"], "fonction": v["fonction"]} for v in verifient],
+        "sources": sorted(dict.fromkeys(cherchent), key=lambda s: min(ordre[i] for i in chemin_sources if ref(i) == s)), "verificateurs": _verificateurs_uniques(verifient),
         "chemins": chemins, "traductions": traductions, "format": formats, "fusion": fusion, "attente": attente, "ia": ia, "rsshub": rsshub, "budget_alerte": budget_alerte, "requetes": requetes, "effets": effets, "appliques": appliques, "non_appliques": non_appliques,
         "pays_equiv": pays_equiv or {},
     }  # fmt: skip
@@ -431,6 +431,21 @@ def _raison_boucle(nom: str, opts: list) -> str:
         return f"{base} (et prendre la liste depuis une tuile précédente ne l'est pas non plus)"
     elements = [v.strip() for v in (opts_map.get("Liste") or "").splitlines() if v.strip()]
     return base + (f" ({len(elements)} élément(s) prêt(s) dès que ce sera fait)" if elements else "")
+
+
+def _verificateurs_uniques(verifient: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Une source de vérification posée sur plusieurs tuiles n'est appelée qu'une fois (sinon chaque nom était payé deux fois), sur l'union de ce que ses tuiles
+    couvrent : `None` veut dire « tous les résultats », et une seule tuile sans restriction suffit à l'emporter."""
+    par_id: dict[str, dict[str, Any]] = {}
+    for v in verifient:
+        deja = par_id.get(v["id"])
+        if deja is None:
+            par_id[v["id"]] = {"id": v["id"], "en_amont": v["en_amont"], "fonction": v["fonction"]}
+        elif deja["en_amont"] is None or v["en_amont"] is None:
+            deja["en_amont"] = None
+        else:
+            deja["en_amont"] = sorted({*deja["en_amont"], *v["en_amont"]})
+    return list(par_id.values())
 
 
 def _dans_un_cycle(i: str, succ: dict[str, list[dict[str, Any]]]) -> bool:

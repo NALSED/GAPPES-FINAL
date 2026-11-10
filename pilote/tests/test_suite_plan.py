@@ -658,17 +658,21 @@ def test_ia_ne_traite_que_les_noms_qui_atteignent_sa_tuile():
 def test_la_tuile_jouee_ne_depend_pas_du_hasard_du_processus():
     """Revue 902 : l'ordre des outils venait d'un ensemble (hachage aléatoire par processus) : la tuile Fusion / Attente /
     Assistant IA « jouée » changeait d'un lancement à l'autre. Elle suit maintenant l'ordre du plan."""
+    import os
     import subprocess
     import sys
+    from pathlib import Path
 
     code = (
-        "import sys; sys.path.insert(0, 'tests');"
         "from test_suite_plan import comp_ia, plan, lien;"
         "p = plan([('saisie',), ('grappes',), ('n1', 'a'), ('ia1', 'ia', None, [['Opération', 'Résumer']]), ('ia2', 'ia', None, [['Opération', 'Résumer']])],"
         "[lien('saisie', 'n1'), lien('n1', 'ia1'), lien('ia1', 'ia2'), lien('ia2', 'grappes')]);"
         "print(comp_ia(p)['ia']['tuile'])"
     )
-    vus = {subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={"PYTHONHASHSEED": str(g), "PATH": ""}, check=True).stdout.strip() for g in range(6)}
+    # Le processus enfant doit charger le code de CE dépôt : `pythonpath` de pytest ne le suit pas, et sans ceci il prenait le pilote installé dans l'environnement, quel qu'il soit.
+    racine = Path(__file__).resolve().parents[1]
+    chemins = os.pathsep.join([str(racine / "src"), str(racine / "tests")])
+    vus = {subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={"PYTHONHASHSEED": str(g), "PATH": "", "PYTHONPATH": chemins}, check=True).stdout.strip() for g in range(6)}
     assert vus == {"ia1"}
 
 

@@ -245,6 +245,7 @@ def exporter(cfg: Config, fabrique: sessionmaker[Session], rid: str, qui: str, d
     fichiers: list[str] = []
     envois: list[dict[str, Any]] = []
     erreurs: list[dict[str, str]] = []
+    personnes_ecartees = 0  # règle 8 : ce qu'un format refuse d'écrire est compté, pour que l'absence se dise
     for d in demandes:
         fmt = connus[d["format"]]
         options = {**(d.get("options") or {})}
@@ -258,15 +259,16 @@ def exporter(cfg: Config, fabrique: sessionmaker[Session], rid: str, qui: str, d
                 erreurs.append({"format": fmt["nom"], "raison": str(exc) or type(exc).__name__})
                 continue
             fichiers += [Path(p).name for p in res.get("fichiers", [])]
+            personnes_ecartees += int(res.get("ignorees_personnes_physiques") or 0)
             if res.get("envoye"):
                 envois.append({"format": fmt["nom"], **res["envoye"]})
     extra = _decisions_et_mentions(cfg, fabrique, rid, dest)
     fichiers += extra
     with fabrique.begin() as s:
         s.add(Journal(recherche_id=rid, qui=qui, evenement="export", detail={"formats": [d["format"] for d in demandes], "fichiers": fichiers, "filtre": jeu["trace"]["filtre"], "nombre": jeu["trace"]["nombre"],
-                                                                              "envois": len(envois), "erreurs": len(erreurs)}))  # fmt: skip
+                                                                              "envois": len(envois), "erreurs": len(erreurs), **({"ignorees_personnes_physiques": personnes_ecartees} if personnes_ecartees else {})}))  # fmt: skip
     return {"dossier": str(dest), "gardes": len([r for r in jeu["lignes"] if r["decision"] == "garder"]), "exportes": jeu["trace"]["nombre"], "decisions": _nb_decisions(fabrique, rid),
-            "fichiers": fichiers, "envois": envois, "erreurs": erreurs, "trace": jeu["trace"], "sujet": jeu["trace"]["sujet"]}  # fmt: skip
+            "fichiers": fichiers, "envois": envois, "erreurs": erreurs, "trace": jeu["trace"], "sujet": jeu["trace"]["sujet"], "ignorees_personnes_physiques": personnes_ecartees}  # fmt: skip
 
 
 def _nb_decisions(fabrique: sessionmaker[Session], rid: str) -> int:

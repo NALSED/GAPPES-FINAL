@@ -585,6 +585,11 @@ def ecrire_plan(cfg: Config, plan: dict[str, Any]) -> dict[str, Any]:
 
 
 def sauvegarder_recherche(cfg: Config, d: dict[str, Any]) -> dict[str, Any]:
+    return enregistrer_entree(cfg, entree_de_recherche(d))
+
+
+def entree_de_recherche(d: dict[str, Any]) -> dict[str, Any]:
+    """L'entrée d'une recherche sauvegardée, vérifiée, sans rien écrire : un lancement la contrôle AVANT de créer la recherche."""
     mode = d.get("mode")
     if mode not in ("Simple", "Avancée"):
         raise ConfigRefusee("Une recherche est « Simple » ou « Avancée ».")
@@ -604,7 +609,10 @@ def sauvegarder_recherche(cfg: Config, d: dict[str, Any]) -> dict[str, Any]:
         s = d.get("simple") or {}
         entree["simple"] = {"preset": s.get("preset") if s.get("preset") in CATS else (cats[0] if cats else None), "pays": _texte(s, "pays") or "Tous",
                             "ov": s.get("ov") if isinstance(s.get("ov"), dict) else {}, "saisie": _texte(s, "saisie")}  # fmt: skip
+    return entree
 
+
+def enregistrer_entree(cfg: Config, entree: dict[str, Any]) -> dict[str, Any]:
     def f(e):
         e["recherches"].insert(0, entree)
         return entree

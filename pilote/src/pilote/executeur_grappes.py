@@ -58,7 +58,7 @@ def preparer(cfg: Config, ctx: ContexteRecherche) -> dict[str, Any]:
     cible = d / "config"
     if cible.exists():
         shutil.rmtree(cible)
-    shutil.copytree(src, cible, ignore=shutil.ignore_patterns("apprentissage", "__pycache__"))
+    shutil.copytree(src, cible, ignore=shutil.ignore_patterns("apprentissage", "__pycache__", "secrets.env"))  # jamais les clés de grappes : `materialiser` écrit celles des seules sources utilisées, et s'il échoue il n'en reste aucune
     (cible / "apprentissage").mkdir()
     sujet, params = ctx.sujet, ctx.parametres
     phrase = phrase_du_sujet(sujet)
