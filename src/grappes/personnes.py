@@ -51,7 +51,7 @@ class PerimetrePersonnes:
 
 def load_perimetre(path: str | Path) -> PerimetrePersonnes:
     """`config/personnes.yaml`. Absent : aucune collecte, masquage actif. Valeur inconnue : erreur, jamais de repli permissif."""
-    from grappes.config import ConfigError  # import tardif : config importe déjà ce module
+    from grappes.config import ConfigError, booleen  # import tardif : config importe déjà ce module
 
     f = Path(path)
     if not f.exists():
@@ -65,4 +65,4 @@ def load_perimetre(path: str | Path) -> PerimetrePersonnes:
     inconnus = [r for r in roles if r not in base.roles_publics]
     if inconnus:
         raise ConfigError(f"{f}: rôles publics inconnus {inconnus}")
-    return PerimetrePersonnes(bool(y.get("collecte", False)), perimetre, roles, bool(y.get("masquage", True)))
+    return PerimetrePersonnes(booleen(y, "collecte", False, str(f)), perimetre, roles, booleen(y, "masquage", True, str(f)))

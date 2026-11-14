@@ -171,15 +171,15 @@ class HttpProvider(SearchProvider):
 
         ua = str((self.options.get("headers") or {}).get("User-Agent", "grappes-recherche/1"))
 
-        def fetch(u: str) -> tuple[int, bytes]:
+        def fetch(u: str) -> tuple[int, bytes, str]:
             try:
                 self.ctx.throttle()
                 r = self.transport("GET", u, {"User-Agent": ua}, None, 15.0, 500_000)
                 self.ctx.journal.log(self.id, "-", f"GET {u}", str(r.status))
-                return r.status, r.body
+                return r.status, r.body, str(r.headers.get("Location") or r.headers.get("location") or "")
             except Exception as exc:  # noqa: BLE001 - robots illisible = prudence
                 self.ctx.journal.log(self.id, "-", f"GET {u}", f"erreur {type(exc).__name__}")
-                return 0, b""
+                return 0, b"", ""
 
         return RobotsCache(fetch, ua)
 

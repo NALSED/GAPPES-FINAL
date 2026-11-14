@@ -12,7 +12,7 @@ from pathlib import Path
 import yaml
 
 from grappes.clustering.export import safe_cell
-from grappes.config import ConfigError
+from grappes.config import ConfigError, booleen
 
 COLONNES = ("nom", "ville", "pays", "score", "bande", "calibre", "sources", "registres", "statut")
 
@@ -63,7 +63,7 @@ def charger_profils(config_dir: str | Path) -> list[Profil]:
         inconnues = [c for c in cols if c not in COLONNES]
         if inconnues:
             raise ConfigError(f"{f}: profil {pid}: colonnes inconnues {inconnues} (disponibles : {', '.join(COLONNES)})")
-        out.append(Profil(pid, bool(d.get("actif", True)), str(d["fichier"]), cols, tuple(d.get("entete", cols)), str(d.get("delimiteur", ","))))
+        out.append(Profil(pid, booleen(d, "actif", True, f"{f}: profil {pid}"), str(d["fichier"]), cols, tuple(d.get("entete", cols)), str(d.get("delimiteur", ","))))
     return out
 
 

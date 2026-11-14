@@ -45,9 +45,20 @@ def _groupes(ds: list[Decouvert]) -> list[dict]:
     return groupes
 
 
+CATEGORIES_CANDIDATES = ("", "ORG")  # catégories de noms lus qui deviennent candidats ; "" = extraction d'avant les catégories
+
+
+def _copie(c: Candidat) -> Candidat:
+    """Copie d'un candidat avec SES propres ensembles et dictionnaires : `copy.copy` seul les partageait avec l'original,
+    et enrichir la copie modifiait le candidat du contexte (les configurations d'une mesure se contaminaient)."""
+    c = copy.copy(c)
+    c.citants, c.ecosystemes, c.registres, c.ner_sites = set(c.citants), set(c.ecosystemes), set(c.registres), dict(c.ner_sites)
+    return c
+
+
 def fusionner(ctx: Contexte, ds: list[Decouvert], sources: tuple[str, ...]) -> list[Candidat]:
     """Candidats du web (copies enrichies) + acteurs de registre sans équivalent web."""
-    cands = [copy.copy(c) for c in ctx.candidats]
+    cands = [_copie(c) for c in ctx.candidats]
     par_site = {site_key(canonical_domain(c.ref.partition(":")[2])): c for c in cands if c.ref.startswith(("web:", "rss:"))}
     par_nom = {norm_name(c.nom): c for c in cands if c.nom}
     facteur = ctx.rel.table.factors["A"]
@@ -83,11 +94,16 @@ def ajouter(
     ctx: Contexte, cands: list[Candidat], nommes: dict[str, Nomme]
 ) -> tuple[list[Candidat], list[tuple[str, str]]]:
     """(candidats avec les entités nommées, citations source -> entité nommée)."""
-    cands = list(cands)
+    cands = [_copie(c) for c in cands]
     par_nom = {norm_name(c.nom): c for c in cands if c.nom}
     cits: list[tuple[str, str]] = []
     obs_source = {o.obs_id: o.source.key for o in ctx.db.load_observations()}
     for cle, n in sorted(nommes.items()):
+        # depuis que l'extraction rend aussi des personnes et des lieux (903), seules les ORGANISATIONS créent ou
+        # enrichissent un candidat : sans ce tri, chaque nom de personne et chaque ville lus dans une page sortaient
+        # comme des acteurs du sujet
+        if getattr(n, "categorie", "") not in CATEGORIES_CANDIDATES:
+            continue
         c = par_nom.get(norm_name(n.nom))
         if c is None:
             c = Candidat(

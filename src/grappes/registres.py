@@ -145,7 +145,7 @@ def refresh_domaines(
         data = _get(spec, params, transport, journal, "-")
         n += 1
         if data is None:
-            break
+            return n  # lecture interrompue : l'ancien cache, complet, est gardé tel quel
         rows = select(data, spec.items)
         for row in rows:
             u = clean_url(first(row, spec.champ_url) or "")

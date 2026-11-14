@@ -285,7 +285,7 @@ def _execute(
         data.subjects = _subjects_info(cfg)
         check_stop()
         if cfg.scoring.retention_days:
-            data.purged = db.purge_older_than(cfg.scoring.retention_days)
+            data.purged = db.purge_older_than(cfg.scoring.retention_days, now)
         fetcher = PageFetcher(
             auto, Journal(scfg.journal), transport=fetch_transport, sleep=sleep, monotonic=monotonic, allow_private=allow_private
         )  # fmt: skip

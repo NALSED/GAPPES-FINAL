@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from urllib.parse import urljoin, urlsplit
 
 from grappes.autonomy import Autonomy
+from grappes.canon import canonical_domain, site_key
 from grappes.fetch.html import extract
 from grappes.fetch.robots import RobotsCache
 from grappes.fetch.rules import Rules
@@ -98,8 +99,11 @@ class PageFetcher:
                 self.sleep(wait)
         self._last[host] = self.monotonic()
 
-    def _raw_get(self, url: str) -> tuple[int, bytes]:
-        """GET sans redirection pour robots.txt ; (0, b"") si erreur réseau."""
+    def _raw_get(self, url: str) -> tuple[int, bytes, str]:
+        """GET sans redirection pour robots.txt : (statut, corps, adresse de redirection) ; (0, b"", "") si erreur réseau
+        ou si l'adresse (cible d'une redirection comprise) est de celles qu'on ne visite pas."""
+        if self.rules.check_url(url):
+            return 0, b"", ""
         host = urlsplit(url).netloc
         self._wait(host)
         self.requests += 1
@@ -107,9 +111,9 @@ class PageFetcher:
             resp = self.transport("GET", url, self._headers(), None, 15.0, 500_000)
         except Exception as exc:  # noqa: BLE001 - toute erreur réseau = robots indisponible
             self.journal.log("pages", "", f"GET {url}", f"erreur {type(exc).__name__}")
-            return 0, b""
+            return 0, b"", ""
         self.journal.log("pages", "", f"GET {url}", str(resp.status))
-        return resp.status, resp.body
+        return resp.status, resp.body, str(resp.headers.get("Location") or resp.headers.get("location") or "")
 
     # --- récupération -----------------------------------------------------------------------
 
@@ -220,7 +224,11 @@ class PageFetcher:
             if u and u not in links and len(links) < MAX_LINKS:
                 links.append(u)
                 anchors.append({"href": u, "anchor": clean_text(anchor, 100)})
-        canonical = _url_sure(page.canonical) or _url_sure(final)
+        # `rel=canonical` n'est cru que chez le même éditeur : sinon n'importe quelle page se déclarait page d'un grand
+        # site et parlait en son nom, avec sa fiabilité
+        canonical = _url_sure(page.canonical)
+        if not canonical or site_key(canonical_domain(canonical)) != site_key(host):
+            canonical = _url_sure(final)
         lang = re.sub(r"[^A-Za-z-]", "", page.lang)[:10]
         stamp = self.now().strftime("%Y-%m-%dT%H:%M:%SZ")
         record = {

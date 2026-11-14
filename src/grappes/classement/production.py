@@ -15,7 +15,7 @@ from grappes import avancement
 from grappes import vraisemblance as vr
 from grappes.classement import fusion, indice
 from grappes.classement.candidats import Candidat, Contexte, charger
-from grappes.config import Config
+from grappes.config import Config, booleen
 from grappes.decouverte.client import Http
 from grappes.decouverte.registres import DecouverteConfig, decouvrir
 from grappes.ner.extraire import charger_config as charger_ner
@@ -56,9 +56,9 @@ def charger_config(config_dir: str | Path) -> ClassementConfig:
     y = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
     fo, va, so = y.get("fournisseurs") or {}, y.get("variantes") or {}, y.get("sortie") or {}
     return ClassementConfig(
-        bool(y.get("actif", False)), bool(y.get("remplace_resultat", False)),
-        tuple(fo.get("registres", ("wikidata", "sirene"))), bool(fo.get("noms", True)),
-        bool(va.get("actif", False)), float(va.get("seuil", 0.9)),
+        booleen(y, "actif", False, str(f)), booleen(y, "remplace_resultat", False, str(f)),
+        tuple(fo.get("registres", ("wikidata", "sirene"))), booleen(fo, "noms", True, f"{f}:fournisseurs"),
+        booleen(va, "actif", False, f"{f}:variantes"), float(va.get("seuil", 0.9)),
         int(so.get("n_max", 200)), float(so.get("p_min", 0.0)),
         str(y.get("calibration", "config/calibration.json")), int(y.get("cache_registres_jours", 30)),
         str(va.get("lien", "complet")),

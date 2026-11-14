@@ -30,6 +30,7 @@ from typing import Any
 
 import yaml
 
+from grappes.config import booleen
 from grappes.decouverte.client import DecouverteError, Http
 from grappes.decouverte.registres import Decouvert
 from grappes.decouverte.traduction import noyau, racine, singulier
@@ -67,7 +68,7 @@ def charger_sources(dossier: str | Path = "config/recherche") -> list[Source]:
         out.append(Source(
             y["id"], y["url"], y.get("format", "json"), {k: str(v) for k, v in (y.get("params") or {}).items()},
             (y.get("response") or {}).get("items", ""), y.get("fields") or {}, y.get("pagination") or {},
-            int(y.get("relaxation", 2)), bool(y.get("actif", True)),
+            int(y.get("relaxation", 2)), booleen(y, "actif", True, str(p)),
             str(y.get("delimiter", ";")), str(y.get("encoding", "utf-8-sig")), list(y.get("colonnes_recherche") or []), str(y.get("description", "")),
             str(y.get("type_fixe", "")),
         ))  # fmt: skip
@@ -140,7 +141,10 @@ def _elements_json(src: Source, mots: list[str], typ: str, http: Http) -> list[A
 
 def interroger(src: Source, phrase: str, http: Http) -> list[Decouvert]:
     """Acteurs nommés que la source rend pour la phrase. Une erreur réseau rend une liste vide (source muette)."""
-    lignes = _lignes_csv(src, http) if src.format == "csv" else None
+    try:
+        lignes = _lignes_csv(src, http) if src.format == "csv" else None
+    except DecouverteError:
+        return []
     typ = mots_requete(phrase)[1]
     for mots in variantes_requete(phrase, src.relaxation):
         try:

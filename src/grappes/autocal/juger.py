@@ -153,4 +153,6 @@ class Juge:
                 "x:" + source_key,
                 f"de la bonne classe mais hors référence ({compatibles[0]})",
             )
+        if not others:  # la recherche a trouvé le libellé mais le détail n'a rien rendu : on ne sait pas
+            return Verdict(NON_VERIFIABLE, "x:" + source_key, "élément Wikidata introuvable au détail")
         return Verdict(FAUX, others[0], "libellé exact d'éléments d'une autre classe")

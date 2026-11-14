@@ -4,6 +4,7 @@ import hashlib
 import json
 import sqlite3
 import sys
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -56,6 +57,9 @@ class Monde:
         db.close()
 
     def cycle(self, **kw):
+        # à la date du corpus : sans date fixée, la purge (90 jours) comptait depuis l'horloge réelle et vidait peu à peu
+        # le corpus, daté de fin septembre 2026 — ces essais échouaient un par un avec le temps qui passe
+        kw.setdefault("now", cs.BASE + timedelta(days=1))
         return run_cycle(self.config, self.db, self.out, self.data, **kw)
 
     def sednal_hash(self):

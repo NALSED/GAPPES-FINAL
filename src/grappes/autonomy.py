@@ -18,7 +18,7 @@ from typing import Any
 import yaml
 
 from grappes.canon import canonical_domain
-from grappes.config import ConfigError
+from grappes.config import ConfigError, booleen
 
 MIN_DOMAIN_DELAY_S = 1.0  # plancher imposé par les règles générales
 DEFAULT_UA = "grappes-collecte/1 (collecte automatique de pages publiques ; respecte robots.txt)"
@@ -207,7 +207,7 @@ def _ingestion_settings(
         start = _num(raw, "valeur", base.seuil_ingestion, path)
         lo = _num(raw, "min", base.seuil_ingestion_min, path)
         hi = _num(raw, "max", base.seuil_ingestion_max, path)
-        auto = bool(raw.get("auto_ajustable", False))
+        auto = booleen(raw, "auto_ajustable", False, f"{path}:seuil_ingestion")
     else:
         start = _num(d, "seuil_ingestion", base.seuil_ingestion, path)
         lo, hi, auto = base.seuil_ingestion_min, base.seuil_ingestion_max, False
@@ -297,7 +297,7 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
         requetes_termes=int(_num(d, "requetes_termes", base.requetes_termes, path, 2)),
         export_tsites_actif=tsites[0],
         export_tsites_pays_defaut=tsites[1],
-        apprentissage_actif=bool(ap.get("actif", True)),
+        apprentissage_actif=booleen(ap, "actif", True, f"{path}:apprentissage"),
         min_confirmees=int(_num(ap, "min_confirmees", base.min_confirmees, path, 1)),
         min_ecosystemes=int(_num(ap, "min_ecosystemes", base.min_ecosystemes, path, 1)),
         max_termes_par_cycle=int(_num(ap, "max_termes_par_cycle", base.max_termes_par_cycle, path)),
@@ -306,8 +306,8 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
         expiration_cycles=int(_num(ap, "expiration_cycles", base.expiration_cycles, path, 1)),
         support_min=_num(ap, "support_min", base.support_min, path),
         rarete_max=_num(ap, "rarete_max", base.rarete_max, path),
-        exiger_racine_de_confiance=bool(ap.get("exiger_racine_de_confiance", True)),
-        recalibrage_actif=bool(rc.get("actif", True)),
+        exiger_racine_de_confiance=booleen(ap, "exiger_racine_de_confiance", True, f"{path}:apprentissage"),
+        recalibrage_actif=booleen(rc, "actif", True, f"{path}:recalibrage"),
         variation_max=_num(rc, "variation_max", base.variation_max, path),
         bornes_seuil_min=_bounds(rc, "bornes_seuil_min", base.bornes_seuil_min, path),
         bornes_marge=_bounds(rc, "bornes_marge", base.bornes_marge, path),

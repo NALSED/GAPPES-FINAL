@@ -101,10 +101,10 @@ def run_search(
         avant = len(found)
         for kw in keywords:
             try:
-                trouves = list(provider.search(kw, cfg.limite_par_mot_cle))
-                found.extend(trouves)
-                for t in trouves:  # quelle source a trouvé quoi (rapport d'avancement)
-                    avancement.signaler("trouve", prise=pid, cle=f"{t.ecosystem}:{t.ident}")
+                # un par un : une page suivante en échec ne jette plus les résultats des pages déjà reçues (et payées)
+                for t in provider.search(kw, cfg.limite_par_mot_cle):
+                    found.append(t)
+                    avancement.signaler("trouve", prise=pid, cle=f"{t.ecosystem}:{t.ident}")  # quelle source a trouvé quoi
             except ProviderUnavailable as exc:
                 report.status[pid] = f"inactif : {exc}"
                 ctx.journal.log(pid, kw, "-", f"inactif : {exc}")

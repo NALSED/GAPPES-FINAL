@@ -118,6 +118,18 @@ def _mapping(d: Any, where: str) -> dict[str, Any]:
     return d
 
 
+def booleen(d: dict[str, Any], key: str, default: bool, where: str) -> bool:
+    """Un réglage vrai/faux, lu strictement. `non`, `oui`, `faux` sont des TEXTES pour YAML : `bool()` les lisait tous
+    vrais, donc « inclure_personnes: non » incluait les personnes et « actif: non » activait. Tout ce qui n'est pas
+    `true` ou `false` est désormais une erreur de configuration, dite en clair."""
+    v = d.get(key, default)
+    if v is None:
+        return default
+    if not isinstance(v, bool):
+        raise ConfigError(f"{where}: {key} doit être true ou false (reçu {v!r})")
+    return v
+
+
 def _finite(value: Any, where: str) -> float:
     try:
         x = float(value)
@@ -201,7 +213,7 @@ def load_scoring(path: Path) -> ScoringConfig:
             }
             or default.entity_types,
             csv_separator=str(csv.get("separator", default.csv_separator)),
-            csv_bom=bool(csv.get("bom", default.csv_bom)),
+            csv_bom=booleen(csv, "bom", default.csv_bom, f"{path}:csv"),
             formule_confiance=str(d.get("formule_confiance", default.formule_confiance)),
             c_ecosystem=float(cc.get("ecosysteme", default.c_ecosystem)),
             c_anchor=float(cc.get("ancrage", default.c_anchor)),
@@ -225,12 +237,12 @@ def load_scoring(path: Path) -> ScoringConfig:
                 if d.get("retention_days", 90) in (None, 0)
                 else int(d.get("retention_days", 90))
             ),
-            redact_persons=bool(d.get("redact_persons", default.redact_persons)),
+            redact_persons=booleen(d, "redact_persons", default.redact_persons, str(path)),
             resultat_confiance_min=(
                 None if res.get("confiance_min") is None else float(res["confiance_min"])
             ),
-            resultat_inclure_ambigus=bool(res.get("inclure_ambigus", False)),
-            resultat_inclure_personnes=bool(res.get("inclure_personnes", False)),
+            resultat_inclure_ambigus=booleen(res, "inclure_ambigus", False, f"{path}:resultat"),
+            resultat_inclure_personnes=booleen(res, "inclure_personnes", False, f"{path}:resultat"),
             mode_recherche=str(d.get("mode_recherche", default.mode_recherche)),
             resultat_indices_institution=tuple(
                 str(x) for x in res.get("indices_institution", DEFAULT_INSTITUTION_HINTS)
