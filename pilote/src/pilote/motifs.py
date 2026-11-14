@@ -24,9 +24,9 @@ def lire(cfg: Config) -> list[dict[str, str]]:
     f = fichier(cfg)
     try:
         y = yaml.safe_load(f.read_text(encoding="utf-8")) if f.exists() else None
-        liste = (y or {}).get("motifs")
+        liste = y.get("motifs") if isinstance(y, dict) else None  # un fichier retouché en liste faisait tomber toute la page Tri
         return valider(liste) if liste else [dict(m) for m in PAR_DEFAUT]
-    except (OSError, yaml.YAMLError, ConfigRefusee):
+    except (OSError, UnicodeDecodeError, yaml.YAMLError, ConfigRefusee):
         return [dict(m) for m in PAR_DEFAUT]
 
 

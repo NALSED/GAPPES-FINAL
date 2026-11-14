@@ -63,7 +63,7 @@ def _niveau_ia(opts_map: dict[str, Any]) -> int:
     de tête ; absent ou illisible, niveau 1 (le seul branché — jamais un refus sur un réglage ancien)."""
     txt = str(opts_map.get("Niveau", "") or "").strip()
     chiffre = txt.split()[0] if txt else "1"
-    return int(chiffre) if chiffre.isdigit() and chiffre in "1234" else 1
+    return int(chiffre) if chiffre in ("1", "2", "3", "4") else 1  # « in "1234" » acceptait aussi « 12 », « 23 », « 234 »
 
 
 def _option(opts: list, indice: int, mot: str = "") -> str:
@@ -634,10 +634,10 @@ def _egal(v: str, valeurs: list[str], equiv: dict[str, list[str]]) -> bool:
     return n in cibles or any(n in equiv.get(c, ()) for c in cibles)
 
 
-def _teste_ligne(ligne: dict[str, Any], lc: dict[str, Any], equiv: dict[str, list[str]], fiabilites_sources: dict[str, str] | None) -> bool:
+def _teste_ligne(ligne: dict[str, Any], lc: dict[str, Any], equiv: dict[str, list[str]], fiabilites_sources: dict[str, str] | None, jetons: dict[str, str] | None = None) -> bool:
     champ, valeurs = lc["champ"], lc["valeurs"]
-    if champ == "_corroboration":  # Filtre (3.8.06) : « trouvé par N sources ou plus »
-        return len({s for s in (ligne.get("trouve_par") or [])}) >= int(valeurs[0])
+    if champ == "_corroboration":  # Filtre (3.8.06) : « trouvé par N sources ou plus » — des SOURCES : deux prises d'une même source (deux flux, deux entrées d'un annuaire) n'en font qu'une
+        return len({(jetons or {}).get(t, t) for t in (ligne.get("trouve_par") or [])}) >= int(valeurs[0])
     if champ == "_fiabilite":  # Filtre (3.8.06) : la meilleure fiabilité parmi les sources qui ont trouvé ce nom
         lettres = [(fiabilites_sources or {}).get(s, _LETTRES_FIABILITE[-1]) for s in (ligne.get("trouve_par") or [])]
         meilleure = min(lettres) if lettres else _LETTRES_FIABILITE[-1]  # A est la meilleure, alphabétique
@@ -662,8 +662,8 @@ def _teste_ligne(ligne: dict[str, Any], lc: dict[str, Any], equiv: dict[str, lis
     return any(nv.endswith(norme(x)) for x in valeurs)  # "finit_par"
 
 
-def _teste_lignes(ligne: dict[str, Any], lignes_cond: list[dict[str, Any]], mode: str, equiv: dict[str, list[str]], fiabilites_sources: dict[str, str] | None) -> bool:
-    resultats = [_teste_ligne(ligne, lc, equiv, fiabilites_sources) for lc in lignes_cond]
+def _teste_lignes(ligne: dict[str, Any], lignes_cond: list[dict[str, Any]], mode: str, equiv: dict[str, list[str]], fiabilites_sources: dict[str, str] | None, jetons: dict[str, str] | None = None) -> bool:
+    resultats = [_teste_ligne(ligne, lc, equiv, fiabilites_sources, jetons) for lc in lignes_cond]
     return all(resultats) if mode == "et" else any(resultats)
 
 
@@ -708,7 +708,7 @@ def appliquer(
                 passe = [
                     k
                     for k in courant
-                    if _teste_lignes(lignes[k], etape["lignes"], etape["mode"], equiv, fiabilites_sources) == (etape["op"] == "garder")
+                    if _teste_lignes(lignes[k], etape["lignes"], etape["mode"], equiv, fiabilites_sources, jetons) == (etape["op"] == "garder")
                 ]
             elif etape["op"] == "tronquer":
                 passe = courant[: etape["maximum"]]

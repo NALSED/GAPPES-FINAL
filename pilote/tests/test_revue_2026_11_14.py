@@ -117,3 +117,57 @@ def test_source_scrapling_sans_scrapling_installe_dit_pourquoi(monkeypatch):
         assert "pas installé" in str(exc)
     else:
         raise AssertionError("une ErreurSource était attendue")
+
+
+def test_nombre_de_sources_compte_des_sources_pas_des_prises():
+    from pilote import suite_plan
+
+    ligne = {"nom": "Atelier des Jardins", "trouve_par": ["annuaire_naf", "annuaire_nom"]}
+    lc = {"champ": "_corroboration", "comparateur": "min", "valeurs": ["2"]}
+    jetons = {"annuaire_naf": "annuaire", "annuaire_nom": "annuaire"}
+    assert suite_plan._teste_ligne(ligne, lc, {}, None, jetons) is False  # une seule source, passée par deux prises
+    assert suite_plan._teste_ligne({**ligne, "trouve_par": ["annuaire_naf", "web"]}, lc, {}, None, jetons) is True
+
+
+def test_niveau_ia_lu_chiffre_par_chiffre():
+    from pilote import suite_plan
+
+    assert suite_plan._niveau_ia({"Niveau": "2 — Trier"}) == 2
+    assert suite_plan._niveau_ia({"Niveau": "12"}) == 1
+    assert suite_plan._niveau_ia({"Niveau": "23 — rien"}) == 1
+
+
+def test_gexf_deux_homonymes_restent_deux_points(tmp_path):
+    import xml.etree.ElementTree as ET
+
+    from pilote.formats import gexf
+
+    def ligne(i, ville, relations):
+        return {"id": i, "nom": "Atelier des Jardins", "ville": ville, "pays": "FR", "origine_phrase": "", "fonction": "", "decision": "garder", "site": "", "relations": relations}
+
+    jeu = {"lignes": [ligne(1, "Villebois", [{"type": "filiale_de", "vers": "Cercle des Potagers"}]), ligne(2, "Montclair", []),
+                      {**ligne(3, "Montclair", [{"type": "siege", "vers": "Atelier des Jardins"}]), "nom": "Cercle des Potagers"}],
+           "trace": {"date": "2026-11-14T10:00:00", "sujet": "jardins", "recherche": "r", "nombre": 3, "filtre": "", "sources": []}}
+    f = tmp_path / "r.gexf"
+    gexf.ecrire(jeu, "detail", {}, f)
+    ns = {"g": gexf.NS}
+    racine = ET.parse(f).getroot()
+    noeuds = racine.findall(".//g:node", ns)
+    assert [n.get("label") for n in noeuds].count("Atelier des Jardins") >= 2  # deux fiches, deux points
+    liens = {(e.get("source"), e.get("target")) for e in racine.findall(".//g:edge", ns)}
+    assert ("n1", "n3") in liens  # le lien vers un nom unique s'accroche à sa fiche
+    assert all(t not in ("n1", "n2") for s, t in liens if s == "n3")  # « Atelier des Jardins » désigne deux fiches : point extérieur, pas l'une au hasard
+
+
+def test_classer_refuse_une_categorie_hors_liste(monkeypatch):
+    from pilote import suite_ia
+
+    reponses = iter(["Potager.", "verger fruitier inventé", "JARDIN PARTAGÉ"])
+    monkeypatch.setattr(suite_ia, "appliquer", lambda *a, **k: (next(reponses), 1))
+    lignes = [{"nom": "Atelier des Jardins"}, {"nom": "Cercle des Potagers"}, {"nom": "Club des Semis"}]
+    operation = {"champ_sortie": "categorie_ia"}
+    bilan = suite_ia.appliquer_lignes(lignes, operation, {"categories": "potager, jardin partagé"})
+    assert lignes[0]["faits"]["ia"]["categorie_ia"] == "potager"
+    assert "faits" not in lignes[1]  # hors liste : rien d'écrit
+    assert lignes[2]["faits"]["ia"]["categorie_ia"] == "jardin partagé"
+    assert bilan["ia_echecs"] == 1

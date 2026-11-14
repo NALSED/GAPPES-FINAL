@@ -22,7 +22,7 @@ def propre_xml(t: object) -> str:
 
 def ligne_detail(r: dict) -> list[str]:
     return [r["nom"], r["ville"], r["pays"], r["origine_phrase"], str(r["confirmations"]) if r["confirmations"] is not None else "", r["fonction"], r["genre"], r["site"], r["numero_officiel"],
-            DECISIONS_MOTS.get(r["decision"], ""), r["motif_rejet"], " | ".join(r["sources"]), " | ".join(f"{x['type'].replace('_', ' ')} : {x['vers']}" for x in r["relations"]),
+            DECISIONS_MOTS.get(r["decision"], ""), r["motif_rejet"], " | ".join(r["sources"]), " | ".join(f"{str(x.get('type', '')).replace('_', ' ')} : {x.get('vers', '')}" for x in r["relations"]),
             r.get("sources_fusionnees", ""), r.get("ia", "")]  # fmt: skip
 
 

@@ -10,6 +10,6 @@ from pilote.config import Config
 
 def noter(cfg: Config, qui: str, action: str, detail: str = "") -> None:
     cfg.donnees.mkdir(parents=True, exist_ok=True)
-    ligne = " | ".join((datetime.now(UTC).isoformat(timespec="seconds"), qui, action, detail.replace("\n", " ")))
+    ligne = " | ".join((datetime.now(UTC).isoformat(timespec="seconds"), " ".join(str(qui).split()), action, " ".join(detail.split())))  # « qui » vient du navigateur : un retour à la ligne y fabriquait une fausse ligne de journal
     with cfg.journal_actions.open("a", encoding="utf-8") as f:
         f.write(ligne + "\n")  # jamais de valeur de clé : l'appelant ne la passe pas

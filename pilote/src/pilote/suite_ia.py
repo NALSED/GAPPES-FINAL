@@ -117,6 +117,22 @@ def appliquer(operation: dict, resultat: dict, options: dict, modele: str = "", 
     return demander(modele, operation["module"].prompt(resultat, options), effort)
 
 
+def categorie_de_la_liste(reponse: str, categories: str) -> str:
+    """La catégorie de la liste FERMÉE que l'agent a répondue, écrite comme dans la liste. Une réponse hors liste (catégorie inventée,
+    phrase autour du mot) lève ValueError : la ligne garde son résultat sans champ IA, et l'échec est compté — jamais enregistrée telle quelle."""
+    import re
+    import unicodedata
+
+    def plat(t: str) -> str:
+        return re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode().lower()).strip()
+
+    liste = {plat(c): c.strip() for c in categories.split(",") if c.strip()}
+    trouvee = liste.get(plat(reponse))
+    if trouvee is None:
+        raise ValueError(f"réponse hors de la liste des catégories : « {reponse.strip()[:60]} »")
+    return trouvee
+
+
 def appliquer_lignes(lignes: list[dict], operation: dict, ia_spec: dict, signaler=None, arreter=None) -> dict:
     """Applique `operation` à chaque ligne de `lignes` (au plus `ia_spec['plafond']`, Q33), EN PLACE :
     `faits["ia"][champ_sortie]`, et le champ ajouté à `faits["ia_marque"]` si `ia_spec['marquer']`. Une ligne dont
@@ -138,6 +154,8 @@ def appliquer_lignes(lignes: list[dict], operation: dict, ia_spec: dict, signale
         try:
             options = {"categories": ia_spec.get("categories", "")} if ia_spec.get("categories") else {}
             texte, cout = appliquer(operation, ligne, options, ia_spec.get("modele", ""), ia_spec.get("effort", ""))
+            if options.get("categories"):
+                texte = categorie_de_la_liste(texte, options["categories"])
         except (OSError, ValueError) as exc:
             echecs += 1
             if signaler:

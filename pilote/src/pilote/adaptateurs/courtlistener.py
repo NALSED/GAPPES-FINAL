@@ -57,5 +57,6 @@ def chercher(entree: dict[str, Any], client: Client, parametres: dict[str, Any])
     cle = str(parametres.get("_cle", "")).strip()
     if not cle:
         raise ErreurSource("La clé de CourtListener est absente : la source reste éteinte sans elle.")
-    rep = client.get_json(URL, {"q": f'caseName:"{nom}"', "type": "o", "page_size": 10}, headers={"Authorization": f"Token {cle}"})
+    phrase = nom.replace('"', " ")  # un guillemet dans le nom fermait la phrase cherchée
+    rep = client.get_json(URL, {"q": f'caseName:"{phrase}"', "type": "o", "page_size": 10}, headers={"Authorization": f"Token {cle}"})
     return convertir(rep, nom)

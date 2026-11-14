@@ -101,9 +101,11 @@ def valider(grouper_par: list[str], ordre_paquets: str, ordre_noms: str, nom: st
 def _lire(chemin: Path, livre: bool) -> Classement:
     try:
         y = yaml.safe_load(chemin.read_text(encoding="utf-8")) or {}
-        gp = [str(x) for x in (y.get("grouper_par") or [])]
+        if not isinstance(y, dict):  # une liste ou un texte : sans ce contrôle, le fichier faisait tomber toute la page Tri au lieu d'être ignoré
+            raise ClassementInvalide(f"{chemin.name} : ce n'est pas un classement (nom, grouper_par…).")
+        gp = [str(x) for x in (y.get("grouper_par") or [])] if isinstance(y.get("grouper_par"), list) else []
         valider(gp, str(y.get("ordre_paquets", "solidite")), str(y.get("ordre_noms", "alphabetique")), str(y.get("nom", "")))
-    except (OSError, yaml.YAMLError) as exc:
+    except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
         raise ClassementInvalide(f"{chemin.name} : illisible ({exc})") from exc
     return Classement(chemin.stem, str(y["nom"]), gp, str(y.get("ordre_paquets", "solidite")), str(y.get("ordre_noms", "alphabetique")), livre)
 
