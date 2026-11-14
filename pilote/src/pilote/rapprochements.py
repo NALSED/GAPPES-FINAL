@@ -23,7 +23,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
-from pilote import suite, tri
+from pilote import mentions, suite, tri
 from pilote.base import Candidat, Journal, Rapprochement, Recherche
 from pilote.config import Config
 
@@ -157,7 +157,8 @@ def file(cfg: Config, fabrique: sessionmaker[Session]) -> dict[str, Any]:
         rapps = list(s.scalars(select(Rapprochement)))
         ids = {i for r in rapps for i in (r.a, r.b)}
         cands = {c.id: c for c in s.scalars(select(Candidat).where(Candidat.id.in_(ids)))} if ids else {}
-        cartes = [_carte(r, cands[r.a], cands[r.b], nom_source, fiabilites) for r in rapps if r.a in cands and r.b in cands]
+        par_recherche = {rid: mentions.fiabilites_par_jeton(cfg.dossier_recherche(rid), fiabilites) for rid in {r.recherche_id for r in rapps}}
+        cartes = [_carte(r, cands[r.a], cands[r.b], nom_source, par_recherche[r.recherche_id]) for r in rapps if r.a in cands and r.b in cands]
     a_examiner = sorted((c for c in cartes if c["etat"] == "a_examiner"), key=lambda c: (c["confiance"], c["id"]))
     tranches = sorted((c for c in cartes if c["etat"] != "a_examiner"), key=lambda c: c["decide_le"] or "", reverse=True)
     return {"a_examiner": a_examiner, "tranches": tranches}

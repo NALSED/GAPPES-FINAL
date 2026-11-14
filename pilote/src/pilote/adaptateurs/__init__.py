@@ -145,7 +145,7 @@ class Client:
         try:
             return asyncio.run(asyncio.wait_for(appel(), self.timeout + 5))
         except Exception as exc:
-            raise ErreurSource("Le serveur du catalogue ne répond pas.") from exc
+            raise ErreurSource("Le serveur MCP ne répond pas, ou a refusé l'appel.") from exc
 
 
 def _url_ascii(url: str) -> str:

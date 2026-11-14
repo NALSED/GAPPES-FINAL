@@ -5,6 +5,7 @@ Sortie : un JSON sur la sortie standard — une liste de noms, ou {"noms": [...]
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -30,13 +31,16 @@ def lire_sortie(texte: str) -> list[dict[str, Any]]:
     return v
 
 
-def executer(script: dict[str, Any], entree: dict[str, Any], cwd: Path | None = None, delai_s: float | None = None) -> list[dict[str, Any]]:
+def executer(script: dict[str, Any], entree: dict[str, Any], cwd: Path | None = None, delai_s: float | None = None, sans_variables: tuple[str, ...] | list[str] = ()) -> list[dict[str, Any]]:
+    """`sans_variables` : noms retirés de l'environnement du programme (les clés d'API des sources de la recherche, que le pont a
+    chargées pour les prises du moteur : un programme local n'a pas à les recevoir)."""
     commande = [str(c) for c in script.get("commande") or []]
     if not commande:
         raise ErreurSource("Le programme local doit indiquer sa commande.")
     delai = min(float(delai_s or script.get("delai_s", DELAI_DEFAUT_S)), DELAI_MAX_S)
     try:
-        r = subprocess.run(commande, input=json.dumps(entree, ensure_ascii=False), capture_output=True, text=True, timeout=delai, cwd=cwd, check=False)
+        env = {k: v for k, v in os.environ.items() if k not in set(sans_variables)} if sans_variables else None
+        r = subprocess.run(commande, input=json.dumps(entree, ensure_ascii=False), capture_output=True, text=True, timeout=delai, cwd=cwd, check=False, env=env)
     except subprocess.TimeoutExpired as exc:
         raise ErreurSource(f"Le programme a dépassé sa limite de temps ({delai:g} s) et a été arrêté.") from exc
     except OSError as exc:

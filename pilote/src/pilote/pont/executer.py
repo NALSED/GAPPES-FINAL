@@ -252,7 +252,7 @@ def main(dossier: str) -> int:
                 {**a.get("parametres", {}), **({"_cle": secrets.get(a["cles_noms"][0], ""), "_cles": {n: secrets.get(n, "") for n in a["cles_noms"]}} if a.get("cles_noms") else {})}))
             for a in spec.get("adaptateurs", [])
         ]  # fmt: skip
-        executions += [(sc["source"], lambda sc=sc: programmes.executer(sc, entree_de(sc["source"]), cwd=Path.cwd())) for sc in spec.get("scripts", [])]
+        executions += [(sc["source"], lambda sc=sc: programmes.executer(sc, entree_de(sc["source"]), cwd=Path.cwd(), sans_variables=tuple(secrets))) for sc in spec.get("scripts", [])]
         limite_source = float(spec.get("limite_source_s") or 180)
 
         def isole(executer_):

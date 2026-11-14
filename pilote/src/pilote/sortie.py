@@ -168,7 +168,7 @@ def jeu_de_donnees(cfg: Config, fabrique: sessionmaker[Session], rid: str, decis
     from pilote import suite
 
     nom_source = tri.noms_de_sources(cfg)
-    fiabilites = {s["id"]: s["fiabilite"] for s in suite.charger(cfg)["sources"]}
+    fiabilites = mentions.fiabilites_par_jeton(cfg.dossier_recherche(rid), {s["id"]: s["fiabilite"] for s in suite.charger(cfg)["sources"]})
     with fabrique() as s:
         r = tri._recherche(s, rid)
         lignes = tri.lignes_de(s, rid)

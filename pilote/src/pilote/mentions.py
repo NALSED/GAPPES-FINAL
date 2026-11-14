@@ -30,6 +30,22 @@ def sources_de_la_recherche(dossier_recherche: Path) -> list[str]:
     return list(dict.fromkeys([*(str(s) for s in spec.get("sources", [])), *(str(v["source"]) for v in spec.get("verificateurs", []) if isinstance(v, dict) and v.get("source"))]))
 
 
+def jetons_de_la_recherche(dossier_recherche: Path) -> dict[str, str]:
+    """Étiquette de prise -> identifiant de source, tels que la recherche les a notés à son lancement. `trouve_par` garde l'étiquette
+    de la prise (un flux RSS y est « rss-… ») : sans cette table, la lettre de fiabilité de sa source n'était jamais retrouvée."""
+    f = dossier_recherche / "lancement.json"
+    try:
+        jetons = json.loads(f.read_text(encoding="utf-8")).get("jetons")
+    except (OSError, ValueError, AttributeError):
+        return {}
+    return {str(k): str(v) for k, v in jetons.items()} if isinstance(jetons, dict) else {}
+
+
+def fiabilites_par_jeton(dossier_recherche: Path, fiabilites: dict[str, str]) -> dict[str, str]:
+    """Les lettres de fiabilité, lisibles aussi par étiquette de prise (même règle que le Filtre du plan, `suite_plan.appliquer`)."""
+    return {**{j: fiabilites[s] for j, s in jetons_de_la_recherche(dossier_recherche).items() if s in fiabilites}, **fiabilites}
+
+
 def ecrire(cfg: Config, dossier_recherche: Path, dossier_sortie: Path) -> Path | None:
     """Écrit `SOURCES.txt` à côté des sorties si au moins une source utilisée impose une mention. Sinon rien."""
     m = mentions(cfg, sources_de_la_recherche(dossier_recherche))
