@@ -42,3 +42,78 @@ def test_message_serveur_mcp_muet_ne_parle_plus_du_catalogue():
     from pilote import adaptateurs
 
     assert "serveur du catalogue" not in inspect.getsource(adaptateurs)
+
+
+def test_role_enrichir_choisi_a_l_ajout_reste_enrichir():
+    from pilote import suite_reel
+
+    assert suite_reel._roles_ajout("ENRICHIR") == ["enrichir"]  # donnait « chercher » : la source partait chercher des noms
+    assert suite_reel._roles_ajout("VERIFIER") == ["verifier"]
+    assert suite_reel._roles_ajout("CHERCHER") == ["chercher"]
+    commun = suite_reel._commun_ajout({"cat": "perso", "role": "ENRICHIR", "nom": "Annuaire des jardins"})
+    assert commun["roles"] == ["enrichir"]
+
+
+def test_declaration_ajoutee_garde_le_role_enrichir():
+    from pilote import sources_ajout
+
+    d = sources_ajout._commun({"nom": "Annuaire des jardins", "roles": ["enrichir"]}, "annuaire-des-jardins", "api")
+    assert d["roles"] == ["enrichir"]
+
+
+def test_jointure_sans_cle_ne_touche_pas_les_fiches_sans_numero(tmp_path):
+    """Une ligne du second fichier sans numéro complétait TOUTES les fiches sans numéro avec sa ville."""
+    from pilote import fichier_local as fl
+
+    principal = tmp_path / "principal.csv"
+    principal.write_text("nom,numero\nAtelier des Jardins,111\nCercle des Potagers,\n", encoding="utf-8")
+    second = tmp_path / "second.csv"
+    second.write_text("numero,ville\n111,Villebois\n,Montclair\n", encoding="utf-8")
+    spec = {"format": "csv", "colonnes": {"nom": "nom", "numero": "numero"},
+            "jointures": [{"fichier": str(second), "format": "csv", "cle": "numero", "colonnes": {"ville": "ville"}}]}
+    fl.importer(principal, "jardins", tmp_path, spec)
+    assert fl.exact(tmp_path, "jardins", "Atelier des Jardins")[0]["ville"] == "Villebois"
+    assert "ville" not in fl.exact(tmp_path, "jardins", "Cercle des Potagers")[0]
+
+
+def test_base_sqlite_adoptee_sans_table_meta(tmp_path):
+    import sqlite3
+
+    from pilote import fichier_local as fl
+
+    f = fl.chemin_base(tmp_path, "adoptee")
+    f.parent.mkdir(parents=True)
+    con = sqlite3.connect(f)
+    con.executescript("CREATE TABLE donnees (id INTEGER PRIMARY KEY, nom TEXT); CREATE TABLE noms (id INTEGER PRIMARY KEY, nom_n TEXT, donnee INTEGER);")
+    con.close()
+    assert fl.meta(tmp_path, "adoptee") == {}
+
+
+def test_fichier_de_prise_qui_n_est_pas_un_dictionnaire(tmp_path):
+    from pilote import ajout
+
+    f = tmp_path / "liste.yaml"
+    f.write_text("- un\n- deux\n", encoding="utf-8")
+    assert ajout._id_du_fichier(f) == ""
+
+
+def test_source_scrapling_sans_scrapling_installe_dit_pourquoi(monkeypatch):
+    import builtins
+
+    from pilote.adaptateurs import ErreurSource
+    from pilote.adaptateurs import scrapling as sc
+
+    vrai_import = builtins.__import__
+
+    def sans_scrapling(nom, *a, **k):
+        if nom.startswith("scrapling"):
+            raise ImportError(nom)
+        return vrai_import(nom, *a, **k)
+
+    monkeypatch.setattr(builtins, "__import__", sans_scrapling)
+    try:
+        sc.convertir("<html></html>", {"liste": "li", "champs": {"nom": "a::text"}})
+    except ErreurSource as exc:
+        assert "pas installé" in str(exc)
+    else:
+        raise AssertionError("une ErreurSource était attendue")

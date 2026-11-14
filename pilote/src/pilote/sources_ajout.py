@@ -64,7 +64,7 @@ def _texte(spec: dict[str, Any], cle: str, defaut: str = "") -> str:
 def _commun(spec: dict[str, Any], ident: str, type_: str) -> dict[str, Any]:
     cout = spec.get("cout") or {}
     cle = _texte(spec, "cle")
-    roles = [r for r in (spec.get("roles") or ["chercher"]) if r in ("chercher", "verifier")]
+    roles = [r for r in (spec.get("roles") or ["chercher"]) if r in ("chercher", "verifier", "enrichir")]
     d: dict[str, Any] = {
         "id": ident, "nom": _texte(spec, "nom"), "description": _texte(spec, "description", f"Source ajoutée par l'utilisateur ({type_})."),
         "trouve": _texte(spec, "trouve", "noms lus dans cette source"), "genres": list(spec.get("genres") or ["club"]),

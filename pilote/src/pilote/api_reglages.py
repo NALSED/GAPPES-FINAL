@@ -591,7 +591,8 @@ def construire(cfg: Config, fabrique: sessionmaker[Session]) -> APIRouter:
         with verrou(cfg.fichier_reglages):
             b = budget.vue(cfg, fabrique)
             if prix["dollars"] > 0 and prix["dollars"] > b["reste_usd"]:
-                raise HTTPException(422, f"Le plafond mensuel ne permet pas ce test ({prix['phrase']} ; il reste {b['reste_usd']:.2f} $).".replace(".", ","))
+                reste = f"{b['reste_usd']:.2f}".replace(".", ",")  # la virgule décimale seulement, pas le point final de la phrase
+                raise HTTPException(422, f"Le plafond mensuel ne permet pas ce test ({prix['phrase']} ; il reste {reste} $).")
             try:
                 res = tests_source.test_reel(cfg, d, corps.mot, cout)
             except tests_source.Echec as exc:

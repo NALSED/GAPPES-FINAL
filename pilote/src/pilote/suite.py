@@ -183,6 +183,8 @@ def ajouter_source(cfg: Config, d: dict[str, Any]) -> dict[str, Any]:
         r"[a-z]{2,3}(-[a-z]{2,4})?", str(d["langue"]).strip().lower()
     ):
         raise ConfigRefusee("La langue s'écrit avec son code : fr, en, de…")  # avant d'écrire quoi que ce soit
+    if d.get("fiabilite") and d["fiabilite"] not in tuple(suite_reel.FIABILITES):
+        raise ConfigRefusee("La fiabilité de la source est une lettre de A à F.")  # avant d'écrire : sinon la source restait créée derrière un message d'erreur
     ident = TYPES_AJOUT[type_](cfg, d)
     _surcouche(cfg, ident, {k: d[k] for k in ("langue", "role", "cat", "fiabilite") if d.get(k)})
 

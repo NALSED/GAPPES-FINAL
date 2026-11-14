@@ -49,7 +49,10 @@ def convertir(page: Any, parametres: dict[str, Any] | None = None) -> list[dict[
     `scrapling.parser.Selector`."""
     p = parametres or {}
     if isinstance(page, (str, bytes)):
-        from scrapling.parser import Selector
+        try:
+            from scrapling.parser import Selector
+        except ImportError as exc:  # dépendance facultative : le test local d'une source Scrapling disait « erreur 500 » au lieu de le dire
+            raise ErreurSource("Scrapling n'est pas installé sur cette machine : `pip install \"pilote[scrapling]\"` (spec 906).") from exc
 
         page = Selector(page.decode("utf-8", "replace") if isinstance(page, bytes) else page)
     champs = p.get("champs") or {}

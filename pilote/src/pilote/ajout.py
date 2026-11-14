@@ -278,6 +278,7 @@ def enregistrer(cfg: Config, spec: dict[str, Any], qui: str) -> dict[str, Any]:
 
 def _id_du_fichier(f: Path) -> str:
     try:
-        return str((yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("id", ""))
-    except (OSError, yaml.YAMLError):
+        d = yaml.safe_load(f.read_text(encoding="utf-8"))
+        return str(d.get("id", "")) if isinstance(d, dict) else ""  # un fichier qui n'est pas un dictionnaire (liste, texte) ne fait pas tomber l'ajout
+    except (OSError, UnicodeDecodeError, yaml.YAMLError):
         return ""

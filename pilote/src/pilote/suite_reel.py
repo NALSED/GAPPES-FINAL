@@ -304,6 +304,12 @@ def definir_parametres(cfg: Config, ident: str, parametres: dict[str, Any]) -> N
     rg.appliquer(cfg, decls, presets.ids_connus(cfg), {"source": {"id": ident, "parametres": parametres}})
 
 
+def _roles_ajout(role: Any) -> list[str]:
+    """Le rôle choisi dans la fenêtre d'ajout devient le rôle DÉCLARÉ. « ENRICHIR » donnait « chercher » : la source affichée
+    comme un enrichissement partait en réalité chercher des noms dès qu'on l'allumait."""
+    return {"VERIFIER": ["verifier"], "ENRICHIR": ["enrichir"]}.get(str(role), ["chercher"])
+
+
 def ajouter_api(cfg: Config, d: dict[str, Any]) -> str:
     """AJOUTER une source : sa déclaration est écrite par la même fonction que l'ancienne page Ajout (type « API »), puis son test local
     tourne. Elle est enregistrée ÉTEINTE ; elle ne s'allume qu'après un test réussi. Les autres types (MCP, fichier, base, programme local,
@@ -342,7 +348,7 @@ def ajouter_api(cfg: Config, d: dict[str, Any]) -> str:
         "usages": [CAT_VERS_USAGE[cat]], "main": "seconde", "cout": cout,  # une source ajoutée ici est de seconde main : elle ne compte jamais comme un endroit de plus tant qu'on ne l'a pas déclarée autrement
        
         "pays": [{"UK": "GB", "Mondial": "monde"}.get(pays, pays)] if pays else ["monde"], "description": t("description") or f"Source ajoutée par l'utilisateur ({t('nom')}).",
-        "roles": ["verifier"] if d.get("role") == "VERIFIER" else ["chercher"],
+        "roles": _roles_ajout(d.get("role")),
     }  # fmt: skip
     if d.get("exemple") not in (None, ""):
         spec["exemple"] = d[
@@ -376,7 +382,7 @@ def _commun_ajout(d: dict[str, Any]) -> dict[str, Any]:
         "main": "seconde",
         "pays": [{"UK": "GB", "Mondial": "monde"}.get(pays, pays)] if pays else ["monde"],
         "description": t("description") or f"Source ajoutée par l'utilisateur ({t('nom')}).",
-        "roles": ["verifier"] if d.get("role") == "VERIFIER" else ["chercher"],
+        "roles": _roles_ajout(d.get("role")),
     }
 
 

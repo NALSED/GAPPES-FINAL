@@ -210,7 +210,8 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
         with verrou(cfg.fichier_reglages):
             b = budget.vue(cfg, fabrique)
             if prix["dollars"] > 0 and prix["dollars"] > b["reste_usd"]:
-                raise HTTPException(422, f"Le plafond mensuel ne permet pas ce test ({prix['phrase']} ; il reste {b['reste_usd']:.2f} $).".replace(".", ","))
+                reste = f"{b['reste_usd']:.2f}".replace(".", ",")  # la virgule décimale seulement : le remplacement portait sur toute la phrase, point final compris
+                raise HTTPException(422, f"Le plafond mensuel ne permet pas ce test ({prix['phrase']} ; il reste {reste} $).")
             try:
                 res = appeler(suite_reel.test_reel, cfg, ident, corps.mot)
             except tests_source.Echec as exc:
@@ -548,9 +549,9 @@ def construire(cfg: Config, fabrique: sessionmaker[Session], gestionnaire: Any) 
         if not cfg.suite_traduction_url:
             raise HTTPException(422, "Aucun moteur de traduction n'est réglé (suite.traduction_url dans pilote.yaml).")
         de_brut = str(corps.get("de") or "détecter")
-        de = "auto" if suite_plan.norme(de_brut) in ("", "detecter", "auto") else (suite_plan.codes_langues(de_brut) or ["auto"])[0]
         cibles_brutes = [v for v in (corps.get("vers") or []) if isinstance(v, str)]
         try:
+            de = "auto" if suite_plan.norme(de_brut) in ("", "detecter", "auto") else (suite_plan.codes_langues(de_brut) or ["auto"])[0]  # une langue de départ inconnue est un refus dit, plus une erreur 500
             cibles = suite_plan.codes_langues(", ".join(cibles_brutes)) if cibles_brutes else []
         except ConfigRefusee as exc:
             raise _refus(exc) from exc

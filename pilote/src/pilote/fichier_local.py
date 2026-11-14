@@ -236,8 +236,9 @@ def _jointure(con: sqlite3.Connection, fichier_jointure: Path, j: dict[str, Any]
         if not (_passe(ligne, j.get("garder"), garder=True) and _passe(ligne, j.get("exclure"), garder=False)):
             continue
         valeurs = [_valeur(ligne, c) for c in colonnes.values()]
-        if any(valeurs):
-            lot.append((*valeurs, _valeur(ligne, cle)))
+        numero = _valeur(ligne, cle)
+        if any(valeurs) and numero:  # sans clé, la mise à jour toucherait TOUTES les fiches qui n'ont pas de numéro
+            lot.append((*valeurs, numero))
         if len(lot) >= LOT:
             _appliquer(con, lot, list(colonnes))
             lot.clear()
@@ -288,6 +289,8 @@ def meta(dossier_copies: str | Path, base: str) -> dict[str, str]:
     con = _ouvrir(dossier_copies, base)
     try:
         return {r["cle"]: r["valeur"] for r in con.execute("SELECT cle, valeur FROM meta")}
+    except sqlite3.Error:  # une base SQLite adoptée telle quelle peut ne pas avoir de table « meta » : pas de date connue, jamais une panne de la liste des sources
+        return {}
     finally:
         con.close()
 
