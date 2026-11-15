@@ -34,14 +34,22 @@ class Params:
     gamma: float = 0.3  # truthfinder : dampening_factor
     editeur_unique: bool = True  # une voix par éditeur (D58), comme dans le recoupement actuel
     nom_requis: bool = True
-    registres: tuple[str, ...] = ()  # registres de découverte utilisés (wikidata, sirene) ; vide = système d'avant D63
-    variantes: bool = True  # variantes de noms regroupées par nomenklatura avant la notation (méthode « lr »)
+    registres: tuple[
+        str, ...
+    ] = ()  # registres de découverte utilisés (wikidata, sirene) ; vide = système d'avant D63
+    variantes: bool = (
+        True  # variantes de noms regroupées par nomenklatura avant la notation (méthode « lr »)
+    )
     seuil_variantes: float = 0.8
     lien: str = "simple"  # regroupement des variantes : « simple » (historique, enchaîne) ou « complet » (toutes les paires au seuil)
-    lr: tuple[tuple[str, float], ...] = ()  # surcharges des valeurs de config/lr.yaml (réglage Optuna)
+    lr: tuple[
+        tuple[str, float], ...
+    ] = ()  # surcharges des valeurs de config/lr.yaml (réglage Optuna)
     ner: bool = False  # entités nommées dans le texte (chantier 2, D63) ajoutées aux candidats et aux citations
     w_rw: float = 0.0  # poids de l'appartenance à Wikidata (classe du sujet) dans le score
-    w_rs: float = 0.0  # poids de l'appartenance à SIRENE/RNA (existence, pas appartenance au sujet : D51)
+    w_rs: float = (
+        0.0  # poids de l'appartenance à SIRENE/RNA (existence, pas appartenance au sujet : D51)
+    )
 
     def td_params(self) -> dict:
         if self.methode in ("investment", "pooledinvestment"):
@@ -102,7 +110,9 @@ def classer(ctx: Contexte, p: Params) -> list[Classe]:
         rows = []
         for c in cands:
             lg = vr.total(indice.elements(ctx, c, cfg_lr), cfg_lr)
-            rows.append(Classe(c.ref, c.nom or c.nom_brut, 1.0 / (1.0 + 10 ** (-lg)), c.s / 100.0, lg, 0.0))
+            rows.append(
+                Classe(c.ref, c.nom or c.nom_brut, 1.0 / (1.0 + 10 ** (-lg)), c.s / 100.0, lg, 0.0)
+            )
         return sorted(rows, key=lambda r: (-r.score, r.ref))
     if p.methode == "actuel":
         seuil = (
@@ -134,7 +144,14 @@ def classer(ctx: Contexte, p: Params) -> list[Classe]:
                 Classe(
                     c.ref,
                     c.nom or c.nom_brut,
-                    (p.w_s * c.s / 100.0 + p.w_t * b + p.w_f * f + p.w_rw * ("wikidata" in c.registres) + p.w_rs * ("sirene" in c.registres)) / wsum,
+                    (
+                        p.w_s * c.s / 100.0
+                        + p.w_t * b
+                        + p.w_f * f
+                        + p.w_rw * ("wikidata" in c.registres)
+                        + p.w_rs * ("sirene" in c.registres)
+                    )
+                    / wsum,
                     c.s / 100.0,
                     b,
                     f,
@@ -171,14 +188,13 @@ def run_de(sujet_id: str, jug: list[Jugement], n: int | None = None) -> dict[str
 
 
 def qrels_de(ref, jug: list[Jugement]) -> dict[str, dict[str, int]]:
-    """Référence (1) + faux jugés (0). Un résultat juste hors de la liste initiale (classe correcte trouvée par
-    libellé) est ajouté à la référence : il est vérifié, pas supposé."""
+    """Référence (1) + faux jugés (0). La liste des attendus est FIXE : c'est celle de la référence, la même pour
+    toutes les configurations d'un sujet (B2, spec 912 ; audit 910 § 3.4). Un « juste » dont l'identifiant n'est pas
+    dans la référence n'y est pas ajouté : sinon deux configurations seraient notées sur des totaux différents."""
     q = {e.qid: 1 for e in ref.entities}
     for j in jug:
         if j.verdict == FAUX:
             q.setdefault(j.docid, 0)
-        elif j.verdict == JUSTE:
-            q.setdefault(j.docid, 1)
     return {ref.sujet_id: q}
 
 
@@ -216,12 +232,17 @@ def mesurer(ref, jug: list[Jugement]) -> dict:
     qrels = qrels_de(ref, jug)
     run = run_de(ref.sujet_id, jug)
     m = evaluer(qrels, run)[ref.sujet_id]
-    r = sum(1 for v in qrels[ref.sujet_id].values() if v > 0)
-    pert = {d for d, v in qrels[ref.sujet_id].items() if v > 0}
+    pert = {e.qid for e in ref.entities}
+    r = len(pert)  # fixe par sujet (B2)
+    trouves = {j.docid for j in jug if j.verdict == JUSTE and j.docid in pert}
     m["Rprec_ex_aequo"] = rprec_ex_aequo(run[ref.sujet_id], pert, r)
     return {
         "mesures": m,
         "R": r,
+        "attendus_trouves": len(
+            trouves
+        ),  # acteurs attendus présents parmi les candidats (chiffre n° 1 de B1)
+        "part_attendus_trouves": len(trouves) / r if r else 0.0,
         "comptes": comptes(jug),
         "comptes_R": comptes(jug, r),
         "n": len(run[ref.sujet_id]),

@@ -3,7 +3,8 @@ avec patience (DECISION_AUTOCAL.md, méthode 5). Pas de grille : recherche aléa
 Bengio 2012 ; TPE). Chaque essai est archivé avec ses paramètres et son score : c'est le registre de preuve.
 
 Ce module ne règle que le CLASSEMENT (méthode de découverte de vérité, poids, variantes) sur des données archivées :
-zéro requête réseau. La validation imbriquée et le jeu de test réservé sont dans `protocole.py`.
+zéro requête réseau. Le découpage mise au point / validation / test et le jeu de test réservé sont dans `protocole.py`.
+La validation croisée imbriquée demandée par DECISION_AUTOCAL.md (méthode 6) n'a PAS été écrite (audit 910 § 4).
 """
 
 from __future__ import annotations

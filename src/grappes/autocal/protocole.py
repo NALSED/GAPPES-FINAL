@@ -1,4 +1,5 @@
-"""Protocole de mesure : mesures de base, étude Optuna, validation imbriquée, jeu de test réservé.
+"""Protocole de mesure : mesures de base, étude Optuna, découpage simple (mise au point / validation / test), jeu de
+test réservé. La validation croisée imbriquée de DECISION_AUTOCAL.md (méthode 6) n'est PAS écrite (audit 910 § 4).
 
 Tout rejoue des données archivées (aucun réseau, hors Wikidata pour juger un nom jamais vu, mis en cache).
 """
