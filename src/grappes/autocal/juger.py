@@ -131,6 +131,8 @@ class Juge:
         q = self.by_label.get(norm_name(name))
         if q:
             return Verdict(JUSTE, q, "libellé exact de la référence")
+        if self.ref.origine == "liste_officielle":  # B1 : référence indépendante, Wikidata jamais consulté
+            return Verdict(NON_VERIFIABLE, "x:" + source_key, "absent de la liste officielle (libellé exact)")
         try:
             hits = [
                 h

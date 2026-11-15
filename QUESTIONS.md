@@ -234,3 +234,7 @@ une régression d'un commit récent sur CE dépôt — plutôt une dérive d'env
 `.venv`) entre le moment où ces tests ont été rendus verts et aujourd'hui. Pas creusé plus loin (coût élevé,
 hors sujet du chantier en cours). Valeur par défaut : laissé rouge, signalé ici plutôt qu'un correctif inventé
 sans comprendre la cause réelle ; à reprendre si ça bloque une vérification de phase.
+
+### Q-B1 — Référence officielle : un nom absent de la liste est-il « faux » ? (15/11/2026)
+
+Avec une liste officielle complète (un label d'État par exemple), un nom que le programme sort et qui n'est pas dans la liste est en principe faux. Mais la comparaison se fait sur le nom exact, le site ou le SIREN : une autre écriture du même acteur serait comptée fausse à tort. Valeur par défaut retenue en attendant (D119) : un tel nom est compté **« non vérifiable »**, jamais « faux », et jamais « juste ». Conséquence : la « part de faux » ne sort pas toute seule d'une liste officielle ; elle demandera de relire à la main un échantillon des noms hors liste (méthode existante : jugement par échantillon, comme les qrels TREC). À trancher par Sednal : garder ce défaut prudent, ou compter « faux » tout nom hors d'une liste déclarée complète.

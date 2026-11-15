@@ -7,7 +7,10 @@ non vérifiable. La référence s'écrit au format qrels (TREC) : `sujet 0 Q123 
 
 from __future__ import annotations
 
+import csv
+import hashlib
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -36,6 +39,7 @@ class Reference:
     classes: list[str] = field(
         default_factory=list
     )  # classes Wikidata acceptées pour juger (P31 direct)
+    origine: str = "wikidata"  # wikidata | liste_officielle (B1, spec 912)
 
     @property
     def r(self) -> int:
@@ -95,6 +99,52 @@ def build(w: Wikidata, sujet_id: str, phrase: str, where: str, classes: list[str
         if e and row["alias"] not in e.aliases and row["alias"] != e.label:
             e.aliases.append(row["alias"])
     return Reference(sujet_id, phrase, where, sorted(ents.values(), key=lambda e: e.qid), classes)
+
+
+def _cle_nom(nom: str) -> str:
+    from grappes.semantic.scoring import normalize
+
+    return re.sub(r"[^\w]+", " ", normalize(nom)).strip()
+
+
+def build_from_list(sujet_id: str, phrase: str, path: str | Path) -> Reference:
+    """Référence tirée d'une liste officielle publiée par une autorité (B1, spec 912) : aucun appel Wikidata.
+
+    Fichier CSV `;` : en tête deux lignes obligatoires `# source: <adresse de la liste>` et `# releve: <date>`, puis
+    les colonnes `nom` (obligatoire), `alias` (séparés par `|`), `site`, `siren`. Même objet `Reference` et même
+    format qrels que la référence Wikidata ; `classes` reste vide : le juge ne peut alors dire « faux » (juger.py).
+    L'identifiant d'une entité dérive de son nom normalisé : il ne dépend pas de l'ordre des lignes.
+    """
+    lignes = Path(path).read_text(encoding="utf-8-sig").splitlines()
+    meta = {}
+    for ligne in lignes:
+        m = re.match(r"#\s*(source|releve)\s*:\s*(.+)", ligne)
+        if m:
+            meta[m.group(1)] = m.group(2).strip()
+    if "source" not in meta or "releve" not in meta:
+        raise ValueError(f"{path} : lignes « # source: » et « # releve: » obligatoires")
+    ents: dict[str, RefEntity] = {}
+    for row in csv.DictReader((x for x in lignes if not x.startswith("#")), delimiter=";"):
+        nom = (row.get("nom") or "").strip()
+        cle = _cle_nom(nom)
+        if not cle:
+            continue
+        ident = "off:" + hashlib.sha1(cle.encode()).hexdigest()[:12]
+        e = ents.setdefault(ident, RefEntity(ident, nom))
+        for a in (row.get("alias") or "").split("|"):
+            a = a.strip()
+            if a and a != e.label and a not in e.aliases:
+                e.aliases.append(a)
+        d = _domain((row.get("site") or "").strip()) if (row.get("site") or "").strip() else ""
+        if d and d not in e.domains:
+            e.domains.append(d)
+        sn = re.sub(r"\D", "", row.get("siren") or "")[:9]
+        if len(sn) == 9 and sn not in e.siren:
+            e.siren.append(sn)
+    where = f"liste officielle : {meta['source']} (relevée le {meta['releve']})"
+    return Reference(
+        sujet_id, phrase, where, sorted(ents.values(), key=lambda e: e.qid), [], "liste_officielle"
+    )
 
 
 def class_where(class_qid: str) -> str:

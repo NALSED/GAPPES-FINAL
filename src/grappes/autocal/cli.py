@@ -3,6 +3,8 @@
 * `collecter [--jeu dev|validation|test|tous] [--sujet ID]` : collectes RÉELLES manquantes (consomment du quota
   Tavily : une requête = un crédit), une par sujet, jamais refaites si une cassette existe.
 * `credits` : crédits Tavily consommés / plafond (point d'API gratuit).
+* `reference-officielle --sujet ID --phrase "…" --liste FICHIER.csv` : écrit la référence et la fiche d'un sujet à
+  partir d'une liste officielle publiée (B1, spec 912). Aucun appel réseau, aucun crédit. Jeu : `officiel`.
 """
 
 from __future__ import annotations
@@ -23,7 +25,8 @@ def charger_sujets(jeu: str = "tous") -> list[Sujet]:
     out = []
     for f in sorted((DEFS / "sujets").glob("*.json")):
         s = Sujet(**json.loads(f.read_text(encoding="utf-8")))
-        if jeu in ("tous", s.jeu):
+        # « tous » = les trois jeux historiques ; le jeu « officiel » (B1) ne se collecte que sur demande explicite
+        if jeu == s.jeu or (jeu == "tous" and s.jeu != "officiel"):
             out.append(s)
     return out
 
@@ -66,18 +69,48 @@ def cmd_collecter(args) -> int:
     return 0
 
 
+def cmd_reference_officielle(args) -> int:
+    from grappes.autocal.reference import build_from_list
+
+    ref = build_from_list(args.sujet, args.phrase, args.liste)
+    if not ref.entities:
+        print(f"{args.liste} : aucune entité lisible", file=sys.stderr)
+        return 2
+    for d in ("references", "sujets"):
+        (DEFS / d).mkdir(parents=True, exist_ok=True)
+    ref.save(DEFS / "references" / f"{args.sujet}.json")
+    Sujet(
+        id=args.sujet,
+        phrase=args.phrase,
+        jeu="officiel",
+        origine="liste_officielle",
+        r=ref.r,
+        where=ref.where,
+    ).save(DEFS / "sujets" / f"{args.sujet}.json")
+    print(f"{args.sujet} : {ref.r} acteurs attendus ({ref.where})")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="autocal")
     sub = p.add_subparsers(dest="cmd", required=True)
     c = sub.add_parser("collecter")
-    c.add_argument("--jeu", default="tous", choices=["dev", "validation", "test", "tous"])
+    c.add_argument(
+        "--jeu", default="tous", choices=["dev", "validation", "test", "officiel", "tous"]
+    )
     c.add_argument("--sujet")
     c.add_argument("--refaire", action="store_true")
     sub.add_parser("credits")
+    r = sub.add_parser("reference-officielle")
+    r.add_argument("--sujet", required=True)
+    r.add_argument("--phrase", required=True)
+    r.add_argument("--liste", required=True)
     args = p.parse_args(argv)
     if args.cmd == "credits":
         print("%d/%d" % credits())
         return 0
+    if args.cmd == "reference-officielle":
+        return cmd_reference_officielle(args)
     return cmd_collecter(args)
 
 
