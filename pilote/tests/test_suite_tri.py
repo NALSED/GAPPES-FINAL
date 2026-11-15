@@ -79,7 +79,7 @@ def test_la_comparaison_champ_par_champ(c, app, cfg):
 
 def test_aucune_fiche_de_personne_physique_n_entre_dans_un_rapprochement(c, app, cfg):
     rid, _ = creer(app, [{"nom": "Jean Martin", "ville": "Lyon", "genre_de_chose": "personne"}, {"nom": "Jean Martin", "ville": "Lyon", "genre_de_chose": "personne"}, {"nom": "Club Alpin", "ville": "Lyon"}])
-    assert rapprochements.proposer(cfg, app.state.fabrique, rid) == {"proposes": 0, "comparees": 1, "reunis": 0}  # règle 8
+    assert rapprochements.proposer(cfg, app.state.fabrique, rid) == {"proposes": 0, "comparees": 1}  # règle 8
     assert c.get("/api/suite/tri").json() == {"a_examiner": [], "tranches": []}
 
 
@@ -141,7 +141,7 @@ def test_un_siret_et_son_siren_sont_la_meme_entite(c, app, cfg):
 def test_deux_etablissements_d_une_meme_entreprise_ne_sont_pas_des_doublons(c, app, cfg):
     """Cas réel (Danone) : deux SIRET différents d'un même SIREN sont deux établissements, jamais proposés comme la même fiche."""
     rid, _ = creer(app, [{"nom": "DANONE PRODUITS FRAIS — Ferrières", "ville": "Ferrières", "numero_officiel": "34012345600017"}, {"nom": "DANONE PRODUITS FRAIS — Le Mans", "ville": "Le Mans", "numero_officiel": "34012345600025"}])
-    assert rapprochements.proposer(cfg, app.state.fabrique, rid) == {"proposes": 0, "comparees": 2, "reunis": 0}  # ni proposées, ni réunies d'office (A7)
+    assert rapprochements.proposer(cfg, app.state.fabrique, rid) == {"proposes": 0, "comparees": 2}  # ni proposées, ni réunies d'office (A7)
 
 
 def test_des_fonds_numerotes_ne_sont_pas_des_fautes_de_frappe(c, app, cfg):

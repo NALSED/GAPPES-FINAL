@@ -94,14 +94,14 @@ def proposer(cfg: Config, fabrique: sessionmaker[Session], rid: str, seuil: floa
     reunis = _reunir_par_numero(fabrique, rid, cands, deja, liees)  # A7 (spec 912) : avant Splink, et même s'il ne tourne pas
     deja |= reunis
     if len(cands) < 2:
-        return {"proposes": 0, "comparees": len(cands), "reunis": len(reunis)}
+        return {"proposes": 0, "comparees": len(cands), **({"reunis": len(reunis)} if reunis else {})}  # `reunis` (A7) seulement quand il y en a : le bilan d'avant reste le même
     paires = [p for p in _scorer([_fiche(c) for c in cands], seuil) if (p["a"], p["b"]) not in deja and (p["a"], p["b"]) not in liees and p["confiance"] >= seuil]
     with fabrique.begin() as s:
         for p in paires:
             s.add(Rapprochement(recherche_id=rid, a=p["a"], b=p["b"], confiance=p["confiance"], pourquoi=p["pourquoi"]))
         if paires:
             s.add(Journal(recherche_id=rid, qui="pilote", evenement="rapprochements_proposes", detail={"n": len(paires)}))
-    return {"proposes": len(paires), "comparees": len(cands), "reunis": len(reunis)}
+    return {"proposes": len(paires), "comparees": len(cands), **({"reunis": len(reunis)} if reunis else {})}
 
 
 def cle_numero(numero: str) -> str:

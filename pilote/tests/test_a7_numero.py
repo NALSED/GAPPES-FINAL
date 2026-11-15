@@ -51,7 +51,7 @@ def test_meme_siren_ou_siret_du_meme_siren_reunis_d_office(cfg):
         a, b = cands["Atelier du Phare"], cands["ATELIER PHARE SARL"]
         assert {x["vers"] for x in a.relations if x["type"] == "meme_entite"} == {"ATELIER PHARE SARL"}
         assert a.nb_endroits == 2 and b.nb_endroits == 2 and cands["Club des Vents"].nb_endroits == 1  # deux pages distinctes, comptées une fois chacune
-        assert rapprochements.proposer(cfg, app.state.fabrique, rid)["reunis"] == 0  # relancer ne double rien
+        assert rapprochements.proposer(cfg, app.state.fabrique, rid).get("reunis", 0) == 0  # relancer ne double rien
         with app.state.fabrique() as s:
             assert [j.detail["n"] for j in s.scalars(select(Journal).where(Journal.evenement == "rapprochements_reunis_par_numero"))] == [1]
 
@@ -66,7 +66,7 @@ def test_separer_defait_le_lien_et_rend_le_compte_d_avant(cfg):
         rapprochements.trancher(cfg, app.state.fabrique, r.id, "separe", "t")
         cands, [r] = _etat(app, rid)
         assert r.etat == "separe" and cands["A"].nb_endroits == 1 and cands["B"].nb_endroits == 1 and not cands["A"].relations
-        assert rapprochements.proposer(cfg, app.state.fabrique, rid)["reunis"] == 0  # la décision d'une personne n'est pas refaite d'office
+        assert rapprochements.proposer(cfg, app.state.fabrique, rid).get("reunis", 0) == 0  # la décision d'une personne n'est pas refaite d'office
 
 
 def test_un_rapprochement_confirme_en_tri_met_a_jour_le_nombre_d_endroits(cfg):
@@ -91,7 +91,7 @@ def test_numeros_differents_absents_ou_trop_courts_rien_n_est_reuni(cfg):
               {"nom": "E", "numero_officiel": "12", "faits": {}}, {"nom": "F", "numero_officiel": "12", "faits": {}}]  # fmt: skip
     app, rid = _app_avec(cfg, fiches)
     with TestClient(app):
-        assert rapprochements.proposer(cfg, app.state.fabrique, rid)["reunis"] == 0
+        assert rapprochements.proposer(cfg, app.state.fabrique, rid).get("reunis", 0) == 0
 
 
 def test_un_siege_et_son_etablissement_lies_par_la_source_restent_deux_fiches(cfg):
@@ -99,18 +99,18 @@ def test_un_siege_et_son_etablissement_lies_par_la_source_restent_deux_fiches(cf
               {"nom": "Atelier du Phare Lorient", "numero_officiel": "41234567800021", "faits": {}}]  # fmt: skip
     app, rid = _app_avec(cfg, fiches)
     with TestClient(app):
-        assert rapprochements.proposer(cfg, app.state.fabrique, rid)["reunis"] == 0
+        assert rapprochements.proposer(cfg, app.state.fabrique, rid).get("reunis", 0) == 0
 
 
 def test_une_fiche_de_personne_n_est_jamais_reunie_d_office(cfg):
     fiches = [{"nom": "A", "numero_officiel": "412345678", "genre_de_chose": "personne", "faits": {}}, {"nom": "B", "numero_officiel": "412345678", "faits": {}}]
     app, rid = _app_avec(cfg, fiches)
     with TestClient(app):
-        assert rapprochements.proposer(cfg, app.state.fabrique, rid)["reunis"] == 0
+        assert rapprochements.proposer(cfg, app.state.fabrique, rid).get("reunis", 0) == 0
 
 
 def test_deux_siret_differents_d_un_meme_siren_restent_deux_etablissements(cfg):
     fiches = [{"nom": "Atelier du Phare Lorient", "numero_officiel": "41234567800013", "faits": {}}, {"nom": "Atelier du Phare Colmar", "numero_officiel": "41234567800021", "faits": {}}]
     app, rid = _app_avec(cfg, fiches)
     with TestClient(app):
-        assert rapprochements.proposer(cfg, app.state.fabrique, rid)["reunis"] == 0
+        assert rapprochements.proposer(cfg, app.state.fabrique, rid).get("reunis", 0) == 0
