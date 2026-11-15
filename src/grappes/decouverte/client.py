@@ -14,8 +14,9 @@ import urllib.request
 from pathlib import Path
 
 from grappes import avancement
+from grappes.contact import user_agent
 
-UA = "grappes/0.1 (decouverte; landes_martin@yahoo.fr) python-urllib"
+UA = user_agent("decouverte")  # le contact vient de la variable d'environnement GRAPPES_CONTACT, jamais du code
 
 
 class DecouverteError(RuntimeError):

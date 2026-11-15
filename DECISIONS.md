@@ -982,3 +982,10 @@ Aucun code, aucun test.
 **Renvoyés à Sednal (Q-D117 dans `QUESTIONS.md`), rien de changé :** la fenêtre d'ajout d'une source Vérifier/Enrichir sans clé de vérification ; le client WebSocket écrit à la main de Jetstream ; le filtre de GLEIF à contrôler en réel ; les adresses internes à l'ajout d'un flux RSS (Q-SECU) ; l'exemple `linkedin.com/in/` de Requête avancée.
 
 **Tests :** `tests/test_revue_2026_11_14.py` (+1), `pilote/tests/test_revue_2026_11_14.py` (+1).
+
+## D133 — Revue de sécurité : le courriel personnel sort du code ; le flux RSS est renvoyé à Sednal (15/11/2026)
+
+* **Courriel écrit en dur.** Deux fichiers du moteur portaient une adresse de courriel personnelle dans leur en-tête User-Agent (`decouverte/client.py`, et `autocal/wikidata.py` trouvé pendant la revue). Elle est retirée du code : le contact est lu dans la variable d'environnement `GRAPPES_CONTACT` (`src/grappes/contact.py`). **Méthode existante :** la règle déjà suivie pour les clés (jamais dans le code, lues dans l'environnement). Sans la variable, le User-Agent nomme l'outil sans contact. Un essai interdit désormais toute adresse de courriel dans le code du moteur et de pilote. **À faire par Sednal :** poser la variable sur les machines (Q-SECU) ; l'adresse reste dans l'historique git.
+* **Ajout d'un flux RSS.** Constat confirmé : seules `http://` et `https://` sont exigées ; les adresses de métadonnées d'hébergeur ne sont pas refusées, contrairement à l'ajout d'une API. Comportement non modifié (consigne) ; proposition écrite dans Q-SECU : réutiliser le contrôle existant `ajout._hote_interdit`.
+
+**Tests :** `tests/test_securite_contact.py` (2).

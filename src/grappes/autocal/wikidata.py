@@ -16,9 +16,11 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from grappes.contact import user_agent
+
 SPARQL = "https://query.wikidata.org/sparql"
 API = "https://www.wikidata.org/w/api.php"
-UA = "grappes-autocal/0.1 (https://github.com/; landes_martin@yahoo.fr) python-urllib"
+UA = user_agent("autocal")  # le contact vient de la variable d'environnement GRAPPES_CONTACT, jamais du code
 DELAY_S = 2.0
 
 
