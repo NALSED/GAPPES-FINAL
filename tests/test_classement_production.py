@@ -50,7 +50,7 @@ def test_lignes_disent_si_le_chiffre_est_une_mesure():
     c = Candidat("reg:wikidata:Q1", "Fenix Toulouse Handball", "x", 0, "registre", 0, 0, 0, registres={"wikidata"}, ville="Toulouse")
     cls = [(c, 2.0, 0.999)]
     ls = pr.lignes(cls, pr.ClassementConfig(), lr, pr.Calibreur(), "FR")
-    assert ls[0].calibre == "estimation étendue" and ls[0].score == 99.0 and ls[0].ville == "Toulouse"
+    assert ls[0].calibre == "non mesuré" and ls[0].score is None and ls[0].ville == "Toulouse"  # A4 (spec 912)
     ls = pr.lignes(cls, pr.ClassementConfig(), lr, pr.Calibreur(valide=True), "FR")
-    assert ls[0].calibre == "mesuré"
+    assert ls[0].calibre == "mesuré" and ls[0].score == 99.0
     assert pr.lignes(cls, pr.ClassementConfig(p_min=0.9999), lr, pr.Calibreur(), "FR") == []

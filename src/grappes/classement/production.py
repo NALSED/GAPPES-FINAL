@@ -159,10 +159,12 @@ def ecrire_sorties(ls: list[LigneSortie], profils: list, out_dir: str | Path, re
 
 def lignes(classes: list[tuple[Candidat, float, float]], cfg: ClassementConfig, lr: vr.LrConfig, cal: Calibreur, pays: str) -> list[LigneSortie]:
     rendu = [t for t in classes if t[2] >= cfg.p_min][: cfg.n_max]
-    calibre = "mesuré" if cal.valide else "estimation étendue"
+    # A4 (spec 912) : tant que la calibration n'est pas valide, le chiffre n'est pas une mesure : il n'est pas écrit. L'indice
+    # continue d'ordonner les candidats ; la bande (restitution verbale) reste.
+    calibre = "mesuré" if cal.valide else "non mesuré"
     return [
         LigneSortie(
-            c.nom or c.nom_brut, c.ville, pays, min(100.0 * p, 99.0), vr.bande(lg, lr), calibre,
+            c.nom or c.nom_brut, c.ville, pays, min(100.0 * p, 99.0) if cal.valide else None, vr.bande(lg, lr), calibre,
             sorted({c.ref, *c.ner_sites}), sorted(c.registres), "retenu", niveau_de(c),
         )
         for c, lg, p in rendu

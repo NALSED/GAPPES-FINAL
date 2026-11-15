@@ -1,6 +1,7 @@
 # Profils de sortie (D64) : le format n'est plus figé. Chaque profil est un fichier CSV de `sorties/` ; on active ceux qu'on veut.
 # Colonnes disponibles : nom, ville, pays, score (0 à 100), bande (restitution verbale du rapport de vraisemblance),
-# calibre (« mesuré » ou « estimation étendue » : hors de la zone calibrée, le chiffre n'est pas une mesure), sources
+# calibre (« mesuré » ou « non mesuré » : A4, spec 912, tant que config/calibration.json n'est pas valide, la colonne score
+# reste VIDE ; l'ordre des lignes et la bande restent), sources
 # (références des sources), registres, statut, niveau (A3, spec 912 : « sûr » ou « à vérifier » ; en mode extraction,
 # `resultat.csv` ne garde que les sûrs, les autres vont dans `resultat_a_verifier.csv`).
 # `resultat` : la sortie historique (une colonne NOM). `tsites` : compatibilité trouver-sites (nom;ville;pays).

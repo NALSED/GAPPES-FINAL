@@ -24,7 +24,7 @@ class LigneSortie:
     pays: str = ""
     score: float | None = None  # 0 à 100
     bande: str = ""
-    calibre: str = ""  # « mesuré » | « estimation étendue » | « non calibré »
+    calibre: str = ""  # « mesuré » | « non mesuré » (A4, spec 912 : score vide dans ce cas)
     sources: list[str] = field(default_factory=list)
     registres: list[str] = field(default_factory=list)
     statut: str = ""
