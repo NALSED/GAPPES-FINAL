@@ -58,6 +58,16 @@ class Contexte:
     nommes: dict = field(default_factory=dict)  # organisations nommées dans les textes (chantier 2)
     decouverts: list = field(default_factory=list)  # entités de registre (chantier 1), archivées par sujet
     memo_variantes: dict = field(default_factory=dict)  # regroupements nomenklatura déjà calculés
+    citants: dict = field(default_factory=dict)  # cité -> {éditeur -> clés des sources citantes} (A5, spec 912)
+
+
+def citants_par_cite(citations: list[tuple[str, str]]) -> dict[str, dict[str, set[str]]]:
+    """cité -> {éditeur -> clés des sources qui citent}. Un éditeur = un site (pages web et flux), sinon la source elle-même."""
+    out: dict[str, dict[str, set[str]]] = {}
+    for citer, cited in citations:
+        eco, _, ident = citer.partition(":")
+        out.setdefault(cited, {}).setdefault(site_key(ident) if eco in ("web", "rss") else citer, set()).add(citer)
+    return out
 
 
 def charger(cible: str | Path | None, cfg: Config | None = None, db: Database | None = None) -> Contexte:
@@ -74,10 +84,11 @@ def charger(cible: str | Path | None, cfg: Config | None = None, db: Database | 
     gid = cfg.grappes[0].grappe_id
     ents = {e.entity_id: e for e in result.entities}
     cits = [(c.citer, c.cited) for c in result.citations if not c.hypothesis]
-    editeurs: dict[str, set[str]] = {}
+    editeurs = citants_par_cite(cits)
+    # A5 (spec 912, audit 910 § 3.1) : les écosystèmes qui comptent sont ceux des CITANTS (recoupement), pas celui de l'entité.
+    ecos_citants: dict[str, set[str]] = {}
     for citer, cited in cits:
-        eco, _, ident = citer.partition(":")
-        editeurs.setdefault(cited, set()).add(site_key(ident) if eco in ("web", "rss") else citer)
+        ecos_citants.setdefault(cited, set()).add(citer.partition(":")[0])
     lues = {o.source.key for o in obs}
     out: list[Candidat] = []
     for m in result.memberships:
@@ -91,11 +102,11 @@ def charger(cible: str | Path | None, cfg: Config | None = None, db: Database | 
             Candidat(
                 ref, readable_name(result.names.get(ref), ref.split(":", 1)[-1]), brut,
                 m["confidence"], m["status"], m["semantic"], m["ecosystem"], m["anchor"],
-                set(st.citing), set(st.ecosystems), len(editeurs.get(ref, ())),
+                set(st.citing), set(ecos_citants.get(ref, ())), len(editeurs.get(ref, ())),
                 rel.letter(ref), rel.factor(ref), ref in lues,
             )
         )  # fmt: skip
-    return Contexte(cfg, db, rel, gid, sorted(out, key=lambda c: c.ref), sorted(set(cits)), lues)
+    return Contexte(cfg, db, rel, gid, sorted(out, key=lambda c: c.ref), sorted(set(cits)), lues, citants=editeurs)
 
 
 def domaine(ref: str) -> str:

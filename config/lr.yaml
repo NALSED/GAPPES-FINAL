@@ -12,6 +12,12 @@
 # valeur d'expert : non mesurable sur une référence Wikidata (circulaire). La calibration (config/calibration.json) dit
 # si l'indice est une probabilité mesurée ou une estimation étendue. Le poids de la source (catégorie Admiralty) multiplie chaque élément :
 # poids de la lettre = facteur de la lettre / facteur de A (A = 1, F = 0,07).
+#
+# AVERTISSEMENT (A5, spec 912 ; audit 910 § 5.1) : CES VALEURS SONT NON MESURÉES. Le réglage Optuna a porté sur 13 bons
+# résultats parmi 2 060 candidats, pour un gain dans le bruit ; deux de ses effets sont contraires à la logique du projet
+# (un registre officiel pèse dix fois moins qu'un nom cité ; un site lu passe derrière un nom simplement cité). La spec 912
+# demande de revenir aux valeurs d'expert d'origine : elles ne sont pas dans ce dépôt (l'historique commence après le
+# réglage), voir QUESTIONS.md Q-A5. `ecosysteme` a été réglé alors que le signal n'agissait pas : sa valeur est du hasard.
 version: 1
 bornes:
   par_element: 3.0      # un seul élément ne peut pas dépasser ±3 (LR 1000 : « soutien fort »)

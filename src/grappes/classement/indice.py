@@ -32,8 +32,15 @@ def elements(ctx: Contexte, c: Candidat, cfg: vr.LrConfig) -> list[vr.Element]:
     if len(c.ecosystemes) > 1:
         out.append(vr.Element("ecosystemes", c.ref, c.lettre, cfg.v("ecosysteme") * (len(c.ecosystemes) - 1)))
     if c.editeurs:
-        w = vr.poids_lettre(c.lettre)
-        out.append(vr.Element("citations", c.ref, c.lettre, min(cfg.v("citation") * c.editeurs * w, cfg.v("citation_plafond"))))
+        # A5 (spec 912) : une voix par éditeur distinct, pondérée par la fiabilité de CELUI QUI CITE (sa meilleure source), comme pour
+        # les noms lus ; avant, c'était la lettre de l'entité citée. Sans détail des citants (candidat réuni ou construit à la main) :
+        # ancien calcul.
+        par_editeur = ctx.citants.get(c.ref) or {}
+        if par_editeur:
+            somme = sum(max(vr.poids_lettre(ctx.rel.letter(k)) for k in cles) for cles in par_editeur.values())
+        else:
+            somme = c.editeurs * vr.poids_lettre(c.lettre)
+        out.append(vr.Element("citations", c.ref, c.lettre, min(cfg.v("citation") * somme, cfg.v("citation_plafond"))))
     return out
 
 
