@@ -52,14 +52,16 @@ TROIS = [
 def test_splink_propose_du_moins_certain_au_plus_certain(c, app, cfg):
     rid, ids = creer(app, TROIS)
     r = rapprochements.proposer(cfg, app.state.fabrique, rid)
-    assert r["proposes"] == 3 and r["comparees"] == 8  # les deux boulangeries (noms voisins, deux artisans) ne sont pas proposées
+    # A7 (spec 912, 15/11/2026) : les deux coopératives portent le même numéro officiel : réunies d'office, plus proposées à une personne.
+    assert r["proposes"] == 2 and r["reunis"] == 1 and r["comparees"] == 8  # les deux boulangeries (noms voisins, deux artisans) ne sont pas proposées
     f = c.get("/api/suite/tri").json()
     assert [x["confiance"] for x in f["a_examiner"]] == sorted(x["confiance"] for x in f["a_examiner"])  # du plus incertain au plus certain
-    bas, milieu, haut = f["a_examiner"]
-    assert 20 <= bas["confiance"] < 60 and milieu["confiance"] >= 50 and haut["confiance"] >= 95
+    bas, milieu = f["a_examiner"]
+    assert 20 <= bas["confiance"] < 60 and milieu["confiance"] >= 50
     assert bas["titre"] == "deux fiches d'association, nom proche"
     assert milieu["titre"] == "deux fiches d'association, nom identique, un identifiant manquant"
-    assert haut["titre"] == "deux fiches d'entreprise, identifiant officiel identique"  # « 501 234 567 » et « 501234567 » : le même numéro
+    [haut] = f["tranches"]
+    assert haut["titre"] == "deux fiches d'entreprise, identifiant officiel identique" and haut["confiance"] == 100  # « 501 234 567 » et « 501234567 » : le même numéro
     assert set(bas["pourquoi"]) == {"nom", "distinctif", "chiffres", "ville", "numero"} and bas["pourquoi"]["numero"]["niveau"] == "absent d'un côté"  # on voit POURQUOI deux fiches sont rapprochées
 
 
@@ -77,7 +79,7 @@ def test_la_comparaison_champ_par_champ(c, app, cfg):
 
 def test_aucune_fiche_de_personne_physique_n_entre_dans_un_rapprochement(c, app, cfg):
     rid, _ = creer(app, [{"nom": "Jean Martin", "ville": "Lyon", "genre_de_chose": "personne"}, {"nom": "Jean Martin", "ville": "Lyon", "genre_de_chose": "personne"}, {"nom": "Club Alpin", "ville": "Lyon"}])
-    assert rapprochements.proposer(cfg, app.state.fabrique, rid) == {"proposes": 0, "comparees": 1}  # règle 8
+    assert rapprochements.proposer(cfg, app.state.fabrique, rid) == {"proposes": 0, "comparees": 1, "reunis": 0}  # règle 8
     assert c.get("/api/suite/tri").json() == {"a_examiner": [], "tranches": []}
 
 
@@ -131,14 +133,15 @@ def test_deux_entites_de_meme_nom_et_de_numeros_differents_ne_sont_pas_proposees
 
 def test_un_siret_et_son_siren_sont_la_meme_entite(c, app, cfg):
     rid, _ = creer(app, [{"nom": "Dupont Sports SAS", "ville": "Grenoble", "numero_officiel": "123 456 789"}, {"nom": "DUPONT SPORTS", "ville": "Grenoble", "numero_officiel": "123 456 789 00012"}])
-    assert rapprochements.proposer(cfg, app.state.fabrique, rid)["proposes"] == 1
-    assert c.get("/api/suite/tri").json()["a_examiner"][0]["confiance"] >= 90  # un siège et son établissement ne se contredisent pas
+    assert rapprochements.proposer(cfg, app.state.fabrique, rid)["reunis"] == 1  # A7 (spec 912) : même numéro officiel, réunies d'office
+    f = c.get("/api/suite/tri").json()
+    assert f["a_examiner"] == [] and f["tranches"][0]["confiance"] == 100  # un siège et son établissement ne se contredisent pas
 
 
 def test_deux_etablissements_d_une_meme_entreprise_ne_sont_pas_des_doublons(c, app, cfg):
     """Cas réel (Danone) : deux SIRET différents d'un même SIREN sont deux établissements, jamais proposés comme la même fiche."""
     rid, _ = creer(app, [{"nom": "DANONE PRODUITS FRAIS — Ferrières", "ville": "Ferrières", "numero_officiel": "34012345600017"}, {"nom": "DANONE PRODUITS FRAIS — Le Mans", "ville": "Le Mans", "numero_officiel": "34012345600025"}])
-    assert rapprochements.proposer(cfg, app.state.fabrique, rid)["proposes"] == 0
+    assert rapprochements.proposer(cfg, app.state.fabrique, rid) == {"proposes": 0, "comparees": 2, "reunis": 0}  # ni proposées, ni réunies d'office (A7)
 
 
 def test_des_fonds_numerotes_ne_sont_pas_des_fautes_de_frappe(c, app, cfg):

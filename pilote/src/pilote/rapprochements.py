@@ -91,15 +91,88 @@ def proposer(cfg: Config, fabrique: sessionmaker[Session], rid: str, seuil: floa
                  if (c.genre_de_chose or "").strip().lower() != "personne" or (c.faits or {}).get("regle8_leve")]  # fmt: skip
         deja = {(r.a, r.b) for r in s.scalars(select(Rapprochement).where(Rapprochement.recherche_id == rid))}
         liees = _deja_liees(cands)
+    reunis = _reunir_par_numero(fabrique, rid, cands, deja, liees)  # A7 (spec 912) : avant Splink, et même s'il ne tourne pas
+    deja |= reunis
     if len(cands) < 2:
-        return {"proposes": 0, "comparees": len(cands)}
+        return {"proposes": 0, "comparees": len(cands), "reunis": len(reunis)}
     paires = [p for p in _scorer([_fiche(c) for c in cands], seuil) if (p["a"], p["b"]) not in deja and (p["a"], p["b"]) not in liees and p["confiance"] >= seuil]
     with fabrique.begin() as s:
         for p in paires:
             s.add(Rapprochement(recherche_id=rid, a=p["a"], b=p["b"], confiance=p["confiance"], pourquoi=p["pourquoi"]))
         if paires:
             s.add(Journal(recherche_id=rid, qui="pilote", evenement="rapprochements_proposes", detail={"n": len(paires)}))
-    return {"proposes": len(paires), "comparees": len(cands)}
+    return {"proposes": len(paires), "comparees": len(cands), "reunis": len(reunis)}
+
+
+def cle_numero(numero: str) -> str:
+    """Le numéro officiel sous une forme comparable. Un SIREN (9 chiffres) ou un SIRET (14 chiffres) rend le SIREN : un SIRET du même SIREN
+    est la même entité juridique. Tout autre numéro (RNA, LEI…) se compare tel quel, sans espaces ni casse. Trop court (moins de 5 signes) : rien."""
+    brut = re.sub(r"[\s.\-]", "", str(numero or "")).upper()
+    if brut.isdigit() and len(brut) in (9, 14):
+        return brut[:9]
+    return brut if len(brut) >= 5 else ""
+
+
+def _reunir_par_numero(fabrique: sessionmaker[Session], rid: str, cands: list[Candidat], deja: set[tuple[int, int]], liees: set[tuple[int, int]]) -> set[tuple[int, int]]:
+    """A7 (spec 912) : deux fiches qui portent le MÊME numéro officiel (même SIREN, ou un SIREN et un SIRET de ce SIREN ; jamais deux SIRET
+    différents : deux établissements) sont réunies d'office (rapprochement confirmé par « pilote », confiance 1).
+    Rien d'autre n'est réuni sans une personne. Jamais : une paire déjà tranchée ou déjà proposée (la décision d'une personne tient), ni deux noms
+    que la source a elle-même liés comme siège et établissement (`_deja_liees` : entités distinctes). Les fiches de personnes n'arrivent pas ici
+    (`cands` les a déjà écartées, règle 8). Se défait comme tout rapprochement (« séparer »)."""
+    par_cle: dict[str, list[int]] = {}
+    for c in cands:
+        if cle := cle_numero(c.numero_officiel or ""):
+            par_cle.setdefault(cle, []).append(c.id)
+    complet = {c.id: re.sub(r"\D", "", c.numero_officiel or "") for c in cands}
+
+    def deux_etablissements(i: int, j: int) -> bool:  # deux SIRET différents d'un même SIREN : deux établissements, jamais la même fiche (cas réel Danone)
+        return len(complet[i]) == 14 and len(complet[j]) == 14 and complet[i] != complet[j]
+
+    paires = {(min(i, j), max(i, j)): cle for cle, ids in par_cle.items() for n, i in enumerate(ids) for j in ids[n + 1 :]}
+    paires = {p: cle for p, cle in paires.items() if p not in deja and p not in liees and not deux_etablissements(*p)}
+    if not paires:
+        return set()
+    with fabrique.begin() as s:
+        for (i, j), cle in sorted(paires.items()):
+            r = Rapprochement(recherche_id=rid, a=i, b=j, confiance=1.0, pourquoi={"numero_officiel": f"même numéro officiel ({cle})"})
+            s.add(r)
+            s.flush()
+            _appliquer(s, r, "confirme", "pilote")
+        s.add(Journal(recherche_id=rid, qui="pilote", evenement="rapprochements_reunis_par_numero", detail={"n": len(paires)}))
+    return set(paires)
+
+
+def _recompter(s: Session, cand: Candidat) -> None:
+    """A7 (spec 912) : le nombre d'endroits d'une fiche réunie à d'autres compte les preuves de TOUTES ces fiches, chaque endroit une seule fois
+    (`pont.faits.endroits_comptes`, la règle de la collecte). Le compte de la fiche seule est gardé (`faits.nb_endroits_seul`) : séparer le rend."""
+    from pilote.pont.faits import endroits_comptes
+
+    faits = dict(cand.faits or {})
+    seul = int(faits.get("nb_endroits_seul") or cand.nb_endroits or 1)
+    liens = s.scalars(select(Rapprochement).where(Rapprochement.recherche_id == cand.recherche_id, Rapprochement.etat == "confirme", (Rapprochement.a == cand.id) | (Rapprochement.b == cand.id))).all()
+    autres = [x for x in (s.get(Candidat, r.b if r.a == cand.id else r.a) for r in liens) if x is not None]
+    if not autres:
+        cand.nb_endroits = seul
+        faits.pop("nb_endroits_seul", None)
+    else:
+        preuves = [p for f in (cand, *autres) for p in ((f.faits or {}).get("preuves") or []) if isinstance(p, dict) and "lieu" in p and "main" in p]
+        faits["nb_endroits_seul"] = seul
+        cand.nb_endroits = max(seul, endroits_comptes(preuves) if preuves else seul)
+    cand.faits = faits
+
+
+def _appliquer(s: Session, r: Rapprochement, action: str, qui: str) -> tuple[Candidat, Candidat]:
+    a, b = s.get(Candidat, r.a), s.get(Candidat, r.b)
+    assert a is not None and b is not None
+    for cand, autre in ((a, b), (b, a)):  # on repart toujours des liens SANS ce rapprochement : changer d'avis ne laisse rien derrière
+        cand.relations = [x for x in (cand.relations or []) if not (isinstance(x, dict) and x.get("rapprochement") == r.id)]
+        if action == "confirme":
+            cand.relations = [*cand.relations, {"type": "meme_entite", "vers": autre.nom, "source": "tri", "rapprochement": r.id}]
+    r.etat, r.decide_par, r.decide_le = action, qui, datetime.now(UTC)
+    s.flush()
+    for cand in (a, b):
+        _recompter(s, cand)
+    return a, b
 
 
 # ---------------------------------------------------------------- la file
@@ -172,12 +245,6 @@ def trancher(cfg: Config, fabrique: sessionmaker[Session], ident: int, action: s
         r = s.get(Rapprochement, ident)
         if r is None:
             raise LookupError("Ce rapprochement n'existe pas.")
-        a, b = s.get(Candidat, r.a), s.get(Candidat, r.b)
-        assert a is not None and b is not None
-        for cand, autre in ((a, b), (b, a)):  # on repart toujours des liens SANS ce rapprochement : changer d'avis ne laisse rien derrière
-            cand.relations = [x for x in (cand.relations or []) if not (isinstance(x, dict) and x.get("rapprochement") == r.id)]
-            if action == "confirme":
-                cand.relations = [*cand.relations, {"type": "meme_entite", "vers": autre.nom, "source": "tri", "rapprochement": r.id}]
-        r.etat, r.decide_par, r.decide_le = action, qui, datetime.now(UTC)
+        a, b = _appliquer(s, r, action, qui)
         s.add(Journal(recherche_id=r.recherche_id, qui=qui, evenement=f"rapprochement_{action}", detail={"rapprochement": r.id, "a": a.nom, "b": b.nom, "confiance": r.confiance}))
     return {"id": ident, "etat": action}
