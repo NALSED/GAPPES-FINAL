@@ -954,3 +954,13 @@ Chiffres avant/après : aucun, les archives de mesure (`donnees/autocal/`) ne so
 ## D129 — C1 : non codé, renvoyé à Sednal (15/11/2026)
 
 « Les registres fournissent d'abord les candidats, le web confirme ensuite » n'a pas été codé. Trois obstacles qui ne sont pas du ressort de l'agent (Q-C1 dans `QUESTIONS.md`) : une décision contraire en vigueur (901/Q26 : les registres sont retirés du mode « lire le contenu » parce qu'ils ramenaient des organisations sans rapport), un coût en requêtes payantes qui ne peut pas être essayé ici, et la dépendance au feu vert NAF de la spec 903. Le mécanisme de découverte par registre existe déjà et n'est pas modifié. Aucun code, aucun test.
+
+## D130 — C2 : une page-annuaire est lue en entier, dans un plafond écrit en configuration (15/11/2026)
+
+**Avant :** `fetch/pages.py` coupait toute page à 20 000 caractères et 100 liens ; une « liste des clubs » de deux cents entrées était lue en partie. **Après :** une page reconnue comme annuaire garde jusqu'à 100 000 caractères et 500 liens ; une page ordinaire garde les limites d'avant.
+
+**Reconnaissance** (`pages.est_annuaire`) : au moins 50 entrées de liste (`<li>`, `<tr>`) ET au moins la moitié du texte dans ces entrées. **Méthode existante adaptée :** la mesure de densité des extracteurs de contenu (Readability, boilerpipe : densité de liens ou de liste d'un bloc), ici comptée par l'analyseur HTML déjà en place (`fetch/html.py` : `entrees`, `part_liste`). Un article qui porte beaucoup de liens n'est pas pris pour un annuaire (essai).
+
+**Plafond en configuration :** bloc `annuaires:` de `config/autonomie.yaml` (`entrees_min`, `part_min`, `texte_max`, `liens_max`), valeurs par défaut identiques dans `autonomy.py`. La taille maximale d'une page téléchargée (`max_octets_page`, 1 Mo) n'est pas changée.
+
+**Fiabilité :** les noms lus sur une seule page restent « à vérifier » (A3, D123 : un seul éditeur), jamais « sûrs » ; essai dédié. **Effet attendu :** plus de noms lus sur les pages de liste ; pas de chiffre (aucune collecte possible ici, à mesurer avec B1). **Risque dit :** davantage de liens suivis depuis une page-annuaire (jusqu'à 500), dans les quotas de pages du cycle, inchangés. **Tests :** `tests/test_c2_annuaires.py` (5) ; moteur 665 verts (4 échecs d'environnement connus).

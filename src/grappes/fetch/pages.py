@@ -32,6 +32,20 @@ _CAPTCHA = re.compile(
 )
 
 
+def est_annuaire(page, reglage) -> bool:
+    """C2 (spec 912) : une page-annuaire a beaucoup d'entrées de même forme, et l'essentiel de son texte s'y trouve. Critère repris des
+    extracteurs de contenu (densité de liste, comme la densité de liens de Readability ou boilerpipe) : nombre d'entrées <li>/<tr> et
+    part du texte qu'elles portent. Un article qui porte beaucoup de liens n'est pas un annuaire."""
+    return page.entrees >= reglage.annuaire_entrees_min and page.part_liste >= reglage.annuaire_part_min
+
+
+def limites(page, reglage) -> tuple[int, int]:
+    """(caractères de texte, liens) gardés : les limites ordinaires, relevées pour un annuaire dans le plafond de la configuration."""
+    if est_annuaire(page, reglage):
+        return max(MAX_TEXT, reglage.annuaire_texte_max), max(MAX_LINKS, reglage.annuaire_liens_max)
+    return MAX_TEXT, MAX_LINKS
+
+
 def _url_sure(value: object) -> str:
     """`clean_url` sans exception : une adresse mal formée lue dans une page (port non numérique, IPv6 cassé) est une
     donnée non fiable, on l'écarte ; elle ne doit jamais faire échouer, donc annuler, le cycle entier."""
@@ -217,11 +231,12 @@ class PageFetcher:
         refus = self.rules.check_text(f"{final} {title} {description}")
         if refus:
             return FetchResult(asked, False, "refusé", refus)
+        max_texte, max_liens = limites(page, self.autonomy)  # C2 (spec 912) : une page-annuaire est lue en entier, dans le plafond
         links: list[str] = []
         anchors: list[dict] = []
         for href, anchor in page.links:
             u = _url_sure(href)
-            if u and u not in links and len(links) < MAX_LINKS:
+            if u and u not in links and len(links) < max_liens:
                 links.append(u)
                 anchors.append({"href": u, "anchor": clean_text(anchor, 100)})
         # `rel=canonical` n'est cru que chez le même éditeur : sinon n'importe quelle page se déclarait page d'un grand
@@ -237,7 +252,7 @@ class PageFetcher:
             "fetched_at": stamp,
             "title": title,
             "text": clean_text(
-                f"{description}. {page.text}" if description else page.text, MAX_TEXT
+                f"{description}. {page.text}" if description else page.text, max_texte
             ),
             "lang": lang,
             "site_name": clean_text(page.site_name, 100),

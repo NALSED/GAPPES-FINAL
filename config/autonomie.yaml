@@ -18,3 +18,12 @@ seuil_ingestion:
 export_tsites:
   actif: true
   pays_defaut: FR
+
+# C2 (spec 912) : une page dont l'essentiel est une liste (annuaire, « liste des clubs ») est lue au-delà des limites ordinaires
+# (20 000 caractères, 100 liens), dans ce plafond. Une page est un annuaire si elle a au moins `entrees_min` entrées de liste et si
+# au moins `part_min` de son texte s'y trouve. Les noms lus sur une seule page restent « à vérifier ».
+annuaires:
+  entrees_min: 50
+  part_min: 0.5
+  texte_max: 100000
+  liens_max: 500

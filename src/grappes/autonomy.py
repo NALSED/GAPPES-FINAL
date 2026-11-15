@@ -57,6 +57,11 @@ class Autonomy:
     reseaux_non_lus: tuple[str, ...] = DEFAULT_SOCIAL
     max_octets_page: int = 1_000_000
     # amorçage
+    # C2 (spec 912) : une page dont l'essentiel est une liste (annuaire) est lue au-delà des limites ordinaires, dans ce plafond
+    annuaire_entrees_min: int = 50  # entrées de liste (<li>, <tr>) à partir desquelles une page peut être un annuaire
+    annuaire_part_min: float = 0.5  # part minimale du texte qui doit se trouver dans ces entrées
+    annuaire_texte_max: int = 100_000  # caractères de texte gardés pour un annuaire (page ordinaire : 20 000)
+    annuaire_liens_max: int = 500  # liens gardés pour un annuaire (page ordinaire : 100)
     amorcage_max_termes: int = 20
     amorcage_poids: float = 0.4
     requetes_termes: int = 4  # termes du lexique combinés par deux avec la phrase (4 = 2 requêtes en plus de la phrase)
@@ -254,6 +259,9 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
     amorcage = d.get("amorcage") or {}
     if not isinstance(amorcage, dict):
         raise ConfigError(f"{path}: amorcage doit être un mapping")
+    annuaires = d.get("annuaires") or {}
+    if not isinstance(annuaires, dict):
+        raise ConfigError(f"{path}: annuaires doit être un mapping (entrees_min, part_min, texte_max, liens_max)")
     interdits = d.get("interdits") or {}
     if not isinstance(interdits, dict):
         raise ConfigError(f"{path}: interdits doit être un mapping (domaines, motifs)")
@@ -292,6 +300,10 @@ def load_autonomy(config_dir: str | Path = "config") -> Autonomy:
             dict.fromkeys((*DEFAULT_SOCIAL, *_strs(d, "reseaux_non_lus", (), path)))
         ),
         max_octets_page=int(_num(d, "max_octets_page", base.max_octets_page, path, 1000)),
+        annuaire_entrees_min=int(_num(annuaires, "entrees_min", base.annuaire_entrees_min, path, 1)),
+        annuaire_part_min=min(1.0, _num(annuaires, "part_min", base.annuaire_part_min, path)),
+        annuaire_texte_max=int(_num(annuaires, "texte_max", base.annuaire_texte_max, path, 1000)),
+        annuaire_liens_max=int(_num(annuaires, "liens_max", base.annuaire_liens_max, path, 1)),
         amorcage_max_termes=int(_num(amorcage, "max_termes", base.amorcage_max_termes, path)),
         amorcage_poids=_num(amorcage, "poids", base.amorcage_poids, path),
         requetes_termes=int(_num(d, "requetes_termes", base.requetes_termes, path, 2)),

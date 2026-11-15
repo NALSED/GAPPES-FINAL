@@ -27,6 +27,8 @@ class Extracted:
     noindex: bool = False
     has_password_field: bool = False
     links: list[tuple[str, str]] = field(default_factory=list)  # (href absolu, ancre)
+    entrees: int = 0  # C2 (spec 912) : nombre d'entrées de liste (<li>, <tr>)
+    part_liste: float = 0.0  # part du texte qui se trouve dans ces entrées (0..1)
 
 
 class _Parser(HTMLParser):
@@ -40,6 +42,9 @@ class _Parser(HTMLParser):
         self._text: list[str] = []
         self._size = 0
         self._anchor: tuple[str, list[str]] | None = None
+        self._dans_liste = 0  # profondeur dans <li>/<tr> ; sert à mesurer la part du texte qui est une liste (C2, spec 912)
+        self._car_liste = 0
+        self._car_total = 0
 
     def handle_starttag(self, tag, attrs):
         a = {k.casefold(): (v or "") for k, v in attrs}
@@ -70,6 +75,9 @@ class _Parser(HTMLParser):
             self.out.has_password_field = True
         elif tag == "a" and a.get("href"):
             self._anchor = (urljoin(self.base, a["href"]), [])
+        if tag in ("li", "tr"):
+            self.out.entrees += 1
+            self._dans_liste += 1
         if tag in _BLOCK:
             self._text.append(" ")
 
@@ -77,6 +85,8 @@ class _Parser(HTMLParser):
         if tag in _SKIP:
             self._skip = max(0, self._skip - 1)
             return
+        if tag in ("li", "tr"):
+            self._dans_liste = max(0, self._dans_liste - 1)
         if tag == "title":
             self._in_title = False
         elif tag == "a" and self._anchor:
@@ -93,6 +103,10 @@ class _Parser(HTMLParser):
             self._title.append(data)
         if self._anchor:
             self._anchor[1].append(data)
+        n = len(data.strip())
+        self._car_total += n
+        if self._dans_liste:
+            self._car_liste += n
         if self._size < MAX_TEXT:
             self._text.append(data)
             self._size += len(data)
@@ -129,4 +143,5 @@ def extract(body: bytes, content_type: str, base_url: str) -> Extracted:
     out = parser.out
     out.title = " ".join("".join(parser._title).split())
     out.text = " ".join("".join(parser._text).split())
+    out.part_liste = parser._car_liste / parser._car_total if parser._car_total else 0.0
     return out
