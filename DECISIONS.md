@@ -964,3 +964,10 @@ Chiffres avant/après : aucun, les archives de mesure (`donnees/autocal/`) ne so
 **Plafond en configuration :** bloc `annuaires:` de `config/autonomie.yaml` (`entrees_min`, `part_min`, `texte_max`, `liens_max`), valeurs par défaut identiques dans `autonomy.py`. La taille maximale d'une page téléchargée (`max_octets_page`, 1 Mo) n'est pas changée.
 
 **Fiabilité :** les noms lus sur une seule page restent « à vérifier » (A3, D123 : un seul éditeur), jamais « sûrs » ; essai dédié. **Effet attendu :** plus de noms lus sur les pages de liste ; pas de chiffre (aucune collecte possible ici, à mesurer avec B1). **Risque dit :** davantage de liens suivis depuis une page-annuaire (jusqu'à 500), dans les quotas de pages du cycle, inchangés. **Tests :** `tests/test_c2_annuaires.py` (5) ; moteur 665 verts (4 échecs d'environnement connus).
+
+## D131 — C3 et C4 : non codés, renvoyés à Sednal (15/11/2026)
+
+* **C3 (décliner les requêtes)** : la déclinaison par langue existe déjà pour les sources par adaptateur (outil Traduction). La déclinaison par lieu n'est pas codée : elle multiplie les appels payants et demande quatre choix (grain, plafond, sources, affichage) et un essai réel (Q-C3).
+* **C4 (Requête avancée)** : la spec exige un essai réel par opérateur et par source ; impossible ici. Aucun opérateur déclaré, pour ne pas en annoncer un qu'une source ignorerait (Q-C4).
+
+Aucun code, aucun test.
