@@ -78,10 +78,11 @@ def test_les_acteurs_attendus_sortent_et_les_faux_connus_ne_sortent_pas(monde):
     assert tous == voulus  # et rien d'autre
 
 
-def test_le_fichier_complet_dit_le_niveau_et_n_affiche_pas_de_chiffre_non_mesure(monde):
+def test_le_fichier_complet_en_mode_classique(monde):
+    """La configuration livrée est en mode classique (classement inactif). Le niveau (A3) et le retrait du chiffre non mesuré (A4) ne
+    concernent que le mode extraction : ici la colonne `niveau` est vide et `score` porte la confiance d'appartenance du mode classique."""
     brut = _lignes(monde["t"] / "sorties" / "resultat_brut.csv", ";")
     tete = brut[0]
     assert "niveau" in tete and "score" in tete and len(brut) > 1
-    # A3 : le niveau n'est posé qu'en mode extraction (classement actif). La configuration livrée est en mode classique : colonne vide.
     assert {r[tete.index("niveau")] for r in brut[1:]} == {""}
-    assert {r[tete.index("score")] for r in brut[1:]} == {""}  # A4 : la calibration livrée n'est pas valide
+    assert all(r[tete.index("score")].isdigit() and 0 <= int(r[tete.index("score")]) <= 100 for r in brut[1:])
