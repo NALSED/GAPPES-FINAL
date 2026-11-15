@@ -31,6 +31,13 @@ def lire_sortie(texte: str) -> list[dict[str, Any]]:
     return v
 
 
+def cles_des_autres(secrets: Any, propres: Any) -> tuple[str, ...]:
+    """Les noms de clés à retirer de l'environnement d'un programme local : celles des AUTRES sources de la recherche. Les clés que le
+    programme déclare lui-même (`cle` de sa déclaration) lui restent : sans cela, un programme qui a besoin de sa propre clé ne marchait plus."""
+    siennes = {str(n) for n in (propres or [])}
+    return tuple(str(n) for n in secrets if str(n) not in siennes)
+
+
 def executer(script: dict[str, Any], entree: dict[str, Any], cwd: Path | None = None, delai_s: float | None = None, sans_variables: tuple[str, ...] | list[str] = ()) -> list[dict[str, Any]]:
     """`sans_variables` : noms retirés de l'environnement du programme (les clés d'API des sources de la recherche, que le pont a
     chargées pour les prises du moteur : un programme local n'a pas à les recevoir)."""

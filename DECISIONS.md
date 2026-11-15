@@ -989,3 +989,17 @@ Aucun code, aucun test.
 * **Ajout d'un flux RSS.** Constat confirmé : seules `http://` et `https://` sont exigées ; les adresses de métadonnées d'hébergeur ne sont pas refusées, contrairement à l'ajout d'une API. Comportement non modifié (consigne) ; proposition écrite dans Q-SECU : réutiliser le contrôle existant `ajout._hote_interdit`.
 
 **Tests :** `tests/test_securite_contact.py` (2).
+
+## D134 — Contre-relecture des 37 corrections de D117 : une régression trouvée et corrigée (15/11/2026)
+
+Relecture du diff des cinq commits de D117 (`d73d55b`, `b26d71c`, `92c2fa5`, `757f5c3`, `fac1950`), correction par correction, avec leur essai.
+
+**Une régression, corrigée.** D117 retirait de l'environnement d'un programme local **toutes** les clés d'API de la recherche, y compris celle que le programme déclare lui-même (`cle` de sa déclaration) : un programme local qui a besoin de sa propre clé ne la recevait plus. Désormais le pont ne retire que les clés des **autres** sources (`adaptateurs/programmes.cles_des_autres`, `moteur_sources.py` : `cles_noms` porté par le programme, `pont/executer.py`). Essai ajouté.
+
+**Remarques sans correction :**
+
+* `search/http.py` : depuis D117 la lecture de `robots.txt` d'un fournisseur de recherche suit les redirections (RFC 9309), sans le contrôle d'adresse que fait la collecte de pages (`fetch/pages.py` l'applique à chaque redirection). Le contenu lu n'est interprété que comme des règles robots et n'est jamais rendu ; le fournisseur est une adresse posée par Sednal. Risque jugé négligeable, noté ici.
+* Les booléens stricts (D117) refusent `oui` / `non` écrits en texte : la configuration livrée passe (essai B3) ; une configuration ancienne qui les utilisait sera refusée avec un message clair, c'est voulu.
+* Le tri des noms lus par catégorie (seules les organisations deviennent candidates) et le booléen strict de `inclure_personnes` touchent au traitement des personnes : déjà signalés à Sednal dans D117, non modifiés ici.
+
+Les 36 autres corrections relues n'appellent pas de remarque : chacune a son essai, et les essais passent. **Tests :** `pilote/tests/test_revue_2026_11_14.py` (+1), `test_f15_solution_maison`, `test_f26_web_social` verts.

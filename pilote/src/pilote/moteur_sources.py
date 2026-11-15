@@ -198,7 +198,7 @@ def materialiser(cfg: Config, cible: Path, params: dict[str, Any]) -> Materialis
                 res.jetons[pid] = d.id
             continue
         elif "script" in m:
-            res.scripts.append({"source": d.id, **m["script"]})
+            res.scripts.append({"source": d.id, "cles_noms": list(d.cles), **m["script"]})  # ses propres clés : les seules que le pont lui laisse (D134)
             res.jetons[d.id] = d.id
             continue
         elif "definition" in m:

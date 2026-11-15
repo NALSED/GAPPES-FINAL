@@ -181,3 +181,16 @@ def test_le_tableau_de_bord_recoit_la_table_des_etiquettes_de_prise():
     assert 'ctx.avancer(jetons=' in (racine / "src/pilote/executeur_grappes.py").read_text(encoding="utf-8")
     js = (racine / "static/suite/js/tableau.js").read_text(encoding="utf-8")
     assert "sourceParId((r.avancement?.jetons || {})[pid] || pid)" in js
+
+
+# --- Contre-relecture de D117 (D134) : un programme local garde SA clé, il ne reçoit pas celles des autres sources
+def test_un_programme_local_garde_sa_propre_cle():
+    from pathlib import Path
+
+    from pilote.adaptateurs import programmes
+
+    assert programmes.cles_des_autres({"CLE_A": "1", "CLE_PROGRAMME": "2"}, ["CLE_PROGRAMME"]) == ("CLE_A",)
+    assert programmes.cles_des_autres({"CLE_A": "1"}, None) == ("CLE_A",)
+    racine = Path(__file__).resolve().parents[1]
+    assert '"cles_noms": list(d.cles)' in (racine / "src/pilote/moteur_sources.py").read_text(encoding="utf-8")
+    assert "programmes.cles_des_autres(secrets, sc.get(\"cles_noms\"))" in (racine / "src/pilote/pont/executer.py").read_text(encoding="utf-8")
