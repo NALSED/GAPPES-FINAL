@@ -178,7 +178,7 @@ def test_le_tableau_de_bord_recoit_la_table_des_etiquettes_de_prise():
     from pathlib import Path
 
     racine = Path(__file__).resolve().parents[1]
-    assert 'ctx.avancer(jetons=' in (racine / "src/pilote/executeur_grappes.py").read_text(encoding="utf-8")
+    assert 'ctx.avancer(**suivi.lire(), **a_dire)' in (racine / "src/pilote/executeur_grappes.py").read_text(encoding="utf-8")
     js = (racine / "static/suite/js/tableau.js").read_text(encoding="utf-8")
     assert "sourceParId((r.avancement?.jetons || {})[pid] || pid)" in js
 

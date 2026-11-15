@@ -1003,3 +1003,11 @@ Relecture du diff des cinq commits de D117 (`d73d55b`, `b26d71c`, `92c2fa5`, `75
 * Le tri des noms lus par catégorie (seules les organisations deviennent candidates) et le booléen strict de `inclure_personnes` touchent au traitement des personnes : déjà signalés à Sednal dans D117, non modifiés ici.
 
 Les 36 autres corrections relues n'appellent pas de remarque : chacune a son essai, et les essais passent. **Tests :** `pilote/tests/test_revue_2026_11_14.py` (+1), `test_f15_solution_maison`, `test_f26_web_social` verts.
+
+## D135 — Fin du plan 912 dans cette session : suites complètes, et un défaut de D132 corrigé (15/11/2026)
+
+**Défaut trouvé par la suite complète, corrigé.** D132 écrivait la table étiquette → source dans l'avancement **avant** le lancement du pont : une base occupée ou une panne à cet instant arrêtait la recherche avant qu'elle parte (essai `test_le_suivi_du_pont_tolere_une_base_occupee_et_ne_laisse_pas_d_orphelin`). La table est maintenant dite avec le premier avancement réussi, dans la boucle de suivi qui tolère déjà une base occupée (`executeur_grappes.py`). **Essai adapté :** `test_suite_api.py::test_eteindre_puis_rallumer_une_source_double_role_garde_verifier` partait de « ROR vérifie par défaut » ; depuis D126 la personne coche d'abord (le reste de l'essai est inchangé).
+
+**Suites complètes :** moteur 668 réussis, 4 échecs d'environnement (`nomenklatura` non installable ici) ; pilote hors réseau 732 réussis, 2 échecs d'environnement (`test_f14_sortie` exécuté en root, `test_f09_presse` sans `transformers`, qui affiche désormais le message clair de D132). À repasser sur la machine de momo.
+
+**Bilan du plan 912 :** codés A1 à A7 (A5 sans le retour aux valeurs d'expert), B2, B3, C2 ; B1 préparé, en attente de validation ; C1, C3, C4 non codés (choix, coût, essais réels). Aucun chiffre avant/après n'a pu être mesuré : la référence B1 n'est pas collectée et les archives de mesure ne sont pas dans le dépôt. Ce qui attend Sednal est en tête d'`ETAT.md` et dans `QUESTIONS.md` (Q-B1, Q-A5, Q-A6, Q-B3, Q-C1, Q-C3, Q-C4, Q-D117, Q-SECU).

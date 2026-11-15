@@ -266,7 +266,10 @@ def test_allumer_et_eteindre_ecrivent_dans_reglages(c, cfg):
 # --- 909, point 1.1.c (retour du 09/11/2026) : bug — éteindre puis rallumer une source chercher+verifier
 # perdait « verifier » pour toujours (exclusion mutuelle inventée, jamais demandée).
 def test_eteindre_puis_rallumer_une_source_double_role_garde_verifier(c):
-    assert src(c, "ror")["chercher"] and src(c, "ror")["verifier"]  # par défaut : les deux
+    # A6 (spec 912, D126) : « vérifier » de ROR est éteint par défaut depuis qu'il vérifie réellement ; la personne le coche d'abord
+    assert src(c, "ror")["chercher"] and not src(c, "ror")["verifier"]
+    assert c.post("/api/suite/sources/ror/role/verifier", json={"actif": True}).status_code == 200
+    assert src(c, "ror")["chercher"] and src(c, "ror")["verifier"]  # les deux
     assert c.post("/api/suite/sources/ror/eteindre").status_code == 200
     assert not src(c, "ror")["chercher"] and not src(c, "ror")["verifier"]
     assert c.post("/api/suite/sources/ror/allumer").status_code == 200
