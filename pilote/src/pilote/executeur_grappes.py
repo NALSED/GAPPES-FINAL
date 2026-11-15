@@ -144,6 +144,15 @@ def preparer(cfg: Config, ctx: ContexteRecherche) -> dict[str, Any]:
     return spec
 
 
+def dire_la_coupe(ctx, coupe: dict | None) -> None:
+    """A1 (spec 912) : les noms retirés parce que la liste dépasse le nombre demandé ne disparaissent pas en silence (règle 1). Le nombre
+    réel et les trente premiers noms vont au journal, sur le modèle de `plan_noms_retires`."""
+    if not coupe or not coupe.get("retires"):
+        return
+    ctx.noter("coupe_noms_retires", retires=int(coupe["retires"]), combien=int(coupe.get("combien") or 0), noms=list(coupe.get("noms") or []))
+    ctx.avancer(coupe={"retires": int(coupe["retires"]), "combien": int(coupe.get("combien") or 0)})
+
+
 class Suivi:
     """Lit le fichier d'avancement de grappes (une ligne JSON par événement) et en tire l'état à montrer."""
 
@@ -252,6 +261,7 @@ class ExecuteurGrappes:
         self.faire_le_bilan(ctx, spec, suivi_fichier)
         self.dire_l_emoji(ctx, spec)
         self.dire_le_plan(ctx, spec, res.get("plan"))
+        dire_la_coupe(ctx, res.get("coupe"))
         self.dire_la_verification(ctx, res.get("verifications") or [])
         self.dire_les_alertes_verification(ctx, lignes)
         self.proposer_les_rapprochements(ctx)

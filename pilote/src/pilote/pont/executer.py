@@ -367,12 +367,21 @@ def main(dossier: str) -> int:
             if leve_auto:
                 ligne["faits"]["regle8_leve"] = {"qui": "automatique", "quand": __import__("datetime").datetime.now(__import__("datetime").UTC).isoformat(timespec="seconds")}
             lignes.append(ligne)
-            if len(lignes) >= int(spec.get("combien", 200)):
-                break
-        if plan.get("chemins") is not None:  # le plan de travail : on ne garde que les noms que ses branches laissent passer, AVANT de vérifier (inutile de vérifier ce qu'on retire)
+        # A1 (spec 912) : le plan s'applique à TOUS les noms classés, la coupe au nombre demandé vient APRÈS, et elle est dite au journal.
+        # Avant, la coupe venait d'abord : un filtre ne voyait que les premiers noms et la liste sortait plus courte que demandé.
+        from pilote.pont.coupe import plan_puis_coupe
+
+        avec_plan = plan.get("chemins") is not None  # le plan de travail : on ne garde que les noms que ses branches laissent passer, AVANT de vérifier (inutile de vérifier ce qu'on retire)
+        if avec_plan:
             from pilote import suite_plan, suite_script
 
-            lignes, bilan_plan = suite_plan.appliquer(lignes, plan, lambda code, entree: suite_script.executer(code, entree, sortie_max=None), fiabilites_sources=spec.get("fiabilites_sources"), jetons=spec.get("jetons"))
+        lignes, bilan_plan, coupe = plan_puis_coupe(
+            lignes, int(spec.get("combien", 200)),
+            (lambda toutes: suite_plan.appliquer(toutes, plan, lambda code, entree: suite_script.executer(code, entree, sortie_max=None), fiabilites_sources=spec.get("fiabilites_sources"), jetons=spec.get("jetons"))) if avec_plan else None,
+        )  # fmt: skip
+        if coupe:
+            resultat["coupe"] = coupe
+        if avec_plan:
             resultat["plan"] = {**bilan_plan, "traductions": effets_traduction}
             ia_spec = plan.get("ia")
             if ia_spec:  # Assistant IA (3.8.09) : après les chemins, avant la vérification, sur les noms qui atteignent la tuile
