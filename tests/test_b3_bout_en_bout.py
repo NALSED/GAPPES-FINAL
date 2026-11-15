@@ -1,7 +1,7 @@
 """B3 (spec 912) : une recherche complète avec les fichiers de `config/` TELS QU'ILS SONT LIVRÉS (copiés, jamais modifiés). Les autres
 essais de bout en bout utilisent la configuration du corpus synthétique : un réglage livré qui casserait la chaîne n'était vu par aucun.
-Seul le sujet est ajouté (`grappes/` : trois thèmes neutres inventés du corpus). Aucun réseau : la configuration livrée est en `autonome:
-false`, et l'essai échoue si un appel de recherche part."""
+Seul le sujet est ajouté (`grappes/` : trois thèmes neutres inventés du corpus). La configuration livrée est en `autonome: true` : la
+recherche tente des appels ; l'essai coupe le réseau à la connexion, rien ne sort de la machine."""
 
 import csv
 import hashlib
@@ -42,18 +42,23 @@ def monde(tmp_path_factory):
     for eco in ("x", "telegram", "instagram", "web"):
         ingest(db, t / "corpus" / eco, eco, cfg)
     db.close()
+    # La configuration livrée est en `autonome: true` : la recherche TENTE des appels (moteurs, flux). L'essai coupe le réseau au plus
+    # bas (la connexion elle-même) : rien ne sort de la machine, et la recherche doit aller au bout quand même.
+    import socket
+
+    tentees: list = []
+
+    def coupe(self, adresse, *a, **k):
+        tentees.append(adresse)
+        raise OSError("réseau coupé pour l'essai de bout en bout")
+
     mp = pytest.MonkeyPatch()
-    import urllib.request
-
-    def interdit(*a, **k):
-        raise AssertionError("appel réseau pendant l'essai de bout en bout")
-
-    mp.setattr(urllib.request, "urlopen", interdit)
+    mp.setattr(socket.socket, "connect", coupe)
     try:
         rapport = run_cycle(conf, t / "d" / "grappes.db", t / "sorties", t / "d", now=cs.BASE + timedelta(days=1))
     finally:
         mp.undo()
-    return {"t": t, "conf": conf, "avant": avant, "attendu": attendu, "rapport": rapport}
+    return {"t": t, "conf": conf, "avant": avant, "attendu": attendu, "rapport": rapport, "tentees": tentees}
 
 
 def _lignes(p: Path, delim=","):
@@ -65,8 +70,9 @@ def test_la_configuration_livree_est_utilisee_telle_quelle(monde):
     assert _empreinte(monde["conf"]) == monde["avant"]  # la recherche n'a rien réécrit dans les réglages
 
 
-def test_la_recherche_va_au_bout(monde):
+def test_la_recherche_va_au_bout_meme_reseau_coupe(monde):
     assert monde["rapport"].status == OK
+    assert monde["tentees"]  # la configuration livrée lance bien des appels : ils échouent ici sans arrêter la recherche
     assert (monde["t"] / "sorties" / "resultat.csv").exists()
 
 
