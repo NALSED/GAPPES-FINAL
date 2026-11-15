@@ -877,3 +877,18 @@ Cinq points de la spec `912` (audit `910` § 3.3, § 3.4, § 4), aucun ne change
 * **Date du corpus de `tests/test_cycle.py`** : déjà rendue indépendante de la date par D117 ; vérifié.
 
 Chiffres avant/après : aucun, les archives de mesure (`donnees/autocal/`) ne sont pas dans le dépôt. Les anciennes mesures restent telles qu'écrites ; toute nouvelle mesure utilisera R fixe. **Tests :** `tests/test_b2_mesure.py` (3) ; moteur 642 verts, 4 échecs d'environnement connus (`nomenklatura` non installable ici).
+
+## D121 — A2 : une confirmation exige le nom ET un second champ concordant (15/11/2026)
+
+**Avant :** dès qu'une source de vérification interrogée sur le nom rendait ce nom, la fiche portait « confirmation » ; si la source était de première main, la fiabilité affichée du nom était relevée. Un simple homonyme (même nom, autre ville) suffisait.
+
+**Après** (`pilote/src/pilote/pont/verification.py`) : pour une vérification faite **sur le nom**, la fiche et la réponse de la source sont comparées sur la ville, le numéro officiel et le site.
+
+* au moins un de ces champs concorde : `confirmation` (seul signal qui relève `faits.fiabilite_effective`, 909 § 1.2.d) ;
+* aucun ne concorde (absent ou différent) : `meme_nom`, affiché « Même nom seulement (non confirmé) », **sans effet** sur la fiabilité ;
+* les accords et désaccords sont gardés dans la vérification (`champs`) et affichés dans la fiche (« concorde : ville », « diffère : ville ») ;
+* parmi plusieurs homonymes rendus par la source, celui qui concorde est retenu ; une alerte reste une alerte, même sur le nom seul (prudence inchangée).
+
+**Méthode existante réutilisée :** `rapprochements.comparer()` (accord / désaccord / absence, celle de l'onglet Tri) et `lancement.nom_de_domaine()` pour comparer deux sites ; aucune règle de comparaison nouvelle. Le calcul de la fiabilité effective est déplacé tel quel d'`executer.py` vers `verification.fiabilite_effective()` pour être testable.
+
+**Limites dites :** (1) une vérification faite sur l'adresse du site (Wayback, etc.) reste une `confirmation` : le site est la clé interrogée ; (2) le « numéro » rendu par une vérification est souvent l'adresse de la preuve : une adresse n'est jamais comparée à un numéro officiel ; (3) les recherches déjà enregistrées gardent leurs anciennes mentions ; (4) la comparaison de ville est exacte (casse et espaces près) : « Saint-Malo » et « St Malo » diffèrent, ce qui donne `meme_nom`, donc l'erreur va du côté prudent. **Effet attendu :** moins de fiabilités relevées à tort ; pas de chiffre avant/après (aucune archive de recherche réelle ici). Règle n° 8 non touchée. **Tests :** `pilote/tests/test_a2_confirmation.py` (8) ; `test_f13_tri`, `test_f16_verification`, `test_f17_revue`, `test_suite_tri`, `test_f19` verts.

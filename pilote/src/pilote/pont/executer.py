@@ -384,7 +384,7 @@ def main(dossier: str) -> int:
                 else:  # arret_local : arrêt demandé ou temps écoulé ; la limite d'appels ne compte pas (l'agent n'est pas une source)
                     resultat["plan"].update(suite_ia.appliquer_lignes([lignes[k] for k in bilan_plan.get("ia", [])], operation, ia_spec,
                                                                      signaler=avancement.signaler, arreter=arret_local))  # fmt: skip
-        from pilote.pont.verification import verifier_candidats
+        from pilote.pont.verification import fiabilite_effective, verifier_candidats
 
         # la vérification des candidats appartient à l'étape « vérification » : la jauge doit couvrir le travail qu'elle annonce.
         bilans = verifier_candidats(lignes, spec, secrets, doit_s_arreter, limite_source, avancement.signaler, arret_local)
@@ -393,17 +393,8 @@ def main(dossier: str) -> int:
         # seule source de recherche — jusqu'ici, `faits.verifications` restait un simple affichage, sans
         # conséquence automatique. Calculé APRÈS la vérification (ses résultats n'existent pas avant), jamais
         # en reprenant l'ordre Filtre/vérification (déjà voulu ainsi : inutile de vérifier ce que Filtre retire).
-        mains = spec.get("mains_sources") or {}
-        fiabilites_v = spec.get("fiabilites_sources") or {}
-        for ligne in lignes:
-            meilleure = None
-            for v in (ligne.get("faits") or {}).get("verifications") or []:
-                if v.get("signal") == "confirmation" and mains.get(v.get("source"), "") == "premiere":
-                    f = fiabilites_v.get(v.get("source"), "F")
-                    if meilleure is None or f < meilleure:
-                        meilleure = f
-            if meilleure is not None:
-                ligne.setdefault("faits", {})["fiabilite_effective"] = meilleure
+        # A2 (spec 912) : seule une confirmation stricte (nom ET un autre champ concordant) compte ; voir `verification.fiabilite_effective`.
+        fiabilite_effective(lignes, spec)
         avancement.signaler("etape", etape="sortie")
         Path("candidats.json").write_text(json.dumps(lignes, ensure_ascii=False, indent=1), encoding="utf-8")
         resultat["verifications"] = bilans

@@ -5,6 +5,40 @@ from __future__ import annotations
 
 import time
 
+CHAMPS_DE_CONCORDANCE = ("ville", "numero", "site")  # A2 (spec 912) : ce qui, en plus du nom, fait une confirmation
+
+
+def concordance(ligne: dict, rendu: dict) -> dict[str, str]:
+    """Compare la fiche et ce que la source a rendu, champ par champ (accord / desaccord / absence), avec la comparaison de l'onglet Tri
+    (`rapprochements.comparer`) : aucune seconde règle. Un site se compare par son nom de domaine ; le « numero » d'une vérification est
+    souvent l'adresse de la preuve (une capture, une fiche en ligne) : une adresse n'est pas un numéro officiel, elle ne se compare pas."""
+    from pilote.lancement import nom_de_domaine
+    from pilote.rapprochements import comparer
+
+    numero = str(rendu.get("numero") or "")
+    paires = {
+        "ville": (str(ligne.get("ville") or ""), str(rendu.get("ville") or "")),
+        "numero": (str(ligne.get("numero_officiel") or ""), "" if numero.lower().startswith(("http://", "https://")) else numero),
+        "site": (nom_de_domaine(str(ligne.get("site") or "")), nom_de_domaine(str(rendu.get("site") or ""))),
+    }
+    return {champ: comparer(champ, *paires[champ]) for champ in CHAMPS_DE_CONCORDANCE}
+
+
+def fiabilite_effective(lignes: list[dict], spec: dict) -> None:
+    """909 § 1.2.d : une CONFIRMATION par une source de première main relève la fiabilité effective du candidat. A2 (spec 912) : seule une
+    confirmation au sens strict compte (le nom et un autre champ concordent) ; un « meme_nom » s'affiche dans la fiche, sans effet."""
+    mains = spec.get("mains_sources") or {}
+    fiabilites = spec.get("fiabilites_sources") or {}
+    for ligne in lignes:
+        meilleure = None
+        for v in (ligne.get("faits") or {}).get("verifications") or []:
+            if v.get("signal") == "confirmation" and mains.get(v.get("source"), "") == "premiere":
+                f = fiabilites.get(v.get("source"), "F")
+                if meilleure is None or f < meilleure:
+                    meilleure = f
+        if meilleure is not None:
+            ligne.setdefault("faits", {})["fiabilite_effective"] = meilleure
+
 
 def verifier_candidats(lignes: list[dict], spec: dict, secrets: dict[str, str], doit_s_arreter, limite_source: float, signaler, arret_local=None) -> list[dict]:
     """Appelle chaque source « vérifier » sur chaque candidat à vérifier, APRÈS le classement. Une vérification ne trouve rien et ne compte
@@ -66,9 +100,22 @@ def verifier_candidats(lignes: list[dict], spec: dict, secrets: dict[str, str], 
                     ligne.setdefault("faits", {}).setdefault("enrichissements", []).append({"source": source, "origine": str(trouves[0].get("origine", "")), "champs": champs})
             elif trouves:
                 faits_ok += 1
-                retenu = next((t for t in trouves if t.get("signal") == "alerte"), trouves[0])  # une alerte n'est jamais masquée par un homonyme rangé devant elle
+                retenu = next((t for t in trouves if t.get("signal") == "alerte"), None)  # une alerte n'est jamais masquée par un homonyme rangé devant elle
+                fait = {}
+                if retenu is None and sur_le_nom:
+                    # A2 (spec 912) : la source a rendu le NOM. Ce n'est une confirmation que si un autre champ concorde (ville, numéro officiel ou
+                    # site) ; sinon c'est « meme_nom » (un homonyme possible), affiché avec ses accords et désaccords, sans effet sur la fiabilité.
+                    etats = [concordance(ligne, t) for t in trouves]
+                    i = next((k for k, e in enumerate(etats) if "accord" in e.values()), 0)  # parmi plusieurs homonymes, celui qui concorde
+                    retenu, fait = trouves[i], {"champs": etats[i]}
+                    signal = "confirmation" if "accord" in etats[i].values() else "meme_nom"
+                    if str(retenu.get("signal") or "confirmation") != "confirmation":  # « information » et autres signaux propres à la source : gardés
+                        signal = str(retenu["signal"])
+                else:
+                    retenu = retenu or trouves[0]  # vérification sur l'adresse du site : la clé interrogée EST le second champ
+                    signal = str(retenu.get("signal") or "confirmation")
                 ligne.setdefault("faits", {}).setdefault("verifications", []).append(
-                    {"source": source, "origine": str(retenu.get("origine", "")), "preuve": str(retenu.get("numero", "")), "signal": str(retenu.get("signal") or "confirmation")})  # fmt: skip
+                    {"source": source, "origine": str(retenu.get("origine", "")), "preuve": str(retenu.get("numero", "")), "signal": signal, **fait})
         # Aucun nom examiné = la source n'a pas été interrogée : ce n'est pas une réponse. Sans cela, le « ok » levait sa pause et effaçait une panne de la phase de recherche.
         if not hors_service and examines:
             signaler("source_ok", prise=source)

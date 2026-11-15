@@ -299,7 +299,8 @@ def fiche(cfg: Config, fabrique: sessionmaker[Session], rid: str, cid: int) -> d
         eco, _, ident = ref.partition(":")
         detail = f"article « {ident.split('/', 1)[-1]} »" if eco == "wikipedia" else ident
         sources.append({"nom": SOURCES_ECOSYSTEMES.get(eco, eco), "detail": detail})
-    verifications = [{"nom": nom_source(v.get("source", "")), "origine": str(v.get("origine", "")), "preuve": str(v.get("preuve", "")), "signal": str(v.get("signal") or "confirmation")}
+    verifications = [{"nom": nom_source(v.get("source", "")), "origine": str(v.get("origine", "")), "preuve": str(v.get("preuve", "")), "signal": str(v.get("signal") or "confirmation"),
+                      **({"champs": {k: str(e) for k, e in v["champs"].items()}} if isinstance(v.get("champs"), dict) and v["champs"] else {})}  # A2 : accord / desaccord / absence par champ, quand la vérification s'est faite sur le nom
                      for v in (c.faits or {}).get("verifications", []) if isinstance(v, dict)]  # ce que les sources « vérifier » ont rendu (ex. capture Wayback)
     enrichissements = [{"nom": nom_source(v.get("source", "")), "origine": str(v.get("origine", "")), "champs": v.get("champs") or {}}
                        for v in (c.faits or {}).get("enrichissements", []) if isinstance(v, dict)]  # ce que les sources « enrichir » ont AJOUTÉ à côté de la fiche, sans l'écraser
