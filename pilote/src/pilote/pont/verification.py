@@ -101,6 +101,12 @@ def verifier_candidats(lignes: list[dict], spec: dict, secrets: dict[str, str], 
                 signaler("source_echec", prise=source, raison=hors_service)
                 continue
             examines += 1
+            if sur_le_nom and (v.get("parametres") or {}).get("correspondance_exacte"):
+                # A6 (spec 912) : un registre interrogé par mots rend aussi des noms approchants. Seul le nom exactement rendu compte (outil
+                # existant : `api_json._exactes`, casse, accents et ponctuation à part ; un alias déclaré par le registre est admis).
+                from pilote.adaptateurs.api_json import _exactes
+
+                trouves = _exactes([t for t in trouves if t.get("nom")], {"correspondance_exacte": True}, {"nom": ligne["nom"]})
             if trouves and enrichit:
                 faits_ok += 1
                 champs = {k: trouves[0][k] for k in ("ville", "site", "numero", "pays", "genre", "coordonnees", "detail") if trouves[0].get(k) and trouves[0][k] != ligne.get(k)}

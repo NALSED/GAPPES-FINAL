@@ -924,3 +924,13 @@ Chiffres avant/après : aucun, les archives de mesure (`donnees/autocal/`) ne so
 * **`config/lr.yaml`** : avertissement en tête, les valeurs sont **non mesurées**. Le retour aux valeurs d'expert d'origine n'est **pas fait** : elles ne sont pas dans ce dépôt (Q-A5 dans `QUESTIONS.md`). Rien n'a été inventé.
 
 **Effet :** le classement des candidats change (deux signaux agissent autrement). Aucun chiffre avant/après : la mesure demande la référence B1, en attente. Le poids `ecosysteme` (1,149) est un réglage fait quand le signal n'agissait pas : à revoir avec Q-A5. **Tests :** `tests/test_a5_indice.py` (5) ; moteur 656 verts (4 échecs d'environnement connus).
+
+## D126 — A6 : cinq registres de première main savent vérifier par le nom (15/11/2026)
+
+**Avant :** `recherche-entreprises`, `registre-associations`, `companies-house`, `gleif` et `ror` déclaraient le rôle « vérifier » sans clé de vérification : ils n'étaient jamais appelés sur un nom trouvé. **Après :** chacun déclare `verifie_sur: nom` et `correspondance_exacte: true`.
+
+**Garde-fou ajouté** (`pont/verification.py`) : ces registres cherchent par mots et rendent aussi des noms approchants. En vérification par le nom, quand la source déclare `correspondance_exacte`, seules les réponses qui portent **exactement** le nom de la fiche sont gardées (outil existant : `adaptateurs/api_json._exactes`, casse, accents et ponctuation à part ; un alias déclaré par le registre est admis). Sans cela, un autre nom de la même ville aurait donné une confirmation à tort (constaté au premier essai, sur les cinq exemples). Le contrôle A2 (D121) s'applique ensuite : confirmation seulement si la ville, le numéro officiel ou le site concorde.
+
+**Éteints par défaut :** les quatre registres gratuits étaient cochés « vérifier » par défaut (case sans effet jusqu'ici). Les laisser cochés changeait toutes les recherches (bilan de 2 à 6 sources dans les essais, de l'ordre de 1 200 appels de plus pour 200 noms) sans aucun essai réel : la case par défaut passe à non, la personne coche dans Réglages ou pose la source sur son plan (Q-A6 dans `QUESTIONS.md`). Aucune recherche ne change donc sans un choix. **Non branchés :** `pappers`, `opencorporates` (payants : plafond et test réel de 909 § 1.2.b d'abord).
+
+**Limite dite :** le nom complet de l'annuaire des entreprises porte parfois le sigle entre parenthèses ; il n'est alors pas « exactement » le nom de la fiche et la source ne confirme pas (l'erreur va du côté prudent). **Tests :** `pilote/tests/test_a6_registres.py` (12), une source à la fois sur son exemple de réponse archivé ; `test_f16`, `test_f17`, `test_f11`, `test_f12` verts.

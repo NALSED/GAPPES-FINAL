@@ -36,7 +36,7 @@ cout:
 confiance: 0.9
 defaut:
   chercher: true
-  verifier: true
+  verifier: false  # A6 (spec 912) : la source SAIT vérifier par le nom depuis le 15/11/2026 ; éteinte par défaut tant que le test réel n'est pas fait (QUESTIONS.md Q-A6), à cocher dans Réglages
 mode:
   en_ligne: true
   local: false
@@ -45,4 +45,7 @@ verifie_le: '2026-10-13'
 moteur:
   adaptateur: recherche_entreprises
   parametres:
+    correspondance_exacte: true  # A6 (spec 912) : en vérification, seul le nom exactement rendu compte
     filtre: association
+# A6 (spec 912) : ce registre de première main vérifie chaque nom trouvé (nom exact, puis contrôle A2 : un autre champ doit concorder).
+verifie_sur: nom

@@ -8,8 +8,24 @@ from fastapi.testclient import TestClient
 
 from pilote import adaptateurs
 from pilote.app import creer_app
-from pilote.moteur_sources import choisies, materialiser, verificatrices
+from pilote.moteur_sources import choisies
+from pilote.moteur_sources import materialiser as _materialiser
+from pilote.moteur_sources import verificatrices as _verificatrices
 from pilote.pont.verification import verifier_candidats
+
+# A6 (spec 912, 15/11/2026) : ces registres de première main, cochés « vérifier » par défaut, vérifient désormais réellement par le nom
+# (`pilote/tests/test_a6_registres.py`). Les essais de cette fiche portent sur les AUTRES sources : ils les regardent sans ces registres.
+REGISTRES_A6 = {"recherche-entreprises", "registre-associations", "companies-house", "gleif", "ror"}
+
+
+def verificatrices(cfg, params):
+    return [d for d in _verificatrices(cfg, params) if d.id not in REGISTRES_A6]
+
+
+def materialiser(*a, **k):
+    res = _materialiser(*a, **k)
+    res.verificateurs[:] = [v for v in res.verificateurs if v["source"] not in REGISTRES_A6]
+    return res
 
 
 def en_ligne(url: str) -> bool:
