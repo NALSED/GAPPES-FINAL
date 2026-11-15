@@ -1,6 +1,6 @@
 # ETAT — grappes
 
-Phase en cours : aucune. Revue totale du code terminée (D112 à D116), puis relecture intégrale demandée par Sednal (D117, 14 et 15/11/2026) ; décisions en attente de Sednal listées dans D116 et D117.
+Phase en cours : plan 912 demandé par Sednal le 15/11/2026 (D118), ordre strict B1, B2, A2, A1, fait directement sur le dépôt (hors momo). **Étape en cours : B1** (référence indépendante de Wikidata). Fait : rien encore. Prochain geste exact : (1) `src/grappes/autocal/reference.py` : construire une `Reference` depuis un CSV de liste officielle (`autocal/listes_officielles/<sujet>.csv`), tests d'abord dans `tests/test_b1_reference_officielle.py` ; (2) `juger.py` : sans classe Wikidata, aucun appel Wikidata ; (3) écrire `autocal/B1_sujets_proposes.md` (20 à 30 sujets + coût) et l'envoyer à Sednal, AUCUNE collecte avant sa validation. Ensuite B2, puis A2, puis A1. Règle 8 et personnes : ne pas toucher.
 
 909 (« Vérifier et enrichir ») clos pour tout ce qui est câblable sans Sednal ni infra manquante : §1.1 fait
 (D104), §2.1 complet (a/b/c, D104+D105), 1.2 (a/b/c/d) faits (D106/D92/D108/D107), 1.2 (e/f) déclinés avec

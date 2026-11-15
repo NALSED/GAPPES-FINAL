@@ -856,3 +856,7 @@ Faite hors de momo, directement sur le dépôt, à la demande de Sednal. Règle 
 **Non relu ligne à ligne :** quelques scripts de mesure d'`autocal`, `installation.js`, et l'ancienne interface (`static/*.js`), contrôlés seulement sur l'échappement des textes affichés et les appels au serveur.
 
 **Vérification :** moteur 633 tests verts (4 échecs d'environnement : `nomenklatura` non installable ici) ; pilote 692 tests verts, 2 échecs dus au seul environnement de relecture (exécution en root pour `test_f14_sortie`, `transformers` absent pour `test_f09_presse`) : à repasser sur la machine de momo.
+
+## D118 — Plan 912 lancé par Sednal : B1, B2, A2, A1 dans cet ordre (15/11/2026)
+
+Sednal a demandé le 15/11/2026 d'appliquer la spec `912` dans l'ordre strict B1, B2, A2, A1 : cette demande vaut validation de ces quatre points (la spec disait « rien à coder tant qu'un point n'est pas validé »). Travail fait directement sur le dépôt, hors momo : la règle de routage vers le compte gratuit ne s'applique pas à cette session. Règle n° 8 et traitement des personnes : non touchés. Suivi : la ligne « Phase en cours » d'`ETAT.md` dit toujours le prochain geste exact ; un commit poussé par sous-étape. Les sous-décisions de chaque étape sont ajoutées ci-dessous (D119 et suivantes).
