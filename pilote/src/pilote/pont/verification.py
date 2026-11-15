@@ -24,6 +24,14 @@ def concordance(ligne: dict, rendu: dict) -> dict[str, str]:
     return {champ: comparer(champ, *paires[champ]) for champ in CHAMPS_DE_CONCORDANCE}
 
 
+def relever_niveaux(lignes: list[dict]) -> None:
+    """A3 (spec 912) : une confirmation au sens de A2 (le nom ET un autre champ concordent) rend le nom « sur ». Rien ne redescend."""
+    for ligne in lignes:
+        faits = ligne.get("faits") or {}
+        if faits.get("niveau") == "a_verifier" and any(v.get("signal") == "confirmation" for v in faits.get("verifications") or []):
+            faits["niveau"] = "sur"
+
+
 def fiabilite_effective(lignes: list[dict], spec: dict) -> None:
     """909 § 1.2.d : une CONFIRMATION par une source de première main relève la fiabilité effective du candidat. A2 (spec 912) : seule une
     confirmation au sens strict compte (le nom et un autre champ concordent) ; un « meme_nom » s'affiche dans la fiche, sans effet."""

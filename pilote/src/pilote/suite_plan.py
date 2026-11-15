@@ -23,6 +23,7 @@ from pilote.refus import ConfigRefusee
 CHAMPS = {
     "nom": "nom", "ville": "ville", "pays": "pays", "genre": "genre_de_chose", "categorie": "genre_de_chose", "type": "genre_de_chose",
     "origine": "genre_source", "site": "site", "numero": "numero_officiel", "numero officiel": "numero_officiel", "fonction": "fonction",
+    "niveau": "niveau",  # A3 (spec 912) : « sûr » ou « à vérifier », tel qu'il est connu AVANT la vérification (le plan passe avant elle)
 }  # fmt: skip
 LANGUES = {
     "francais": "fr", "anglais": "en", "allemand": "de", "espagnol": "es", "italien": "it", "neerlandais": "nl", "portugais": "pt", "polonais": "pl", "russe": "ru",
@@ -623,6 +624,8 @@ def _requete_avancee(i, node, opts, nodes, par_source, pred, requetes, appliques
 def valeur(ligne: dict[str, Any], champ: str) -> str:
     if champ == "fonction":
         return str((ligne.get("faits") or {}).get("fonction") or "")
+    if champ == "niveau":
+        return {"sur": "sûr", "a_verifier": "à vérifier"}.get(str((ligne.get("faits") or {}).get("niveau") or ""), "")
     return str(ligne.get(champ) or "")
 
 

@@ -350,7 +350,8 @@
       var zone=el("dtail");
       if(sel!==mon||!zone)return;
       zone.innerHTML=
-        '<div class="dkv"><span class="k">D’où il vient</span><span class="v" style="color:'+COULEUR[f.origine]+'">'+esc(f.origine_phrase)+"</span></div>"
+        '<div class="dkv"><span class="k">D’où il vient</span><span class="v" style="color:'+COULEUR[f.origine]+'">'+esc(f.origine_phrase)+"</span></div>"+
+        (f.niveau?'<div class="dkv"><span class="k">Niveau</span><span class="v">'+(f.niveau==="sur"?"Sûr":"À vérifier")+"</span></div>":"")
         +'<div class="dkv"><span class="k">Trouvé à</span><span class="v">'+plur(f.endroits,"endroit")+"</span></div>"
         +(f.genre_de_chose?'<div class="dkv"><span class="k">Genre</span><span class="v">'+esc(f.genre_de_chose)+"</span></div>":"")
         +(f.regle8_ecartee&&!f.regle8_leve?'<div class="dnote">Écartée du rapprochement par la règle n° 8 (compte au nom d’une personne physique). Si c’est en réalité une organisation, <button class="btn" id="personne-morale" style="padding:2px 8px;font-size:11.5px">marquez-la comme personne morale</button>.</div>':"")

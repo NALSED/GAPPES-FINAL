@@ -80,6 +80,13 @@ def endroits_comptes(ps: list[dict[str, str]]) -> int:
     return max(1, len(premiers) if premiers else len({p["lieu"] for p in ps}))
 
 
+def niveau_de(ps: list[dict[str, str]], nb_endroits: int) -> str:
+    """A3 (spec 912) : « sur » ou « a_verifier ». Un fait, pas un score. Sûr si le nom est dans un registre de première main, ou s'il a
+    été trouvé à deux endroits indépendants au moins (`endroits_comptes`, sans double compte). La troisième voie, une confirmation au
+    sens de A2, n'est connue qu'après la vérification : `verification.relever_niveaux` la pose alors. Tout le reste est à vérifier."""
+    return "sur" if nb_endroits >= 2 or any(p["main"] == "premiere" for p in ps) else "a_verifier"
+
+
 def origine_de(ps: list[dict[str, str]]) -> str:
     """La preuve la plus solide (l'ordre est celui de la maquette : du solide au fragile)."""
     return next((o for o in ORIGINES if any(p["classe"] == o for p in ps)), "web")
@@ -131,6 +138,6 @@ def faits_candidat(c: Any, decouverts_du_nom: list[Any], site_key, pays: str, pr
         "relations": relations,
         # `regle8_personne` : le constat posé par `pilote.regle8.est_personne` au moment de la collecte. Il reste vrai même quand un levier
         # a laissé le genre déclaré par la source, et c'est lui que lisent les garde-fous qu'un levier n'ouvre pas (sortie FollowTheMoney).
-        "faits": {"ref": c.ref, "preuves": ps, **({"regle8_personne": True} if any(_liens(decouverts_du_nom, "regle8")) else {}),
+        "faits": {"ref": c.ref, "preuves": ps, "niveau": niveau_de(ps, endroits_comptes(ps)), **({"regle8_personne": True} if any(_liens(decouverts_du_nom, "regle8")) else {}),
                   **({"coordonnees": coord} if coord else {}), **({"fonction": fonction} if fonction else {}), **({"alias": alias} if alias else {})},
     }  # fmt: skip

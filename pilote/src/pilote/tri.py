@@ -305,7 +305,7 @@ def fiche(cfg: Config, fabrique: sessionmaker[Session], rid: str, cid: int) -> d
     enrichissements = [{"nom": nom_source(v.get("source", "")), "origine": str(v.get("origine", "")), "champs": v.get("champs") or {}}
                        for v in (c.faits or {}).get("enrichissements", []) if isinstance(v, dict)]  # ce que les sources « enrichir » ont AJOUTÉ à côté de la fiche, sans l'écraser
     return {
-        "id": c.id, "nom": c.nom, "verifications": verifications, "enrichissements": enrichissements, "origine": c.genre_source, "origine_phrase": cl.ORIGINE_LIBELLE.get(c.genre_source, ""), "endroits": c.nb_endroits,
+        "id": c.id, "nom": c.nom, "verifications": verifications, "enrichissements": enrichissements, "niveau": str((c.faits or {}).get("niveau") or ""), "origine": c.genre_source, "origine_phrase": cl.ORIGINE_LIBELLE.get(c.genre_source, ""), "endroits": c.nb_endroits,
         "ville": c.ville, "pays": c.pays, "site": c.site, "numero_officiel": c.numero_officiel, "genre_de_chose": c.genre_de_chose,
         "alias": list((c.faits or {}).get("alias") or []),  # les autres noms que les sources déclarent (sigle, acronyme) : une preuve montrée, jamais une identité
         # Règle 8 : ce que la collecte a constaté, et la levée éventuelle. L'écran a besoin des deux pour proposer le bon geste.

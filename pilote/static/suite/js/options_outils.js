@@ -171,7 +171,7 @@ function rendreOptionsTraduction(n, refresh, guarder) {
 
 // 3.8.03 (Condition « si ») et 3.8.06 (Filtre, même moteur) : plusieurs lignes {champ, comparateur, valeur},
 // combinées par et/ou. Stocké dans les options comme « Champ 1 »/« Comparateur 1 »/« Valeur 1 », « Champ 2 »…
-const CHAMPS_CONDITION = ["nom", "ville", "pays", "genre", "origine", "site", "numéro", "fonction"];
+const CHAMPS_CONDITION = ["nom", "ville", "pays", "genre", "origine", "site", "numéro", "fonction", "niveau"];
 const CHAMPS_FILTRE_SEULEMENT = ["Nombre de sources", "Fiabilité minimale"];
 const COMPARATEURS = ["est égal à", "est différent de", "contient", "ne contient pas", "commence par", "finit par", "est vide", "n'est pas vide"];
 // Synonymes acceptés par le moteur (suite_plan.CHAMPS) mais pas affichés comme tels : les modèles livrés « si »/« filtre »

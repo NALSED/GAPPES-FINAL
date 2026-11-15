@@ -14,7 +14,7 @@ import yaml
 from grappes.clustering.export import safe_cell
 from grappes.config import ConfigError, booleen
 
-COLONNES = ("nom", "ville", "pays", "score", "bande", "calibre", "sources", "registres", "statut")
+COLONNES = ("nom", "ville", "pays", "score", "bande", "calibre", "sources", "registres", "statut", "niveau")
 
 
 @dataclass(slots=True)
@@ -28,6 +28,7 @@ class LigneSortie:
     sources: list[str] = field(default_factory=list)
     registres: list[str] = field(default_factory=list)
     statut: str = ""
+    niveau: str = ""  # A3 (spec 912) : « sûr » | « à vérifier » ; un fait, pas un score
 
     def valeur(self, colonne: str) -> str:
         v = getattr(self, colonne)

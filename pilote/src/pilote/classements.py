@@ -40,6 +40,7 @@ ORDRES_NOMS = {"alphabetique": "par ordre alphabétique", "endroits": "les plus 
 # Les faits sur lesquels un classement peut grouper : identifiant -> phrase en français courant.
 FAITS = {
     "origine": "d'où vient le nom",
+    "niveau": "le niveau : sûr ou à vérifier",
     "endroits": "à combien d'endroits il a été trouvé",
     "trouve_par": "ce qui l'a trouvé",
     "genre_de_chose": "le genre de chose",
@@ -239,6 +240,9 @@ def valeur(fait: str, l: Ligne, nom_source) -> tuple[str, str, Any]:
     """(clé du paquet, phrase du paquet, rang) pour un fait."""
     if fait == "origine":
         return l.origine, ORIGINE_LIBELLE.get(l.origine, l.origine), ORIGINE_RANG.get(l.origine, 9)
+    if fait == "niveau":  # A3 (spec 912) : un fait posé à la recherche, jamais recalculé ici
+        n = str((l.faits or {}).get("niveau") or "")
+        return {"sur": ("sur", "sûrs", 0), "a_verifier": ("a_verifier", "à vérifier", 1)}.get(n, ("", "niveau non calculé (recherche ancienne)", 2))
     if fait == "endroits":
         return ("plusieurs", "à plusieurs endroits", 0) if l.endroits > 1 else ("un", "à un seul endroit", 1)
     if fait == "trouve_par":

@@ -393,7 +393,7 @@ def main(dossier: str) -> int:
                 else:  # arret_local : arrêt demandé ou temps écoulé ; la limite d'appels ne compte pas (l'agent n'est pas une source)
                     resultat["plan"].update(suite_ia.appliquer_lignes([lignes[k] for k in bilan_plan.get("ia", [])], operation, ia_spec,
                                                                      signaler=avancement.signaler, arreter=arret_local))  # fmt: skip
-        from pilote.pont.verification import fiabilite_effective, verifier_candidats
+        from pilote.pont.verification import fiabilite_effective, relever_niveaux, verifier_candidats
 
         # la vérification des candidats appartient à l'étape « vérification » : la jauge doit couvrir le travail qu'elle annonce.
         bilans = verifier_candidats(lignes, spec, secrets, doit_s_arreter, limite_source, avancement.signaler, arret_local)
@@ -404,6 +404,7 @@ def main(dossier: str) -> int:
         # en reprenant l'ordre Filtre/vérification (déjà voulu ainsi : inutile de vérifier ce que Filtre retire).
         # A2 (spec 912) : seule une confirmation stricte (nom ET un autre champ concordant) compte ; voir `verification.fiabilite_effective`.
         fiabilite_effective(lignes, spec)
+        relever_niveaux(lignes)  # A3 (spec 912) : une confirmation stricte rend le nom « sûr »
         avancement.signaler("etape", etape="sortie")
         Path("candidats.json").write_text(json.dumps(lignes, ensure_ascii=False, indent=1), encoding="utf-8")
         resultat["verifications"] = bilans

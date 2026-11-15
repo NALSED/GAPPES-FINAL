@@ -116,13 +116,54 @@ def classer(ctx: Contexte, cfg: ClassementConfig, lr: vr.LrConfig, cal: Calibreu
     return sorted(out, key=lambda t: (-t[1], t[0].ref))
 
 
+def niveau_de(c: Candidat) -> str:
+    """A3 (spec 912) : « sûr » si le nom est dans un registre de première main (tout registre sauf l'encyclopédie Wikidata, qui
+    répète), ou s'il a été trouvé à deux endroits indépendants au moins : nommé par deux éditeurs distincts (`ner_sites`) ou cité par
+    deux éditeurs distincts (`editeurs`). Le site de l'entité elle-même n'est pas un endroit indépendant. Sinon « à vérifier »."""
+    if c.registres - {"wikidata"} or max(len(c.ner_sites), c.editeurs) >= 2:
+        return "sûr"
+    return "à vérifier"
+
+
+A_VERIFIER = "resultat_a_verifier.csv"
+
+
+def ecrire_sorties(ls: list[LigneSortie], profils: list, out_dir: str | Path, remplace_resultat: bool) -> list[Path]:
+    """Écrit les profils de sortie. En mode extraction (`remplace_resultat`), A3 (spec 912) : `resultat.csv` et sa variante
+    `tsites` ne reçoivent que les noms sûrs ; les autres vont dans `resultat_a_verifier.csv` (nom ; ville ; sources), sur le modèle
+    de `resultat_a_trancher.csv`. Les autres profils (le fichier complet) gardent tout, avec la colonne `niveau`."""
+    import csv
+
+    from grappes.clustering.export import safe_cell
+    from grappes.sortie import ecrire as ecrire_profils
+
+    out = Path(out_dir)
+    if not remplace_resultat:
+        return ecrire_profils(ls, profils, out, ignorer=frozenset({"resultat", "tsites"}))
+    stricts = [p for p in profils if p.id in ("resultat", "tsites")]
+    chemins = ecrire_profils([x for x in ls if x.niveau == "sûr"], stricts, out)
+    chemins += ecrire_profils(ls, [p for p in profils if p.id not in ("resultat", "tsites")], out)
+    reste = [x for x in ls if x.niveau != "sûr"]
+    cible = out / A_VERIFIER
+    if reste:
+        with cible.open("w", encoding="utf-8", newline="") as f:
+            w = csv.writer(f, delimiter=";", lineterminator="\n")
+            w.writerow(["nom", "ville", "sources"])
+            for x in reste:
+                w.writerow([safe_cell(x.valeur(c)) for c in ("nom", "ville", "sources")])
+        chemins.append(cible)
+    else:
+        cible.unlink(missing_ok=True)  # pas de fichier périmé
+    return chemins
+
+
 def lignes(classes: list[tuple[Candidat, float, float]], cfg: ClassementConfig, lr: vr.LrConfig, cal: Calibreur, pays: str) -> list[LigneSortie]:
     rendu = [t for t in classes if t[2] >= cfg.p_min][: cfg.n_max]
     calibre = "mesuré" if cal.valide else "estimation étendue"
     return [
         LigneSortie(
             c.nom or c.nom_brut, c.ville, pays, min(100.0 * p, 99.0), vr.bande(lg, lr), calibre,
-            sorted({c.ref, *c.ner_sites}), sorted(c.registres), "retenu",
+            sorted({c.ref, *c.ner_sites}), sorted(c.registres), "retenu", niveau_de(c),
         )
         for c, lg, p in rendu
     ]  # fmt: skip
@@ -162,7 +203,6 @@ def appliquer(db: Database, cfg: Config, config_dir: str | Path, out_dir: str | 
     """Écrit les profils de sortie issus du classement si `config/classement.yaml` l'active (sinon : rien).
     Une erreur (réseau, modèle absent) n'interrompt pas le cycle : elle est écrite dans `classement_erreur.txt`."""
     from grappes.sortie import charger_profils
-    from grappes.sortie import ecrire as ecrire_profils
 
     cc = cc_pour_mode(charger_config(config_dir), cfg)
     out = Path(out_dir)
@@ -174,8 +214,7 @@ def appliquer(db: Database, cfg: Config, config_dir: str | Path, out_dir: str | 
         ls = classer_production(db, cfg, config_dir, data_dir, pays, cc=cc)
         avancement.signaler("noms", n=len(ls))
         avancement.signaler("etape", etape="sortie", detail="profils")
-        ignorer = frozenset() if cc.remplace_resultat else frozenset({"resultat", "tsites"})
-        chemins = ecrire_profils(ls, charger_profils(config_dir), out, ignorer=ignorer)
+        chemins = ecrire_sorties(ls, charger_profils(config_dir), out, cc.remplace_resultat)
         erreur.unlink(missing_ok=True)
         amb = out / "ambiguite.json"
         lec = ambiguites(cfg, data_dir)
