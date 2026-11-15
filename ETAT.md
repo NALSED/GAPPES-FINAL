@@ -1,6 +1,6 @@
 # ETAT — grappes
 
-Phase en cours : aucune. Revue totale du code terminée (D112 à D116) ; décisions en attente de Sednal listées dans D116.
+Phase en cours : aucune. Revue totale du code terminée (D112 à D116), puis relecture intégrale demandée par Sednal (D117, 14 et 15/11/2026) ; décisions en attente de Sednal listées dans D116 et D117.
 
 909 (« Vérifier et enrichir ») clos pour tout ce qui est câblable sans Sednal ni infra manquante : §1.1 fait
 (D104), §2.1 complet (a/b/c, D104+D105), 1.2 (a/b/c/d) faits (D106/D92/D108/D107), 1.2 (e/f) déclinés avec

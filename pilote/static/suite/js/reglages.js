@@ -562,12 +562,15 @@ export function ficheOutil(id) {
       options, code: f.code.valeur(), test_entree: f.entree.valeur(), test_sortie: f.sortie.valeur(),
     };
   }
+  // L'outil une fois créé garde son identifiant : « Lancer le test » puis « Ajouter l'outil » créaient DEUX outils (un POST à chaque fois).
+  let identCourant = id || null;
   async function enregistrer() {
-    const res = await agir(() => (edition ? api.put(`/outils/${id}`, corps()) : api.post("/outils", corps())), { rechargerApres: false });
+    const res = await agir(() => (identCourant ? api.put(`/outils/${identCourant}`, corps()) : api.post("/outils", corps())), { rechargerApres: false });
     if (!res) return null;
+    identCourant = res.id || identCourant;
     const cle = f.cle.valeur();
-    if (cle) { await agir(() => api.put(`/outils/${res.id || id}/cle`, { valeur: cle }), { rechargerApres: false }); f.cle.definir(""); }
-    return res.id || id;
+    if (cle) { await agir(() => api.put(`/outils/${identCourant}/cle`, { valeur: cle }), { rechargerApres: false }); f.cle.definir(""); }
+    return identCourant;
   }
   async function valider() {
     const ident = await enregistrer();

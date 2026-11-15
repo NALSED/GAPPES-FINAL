@@ -89,7 +89,7 @@ function memoriserSimple() {
 function simple() {
   const st = app.data.simple;
   const cat = st.preset;
-  const [phrase, placeholder] = PRESETS_INFO[cat];
+  const [phrase, placeholder] = PRESETS_INFO[cat] || ["", ""]; // un préréglage inconnu ne fait pas tomber la page
   const sources = app.data.sources.filter((x) => x.cats.includes(cat) && !x.retiree);
   const visibles = sources.filter((x) => correspond(x, st.pays));
   const ov = st.ov;

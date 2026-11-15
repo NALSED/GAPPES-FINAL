@@ -295,6 +295,7 @@ function deplacer(ev) {
     if (e.from !== n.id && e.to !== n.id) continue;
     const A = noeud(e.from);
     const B = noeud(e.to);
+    if (!A || !B) continue; // un lien dont une tuile n'existe plus : ignoré (comme au dessin), au lieu de bloquer le déplacement
     const d = courbe(...sortieDe(A), ...entreeDe(B));
     for (const p of zone.liens.get(e.id) || []) p.setAttribute("d", d);
   }
