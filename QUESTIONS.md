@@ -250,3 +250,13 @@ Depuis D126, `recherche-entreprises`, `registre-associations`, `gleif`, `ror` et
 ### Q-B3 — Le `score` du mode classique dans `resultat_brut.csv` (15/11/2026)
 
 A4 (D124) a retiré le chiffre non mesuré du mode extraction. L'essai B3 montre qu'en mode classique (celui de la configuration livrée) `resultat_brut.csv` porte toujours un `score` de 0 à 100 : c'est la confiance d'appartenance de `scoring.yaml`, un indice de classement, pas une probabilité mesurée. La spec 912 ne parle que du mode extraction : rien n'a été changé. À trancher par Sednal : le laisser (il sert à ordonner et à comprendre), ou le retirer aussi.
+
+### Q-C1 — Les registres d'abord, le web ensuite pour confirmer : non fait, trois décisions à prendre (15/11/2026)
+
+La spec 912 (C1) demande d'interroger d'abord SIRENE par code d'activité, le RNA et data.gouv.fr, puis de chercher sur le web de quoi confirmer chaque nom. Rien n'a été codé, pour trois raisons qui demandent Sednal :
+
+1. **Décision contraire en vigueur.** En mode « lire le contenu », les registres sont retirés exprès (décision 901/Q26, revue 902 : un registre ramenait onze organisations sans rapport ; `classement/production.py::cc_pour_mode`). C1 revient sur ce choix.
+2. **Coût et essai réel.** « Chercher sur le web de quoi confirmer » veut dire une requête web par nom de registre (200 noms : jusqu'à 200 requêtes payantes de plus par recherche). Ni le coût ni l'effet ne peuvent être essayés ici (pas de réseau, pas de clé).
+3. **Dépendance.** C1 dépend du rattachement NAF de la spec 903, dont le feu vert est en attente.
+
+Ce qui existe déjà et marche : `decouverte/registres.py::decouvrir` interroge les registres choisis (pilote : une source de registre cochée fournit bien des candidats) ; A6 (D126) permet de confirmer un nom par un registre. Proposition : (a) donner le feu vert NAF de 903 ; (b) essayer sur `.60` une recherche avec SIRENE par code d'activité coché, et regarder la part de noms sans rapport ; (c) décider ensuite du plafond de requêtes web de confirmation.
