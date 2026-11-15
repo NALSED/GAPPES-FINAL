@@ -971,3 +971,14 @@ Chiffres avant/après : aucun, les archives de mesure (`donnees/autocal/`) ne so
 * **C4 (Requête avancée)** : la spec exige un essai réel par opérateur et par source ; impossible ici. Aucun opérateur déclaré, pour ne pas en annoncer un qu'une source ignorerait (Q-C4).
 
 Aucun code, aucun test.
+
+## D132 — Les sept points de logique de D117 : deux défauts corrigés, cinq choix renvoyés (15/11/2026)
+
+**Corrigés (vrais défauts) :**
+
+* **Lecture des textes sans sa bibliothèque** : la reconnaissance de noms est active par défaut, sa bibliothèque est une option d'installation ; sans elle la recherche s'arrêtait sur « ModuleNotFoundError : No module named 'transformers' ». Elle s'arrête toujours (rien n'est sauté en silence), mais dit quoi faire : installer l'option « ner » ou vider `actifs` dans `config/ner.yaml` (`ner/extraire.py`). Activer ou non la lecture par défaut reste un choix de Sednal.
+* **Tableau de bord** : « Les sources au travail » affichait l'étiquette de la prise (« rss-… ») au lieu du nom de la source. L'avancement porte maintenant la table étiquette → source (`jetons`, celle de `lancement.json`, déjà utilisée pour la fiabilité depuis D117) et la page s'en sert (`executeur_grappes.py`, `static/suite/js/tableau.js`).
+
+**Renvoyés à Sednal (Q-D117 dans `QUESTIONS.md`), rien de changé :** la fenêtre d'ajout d'une source Vérifier/Enrichir sans clé de vérification ; le client WebSocket écrit à la main de Jetstream ; le filtre de GLEIF à contrôler en réel ; les adresses internes à l'ajout d'un flux RSS (Q-SECU) ; l'exemple `linkedin.com/in/` de Requête avancée.
+
+**Tests :** `tests/test_revue_2026_11_14.py` (+1), `pilote/tests/test_revue_2026_11_14.py` (+1).

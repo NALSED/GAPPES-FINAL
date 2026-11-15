@@ -204,3 +204,25 @@ def test_un_libelle_sans_detail_wikidata_est_non_verifiable(tmp_path):
     w = SimpleNamespace(search=lambda nom, n: [{"id": "Q1", "label": nom}], api=lambda **kw: {"entities": {}}, sparql=lambda q: [])
     v = juger.Juge(Reference("s", "ateliers", "", [], ["Q9"]), w, tmp_path / "juge.json").juger("Atelier des Lilas", "ner:atelier des lilas")
     assert v.verdict == juger.NON_VERIFIABLE
+
+
+# --- Point de logique de D117 repris le 15/11/2026 (D132)
+def test_la_lecture_des_textes_sans_sa_bibliotheque_dit_quoi_faire(monkeypatch):
+    import builtins
+
+    import pytest
+
+    from grappes.config import ConfigError
+    from grappes.ner import extraire
+
+    vrai = builtins.__import__
+
+    def sans_transformers(nom, *a, **k):
+        if nom == "transformers":
+            raise ModuleNotFoundError("No module named 'transformers'", name="transformers")
+        return vrai(nom, *a, **k)
+
+    monkeypatch.setattr(builtins, "__import__", sans_transformers)
+    monkeypatch.setattr(extraire, "_PIPES", {})
+    with pytest.raises(ConfigError, match=r"option « ner ».*config/ner.yaml"):
+        extraire._pipeline(extraire.ModeleNer("m", "modele/inexistant"), "donnees/modeles")

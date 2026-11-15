@@ -98,7 +98,16 @@ def _pipeline(m: ModeleNer, modeles_dir: str):
         import os
 
         os.environ.setdefault("HF_HOME", str(Path(modeles_dir).resolve()))
-        from transformers import pipeline
+        try:
+            from transformers import pipeline
+        except ModuleNotFoundError as exc:
+            # la lecture des textes est active par défaut, sa bibliothèque est une option d'installation : le dire clairement
+            from grappes.config import ConfigError
+
+            raise ConfigError(
+                "La lecture des noms dans les textes est activée (config/ner.yaml, `actifs`) mais sa bibliothèque n'est pas installée "
+                f"({exc.name}). Installer l'option « ner » (pip install '.[ner]') ou vider `actifs` dans config/ner.yaml."
+            ) from exc
 
         _PIPES[key] = pipeline("token-classification", model=m.nom, aggregation_strategy=m.agregation)
     return _PIPES[key]

@@ -133,7 +133,8 @@ function sectionSources(r) {
     "div", { class: "champ" }, h("span", { class: "titre-champ" }, "Les sources au travail"),
     h("div", { class: "carte-corps liste" }, ids.map((pid) => {
       const p = prises[pid];
-      const source = sourceParId(pid);
+      // `pid` est l'étiquette de la prise (un flux y est « rss-… ») : la table `jetons` de l'avancement la ramène à sa source déclarée
+      const source = sourceParId((r.avancement?.jetons || {})[pid] || pid);
       const active = r.avancement?.prise === pid;
       return h("div", { class: `ligne ${active ? "active" : ""}`.trim() },
         h("span", { class: "c-nom" }, source ? h("span", { class: "fort" }, source.nom) : pid, source && etiquetteRole(source.role)),

@@ -268,3 +268,13 @@ Ce qui existe déjà et marche : `decouverte/registres.py::decouvrir` interroge 
 ### Q-C4 — Requête avancée : aucun opérateur déclaré sans essai réel (15/11/2026)
 
 La spec 912 (C4) demande de déclarer les opérateurs compris par `serper`, `brave` et `searxng`, « chacun vérifié par un test réel ». Aucun essai réel n'est possible depuis cette session (pas de clé, pas d'accès à ces services) : rien n'a été déclaré, pour ne pas annoncer un opérateur qu'une source ignorerait en silence. Le mécanisme est prêt (`operateurs:` dans la déclaration d'une source, lu par le plan : `suite_reel.py`, « opérateurs » de la fiche source). À faire sur `.60`, une source à la fois : essayer `site:`, `"expression exacte"`, `-mot`, `intitle:` ; n'écrire dans `pilote/config/sources/<source>.yaml` que ceux qui changent réellement les résultats. Rappel du point 7 de D117 : l'exemple « Valeur » `linkedin.com/in/` de la tuile désigne des profils de personnes ; proposition : le remplacer par un exemple d'organisation (`linkedin.com/company/`), à valider par Sednal.
+
+### Q-D117 — Les points de logique de D117 qui restent des choix de Sednal (15/11/2026)
+
+Deux des sept points étaient de vrais défauts : corrigés (D132). Les cinq autres sont des choix ou demandent un essai réel ; rien n'a été changé.
+
+1. **Source ajoutée depuis `/suite` en Vérifier ou Enrichir** : la fenêtre d'ajout n'a ni « vérifie par (site / nom / ville) » ni « correspondance exacte » ; la source est acceptée, affichée, puis écartée à chaque lancement. Proposition : ajouter ces deux champs à la fenêtre et refuser l'ajout d'un rôle Vérifier/Enrichir sans clé de vérification, avec la raison. Choix d'interface : à Sednal.
+2. **Flux Jetstream lu par un client WebSocket écrit à la main** (`adaptateurs/jetstream.py`). Proposition : le remplacer par la bibliothèque `websockets` (éprouvée, documentée). Demande un essai réel sur le flux : non fait.
+3. **GLEIF interrogé par `filter[entity.legalName]` avec un seul mot** : ce filtre peut exiger le nom entier. À contrôler en réel sur `.60` avant de cocher GLEIF en vérification (voir Q-A6). Si le filtre exige le nom entier : passer à la recherche plein texte de GLEIF (`filter[fulltext]`).
+4. **Ajout d'un flux RSS : adresses internes et de métadonnées non refusées**, contrairement à l'ajout d'une API : voir Q-SECU.
+5. **Exemple « Valeur » de Requête avancée (`linkedin.com/in/`)** : il désigne des profils de personnes. Proposition : `linkedin.com/company/` (voir Q-C4).

@@ -207,6 +207,8 @@ class ExecuteurGrappes:
 
     def __call__(self, ctx: ContexteRecherche) -> None:
         spec = preparer(self.cfg, ctx)
+        if spec.get("jetons"):  # étiquette de prise -> source : le Tableau de bord affiche le NOM de la source, pas l'étiquette (« rss-… ») de sa prise
+            ctx.avancer(jetons={str(k): str(v) for k, v in spec["jetons"].items()})
         if spec["exclues_budget"]:  # le plafond de dépense a écarté des sources payantes : on le dit (la page Recherches l'affichera)
             ctx.avancer(sources_ecartees=spec["exclues_budget"], limitee_aux_gratuites=bool(spec.get("plafond_atteint")))
             ctx.noter("sources_ecartees_par_le_plafond", sources=spec["exclues_budget"])

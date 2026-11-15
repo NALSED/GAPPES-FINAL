@@ -171,3 +171,13 @@ def test_classer_refuse_une_categorie_hors_liste(monkeypatch):
     assert "faits" not in lignes[1]  # hors liste : rien d'écrit
     assert lignes[2]["faits"]["ia"]["categorie_ia"] == "jardin partagé"
     assert bilan["ia_echecs"] == 1
+
+
+# --- Points de logique de D117 repris le 15/11/2026 (D132)
+def test_le_tableau_de_bord_recoit_la_table_des_etiquettes_de_prise():
+    from pathlib import Path
+
+    racine = Path(__file__).resolve().parents[1]
+    assert 'ctx.avancer(jetons=' in (racine / "src/pilote/executeur_grappes.py").read_text(encoding="utf-8")
+    js = (racine / "static/suite/js/tableau.js").read_text(encoding="utf-8")
+    assert "sourceParId((r.avancement?.jetons || {})[pid] || pid)" in js
