@@ -580,7 +580,7 @@ def _valeur_qualificatif(nom: str, qtype: str, v: str) -> str:
             raise ConfigRefusee(f"« {nom} » : une phrase exacte ne contient pas de guillemet droit.")
         return v
     if re.search(r'[\s:"]', v):
-        raise ConfigRefusee(f"« {nom} » : donne un seul terme, sans espace ni deux-points (par exemple linkedin.com/in/).")
+        raise ConfigRefusee(f"« {nom} » : donne un seul terme, sans espace ni deux-points (par exemple linkedin.com/company/).")
     if qtype == "filetype":
         v = v.removeprefix(".").lower()
         if v not in _TYPES_DE_DOCUMENT:

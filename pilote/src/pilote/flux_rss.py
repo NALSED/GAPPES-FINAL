@@ -34,6 +34,11 @@ def verifier_adresse(url: str) -> str:
     u = urllib.parse.urlsplit(url.strip())
     if u.scheme not in ("http", "https") or not u.netloc:
         raise ConfigRefusee("L'adresse d'un flux doit commencer par http:// ou https://.")
+    from pilote.ajout import _hote_interdit  # même contrôle que l'ajout d'une API (Q-SECU) ; import local : pas de boucle
+
+    interdit = _hote_interdit(u.hostname or "")
+    if interdit:
+        raise ConfigRefusee(f"Adresse refusée : {interdit}.")
     return url.strip()
 
 
@@ -97,7 +102,9 @@ def lire_flux(octets: bytes) -> tuple[str, list[dict[str, str]]]:
 def telecharger(url: str, delai_s: float = 20.0) -> bytes:
     req = urllib.request.Request(verifier_adresse(url), headers={"User-Agent": UA, "Accept": "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.1"})
     try:
-        with urllib.request.urlopen(req, timeout=delai_s) as r:
+        from pilote.ajout import _SansLienLocal  # une redirection est contrôlée comme la première adresse (Q-SECU)
+
+        with urllib.request.build_opener(_SansLienLocal()).open(req, timeout=delai_s) as r:
             return r.read(MAX_OCTETS + 1)[:MAX_OCTETS]
     except urllib.error.HTTPError as exc:
         raise ConfigRefusee(f"Le flux a répondu une erreur ({exc.code}).") from exc

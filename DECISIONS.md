@@ -1011,3 +1011,12 @@ Les 36 autres corrections relues n'appellent pas de remarque : chacune a son ess
 **Suites complètes :** moteur 668 réussis, 4 échecs d'environnement (`nomenklatura` non installable ici) ; pilote hors réseau 732 réussis, 2 échecs d'environnement (`test_f14_sortie` exécuté en root, `test_f09_presse` sans `transformers`, qui affiche désormais le message clair de D132). À repasser sur la machine de momo.
 
 **Bilan du plan 912 :** codés A1 à A7 (A5 sans le retour aux valeurs d'expert), B2, B3, C2 ; B1 préparé, en attente de validation ; C1, C3, C4 non codés (choix, coût, essais réels). Aucun chiffre avant/après n'a pu être mesuré : la référence B1 n'est pas collectée et les archives de mesure ne sont pas dans le dépôt. Ce qui attend Sednal est en tête d'`ETAT.md` et dans `QUESTIONS.md` (Q-B1, Q-A5, Q-A6, Q-B3, Q-C1, Q-C3, Q-C4, Q-D117, Q-SECU).
+
+## D136 — Q-SECU (2) et Q-D117 (5) : contrôle d'adresse des flux RSS, exemple de Requête avancée (16/11/2026)
+
+Sur demande de Sednal (« finis tout ce que tu peux »), les deux points de Q-SECU et Q-D117 faisables sans choix ni essai réel :
+
+- **Flux RSS** : `flux_rss.verifier_adresse` refuse désormais les adresses du service d'identifiants des hébergeurs (169.254.0.0/16, etc.), et `telecharger` recontrôle chaque redirection. On reprend tel quel le contrôle de l'ajout d'une API (`ajout._hote_interdit`, `ajout._SansLienLocal`) : rien de nouveau. Le réseau local reste autorisé (RSSHub sur la machine). Essai : `pilote/tests/test_securite_rss.py`.
+- **Requête avancée** : l'exemple `linkedin.com/in/` (profils de personnes) devient `linkedin.com/company/` dans l'interface, la graine et le message d'erreur. Aucun changement de comportement.
+
+Restent à Sednal : le reste de Q-D117 (fenêtre d'ajout, Jetstream, GLEIF) et de Q-SECU (`GRAPPES_CONTACT`, historique git).

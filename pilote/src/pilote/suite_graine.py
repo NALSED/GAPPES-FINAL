@@ -73,7 +73,7 @@ _OUTILS: list[tuple[Any, ...]] = [
     # qu'elle comprend (`Declaration.operateurs`) ; un qualificatif qu'elle ne comprend pas est ignoré pour elle.
     ("requete_avancee", "Requête avancée", "OUTIL", "off", "Ajoute un qualificatif à la requête avant qu'elle parte vers les sources (site, type de fichier, phrase exacte…).",
      "Le texte de la recherche", "La même requête, avec le qualificatif ajouté pour les sources qui le comprennent", "journal",
-     [["Type de qualificatif", "Limiter à un site/domaine"], ["Valeur", ""]], "club de judo", 'club de judo site:linkedin.com/in/'),
+     [["Type de qualificatif", "Limiter à un site/domaine"], ["Valeur", ""]], "club de judo", 'club de judo site:linkedin.com/company/'),
 ]  # fmt: skip
 
 

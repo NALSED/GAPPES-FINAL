@@ -355,15 +355,15 @@ def plan_requete_avancee(opts, apres=False):
 
 # --- 909 §3 : la Requête avancée qualifie la requête des sources placées après elle, et seulement celles qui déclarent comprendre le qualificatif
 def test_requete_avancee_qualifie_seulement_les_sources_qui_le_comprennent():
-    opts = [("Type de qualificatif", "Limiter à un site/domaine"), ("Valeur", "linkedin.com/in/")]
+    opts = [("Type de qualificatif", "Limiter à un site/domaine"), ("Valeur", "linkedin.com/company/")]
     c = comp(plan_requete_avancee(opts))
-    assert c["requetes"] == {"d": [{"type": "site", "valeur": "linkedin.com/in/"}]}  # « a » ne déclare aucun opérateur
+    assert c["requetes"] == {"d": [{"type": "site", "valeur": "linkedin.com/company/"}]}  # « a » ne déclare aucun opérateur
     texte = c["appliques"][0]["texte"]
     assert "D" in texte and "ignoré" in texte and "A" in texte
 
 
 def test_requete_avancee_posee_apres_les_sources_non_appliquee():
-    opts = [("Type de qualificatif", "Limiter à un site/domaine"), ("Valeur", "linkedin.com/in/")]
+    opts = [("Type de qualificatif", "Limiter à un site/domaine"), ("Valeur", "linkedin.com/company/")]
     c = comp(plan_requete_avancee(opts, apres=True))
     assert c["requetes"] == {} and "après les sources" in c["non_appliques"][0]["raison"]
 
@@ -381,10 +381,10 @@ def test_requete_avancee_type_inconnu_est_refuse():
 
 
 def test_requete_avancee_une_source_posee_deux_fois_est_qualifiee_une_fois():
-    opts = [("Type de qualificatif", "Limiter à un site/domaine"), ("Valeur", "linkedin.com/in/")]
+    opts = [("Type de qualificatif", "Limiter à un site/domaine"), ("Valeur", "linkedin.com/company/")]
     noeuds = [("saisie",), ("grappes",), ("r", "requete_avancee", None, opts), ("n1", "d"), ("n2", "d")]
     liens = [lien("saisie", "r"), lien("r", "n1"), lien("r", "n2"), lien("n1", "grappes"), lien("n2", "grappes")]
-    assert comp(plan(noeuds, liens))["requetes"] == {"d": [{"type": "site", "valeur": "linkedin.com/in/"}]}
+    assert comp(plan(noeuds, liens))["requetes"] == {"d": [{"type": "site", "valeur": "linkedin.com/company/"}]}
 
 
 @pytest.mark.parametrize(

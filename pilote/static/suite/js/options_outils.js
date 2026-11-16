@@ -428,7 +428,7 @@ const TYPES_QUALIFICATIF = [
 
 function rendreOptionsRequeteAvancee(n, refresh, guarder) {
   const type = optLabel(n, "Type de qualificatif") || TYPES_QUALIFICATIF[0];
-  const valeur = champ({ libelle: "Valeur", valeur: optLabel(n, "Valeur"), placeholder: "ex. linkedin.com/in/, pdf, « association loi 1901 »" });
+  const valeur = champ({ libelle: "Valeur", valeur: optLabel(n, "Valeur"), placeholder: "ex. linkedin.com/company/, pdf, « association loi 1901 »" });
   valeur.saisie.addEventListener("change", () => { optDefinir(n, "Valeur", valeur.valeur()); guarder(); });
   return h(
     "div", { class: "options-grille" },
