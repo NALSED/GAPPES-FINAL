@@ -12,6 +12,7 @@ from urllib.parse import urljoin, urlsplit
 
 from grappes.autonomy import Autonomy
 from grappes.canon import canonical_domain, site_key
+from grappes.fetch.declare import relever
 from grappes.fetch.html import extract
 from grappes.fetch.robots import RobotsCache
 from grappes.fetch.rules import Rules
@@ -258,4 +259,7 @@ class PageFetcher:
             "site_name": clean_text(page.site_name, 100),
             "links": anchors,
         }
+        declare = relever(resp.body, page.text, final)  # 914/A : ce que la page dit d'elle-même, relevé avant que le HTML ne soit jeté
+        if declare:
+            record["declare"] = declare
         return FetchResult(asked, True, str(resp.status), "", record, links)

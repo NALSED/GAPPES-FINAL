@@ -88,6 +88,7 @@ class Database:
                 ("ingested_at", "TEXT"),
                 ("hypo", "TEXT NOT NULL DEFAULT '[]'"),
                 ("fiabilite_admiralty", "TEXT"),
+                ("declare", "TEXT"),  # 914/A : ce que la page déclare d'elle-même (JSON), ou NULL
             ],
             "memberships": [("fiabilite_admiralty", "TEXT"), ("credibilite_admiralty", "INTEGER")],
             "sources": [("native_id", "TEXT"), ("origin", "TEXT")],
@@ -147,8 +148,8 @@ class Database:
                 )
                 cur = c.execute(
                     "INSERT OR IGNORE INTO observations(obs_id, source_key, ts, text, mentions,"
-                    " links, hashtags, engagement, raw_ref, ingested_at, hypo, fiabilite_admiralty)"
-                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                    " links, hashtags, engagement, raw_ref, ingested_at, hypo, fiabilite_admiralty, declare)"
+                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                     (
                         o.obs_id,
                         o.source.key,
@@ -162,6 +163,7 @@ class Database:
                         datetime.now(UTC).isoformat(),
                         json.dumps(list(o.hypothetical)),
                         letter(o.source.key) if letter else None,
+                        o.meta.get("declare"),
                     ),
                 )
                 new += cur.rowcount
@@ -231,6 +233,7 @@ class Database:
                     engagement=r["engagement"],
                     raw_ref=r["raw_ref"],
                     hypothetical=tuple(json.loads(r["hypo"])),
+                    meta={"declare": r["declare"]} if "declare" in r.keys() and r["declare"] else {},
                 )
             )
         return out

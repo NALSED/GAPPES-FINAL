@@ -5,6 +5,7 @@ Formats : voir docs/conception/formats_json.md.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterable, Mapping
 from typing import Any
 
@@ -62,6 +63,8 @@ class WebFetcher(BaseFetcher):
             meta={
                 "page_url": page_url,
                 **({"lang": str(raw["lang"])} if raw.get("lang") else {}),
+                # 914/A : ce que la page déclare d'elle-même (numéro officiel, ville…), gardé tel quel
+                **({"declare": json.dumps(raw["declare"], ensure_ascii=False, sort_keys=True)} if isinstance(raw.get("declare"), Mapping) and raw["declare"] else {}),
                 **(
                     {"nom": raw["site_name"].strip()}
                     if isinstance(raw.get("site_name"), str) and raw["site_name"].strip()
