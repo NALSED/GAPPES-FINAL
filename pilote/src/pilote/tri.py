@@ -310,6 +310,8 @@ def fiche(cfg: Config, fabrique: sessionmaker[Session], rid: str, cid: int) -> d
         "alias": list((c.faits or {}).get("alias") or []),  # les autres noms que les sources déclarent (sigle, acronyme) : une preuve montrée, jamais une identité
         # 914/A : ce que le site de l'acteur dit de lui-même (affiché, jamais une preuve) ; et l'alerte quand le registre dit autre chose
         "declare": dict((c.faits or {}).get("declare") or {}), "numero_site_different": bool((c.faits or {}).get("numero_site_different")),
+        # 914/B : les pages comptées avec celle qu'elles recopient (un seul endroit pour les deux)
+        "copies": sorted({(p["lieu"].removeprefix("page:"), str(p["copie_de"])) for p in (c.faits or {}).get("preuves") or [] if isinstance(p, dict) and p.get("copie_de") and "lieu" in p}),
         # Règle 8 : ce que la collecte a constaté, et la levée éventuelle. L'écran a besoin des deux pour proposer le bon geste.
         "regle8_ecartee": _ecartee_par_regle8(c), "regle8_leve": (c.faits or {}).get("regle8_leve") or None,
         "decision": ligne.decision, "ressemble_a": ligne.ressemble_a, "sources": sources, "fonction": ligne.fonction, "bloc": ligne.racine,

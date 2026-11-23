@@ -53,6 +53,7 @@ def _copie(c: Candidat) -> Candidat:
     et enrichir la copie modifiait le candidat du contexte (les configurations d'une mesure se contaminaient)."""
     c = copy.copy(c)
     c.citants, c.ecosystemes, c.registres, c.ner_sites = set(c.citants), set(c.ecosystemes), set(c.registres), dict(c.ner_sites)
+    c.copies = dict(c.copies)
     return c
 
 

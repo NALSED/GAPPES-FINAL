@@ -13,7 +13,7 @@ import yaml
 
 from grappes import avancement
 from grappes import vraisemblance as vr
-from grappes.classement import fusion, indice
+from grappes.classement import copies, fusion, indice
 from grappes.classement.candidats import Candidat, Contexte, charger
 from grappes.config import Config, booleen
 from grappes.decouverte.client import Http
@@ -109,6 +109,7 @@ def classer(ctx: Contexte, cfg: ClassementConfig, lr: vr.LrConfig, cal: Calibreu
     cands = [c for c in cands if c.nom]
     if cfg.variantes:
         cands = indice.fusion_variantes(ctx, cands, cfg.seuil_variantes, cfg.lien_variantes)
+    copies.marquer(cands, ctx.db.load_observations())  # 914/B : les pages qui se recopient, après toutes les réunions de fiches
     out = []
     for c in cands:
         lg = vr.total(indice.elements(ctx, c, lr), lr)
@@ -119,8 +120,15 @@ def classer(ctx: Contexte, cfg: ClassementConfig, lr: vr.LrConfig, cal: Calibreu
 def niveau_de(c: Candidat) -> str:
     """A3 (spec 912) : « sûr » si le nom est dans un registre de première main (tout registre sauf l'encyclopédie Wikidata, qui
     répète), ou s'il a été trouvé à deux endroits indépendants au moins : nommé par deux éditeurs distincts (`ner_sites`) ou cité par
-    deux éditeurs distincts (`editeurs`). Le site de l'entité elle-même n'est pas un endroit indépendant. Sinon « à vérifier »."""
-    if c.registres - {"wikidata"} or max(len(c.ner_sites), c.editeurs) >= 2:
+    deux éditeurs distincts (`editeurs`). Le site de l'entité elle-même n'est pas un endroit indépendant. Des sites qui se recopient
+    (914/B, `copies`) comptent pour un. Sinon « à vérifier »."""
+    if c.registres - {"wikidata"}:
+        return "sûr"
+    # 914/B : des pages qui se recopient comptent pour un seul endroit (un groupe de copies retire ses doublons du compte)
+    ner = copies.independants(c.ner_sites, c.copies)
+    eds = copies.editeurs_citants(c.citants)
+    editeurs = c.editeurs - (len(eds) - copies.independants(eds, c.copies)) if c.citants else c.editeurs
+    if max(ner, editeurs) >= 2:
         return "sûr"
     return "à vérifier"
 

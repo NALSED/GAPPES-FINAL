@@ -46,10 +46,15 @@ def preuves(c: Any, prov: Provenance, site_key) -> list[dict[str, str]]:
     """Les preuves d'un candidat (sans doublon : une source, un endroit)."""
     out: dict[tuple[str, str], dict[str, str]] = {}
 
+    copies = dict(getattr(c, "copies", None) or {})  # 914/B : site -> représentant de son groupe de pages qui se recopient
+
     def ajouter(source: str, classe: str, lieu: str, propre: bool = False) -> None:
         p = {"source": source, "classe": classe, "main": prov.mains.get(source, "seconde"), "lieu": lieu}
         if propre:  # 913/N5 : le site de l'acteur lui-même, gardé comme preuve, jamais compté comme un endroit indépendant
             p["propre"] = "oui"
+        site = lieu.removeprefix("page:")
+        if lieu.startswith("page:") and copies.get(site, site) != site:  # 914/B : affichée, comptée avec la page qu'elle recopie
+            p["copie_de"] = copies[site]
         out.setdefault((source, lieu), p)
 
     for jeton in c.registres:
@@ -82,9 +87,18 @@ def endroits_comptes(ps: list[dict[str, str]]) -> int:
       toujours vers quoi elle pointe, alors on ne la compte pas du tout, par prudence).
     * Sans preuve de première main, chaque page distincte (un site = un endroit) est un endroit.
     * 913/N5 : le site de l'acteur lui-même (`propre`) n'est pas un endroit indépendant, comme dans le moteur (`production.niveau_de`).
+    * 914/B : des pages qui se recopient (`copie_de`) comptent pour un seul endroit ; une page qui recopie le site de l'acteur ne compte pas.
       Un acteur trouvé seulement sur son site compte toujours un endroit."""
     premiers = {p["lieu"] for p in ps if p["main"] == "premiere"}
-    return max(1, len(premiers) if premiers else len({p["lieu"] for p in ps if not p.get("propre")}))
+    if premiers:
+        return max(1, len(premiers))
+    propres = {_groupe(p) for p in ps if p.get("propre")}  # 914/B : une page qui recopie le site de l'acteur parle aussi pour lui
+    return max(1, len({_groupe(p) for p in ps} - propres))
+
+
+def _groupe(p: dict[str, str]) -> str:
+    """914/B : l'endroit d'une preuve, une page qui en recopie une autre comptant avec elle."""
+    return f"page:{p['copie_de']}" if p.get("copie_de") else p["lieu"]
 
 
 def niveau_de(ps: list[dict[str, str]], nb_endroits: int) -> str:

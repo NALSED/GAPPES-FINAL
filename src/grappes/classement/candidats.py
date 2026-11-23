@@ -38,6 +38,7 @@ class Candidat:
     registres: set[str] = field(default_factory=set)  # registres qui la nomment (wikidata, sirene)
     ville: str = ""  # commune donnée par un registre, jamais déduite
     ner_sites: dict[str, float] = field(default_factory=dict)  # éditeur -> confiance moyenne du modèle (noms dans les textes)
+    copies: dict[str, str] = field(default_factory=dict)  # 914/B : site -> représentant de son groupe de pages qui se recopient
 
     @property
     def exportable_actuel(self) -> bool:
