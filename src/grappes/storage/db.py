@@ -233,7 +233,7 @@ class Database:
                     engagement=r["engagement"],
                     raw_ref=r["raw_ref"],
                     hypothetical=tuple(json.loads(r["hypo"])),
-                    meta={"declare": r["declare"]} if "declare" in r.keys() and r["declare"] else {},
+                    meta={"declare": r["declare"]} if r["declare"] else {},  # colonne toujours présente (migration au démarrage)
                 )
             )
         return out
