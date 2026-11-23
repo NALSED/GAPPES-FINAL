@@ -110,7 +110,7 @@ def test_interrupteur_global_regle8_ne_change_que_le_defaut_du_lever_de_recherch
     import threading
 
     def preparer_avec(parametres):
-        d = tmp_path / "travail" / str(id(parametres))
+        d = tmp_path / "travail" / __import__("uuid").uuid4().hex  # id() d'un dictionnaire libéré peut revenir : dossier déjà là, test instable
         d.mkdir(parents=True)
         ctx = ContexteRecherche("abc", {"quoi": "clubs", "pays": "France"}, {"profondeur": "strict", "sources": ["wikipedia"], **parametres}, d, "sednal", threading.Event(), None)
         return preparer(c2, ctx)

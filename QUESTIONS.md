@@ -237,6 +237,8 @@ sans comprendre la cause réelle ; à reprendre si ça bloque une vérification 
 
 ### Q-B1 — Référence officielle : un nom absent de la liste est-il « faux » ? (15/11/2026)
 
+**23/11/2026 :** Sednal a validé les 25 sujets et le budget (« lance B1 »). La question « faux ou non vérifiable » n'a pas été tranchée : la valeur prudente reste (« non vérifiable »). Relevé non fait depuis cette session (voir D140).
+
 Avec une liste officielle complète (un label d'État par exemple), un nom que le programme sort et qui n'est pas dans la liste est en principe faux. Mais la comparaison se fait sur le nom exact, le site ou le SIREN : une autre écriture du même acteur serait comptée fausse à tort. Valeur par défaut retenue en attendant (D119) : un tel nom est compté **« non vérifiable »**, jamais « faux », et jamais « juste ». Conséquence : la « part de faux » ne sort pas toute seule d'une liste officielle ; elle demandera de relire à la main un échantillon des noms hors liste (méthode existante : jugement par échantillon, comme les qrels TREC). À trancher par Sednal : garder ce défaut prudent, ou compter « faux » tout nom hors d'une liste déclarée complète.
 
 ### Q-A5 — Valeurs d'expert d'origine de `config/lr.yaml` introuvables dans ce dépôt (15/11/2026)
