@@ -145,19 +145,28 @@ def _reunir_par_numero(fabrique: sessionmaker[Session], rid: str, cands: list[Ca
 def _recompter(s: Session, cand: Candidat) -> None:
     """A7 (spec 912) : le nombre d'endroits d'une fiche réunie à d'autres compte les preuves de TOUTES ces fiches, chaque endroit une seule fois
     (`pont.faits.endroits_comptes`, la règle de la collecte). Le compte de la fiche seule est gardé (`faits.nb_endroits_seul`) : séparer le rend."""
-    from pilote.pont.faits import endroits_comptes
+    from pilote.pont.faits import endroits_comptes, niveau_de
 
     faits = dict(cand.faits or {})
     seul = int(faits.get("nb_endroits_seul") or cand.nb_endroits or 1)
+    niveau_seul = faits.get("niveau_seul") or faits.get("niveau")  # 913/N4 : le niveau suit la réunion comme le nombre d'endroits
     liens = s.scalars(select(Rapprochement).where(Rapprochement.recherche_id == cand.recherche_id, Rapprochement.etat == "confirme", (Rapprochement.a == cand.id) | (Rapprochement.b == cand.id))).all()
     autres = [x for x in (s.get(Candidat, r.b if r.a == cand.id else r.a) for r in liens) if x is not None]
     if not autres:
         cand.nb_endroits = seul
         faits.pop("nb_endroits_seul", None)
+        if niveau_seul:  # séparer rend le niveau de la fiche seule
+            faits["niveau"] = niveau_seul
+            faits.pop("niveau_seul", None)
     else:
         preuves = [p for f in (cand, *autres) for p in ((f.faits or {}).get("preuves") or []) if isinstance(p, dict) and "lieu" in p and "main" in p]
         faits["nb_endroits_seul"] = seul
         cand.nb_endroits = max(seul, endroits_comptes(preuves) if preuves else seul)
+        if niveau_seul:
+            # La même entité : sûre si l'une des fiches l'était seule (registre, confirmation A2), ou si leurs preuves réunies suffisent.
+            seuls = [niveau_seul, *((f.faits or {}).get("niveau_seul") or (f.faits or {}).get("niveau") for f in autres)]
+            faits["niveau_seul"] = niveau_seul
+            faits["niveau"] = "sur" if "sur" in seuls or niveau_de(preuves, cand.nb_endroits) == "sur" else "a_verifier"
     cand.faits = faits
 
 

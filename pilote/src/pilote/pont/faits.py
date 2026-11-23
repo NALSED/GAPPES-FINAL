@@ -45,8 +45,11 @@ def preuves(c: Any, prov: Provenance, site_key) -> list[dict[str, str]]:
     """Les preuves d'un candidat (sans doublon : une source, un endroit)."""
     out: dict[tuple[str, str], dict[str, str]] = {}
 
-    def ajouter(source: str, classe: str, lieu: str) -> None:
-        out.setdefault((source, lieu), {"source": source, "classe": classe, "main": prov.mains.get(source, "seconde"), "lieu": lieu})
+    def ajouter(source: str, classe: str, lieu: str, propre: bool = False) -> None:
+        p = {"source": source, "classe": classe, "main": prov.mains.get(source, "seconde"), "lieu": lieu}
+        if propre:  # 913/N5 : le site de l'acteur lui-même, gardé comme preuve, jamais compté comme un endroit indépendant
+            p["propre"] = "oui"
+        out.setdefault((source, lieu), p)
 
     for jeton in c.registres:
         source = prov.jetons.get(jeton, jeton)
@@ -56,14 +59,15 @@ def preuves(c: Any, prov: Provenance, site_key) -> list[dict[str, str]]:
         pages.setdefault(site_key(c.ref.partition(":")[2]) if _ecosysteme(c.ref) in ("web", "rss") else c.ref, _ecosysteme(c.ref))
     for site in c.ner_sites:
         pages.setdefault(site, prov.eco_par_site.get(site, ""))
+    propre = site_key(c.ref.partition(":")[2]) if _ecosysteme(c.ref) in ("web", "rss") else ""
     for site, eco in pages.items():
         eco = eco or prov.eco_par_site.get(site, "")
         fournisseurs = prov.fournisseurs_par_site.get(site) or set()
         if fournisseurs:
             for f in sorted(fournisseurs):
-                ajouter(f, prov.origines.get(f) or CLASSE_ECOSYSTEME.get(eco, "texte"), f"page:{site}")
+                ajouter(f, prov.origines.get(f) or CLASSE_ECOSYSTEME.get(eco, "texte"), f"page:{site}", site == propre)
         else:
-            ajouter(f"({eco or 'texte'})", CLASSE_ECOSYSTEME.get(eco, "texte"), f"page:{site}")
+            ajouter(f"({eco or 'texte'})", CLASSE_ECOSYSTEME.get(eco, "texte"), f"page:{site}", site == propre)
     return sorted(out.values(), key=lambda p: (ORIGINES.index(p["classe"]) if p["classe"] in ORIGINES else 9, p["source"], p["lieu"]))
 
 
@@ -75,9 +79,11 @@ def endroits_comptes(ps: list[dict[str, str]]) -> int:
     * Une page de seconde main peut recopier un registre : dès qu'un nom a au moins une preuve de première main, les pages de seconde main ne
       s'y ajoutent PAS (une confirmation de seconde main qui pointe vers une source déjà comptée ne compte pas deux fois ; on ne sait pas
       toujours vers quoi elle pointe, alors on ne la compte pas du tout, par prudence).
-    * Sans preuve de première main, chaque page distincte (un site = un endroit) est un endroit."""
+    * Sans preuve de première main, chaque page distincte (un site = un endroit) est un endroit.
+    * 913/N5 : le site de l'acteur lui-même (`propre`) n'est pas un endroit indépendant, comme dans le moteur (`production.niveau_de`).
+      Un acteur trouvé seulement sur son site compte toujours un endroit."""
     premiers = {p["lieu"] for p in ps if p["main"] == "premiere"}
-    return max(1, len(premiers) if premiers else len({p["lieu"] for p in ps}))
+    return max(1, len(premiers) if premiers else len({p["lieu"] for p in ps if not p.get("propre")}))
 
 
 def niveau_de(ps: list[dict[str, str]], nb_endroits: int) -> str:
