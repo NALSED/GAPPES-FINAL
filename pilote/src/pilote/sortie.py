@@ -22,7 +22,7 @@ from pilote import formats, mentions, tri
 from pilote import reglages as rg
 from pilote.base import Candidat, Decision, Journal, Rapprochement
 from pilote.config import Config
-from pilote.formats._commun import suffixe
+from pilote.formats._commun import suffixe, texte_declare
 
 DECISIONS_VALIDES = ("garder", "plus_tard", "rejeter", "aucune")
 FILTRES_NOMMES = {"gardes": ["garder"], "tout": list(DECISIONS_VALIDES)}
@@ -193,7 +193,7 @@ def jeu_de_donnees(cfg: Config, fabrique: sessionmaker[Session], rid: str, decis
             "coordonnees": faits.get("coordonnees") if isinstance(faits.get("coordonnees"), dict) else None,
             # 909, point 1.2.d : une confirmation de première main (`faits.fiabilite_effective`, posée par le pont
             # après vérification) peut faire remonter la fiabilité au-dessus de celle de la seule source de recherche.
-            "fiabilite": _fiabilite_candidat(set(ids_sources), fiabilites, faits), "sources_fusionnees": "",
+            "fiabilite": _fiabilite_candidat(set(ids_sources), fiabilites, faits), "sources_fusionnees": "", "declare_par_le_site": texte_declare(faits.get("declare") if isinstance(faits.get("declare"), dict) else None),
             # Règle 8 : le constat de la collecte et la levée éventuelle, pour les formats qui ont à les distinguer (voir `formats/ftm.py`)
             "regle8_personne": bool(faits.get("regle8_personne")), "regle8_leve": bool(faits.get("regle8_leve")),
             "ia": _texte_ia(faits),

@@ -335,12 +335,17 @@ def main(dossier: str) -> int:
         par_nom: dict[str, list] = {}
         for d in ctx.decouverts:
             par_nom.setdefault(fusion.norm_name(d.nom), []).append(d)
-        from pilote.pont.faits import Provenance, est_exclu, faits_candidat
+        from grappes.fetch.declare import depuis_meta
+
+        from pilote.pont.faits import Provenance, est_exclu, faits_candidat, reunir_declarations
 
         eco_par_site: dict[str, str] = {}
+        declarations: dict[str, list[dict]] = {}
         for o in db.load_observations():
             eco, _, ident = o.source.key.partition(":")
             eco_par_site[site_key(ident) if eco in ("web", "rss") else o.source.key] = eco
+            if eco == "web" and (d := depuis_meta(o.meta.get("declare"))):  # 914/A : ce que chaque site déclare de lui-même
+                declarations.setdefault(site_key(ident), []).append(d)
         fournisseurs_par_site: dict[str, set[str]] = {}
         fav = os.environ.get(avancement.VARIABLE)
         for ligne in (Path(fav).read_text(encoding="utf-8").splitlines() if fav and Path(fav).exists() else []):
@@ -351,7 +356,8 @@ def main(dossier: str) -> int:
                     continue
                 eco, _, ident = e["cle"].partition(":")
                 fournisseurs_par_site.setdefault(site_key(ident) if eco in ("web", "rss") else e["cle"], set()).add(e["prise"])
-        prov = Provenance(spec.get("jetons", {}), spec.get("origines_sources", {}), spec.get("mains_sources", {}), eco_par_site, fournisseurs_par_site)
+        prov = Provenance(spec.get("jetons", {}), spec.get("origines_sources", {}), spec.get("mains_sources", {}), eco_par_site, fournisseurs_par_site,
+                          {site: reunir_declarations(ds) for site, ds in declarations.items()})
         exclus = [n for m in spec.get("mots_a_exclure", []) if (n := fusion.norm_name(m))]  # un mot réduit à rien (« !!! ») n'exclut rien
         lignes, vus = [], set()
         for c, _lg, p in classes:

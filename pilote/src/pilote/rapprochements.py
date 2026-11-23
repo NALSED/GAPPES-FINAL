@@ -93,15 +93,17 @@ def proposer(cfg: Config, fabrique: sessionmaker[Session], rid: str, seuil: floa
         liees = _deja_liees(cands)
     reunis = _reunir_par_numero(fabrique, rid, cands, deja, liees)  # A7 (spec 912) : avant Splink, et même s'il ne tourne pas
     deja |= reunis
+    par_site = _proposer_par_numero_declare(fabrique, rid, cands, deja, liees)  # 914/A : proposé, jamais réuni d'office
+    deja |= par_site
     if len(cands) < 2:
-        return {"proposes": 0, "comparees": len(cands), **({"reunis": len(reunis)} if reunis else {})}  # `reunis` (A7) seulement quand il y en a : le bilan d'avant reste le même
+        return {"proposes": len(par_site), "comparees": len(cands), **({"reunis": len(reunis)} if reunis else {})}  # `reunis` (A7) seulement quand il y en a : le bilan d'avant reste le même
     paires = [p for p in _scorer([_fiche(c) for c in cands], seuil) if (p["a"], p["b"]) not in deja and (p["a"], p["b"]) not in liees and p["confiance"] >= seuil]
     with fabrique.begin() as s:
         for p in paires:
             s.add(Rapprochement(recherche_id=rid, a=p["a"], b=p["b"], confiance=p["confiance"], pourquoi=p["pourquoi"]))
         if paires:
             s.add(Journal(recherche_id=rid, qui="pilote", evenement="rapprochements_proposes", detail={"n": len(paires)}))
-    return {"proposes": len(paires), "comparees": len(cands), **({"reunis": len(reunis)} if reunis else {})}
+    return {"proposes": len(paires) + len(par_site), "comparees": len(cands), **({"reunis": len(reunis)} if reunis else {})}
 
 
 def cle_numero(numero: str) -> str:
@@ -139,6 +141,30 @@ def _reunir_par_numero(fabrique: sessionmaker[Session], rid: str, cands: list[Ca
             s.flush()
             _appliquer(s, r, "confirme", "pilote")
         s.add(Journal(recherche_id=rid, qui="pilote", evenement="rapprochements_reunis_par_numero", detail={"n": len(paires)}))
+    return set(paires)
+
+
+def _proposer_par_numero_declare(fabrique: sessionmaker[Session], rid: str, cands: list[Candidat], deja: set[tuple[int, int]], liees: set[tuple[int, int]]) -> set[tuple[int, int]]:
+    """914/A, choix 2 : deux fiches dont les SITES déclarent le même numéro officiel (même SIREN, ou un SIREN et un SIRET de ce SIREN ; jamais
+    deux SIRET différents) sont PROPOSÉES à une personne, jamais réunies d'office : un site peut se tromper ou recopier le numéro d'un autre.
+    A7 (numéro donné par un registre) reste seul à réunir d'office. Mêmes exclusions que A7 : paire déjà tranchée ou proposée, noms liés."""
+    numeros = {c.id: str(((c.faits or {}).get("declare") or {}).get("numero") or "") for c in cands}
+    par_cle: dict[str, list[int]] = {}
+    for i, n in numeros.items():
+        if cle := cle_numero(n):
+            par_cle.setdefault(cle, []).append(i)
+
+    def deux_etablissements(i: int, j: int) -> bool:
+        return len(numeros[i]) == 14 and len(numeros[j]) == 14 and numeros[i] != numeros[j]
+
+    paires = {(min(i, j), max(i, j)): cle for cle, ids in par_cle.items() for n, i in enumerate(ids) for j in ids[n + 1 :]}
+    paires = {p: cle for p, cle in paires.items() if p not in deja and p not in liees and not deux_etablissements(*p)}
+    if not paires:
+        return set()
+    with fabrique.begin() as s:
+        for (i, j), cle in sorted(paires.items()):
+            s.add(Rapprochement(recherche_id=rid, a=i, b=j, confiance=1.0, pourquoi={"numero_declare": f"leurs sites déclarent le même numéro officiel ({cle})"}))
+        s.add(Journal(recherche_id=rid, qui="pilote", evenement="rapprochements_proposes_par_numero_du_site", detail={"n": len(paires)}))
     return set(paires)
 
 

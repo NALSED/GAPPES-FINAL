@@ -335,7 +335,7 @@ def test_contenu_au_choix_et_deux_fichiers_en_meme_temps(monde):
     d = dossier(res)
     assert next(csv.reader((d / "resultat.csv").read_text(encoding="utf-8").splitlines())) == ["NOM"]  # l'un pour l'outil d'après
     detail = list(csv.reader((d / "resultat_detail.csv").read_text(encoding="utf-8").splitlines(), delimiter=";"))  # l'autre pour l'utilisateur
-    assert detail[0] == ["nom", "ville", "pays", "origine", "confirmations", "fonction", "genre", "site", "numero_officiel", "decision", "motif_rejet", "sources", "relations", "sources_fusionnees", "ia"]
+    assert detail[0] == ["nom", "ville", "pays", "origine", "confirmations", "fonction", "genre", "site", "numero_officiel", "decision", "motif_rejet", "sources", "relations", "sources_fusionnees", "ia", "declare_par_le_site"]  # 914/A : nouvelle colonne, à la fin
     fenix = next(r for r in detail[1:] if r[0].startswith("Fenix"))
     assert fenix[3] == "dans un registre officiel" and fenix[5] == "siège" and fenix[9] == "gardé" and "Groupe Fenix" in fenix[12]
     assert c.post("/api/recherches/r14/export", json={"formats": [{"format": "csv", "contenus": ["inconnu"]}]}).status_code == 422

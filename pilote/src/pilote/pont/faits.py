@@ -30,6 +30,7 @@ class Provenance:
     mains: dict[str, str] = field(default_factory=dict)  # identifiant de source -> premiere / seconde
     eco_par_site: dict[str, str] = field(default_factory=dict)  # site (clé normalisée) -> écosystème de la page
     fournisseurs_par_site: dict[str, set[str]] = field(default_factory=dict)  # site -> identifiants des sources qui ont trouvé cette page
+    declare_par_site: dict[str, dict[str, Any]] = field(default_factory=dict)  # 914/A : site -> ce qu'il déclare de lui-même
 
 
 def est_exclu(nom_norme: str, exclus: list[str]) -> bool:
@@ -122,6 +123,43 @@ def _liens(decouverts: list[Any], cle: str) -> list[Any]:
     return out
 
 
+def reunir_declarations(ds: list[dict[str, Any]]) -> dict[str, Any]:
+    """914/A : les déclarations des pages d'un même site, réunies. Deux pages du site qui donnent des numéros différents (deux SIREN, ou deux
+    SIRET différents) : aucun numéro n'est gardé, on ne sait pas lequel est le bon. Les autres champs : le premier connu."""
+    from pilote.rapprochements import cle_numero
+
+    out: dict[str, Any] = {}
+    for d in ds:
+        for k, v in d.items():
+            if k not in ("numero", "type_numero", "methode") and v:
+                out.setdefault(k, v)
+    numeros = {str(d["numero"]) for d in ds if d.get("numero")}
+    if numeros and len({cle_numero(n) for n in numeros}) == 1:
+        siret = {n for n in numeros if len(n) == 14}
+        if len(siret) <= 1:
+            n = max(numeros, key=len)
+            d = next(x for x in ds if x.get("numero") == n)
+            out.update(numero=n, type_numero=d.get("type_numero", ""), methode=d.get("methode", ""))
+        else:  # deux établissements du même SIREN : seul le SIREN est sûr
+            out.update(numero=next(iter(siret))[:9], type_numero="siren", methode=ds[0].get("methode", ""))
+    return out
+
+
+def declaration(c_ref: str, domaine: str, site_key, prov: Provenance) -> dict[str, Any]:
+    """914/A : ce que le site de l'acteur déclare de lui-même (numéro officiel, ville…), ou {}. Jamais une preuve : affiché, et sert
+    seulement à PROPOSER un rapprochement (spec 914, choix 1 et 2)."""
+    site = site_de(c_ref, domaine)
+    return dict(prov.declare_par_site.get(site_key(site), {})) if site else {}
+
+
+def numero_different(numero_registre: str, declare: dict[str, Any]) -> bool:
+    """914/A, choix 3 : le numéro donné par un registre n'est pas celui que le site déclare (alerte affichée, niveau inchangé)."""
+    from pilote.rapprochements import cle_numero
+
+    a, b = cle_numero(numero_registre), cle_numero(str(declare.get("numero") or ""))
+    return bool(a and b and a != b)
+
+
 def faits_candidat(c: Any, decouverts_du_nom: list[Any], site_key, pays: str, prov: Provenance | None = None) -> dict[str, Any]:
     prov = prov or Provenance()
     ps = preuves(c, prov, site_key)
@@ -131,6 +169,8 @@ def faits_candidat(c: Any, decouverts_du_nom: list[Any], site_key, pays: str, pr
     coord = next(iter(_liens(decouverts_du_nom, "coordonnees")), None)
     fonction = next(iter(_liens(decouverts_du_nom, "fonction")), "")
     alias = alias_de(c.nom, [a for lot in _liens(decouverts_du_nom, "alias") for a in lot])  # les autres noms déclarés par les sources, sans le nom de la fiche
+    declare = declaration(c.ref, domaine, site_key, prov)
+    numero = numero_officiel(decouverts_du_nom)
     return {
         "nom": c.nom,
         "genre_source": origine_de(ps),
@@ -140,10 +180,11 @@ def faits_candidat(c: Any, decouverts_du_nom: list[Any], site_key, pays: str, pr
         "ville": c.ville or "",
         "pays": pays,
         "site": site_de(c.ref, domaine),
-        "numero_officiel": numero_officiel(decouverts_du_nom),
+        "numero_officiel": numero,
         "relations": relations,
         # `regle8_personne` : le constat posé par `pilote.regle8.est_personne` au moment de la collecte. Il reste vrai même quand un levier
         # a laissé le genre déclaré par la source, et c'est lui que lisent les garde-fous qu'un levier n'ouvre pas (sortie FollowTheMoney).
         "faits": {"ref": c.ref, "preuves": ps, "niveau": niveau_de(ps, endroits_comptes(ps)), **({"regle8_personne": True} if any(_liens(decouverts_du_nom, "regle8")) else {}),
-                  **({"coordonnees": coord} if coord else {}), **({"fonction": fonction} if fonction else {}), **({"alias": alias} if alias else {})},
+                  **({"coordonnees": coord} if coord else {}), **({"fonction": fonction} if fonction else {}), **({"alias": alias} if alias else {}),
+                  **({"declare": declare} if declare else {}), **({"numero_site_different": True} if numero_different(numero, declare) else {})},
     }  # fmt: skip
