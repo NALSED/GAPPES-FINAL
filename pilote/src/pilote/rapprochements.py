@@ -178,15 +178,42 @@ def _appliquer(s: Session, r: Rapprochement, action: str, qui: str) -> tuple[Can
 # ---------------------------------------------------------------- la file
 
 
+_ARRONDISSEMENT = re.compile(r"\s+\d{1,2}\s*(?:e|er|eme|ieme)?(?:\s+arrondissement)?$")
+
+
+def _ville(v: str) -> str:
+    """913/N2 : une ville sans casse, sans accents, sans tirets ni apostrophes, sans numéro d'arrondissement. Les registres écrivent
+    « SAINT-ETIENNE » ou « PARIS 11 » : c'est la même ville que « Saint-Étienne » ou « Paris »."""
+    import unicodedata
+
+    v = "".join(c for c in unicodedata.normalize("NFKD", v.lower()) if not unicodedata.combining(c))
+    v = re.sub(r"\s+", " ", re.sub(r"[-'’.]", " ", v)).strip()
+    return _ARRONDISSEMENT.sub("", v)
+
+
 def _norme(champ: str, v: str) -> str:
     v = re.sub(r"\s+", " ", (v or "").strip().lower())
+    if champ == "ville":
+        return _ville(v)
     return re.sub(r"[\s.\-]", "", v) if champ == "numero" else v  # un numéro s'écrit avec ou sans espaces : « 412 345 678 » et « 412345678 » sont le même
+
+
+def _numeros(a: str, b: str) -> bool:
+    """913/N3 : un SIREN et un SIRET de ce SIREN désignent la même entreprise (`cle_numero`, la règle de A7). Deux SIRET différents sont
+    deux établissements : ils ne concordent pas, comme A7 refuse de les réunir. Tout autre numéro se compare tel quel."""
+    da, db = re.sub(r"\D", "", a), re.sub(r"\D", "", b)
+    if len(da) == 14 and len(db) == 14:
+        return da == db
+    ka, kb = cle_numero(a), cle_numero(b)
+    return ka == kb if ka and kb else _norme("numero", a) == _norme("numero", b)
 
 
 def comparer(champ: str, a: str, b: str) -> str:
     """accord / desaccord / absence, calculé champ par champ : une valeur absente d'un côté n'est JAMAIS une différence (il n'y a rien à comparer)."""
     if not (a or "").strip() or not (b or "").strip():
         return "absence"
+    if champ == "numero":
+        return "accord" if _numeros(a, b) else "desaccord"
     return "accord" if _norme(champ, a) == _norme(champ, b) else "desaccord"
 
 
