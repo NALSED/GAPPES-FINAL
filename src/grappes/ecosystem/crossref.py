@@ -36,14 +36,15 @@ MIN_NAME_LEN = 5  # un nom plus court (« Le », « ENS ») n'est jamais cherch�
 
 
 def _same_site(a: str, b: str) -> bool:
-    """Un flux et le site du même éditeur (`rss:x.fr`, `web:x.fr`) : jamais deux voix indépendantes."""
+    """Un flux et le site du même éditeur (`rss:x.fr`, `web:x.fr`), ou un site et l'un de ses sous-domaines (`web:blog.x.fr`) : jamais
+    deux voix indépendantes. Volontairement plus étroit que `site_key` (D58) : deux sites hébergés côte à côte (`a.wordpress.com`,
+    `b.wordpress.com`) restent deux éditeurs qui peuvent se citer."""
     ea, _, ia = a.partition(":")
     eb, _, ib = b.partition(":")
-    return (
-        ea in ("web", "rss")
-        and eb in ("web", "rss")
-        and canonical_domain(ia) == canonical_domain(ib)
-    )
+    if ea not in ("web", "rss") or eb not in ("web", "rss"):
+        return False
+    ha, hb = canonical_domain(ia), canonical_domain(ib)
+    return ha == hb or ha.endswith("." + hb) or hb.endswith("." + ha)
 
 
 def name_index(names: dict[str, str] | None, known: set[str] | None = None) -> dict[str, str]:
@@ -90,8 +91,8 @@ def build_citations(
         cited_keys = [m.key for m in o.mentions]
         cited_keys += [t for t in map(link_target, o.links) if t]
         for cited in cited_keys:
-            if cited == o.source.key:
-                continue
+            if cited == o.source.key or _same_site(cited, o.source.key):
+                continue  # 913/N1 : le flux d'un site (ou un sous-domaine) qui pointe vers ce site ne le corrobore pas
             hypo = o.source.key in o.hypothetical or cited in o.hypothetical
             out.setdefault(
                 (o.source.key, cited, o.obs_id),
@@ -156,7 +157,7 @@ def validate_crossref(
     ] = {}  # citants qui ne citent QUE par mention textuelle (voix plus légère)
     linked: set[tuple[str, str]] = {(c.cited, c.citer) for c in citations if c.via != "texte"}
     for c in citations:
-        if c.citer != c.cited:  # auto-citations ignorées
+        if c.citer != c.cited and not _same_site(c.citer, c.cited):  # auto-citations ignorées, même éditeur compris (913/N1)
             by_cited.setdefault(c.cited, set()).add(c.citer)
             if (c.cited, c.citer) not in linked:
                 text_only.setdefault(c.cited, set()).add(c.citer)
